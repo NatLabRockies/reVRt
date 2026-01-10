@@ -296,3 +296,59 @@ impl<T: LazySubsetElement> AsyncLazySubset<T> {
             data: Arc::new(RwLock::new(HashMap::new())),
         }
     }
+
+    /// Get the subset used by this AsyncLazySubset.
+    fn subset(&self) -> &ArraySubset {
+        &self.subset
+    }
+
+    /// Get data for a specific variable asynchronously.
+    ///
+    /// This method will check the cache first. If the variable is not cached,
+    /// it will load the data from storage, convert it to the target type,
+    /// cache it, and return it.
+    ///
+    /// # Arguments
+    /// * `varname` - Name of the variable to load
+    ///
+    /// # Returns
+    /// The array data as an ndarray with the target element type
+    ///
+    /// # Errors
+    /// Returns an error if the variable cannot be opened or loaded
+    async fn get(
+        &self,
+        varname: &str,
+    ) -> Result<ndarray::ArrayBase<ndarray::OwnedRepr<T>, ndarray::Dim<ndarray::IxDynImpl>>> {
+        trace!("Getting data subset for variable: {}", varname);
+
+        // Check if already cached (read lock)
+        {
+            let data_read = self.data.read().await;
+            if let Some(cached) = data_read.get(varname) {
+                trace!("Data for variable {} already loaded", varname);
+                return Ok(cached.clone());
+            }
+        }
+
+        // Not cached, need to load (write lock)
+        trace!(
+            "Loading data subset ({:?}) for variable: {}",
+            self.subset,
+            varname
+        );
+
+        let variable = Array::async_open(self.source.clone(), &format!("/{varname}")).await?;
+
+        let values = variable
+            .async_retrieve_array_subset_ndarray(&self.subset)
+            .await
+            .expect("Failed to retrieve array subset");
+
+        // Cache the loaded data
+        let mut data_write = self.data.write().await;
+        data_write.insert(varname.to_string(), values.clone());
+
+        Ok(values)
+    }
+}
