@@ -262,3 +262,9 @@ struct AsyncLazySubset<T: LazySubsetElement> {
         >,
     >,
 }
+
+impl<T: LazySubsetElement> fmt::Display for AsyncLazySubset<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "AsyncLazySubset {{ subset: {:?}, ... }}", self.subset)
+    }
+}
