@@ -268,3 +268,12 @@ impl<T: LazySubsetElement> fmt::Display for AsyncLazySubset<T> {
         write!(f, "AsyncLazySubset {{ subset: {:?}, ... }}", self.subset)
     }
 }
+
+impl<T: LazySubsetElement> fmt::Debug for AsyncLazySubset<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("AsyncLazySubset")
+            .field("subset", &self.subset)
+            .field("element_type", &std::any::type_name::<T>())
+            .finish()
+    }
+}
