@@ -22,10 +22,13 @@
 
 use std::collections::HashMap;
 use std::fmt;
+use std::sync::Arc;
 
+use tokio::sync::RwLock;
 use tracing::trace;
 use zarrs::array::{Array, DataType, ElementOwned};
 use zarrs::array_subset::ArraySubset;
+use zarrs::storage::AsyncReadableListableStorage;
 use zarrs::storage::{ReadableListableStorage, ReadableListableStorageTraits};
 
 use crate::error::{Error, Result};
@@ -237,4 +240,25 @@ impl LazySubsetElement for f64 {
     fn from_f64(value: f64) -> Self {
         value
     }
+}
+
+/// Asynchronous lazy loaded subset of a Zarr Dataset.
+///
+/// Work as an async cache for a consistent subset (same indices range) for
+/// multiple variables of a Zarr Dataset.
+// pub struct AsyncLazySubset<T: LazySubsetElement> {
+struct AsyncLazySubset<T: LazySubsetElement> {
+    /// Source Zarr storage
+    source: AsyncReadableListableStorage,
+    /// Subset of the source to be lazily loaded
+    subset: ArraySubset,
+    /// Cached data with RwLock for concurrent access
+    data: Arc<
+        RwLock<
+            HashMap<
+                String,
+                ndarray::ArrayBase<ndarray::OwnedRepr<T>, ndarray::Dim<ndarray::IxDynImpl>>,
+            >,
+        >,
+    >,
 }
