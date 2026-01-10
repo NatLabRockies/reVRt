@@ -277,3 +277,22 @@ impl<T: LazySubsetElement> fmt::Debug for AsyncLazySubset<T> {
             .finish()
     }
 }
+
+impl<T: LazySubsetElement> AsyncLazySubset<T> {
+    /// Create a new AsyncLazySubset for a given source and subset.
+    ///
+    /// # Arguments
+    /// * `source` - Async readable Zarr storage
+    /// * `subset` - The array subset to load
+    ///
+    /// # Returns
+    /// A new AsyncLazySubset instance with an empty cache
+    fn new(source: AsyncReadableListableStorage, subset: ArraySubset) -> Self {
+        trace!("Creating AsyncLazySubset for subset: {:?}", subset);
+
+        AsyncLazySubset {
+            source,
+            subset,
+            data: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
