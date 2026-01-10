@@ -210,3 +210,31 @@ mod tests {
     }
     */
 }
+
+/// Trait defining types that can be used as LazySubset element types
+trait LazySubsetElement: ElementOwned + Clone + Send + Sync {
+    /// Convert from f32
+    fn from_f32(value: f32) -> Self;
+    /// Convert from f64
+    fn from_f64(value: f64) -> Self;
+}
+
+impl LazySubsetElement for f32 {
+    fn from_f32(value: f32) -> Self {
+        value
+    }
+    // A lossy cast.
+    // The value is rounded, if needed, and overflow results in infinity.
+    fn from_f64(value: f64) -> Self {
+        value as f32
+    }
+}
+
+impl LazySubsetElement for f64 {
+    fn from_f32(value: f32) -> Self {
+        value as f64
+    }
+    fn from_f64(value: f64) -> Self {
+        value
+    }
+}
