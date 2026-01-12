@@ -214,6 +214,7 @@ mod tests {
     */
 }
 
+#[allow(dead_code)]
 /// Trait defining types that can be used as LazySubset element types
 trait LazySubsetElement: ElementOwned + Clone + Send + Sync {
     /// Convert from f32
@@ -242,6 +243,7 @@ impl LazySubsetElement for f64 {
     }
 }
 
+#[allow(dead_code)]
 /// Asynchronous lazy loaded subset of a Zarr Dataset.
 ///
 /// Work as an async cache for a consistent subset (same indices range) for
@@ -278,6 +280,7 @@ impl<T: LazySubsetElement> fmt::Debug for AsyncLazySubset<T> {
     }
 }
 
+#[allow(dead_code)]
 impl<T: LazySubsetElement> AsyncLazySubset<T> {
     /// Create a new AsyncLazySubset for a given source and subset.
     ///
