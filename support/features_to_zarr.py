@@ -8,12 +8,10 @@ values are indeed all the same, including any possible NaN should match.
 from pathlib import Path
 
 from dask.diagnostics import ProgressBar
-from dask.distributed import LocalCluster, Client
-import h5py
+from dask.distributed import LocalCluster
 import netCDF4
 import numpy as np
 import xarray as xr
-from zarr.codecs import BloscCodec
 import zarr
 
 cluster = LocalCluster(

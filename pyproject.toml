@@ -60,8 +60,8 @@ dev = [
   "matplotlib>=3.10.1,<4",
   "maturin>=1.9.3,<2",
   "pipreqs>=0.4.13,<0.5",
-  "ruff>=0.14.11,<0.15",
-  "ruff-lsp>=0.0.62,<0.0.63",
+  "ruff>=0.15.0",
+  "ruff-lsp>=0.0.62",
 ]
 test = [
   "hypothesis>=6.0,<7",
@@ -205,6 +205,11 @@ convention = "numpy"
   "SLF001", # private-member-access
   "W505", # doc-line-too-long
 ]
+"docs/source/conf.py" = [
+  "W505", # doc-line-too-long
+  "E501", # line-too-long
+  "E402", # module-import-not-at-top-of-file
+]
 
 [tool.ruff.lint.pylint]
 max-args = 10
@@ -247,7 +252,7 @@ NREL-reVRt = { path = ".", editable = true }
 [tool.pixi.dependencies]
 # system
 python = ">=3.11"
-rust = ">=1.92.0,<1.93"
+rust = ">=1.93.1,<1.94"
 # package
 affine = ">=2.4.0,<3"
 dask = ">=2025.4.1,<2026"
@@ -278,9 +283,10 @@ jupyter_bokeh = ">=4.0.5,<5"
 matplotlib = ">=3.10.1,<4"
 pip = ">=25.1.1,<26"
 pipreqs = ">=0.4.13,<0.5"
-ruff = ">=0.14.11,<0.15"
+ruff = ">=0.15.2,<0.16"
 ruff-lsp = ">=0.0.62,<0.0.63"
 rust-src = ">=1.92.0,<2"
+maturin = ">=1.12.3,<2"
 
 [tool.pixi.feature.test.dependencies]
 hypothesis = ">=6.140.4,<7"

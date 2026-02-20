@@ -45,7 +45,7 @@ def test_stat_count(in_obj):
 def test_stat_min(in_obj):
     """Test the min stat"""
 
-    assert Stat.MIN.compute(in_obj) == 2.0
+    assert Stat.MIN.compute(in_obj) == pytest.approx(2.0)
 
 
 @pytest.mark.parametrize(
@@ -55,7 +55,7 @@ def test_stat_min(in_obj):
 def test_stat_max(in_obj):
     """Test the max stat"""
 
-    assert Stat.MAX.compute(in_obj) == 3.0
+    assert Stat.MAX.compute(in_obj) == pytest.approx(3.0)
 
 
 @pytest.mark.parametrize(
@@ -65,7 +65,7 @@ def test_stat_max(in_obj):
 def test_stat_mean(in_obj):
     """Test the mean stat"""
 
-    assert Stat.MEAN.compute(in_obj, out_dtype="float32") == 2.5
+    assert Stat.MEAN.compute(in_obj, out_dtype="float32") == pytest.approx(2.5)
 
 
 @pytest.mark.parametrize(
@@ -85,7 +85,7 @@ def test_stat_sum(in_obj):
 def test_stat_std(in_obj):
     """Test the std stat"""
 
-    assert Stat.STD.compute(in_obj) == 0.5
+    assert Stat.STD.compute(in_obj) == pytest.approx(0.5)
 
 
 @pytest.mark.parametrize(
@@ -95,7 +95,7 @@ def test_stat_std(in_obj):
 def test_stat_median(in_obj):
     """Test the median stat"""
 
-    assert Stat.MEDIAN.compute(in_obj) == 2.5
+    assert Stat.MEDIAN.compute(in_obj) == pytest.approx(2.5)
 
 
 @pytest.mark.parametrize(
