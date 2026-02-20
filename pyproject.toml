@@ -205,6 +205,11 @@ convention = "numpy"
   "SLF001", # private-member-access
   "W505", # doc-line-too-long
 ]
+"docs/source/conf.py" = [
+  "W505", # doc-line-too-long
+  "E501", # line-too-long
+  "E402", # module-import-not-at-top-of-file
+]
 
 [tool.ruff.lint.pylint]
 max-args = 10
