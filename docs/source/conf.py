@@ -12,10 +12,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import os
 import sys
-import pathlib
 
-sys.path.insert(0, pathlib.Path("../../").resolve())
+sys.path.insert(0, os.path.abspath("../../"))
 
 # -- Project information -----------------------------------------------------
 
@@ -23,10 +23,8 @@ project = "reVRt"
 copyright = "2025, Alliance for Sustainable Energy, LLC"
 author = "NLR: Guilherme Pimenta Castelao, Paul Pinchuk"
 
-pkg = pathlib.Path(
-    pathlib.Path(pathlib.Path(__file__).parent).resolve()
-).parent
-pkg = pathlib.Path(pkg).parent
+pkg = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+pkg = os.path.dirname(pkg)
 sys.path.append(pkg)
 
 from revrt import version
