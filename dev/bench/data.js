@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768932887963,
-  "repoUrl": "https://github.com/NREL/reVRt",
+  "lastUpdate": 1771605382660,
+  "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
       {
@@ -5375,6 +5375,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 367198894,
             "range": "± 4814701",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "14f9c1185ca056265cb4c7c5824fac4bac1f29be",
+          "message": "Build(deps): Bump release-drafter/release-drafter from 6.1.1 to 6.2.0 (#213)\n\n* Build(deps): Bump release-drafter/release-drafter from 6.1.1 to 6.2.0\n\nBumps [release-drafter/release-drafter](https://github.com/release-drafter/release-drafter) from 6.1.1 to 6.2.0.\n- [Release notes](https://github.com/release-drafter/release-drafter/releases)\n- [Commits](https://github.com/release-drafter/release-drafter/compare/v6.1.1...v6.2.0)\n\n---\nupdated-dependencies:\n- dependency-name: release-drafter/release-drafter\n  dependency-version: 6.2.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* Update Release Drafter version in workflow\n\n---------\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Guilherme Castelão <guilherme@castelao.net>",
+          "timestamp": "2026-02-20T09:25:56-07:00",
+          "tree_id": "6476191347d1eb18553f7eca58605b77eaeaf1fe",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/14f9c1185ca056265cb4c7c5824fac4bac1f29be"
+        },
+        "date": 1771605381412,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 55126761,
+            "range": "± 569149",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 59493789,
+            "range": "± 462151",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 81490651,
+            "range": "± 1716542",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 122784838,
+            "range": "± 1335107",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 415100499,
+            "range": "± 12310866",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 86432077,
+            "range": "± 619922",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 89597916,
+            "range": "± 462412",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 98291715,
+            "range": "± 571856",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 127051407,
+            "range": "± 901492",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 233322131,
+            "range": "± 1780370",
             "unit": "ns/iter"
           }
         ]
