@@ -200,7 +200,7 @@ def test_basic_single_route_layered_file_short_path(
     assert len(output) == 1
     route = output.iloc[0]
     assert route["cost"] == pytest.approx((1 + 2) / 2)
-    assert route["length_km"] == 1 / 1000
+    assert route["length_km"] == pytest.approx(1 / 1000)
     assert route["cost"] == route["optimized_objective"]
 
 
