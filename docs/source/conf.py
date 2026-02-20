@@ -23,7 +23,9 @@ project = "reVRt"
 copyright = "2025, Alliance for Sustainable Energy, LLC"
 author = "NLR: Guilherme Pimenta Castelao, Paul Pinchuk"
 
-pkg = pathlib.Path(pathlib.Path(pathlib.Path(__file__).parent).resolve()).parent
+pkg = pathlib.Path(
+    pathlib.Path(pathlib.Path(__file__).parent).resolve()
+).parent
 pkg = pathlib.Path(pkg).parent
 sys.path.append(pkg)
 

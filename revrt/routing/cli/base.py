@@ -143,8 +143,9 @@ class RouteToDefinitionConverter(ABC):
         for group_info, routes in self.route_points.groupby(self._GROUP_COLS):
             if self.existing_routes:
                 mask = routes.apply(
-                    lambda row: self._route_as_tuple(row)
-                    not in self.existing_routes,
+                    lambda row: (
+                        self._route_as_tuple(row) not in self.existing_routes
+                    ),
                     axis=1,
                 )
                 routes = routes[mask]  # noqa: PLW2901
