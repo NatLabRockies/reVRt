@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771605382660,
+  "lastUpdate": 1771614490944,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -5459,6 +5459,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 233322131,
             "range": "± 1780370",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8f16f20bc6ae1d5be4cd4a545bbdfde3f73e718b",
+          "message": "Regular update (#216)\n\n* cfg: Updating Rust\n\n* cfg: Updating Ruff version\n\n* style:\n\n* style: Ruff fix with unsafe\n\n* style, test: Approx float comparison\n\n* style: Ignoring some ruff errors for documentation\n\n* cfg: Updating pixi.lock\n\n* cfg: Updating Maturin\n\n* cfg: Use latest pixi\n\n* style: Formatting with Ruff\n\n* cfg: Just leave docs' conf as it was\n\nI have to move on and can't touch that pandora box today.\n\n* cfg: Pin pixi version used in GHA",
+          "timestamp": "2026-02-20T11:57:09-07:00",
+          "tree_id": "e8b18f90fbfae488535aa3eaaf00b29423dfb6a5",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/8f16f20bc6ae1d5be4cd4a545bbdfde3f73e718b"
+        },
+        "date": 1771614490379,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 70241758,
+            "range": "± 2112990",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 98800569,
+            "range": "± 1725446",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 93963105,
+            "range": "± 2101501",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 143286170,
+            "range": "± 3701070",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 590348059,
+            "range": "± 20199720",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 142510785,
+            "range": "± 1950907",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 145310140,
+            "range": "± 2720983",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 158883065,
+            "range": "± 1853063",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 199426660,
+            "range": "± 2561590",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 348073203,
+            "range": "± 5641712",
             "unit": "ns/iter"
           }
         ]
