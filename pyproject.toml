@@ -286,6 +286,7 @@ pipreqs = ">=0.4.13,<0.5"
 ruff = ">=0.15.2,<0.16"
 ruff-lsp = ">=0.0.62,<0.0.63"
 rust-src = ">=1.92.0,<2"
+maturin = ">=1.12.3,<2"
 
 [tool.pixi.feature.test.dependencies]
 hypothesis = ">=6.140.4,<7"
