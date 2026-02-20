@@ -90,7 +90,8 @@ impl LazySubset<f32> {
             None => {
                 trace!(
                     "Loading data subset ({:?}) for variable: {}",
-                    self.subset, varname
+                    self.subset,
+                    varname
                 );
 
                 let variable =
@@ -337,7 +338,8 @@ impl<T: LazySubsetElement> AsyncLazySubset<T> {
         // Not cached, need to load (write lock)
         trace!(
             "Loading data subset ({:?}) for variable: {}",
-            self.subset, varname
+            self.subset,
+            varname
         );
 
         let variable = Array::async_open(self.source.clone(), &format!("/{varname}")).await?;
