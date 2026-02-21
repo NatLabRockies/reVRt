@@ -365,7 +365,7 @@ pub(crate) fn preset_cost_surface() -> ZarrTestBuilder {
 ///
 /// Just a proof of concept with lots of hardcoded values
 /// that must be improved.
-pub(crate) fn multi_variable_zarr() -> std::path::PathBuf {
+pub(crate) fn multi_variable_zarr() -> TempDir {
     let ni = 8;
     let nj = 8;
     let ci = 4;
@@ -423,11 +423,11 @@ pub(crate) fn multi_variable_zarr() -> std::path::PathBuf {
             .unwrap();
     }
 
-    tmp_path.keep()
+    tmp_path
 }
 
 /// Create a zarr store with a cost layer comprised of a single value
-pub(crate) fn constant_value_cost_zarr(cost_value: f32) -> std::path::PathBuf {
+pub(crate) fn constant_value_cost_zarr(cost_value: f32) -> TempDir {
     let (ni, nj) = (8, 8);
     let (ci, cj) = (4, 4);
 
@@ -468,11 +468,11 @@ pub(crate) fn constant_value_cost_zarr(cost_value: f32) -> std::path::PathBuf {
         )
         .unwrap();
 
-    tmp_path.keep()
+    tmp_path
 }
 
 /// Create a zarr store with a cost layer comprised of cell indices
-pub(crate) fn cost_as_index_zarr((ni, nj): (u64, u64), (ci, cj): (u64, u64)) -> std::path::PathBuf {
+pub(crate) fn cost_as_index_zarr((ni, nj): (u64, u64), (ci, cj): (u64, u64)) -> TempDir {
     let tmp_path = TempDir::new().unwrap();
 
     let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
@@ -511,7 +511,7 @@ pub(crate) fn cost_as_index_zarr((ni, nj): (u64, u64), (ci, cj): (u64, u64)) -> 
         )
         .unwrap();
 
-    tmp_path.keep()
+    tmp_path
 }
 
 /// Create a zarr store with specific layers for testing
@@ -527,7 +527,7 @@ pub(crate) fn specific_layers_zarr(
     (ci, cj): (u64, u64),
     friction_layer_weight: f32,
     invariant_layer_cost: f32,
-) -> std::path::PathBuf {
+) -> TempDir {
     let tmp_path = TempDir::new().unwrap();
 
     let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
@@ -580,7 +580,7 @@ pub(crate) fn specific_layers_zarr(
             .unwrap();
     }
 
-    tmp_path.keep()
+    tmp_path
 }
 #[cfg(test)]
 mod tests {
