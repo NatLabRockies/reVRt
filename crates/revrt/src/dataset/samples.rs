@@ -111,9 +111,6 @@ pub(crate) struct ZarrTestBuilder {
     dtype: DataType,
     /// Fill value for NaN
     fill_value: FillValue,
-    /// Keep temporary directory (for debugging)
-    /// If true, requires manual clean
-    keep_temp: bool,
 }
 
 impl Default for ZarrTestBuilder {
@@ -134,7 +131,6 @@ impl ZarrTestBuilder {
             layers: Vec::new(),
             dtype: DataType::Float32,
             fill_value: FillValue::from(zarrs::array::ZARR_NAN_F32),
-            keep_temp: false,
         }
     }
 
@@ -176,15 +172,6 @@ impl ZarrTestBuilder {
     /// Set data type for all layers (default: Float32)
     pub(crate) fn data_type(mut self, dtype: DataType) -> Self {
         self.dtype = dtype;
-        self
-    }
-
-    /// Whether to keep temporary directory (default: false)
-    ///
-    /// If set to true, the temporary directory is not automatically deleted,
-    /// requiring some manual clean process.
-    pub(crate) fn keep_temp(mut self, keep: bool) -> Self {
-        self.keep_temp = keep;
         self
     }
 
