@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771614490944,
+  "lastUpdate": 1771700817745,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -5543,6 +5543,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 348073203,
             "range": "± 5641712",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a2e2a778a6b9906d7a782bae6df4725013d7451f",
+          "message": "Build(deps): Bump prefix-dev/setup-pixi from 0.9.3 to 0.9.4 (#214)\n\n* Build(deps): Bump prefix-dev/setup-pixi from 0.9.3 to 0.9.4\n\nBumps [prefix-dev/setup-pixi](https://github.com/prefix-dev/setup-pixi) from 0.9.3 to 0.9.4.\n- [Release notes](https://github.com/prefix-dev/setup-pixi/releases)\n- [Commits](https://github.com/prefix-dev/setup-pixi/compare/v0.9.3...v0.9.4)\n\n---\nupdated-dependencies:\n- dependency-name: prefix-dev/setup-pixi\n  dependency-version: 0.9.4\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* Update setup-pixi action to a specific commit\n\n* Change setup-pixi version to specific commit\n\nUpdated setup-pixi action to a specific commit hash.\n\n* Update setup-pixi action to specific commit\n\n* Update setup-pixi version in codecov workflow\n\n* Update setup-pixi action to a specific commit\n\n* Update release-rust.yml\n\n---------\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Guilherme Castelão <guilherme@castelao.net>",
+          "timestamp": "2026-02-21T11:55:21-07:00",
+          "tree_id": "57bf33127836f3c1d15af544e81e65a58bfe70d2",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/a2e2a778a6b9906d7a782bae6df4725013d7451f"
+        },
+        "date": 1771700817055,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 74593462,
+            "range": "± 1201831",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 103441199,
+            "range": "± 1751583",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 96948944,
+            "range": "± 2011083",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 148129152,
+            "range": "± 2833773",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 627307365,
+            "range": "± 16105931",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 146094801,
+            "range": "± 1754484",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 150594907,
+            "range": "± 1736285",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 164484660,
+            "range": "± 1772401",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 207742443,
+            "range": "± 3260545",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 366374592,
+            "range": "± 4075677",
             "unit": "ns/iter"
           }
         ]
