@@ -256,6 +256,8 @@ struct AsyncLazySubset<T: LazySubsetElement> {
     /// Subset of the source to be lazily loaded
     subset: ArraySubset,
     /// Cached data with RwLock for concurrent access
+    // Eventually refactor this into a new type: cache
+    #[allow(clippy::type_complexity)]
     data: Arc<
         RwLock<
             HashMap<
