@@ -356,3 +356,181 @@ impl<T: LazySubsetElement> AsyncLazySubset<T> {
         Ok(values)
     }
 }
+
+#[cfg(test)]
+mod tests_async {
+    use super::*;
+    use crate::dataset::samples::{self, LayerConfig, ZarrTestBuilder};
+
+    // -------------------------------------------------------------------------
+    // Baseline
+    // -------------------------------------------------------------------------
+
+    /// A single instance loads the correct shape and values.
+    #[tokio::test]
+    async fn get_returns_correct_shape_and_values() {
+        let tmp = ZarrTestBuilder::new()
+            .dimensions(4, 4)
+            .chunks(2, 2)
+            .layer(LayerConfig::constant("A", 3.0))
+            .build()
+            .unwrap();
+        let source = samples::async_storage_for(tmp.path());
+
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let lazy = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset);
+
+        let data = lazy.get("A").await.unwrap();
+        assert_eq!(data.shape(), &[4, 4]);
+        assert!(data.iter().all(|&v| v == 3.0));
+    }
+
+    /// Requesting the same variable twice returns identical data (cache
+    /// must not corrupt on repeated access).
+    #[tokio::test]
+    async fn get_same_variable_twice_is_identical() {
+        let tmp = ZarrTestBuilder::new()
+            .dimensions(4, 4)
+            .chunks(2, 2)
+            .layer(LayerConfig::sequential("A"))
+            .build()
+            .unwrap();
+        let source = samples::async_storage_for(tmp.path());
+
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let lazy = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset);
+
+        let first = lazy.get("A").await.unwrap();
+        let second = lazy.get("A").await.unwrap();
+        assert_eq!(first, second);
+    }
+
+    // -------------------------------------------------------------------------
+    // Concurrent access via tokio::join!
+    //
+    // tokio::join! interleaves both futures on the same task. This is the
+    // minimal concurrency test: it exercises shared-Arc access without
+    // spawning extra threads.
+    // -------------------------------------------------------------------------
+
+    /// Two instances sharing one Arc, each loading a different layer,
+    /// run concurrently and return the correct values for their layer.
+    #[tokio::test]
+    async fn two_instances_shared_source_join() {
+        let tmp = ZarrTestBuilder::new()
+            .dimensions(4, 4)
+            .chunks(2, 2)
+            .layer(LayerConfig::constant("A", 1.0))
+            .layer(LayerConfig::constant("B", 2.0))
+            .build()
+            .unwrap();
+        let source = samples::async_storage_for(tmp.path());
+
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let lazy_a = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset.clone());
+        let lazy_b = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset);
+
+        let (result_a, result_b) = tokio::join!(lazy_a.get("A"), lazy_b.get("B"));
+
+        assert!(result_a.unwrap().iter().all(|&v| v == 1.0));
+        assert!(result_b.unwrap().iter().all(|&v| v == 2.0));
+    }
+
+    /// Two instances loading the same layer concurrently must return
+    /// byte-identical data — no torn reads or cache interference.
+    #[tokio::test]
+    async fn two_instances_same_layer_join_are_identical() {
+        let tmp = ZarrTestBuilder::new()
+            .dimensions(4, 4)
+            .chunks(2, 2)
+            .layer(LayerConfig::sequential("A"))
+            .build()
+            .unwrap();
+        let source = samples::async_storage_for(tmp.path());
+
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let lazy_a = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset.clone());
+        let lazy_b = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset);
+
+        let (result_a, result_b) = tokio::join!(lazy_a.get("A"), lazy_b.get("A"));
+
+        assert_eq!(result_a.unwrap(), result_b.unwrap());
+    }
+
+    // -------------------------------------------------------------------------
+    // Parallel access via tokio::spawn (multi-thread runtime)
+    //
+    // Each spawned task runs on a separate thread-pool thread, so all tasks
+    // hit the shared Arc simultaneously. This is the strongest test: it
+    // catches data races in the storage implementation itself.
+    // -------------------------------------------------------------------------
+
+    /// Four tasks, each owning its own AsyncLazySubset but all sharing one
+    /// Arc, run in parallel and each returns the correct constant value.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn many_instances_parallel_spawn_shared_source() {
+        let tmp = ZarrTestBuilder::new()
+            .dimensions(4, 4)
+            .chunks(2, 2)
+            .layer(LayerConfig::constant("A", 5.0))
+            .build()
+            .unwrap();
+        let source = samples::async_storage_for(tmp.path());
+
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+
+        let handles: Vec<_> = (0..4)
+            .map(|_| {
+                let source = Arc::clone(&source);
+                let subset = subset.clone();
+                tokio::spawn(
+                    async move { AsyncLazySubset::<f32>::new(source, subset).get("A").await },
+                )
+            })
+            .collect();
+
+        for handle in handles {
+            let data = handle.await.expect("task panicked").unwrap();
+            assert_eq!(data.shape(), &[4, 4]);
+            assert!(data.iter().all(|&v| v == 5.0));
+        }
+    }
+
+    /// Sequential reference load followed by parallel loads: all parallel
+    /// results must be byte-identical to the reference. This rules out
+    /// data races that produce wrong values without panicking.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn parallel_results_match_sequential_reference() {
+        let tmp = ZarrTestBuilder::new()
+            .dimensions(4, 4)
+            .chunks(2, 2)
+            .layer(LayerConfig::sequential("A"))
+            .build()
+            .unwrap();
+        let source = samples::async_storage_for(tmp.path());
+
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+
+        // Sequential reference.
+        let reference = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset.clone())
+            .get("A")
+            .await
+            .unwrap();
+
+        // Four parallel tasks loading the same data.
+        let handles: Vec<_> = (0..4)
+            .map(|_| {
+                let source = Arc::clone(&source);
+                let subset = subset.clone();
+                tokio::spawn(
+                    async move { AsyncLazySubset::<f32>::new(source, subset).get("A").await },
+                )
+            })
+            .collect();
+
+        for handle in handles {
+            let data = handle.await.expect("task panicked").unwrap();
+            assert_eq!(data, reference);
+        }
+    }
+}
