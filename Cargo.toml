@@ -39,7 +39,7 @@ serde = { version = "1.0.226", features = ["derive"] }
 serde_json = { version = "1.0.143" }
 tempfile = "3.23.0"
 thiserror = "2.0.16"
-tokio = { version = "1.49.0", features = ["fs"] }
+tokio = { version = "1.49.0", features = ["fs", "rt-multi-thread"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"], default-features = true }
 zarrs = { version = "0.22.10", features = ["async", "filesystem"] }

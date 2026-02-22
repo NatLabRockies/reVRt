@@ -6,13 +6,19 @@
 use std::sync::Arc;
 
 use ndarray::{Array2, Array3};
+#[cfg(test)]
+use object_store::local::LocalFileSystem;
 use rand::Rng;
 use tempfile::TempDir;
 use zarrs::array::{ArrayBuilder, DataType, FillValue};
 use zarrs::array_subset::ArraySubset;
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
+#[cfg(test)]
+use zarrs::storage::AsyncReadableListableStorage;
 use zarrs::storage::ReadableWritableListableStorage;
+#[cfg(test)]
+use zarrs_object_store::AsyncObjectStore;
 
 /// Fill strategy for layer data
 #[allow(dead_code)]
@@ -111,9 +117,6 @@ pub(crate) struct ZarrTestBuilder {
     dtype: DataType,
     /// Fill value for NaN
     fill_value: FillValue,
-    /// Keep temporary directory (for debugging)
-    /// If true, requires manual clean
-    keep_temp: bool,
 }
 
 impl Default for ZarrTestBuilder {
@@ -134,7 +137,6 @@ impl ZarrTestBuilder {
             layers: Vec::new(),
             dtype: DataType::Float32,
             fill_value: FillValue::from(zarrs::array::ZARR_NAN_F32),
-            keep_temp: false,
         }
     }
 
@@ -176,15 +178,6 @@ impl ZarrTestBuilder {
     /// Set data type for all layers (default: Float32)
     pub(crate) fn data_type(mut self, dtype: DataType) -> Self {
         self.dtype = dtype;
-        self
-    }
-
-    /// Whether to keep temporary directory (default: false)
-    ///
-    /// If set to true, the temporary directory is not automatically deleted,
-    /// requiring some manual clean process.
-    pub(crate) fn keep_temp(mut self, keep: bool) -> Self {
-        self.keep_temp = keep;
         self
     }
 
@@ -378,7 +371,7 @@ pub(crate) fn preset_cost_surface() -> ZarrTestBuilder {
 ///
 /// Just a proof of concept with lots of hardcoded values
 /// that must be improved.
-pub(crate) fn multi_variable_zarr() -> std::path::PathBuf {
+pub(crate) fn multi_variable_zarr() -> TempDir {
     let ni = 8;
     let nj = 8;
     let ci = 4;
@@ -436,11 +429,11 @@ pub(crate) fn multi_variable_zarr() -> std::path::PathBuf {
             .unwrap();
     }
 
-    tmp_path.keep()
+    tmp_path
 }
 
 /// Create a zarr store with a cost layer comprised of a single value
-pub(crate) fn constant_value_cost_zarr(cost_value: f32) -> std::path::PathBuf {
+pub(crate) fn constant_value_cost_zarr(cost_value: f32) -> TempDir {
     let (ni, nj) = (8, 8);
     let (ci, cj) = (4, 4);
 
@@ -481,11 +474,11 @@ pub(crate) fn constant_value_cost_zarr(cost_value: f32) -> std::path::PathBuf {
         )
         .unwrap();
 
-    tmp_path.keep()
+    tmp_path
 }
 
 /// Create a zarr store with a cost layer comprised of cell indices
-pub(crate) fn cost_as_index_zarr((ni, nj): (u64, u64), (ci, cj): (u64, u64)) -> std::path::PathBuf {
+pub(crate) fn cost_as_index_zarr((ni, nj): (u64, u64), (ci, cj): (u64, u64)) -> TempDir {
     let tmp_path = TempDir::new().unwrap();
 
     let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
@@ -524,7 +517,7 @@ pub(crate) fn cost_as_index_zarr((ni, nj): (u64, u64), (ci, cj): (u64, u64)) -> 
         )
         .unwrap();
 
-    tmp_path.keep()
+    tmp_path
 }
 
 /// Create a zarr store with specific layers for testing
@@ -540,7 +533,7 @@ pub(crate) fn specific_layers_zarr(
     (ci, cj): (u64, u64),
     friction_layer_weight: f32,
     invariant_layer_cost: f32,
-) -> std::path::PathBuf {
+) -> TempDir {
     let tmp_path = TempDir::new().unwrap();
 
     let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
@@ -593,8 +586,23 @@ pub(crate) fn specific_layers_zarr(
             .unwrap();
     }
 
-    tmp_path.keep()
+    tmp_path
 }
+
+/// Wrap any on-disk sample path in an `AsyncReadableListableStorage`.
+///
+/// # Example
+/// ```rust
+/// let tmp = samples::multi_variable_zarr();
+/// let source = samples::async_storage_for(tmp.path());
+/// ```
+#[cfg(test)]
+pub(crate) fn async_storage_for(path: &std::path::Path) -> AsyncReadableListableStorage {
+    let store =
+        LocalFileSystem::new_with_prefix(path).expect("could not open local filesystem store");
+    std::sync::Arc::new(AsyncObjectStore::new(store))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -319,11 +319,11 @@ mod test {
     use zarrs::filesystem::FilesystemStore;
     use zarrs::storage::ReadableListableStorage;
 
-    fn make_features_for_costs_tests() -> LazySubset<f32> {
-        let path = samples::multi_variable_zarr();
-        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(&path).unwrap());
+    fn make_features_for_costs_tests() -> (tempfile::TempDir, LazySubset<f32>) {
+        let tmp = samples::multi_variable_zarr();
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
-        make_lazy_subset_for_tests(store, subset)
+        (tmp, make_lazy_subset_for_tests(store, subset))
     }
 
     #[test]
@@ -352,7 +352,7 @@ mod test {
 
     #[test]
     fn test_friction_only_returns_zeros() {
-        let mut features = make_features_for_costs_tests();
+        let (_tmp, mut features) = make_features_for_costs_tests();
 
         // friction-only (no `layer_name`) should return an empty cost array (zeros)
         let json = r#"
@@ -377,7 +377,7 @@ mod test {
     fn test_friction_clamp_with_cost_layer() {
         use ndarray::Zip;
 
-        let mut features = make_features_for_costs_tests();
+        let (_tmp, mut features) = make_features_for_costs_tests();
 
         // cost layer A with a friction layer defined by B * -3.0
         let json = r#"
