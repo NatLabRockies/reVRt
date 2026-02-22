@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771700817745,
+  "lastUpdate": 1771743050028,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -5627,6 +5627,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 366374592,
             "range": "± 4075677",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "857606ce6aa54a0893eecb7d0cab0d6dd49cf600",
+          "message": "Async LazySubset (#208)\n\n* Trait that defines types that can be used in LazySubset\n\n* An async LazySubet\n\n* feat: Display for AsyncLazySubet\n\n* feat: Debug for AsyncLazySubset\n\n* feat: AsyncLazySubset::new()\n\n* feat: AsyncLazySubset::get()\n\n* style:\n\n* cfg: Allow dead_code for now until we actually use it\n\n* style:\n\n* test: Removing keep_temp from samles builder\n\nThat's a bad strategy. I might still want to preserve the dataset to\nmanually verify it, but in that case I shall create a support function\nfor that, but avoid the risk of bad use of keep_temp and leave trash\nbehind.\n\n* fix: Pass `.path()` to avoid early drop\n\n* fix: Preserve tmp directory for firction test in cost.\n\nWith the intermediate make_features_for_costs_tests(), we shall pass the\ntmp itself as well to keep it alive until the end of the test.\n\n* test, fix: Update support sample functions to return TempDir\n\nInstead of using `.keep()` and return `PathBuf`, which was a bad choice\nleaving trash behind.\n\n* feat, test: A wrapper to provide an async storage\n\nTo avoid duplicates, we use the same methods to build sample datasets\nwith different strategies an use this wrapper to deliver an async\nstorage.\n\n* test: AsyncLazySubset sharing same source\n\nMultiple tests with progressive complexity to validate AsyncLazySubset\ncan be used while sharing the same source.\n\n* cfg: Tokio with rt-multi-thread\n\nRequired to use multiple thread sharing the workload, so we can take\nfull advantage of kestrel.\n\n* style: Ignore warning on complex type while prototyping\n\n* style:",
+          "timestamp": "2026-02-21T23:39:26-07:00",
+          "tree_id": "b284a770efa526565432b0e261377414d5a0c036",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/857606ce6aa54a0893eecb7d0cab0d6dd49cf600"
+        },
+        "date": 1771743049478,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 72103540,
+            "range": "± 862892",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 77847638,
+            "range": "± 1253578",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 95628424,
+            "range": "± 1757380",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 147097248,
+            "range": "± 1966108",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 621957854,
+            "range": "± 17965764",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 145935899,
+            "range": "± 2848207",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 151167368,
+            "range": "± 777773",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 164753697,
+            "range": "± 1544098",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 207457453,
+            "range": "± 1755657",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 364211492,
+            "range": "± 4725932",
             "unit": "ns/iter"
           }
         ]
