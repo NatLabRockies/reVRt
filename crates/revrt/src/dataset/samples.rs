@@ -6,13 +6,19 @@
 use std::sync::Arc;
 
 use ndarray::{Array2, Array3};
+#[cfg(test)]
+use object_store::local::LocalFileSystem;
 use rand::Rng;
 use tempfile::TempDir;
 use zarrs::array::{ArrayBuilder, DataType, FillValue};
 use zarrs::array_subset::ArraySubset;
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
+#[cfg(test)]
+use zarrs::storage::AsyncReadableListableStorage;
 use zarrs::storage::ReadableWritableListableStorage;
+#[cfg(test)]
+use zarrs_object_store::AsyncObjectStore;
 
 /// Fill strategy for layer data
 #[allow(dead_code)]
@@ -582,6 +588,21 @@ pub(crate) fn specific_layers_zarr(
 
     tmp_path
 }
+
+/// Wrap any on-disk sample path in an `AsyncReadableListableStorage`.
+///
+/// # Example
+/// ```rust
+/// let tmp = samples::multi_variable_zarr();
+/// let source = samples::async_storage_for(tmp.path());
+/// ```
+#[cfg(test)]
+pub(crate) fn async_storage_for(path: &std::path::Path) -> AsyncReadableListableStorage {
+    let store =
+        LocalFileSystem::new_with_prefix(path).expect("could not open local filesystem store");
+    std::sync::Arc::new(AsyncObjectStore::new(store))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
