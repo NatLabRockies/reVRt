@@ -446,7 +446,8 @@ mod tests {
         let tmp = samples::multi_variable_zarr();
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
@@ -497,7 +498,8 @@ mod tests {
             r#"{"cost_layers": [{"layer_name": "A", "is_invariant": true}]}"#,
         )
         .unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
@@ -523,7 +525,8 @@ mod tests {
     fn test_sample_cost_function_get_3x3() {
         let tmp = samples::multi_variable_zarr();
         let cost_function = crate::cost::sample::cost_function();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
         let array_a = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
@@ -607,7 +610,8 @@ mod tests {
         let tmp = samples::cost_as_index_zarr((1, 1), (1, 1));
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: 0, j: 0 });
 
@@ -629,7 +633,8 @@ mod tests {
         let tmp = samples::cost_as_index_zarr((2, 2), (2, 2));
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
 
@@ -665,7 +670,8 @@ mod tests {
         let tmp = samples::cost_as_index_zarr((3, 3), (3, 3));
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
 
@@ -704,7 +710,8 @@ mod tests {
         let tmp = samples::cost_as_index_zarr((4, 4), (2, 2));
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
 
@@ -741,7 +748,8 @@ mod tests {
 
         let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0.2_f32, 10.0_f32);
         let cost_function = CostFunction::from_json(json).unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         // Request center neighbors
         let point = ArrayIndex { i: 1, j: 1 };
@@ -814,7 +822,8 @@ mod tests {
     fn test_get_3x3_with_hard_barriered_layers(json: &str) {
         let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0_f32, -1_f32);
         let cost_function = CostFunction::from_json(json).unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
         assert!(
@@ -828,7 +837,8 @@ mod tests {
     fn test_get_3x3_with_soft_barrier_layers(json: &str) {
         let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0_f32, -1_f32);
         let cost_function = CostFunction::from_json(json).unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
         assert_eq!(results.len(), 8);
