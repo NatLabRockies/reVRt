@@ -209,11 +209,13 @@ jobs:
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: 'wheels-*/*'
+    #   - name: Collect distribution artifacts
+    #     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    #     run: |
+    #       mkdir -p dist
+    #       find wheels-* -type f \( -name "*.whl" -o -name "*.tar.gz" \) -exec cp {} dist/ \;
       - name: Publish to PyPI
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: PyO3/maturin-action@v1
-        env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          command: upload
-          args: --non-interactive --skip-existing wheels-*/*
+          packages-dir: dist
