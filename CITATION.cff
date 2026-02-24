@@ -23,7 +23,7 @@ authors:
 identifiers:
   - type: doi
     value: 10.5281/zenodo.17173574
-repository-code: 'https://github.com/NREL/reVRt'
+repository-code: 'https://github.com/NatLabRockies/reVRt'
 abstract: >-
   The reV Routing tool is a computational framework for modeling
   and optimizing transmission infrastructure requirements for

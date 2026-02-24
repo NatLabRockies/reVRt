@@ -13,7 +13,7 @@ body:
           required: true
         - label: >
             I have confirmed this bug exists on the
-            [latest version](https://github.com/NREL/reVRt/releases/latest) of reVRt.
+            [latest version](https://github.com/NatLabRockies/reVRt/releases/latest) of reVRt.
           required: true
         - label: >
             I have confirmed this bug exists on the main branch of reVRt.

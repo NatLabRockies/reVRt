@@ -39,7 +39,7 @@ have a mask layer applied to it (``"my_bool_layer"``) along with a
 scalar that would adjust the costs (for example, a value of ``1.04`` can
 account for inflation). There are several more options you can include
 for a single layer; they are all documented
-[here](https://nrel.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=cost_layerslist).
+[here](https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=cost_layerslist).
 
 For maximum flexibility, you can specify multiple such layers that all
 aggregate to form the final routing cost layer:
@@ -129,7 +129,7 @@ One major difference is that there is no ``"layer_name"`` input, since
 the friction layer itself is being multiplied onto the final cost routing
 layer (see the section above). As before, there are several more options
 you can include for a single friction layer; they are all documented
-[here](https://nrel.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=friction_layerslist).
+[here](https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=friction_layerslist).
 
 For maximum flexibility, you can specify multiple friction layers that all
 aggregate to form the final friction layer:
