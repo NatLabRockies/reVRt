@@ -68,7 +68,6 @@ intersphinx_mapping = {
     "gaps": ("https://natlabrockies.github.io/gaps/", None),
     "geopandas": ("https://geopandas.org/en/stable/", None),
     "geoplot": ("https://residentmario.github.io/geoplot", None),
-    "lc": ("https://reference.langchain.com/python/", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
