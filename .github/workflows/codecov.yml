@@ -28,7 +28,7 @@ jobs:
 
     - name: Generate coverage report
       run: |
-        pixi reinstall -e dev --locked NREL-reVRt
+        pixi reinstall -e dev --locked NLR-reVRt
         pixi run -e dev --locked tests
 
     - name: Upload coverage to Codecov

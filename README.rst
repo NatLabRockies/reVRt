@@ -5,11 +5,11 @@ Welcome to reV Routing (reVRt)!
 |License| |Zenodo| |PythonV| |PyPi| |Ruff| |Pixi| |SWR| |Codecov|
 
 
-.. |PythonV| image:: https://badge.fury.io/py/nrel-revrt.svg
-    :target: https://pypi.org/project/nrel-revrt/
+.. |PythonV| image:: https://badge.fury.io/py/nlr-revrt.svg
+    :target: https://pypi.org/project/nlr-revrt/
 
-.. |PyPi| image:: https://img.shields.io/pypi/pyversions/nrel-revrt.svg
-    :target: https://pypi.org/project/nrel-revrt/
+.. |PyPi| image:: https://img.shields.io/pypi/pyversions/nlr-revrt.svg
+    :target: https://pypi.org/project/nlr-revrt/
 
 .. |Ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
     :target: https://github.com/astral-sh/ruff
@@ -26,8 +26,8 @@ Welcome to reV Routing (reVRt)!
 .. |Zenodo| image:: https://zenodo.org/badge/944738283.svg
     :target: https://doi.org/10.5281/zenodo.17173574
 
-.. |Codecov| image:: https://codecov.io/github/NREL/reVRt/graph/badge.svg?token=W072E3ZEMR
-    :target: https://codecov.io/github/NREL/reVRt
+.. |Codecov| image:: https://codecov.io/github/NatLabRockies/reVRt/graph/badge.svg?token=W072E3ZEMR
+    :target: https://codecov.io/github/NatLabRockies/reVRt
 
 .. inclusion-intro
 
@@ -50,20 +50,20 @@ The quickest way to install reVRt for users and analysts is from PyPi:
 
 .. code-block:: bash
 
-    pip install nrel-revrt
+    pip install nlr-revrt
 
 If you would like to install and run reVRt from source, we recommend using `pixi <https://pixi.sh/latest/>`_:
 
 .. code-block:: bash
 
-    git clone git@github.com:NREL/reVRt.git; cd reVRt
+    git clone git@github.com:NatLabRockies/reVRt.git; cd reVRt
     pixi run reVRt
 
 
-For detailed instructions, see the `installation documentation <https://nrel.github.io/reVRt/misc/installation.html>`_.
+For detailed instructions, see the `installation documentation <https://natlabrockies.github.io/reVRt/misc/installation.html>`_.
 
 
 Development
 ===========
-Please see the `Development Guidelines <https://nrel.github.io/reVRt/dev/index.html>`_
+Please see the `Development Guidelines <https://natlabrockies.github.io/reVRt/dev/index.html>`_
 if you wish to contribute code to this repository.

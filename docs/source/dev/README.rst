@@ -29,7 +29,7 @@ learn how to `create a branch <https://docs.github.com/en/pull-requests/collabor
 and `request a review <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/requesting-a-pull-request-review>`_.
 
 If you are not sure where or how to start contributing to reVRt, consider reaching out to the
-current developer(s): **Paul Pinchuk** ["ppinchuk@nrel.gov"] or **Guilherme Pimenta Castelao** ["gpimenta@nrel.gov"].
+current developer(s): **Paul Pinchuk** ["ppinchuk@nlr.gov"] or **Guilherme Pimenta Castelao** ["gpimenta@nlr.gov"].
 
 When you are ready to contribute to reVRt, clone a copy of the reVRt repository from GitHub, check out your
 own branch, and make the appropriate changes locally. Ensure that your new code adheres to all of the guidelines
@@ -351,7 +351,7 @@ you would increment the ``rX.X.X`` version number, but not the ``cX.X.X`` or
 Rust Benchmarking
 ^^^^^^^^^^^^^^^^^
 To ensure the routing algorithm remains performant, we have set up
-`Rust benchmarks <https://nrel.github.io/reVRt/dev/bench/index.html>`_
+`Rust benchmarks <https://natlabrockies.github.io/reVRt/dev/bench/index.html>`_
 that are automatically run on GitHub Actions on the main branch. If
 you are actively developing the Rust-based routing algorithm, you
 should monitor the benchmarks to ensure that your changes do not
