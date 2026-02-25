@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "NLR-reVRt"
-version = "0.3.0"
+version = "0.3.2"
 description = "National Laboratory of the Rockies' (NLR's) Transmission for reV tool"
 readme = "README.rst"
 authors = [
@@ -108,6 +108,9 @@ reVRt = "revrt._cli:main"
 manifest-path = "crates/revrt/Cargo.toml"
 module-name = "revrt._rust"
 features = ["pyo3/extension-module"]
+include = [
+  { path = "LICENSE", format = ["sdist", "wheel"] },
+]
 
 
 [tool.ruff]
