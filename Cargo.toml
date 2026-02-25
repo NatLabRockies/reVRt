@@ -23,7 +23,7 @@ criterion = { version = "0.8.1", features = ["html_reports"] }
 derive_builder = "0.20.2"
 dhat = "0.3.3"
 ndarray = { version = "0.16.1", features = ["rayon"] }
-object_store = "0.12.4"
+object_store = "0.12.5"
 pathfinding = "4.14.0"
 pyo3 = { version = "0.26.0", features = [
     "abi3-py311",
