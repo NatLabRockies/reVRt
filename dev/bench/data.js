@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772043167231,
+  "lastUpdate": 1772057282474,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -5963,6 +5963,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 381946302,
             "range": "± 4861014",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7fb43b15ee009536c97ad5df29b3bda60a431abf",
+          "message": "Add license to dist (#220)\n\n* Add license file to maturin include\n\n* Bump version\n\n* Update lockfile",
+          "timestamp": "2026-02-25T14:55:26-07:00",
+          "tree_id": "ae6e55c996374992302c8b3d05e2f9db5e39e6aa",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/7fb43b15ee009536c97ad5df29b3bda60a431abf"
+        },
+        "date": 1772057281522,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 75108708,
+            "range": "± 1291389",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 52070768,
+            "range": "± 954279",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 101129683,
+            "range": "± 2248802",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 153302693,
+            "range": "± 2922829",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 626036155,
+            "range": "± 17042145",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 152917006,
+            "range": "± 3697549",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 157690890,
+            "range": "± 651297",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 170664387,
+            "range": "± 2229489",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 214312305,
+            "range": "± 3012443",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 368916086,
+            "range": "± 4677820",
             "unit": "ns/iter"
           }
         ]
