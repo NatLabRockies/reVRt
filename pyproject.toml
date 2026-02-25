@@ -108,6 +108,9 @@ reVRt = "revrt._cli:main"
 manifest-path = "crates/revrt/Cargo.toml"
 module-name = "revrt._rust"
 features = ["pyo3/extension-module"]
+include = [
+  { path = "LICENSE", format = ["sdist", "wheel"] },
+]
 
 
 [tool.ruff]
