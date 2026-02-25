@@ -1,0 +1,6 @@
+revrt.routing.cli.point\_to\_point.compute\_lcp\_routes
+=======================================================
+
+.. currentmodule:: revrt.routing.cli.point_to_point
+
+.. autofunction:: compute_lcp_routes

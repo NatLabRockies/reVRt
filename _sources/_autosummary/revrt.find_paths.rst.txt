@@ -1,0 +1,6 @@
+revrt.find\_paths
+=================
+
+.. currentmodule:: revrt
+
+.. autofunction:: find_paths

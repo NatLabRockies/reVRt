@@ -1,0 +1,6 @@
+revrt.utilities.handlers.gpkg\_crs
+==================================
+
+.. currentmodule:: revrt.utilities.handlers
+
+.. autofunction:: gpkg_crs

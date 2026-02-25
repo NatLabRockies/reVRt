@@ -1,0 +1,6 @@
+revrt.utilities.cli.convert\_pois\_to\_lines
+============================================
+
+.. currentmodule:: revrt.utilities.cli
+
+.. autofunction:: convert_pois_to_lines

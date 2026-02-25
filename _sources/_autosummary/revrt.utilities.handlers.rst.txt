@@ -9,6 +9,15 @@ revrt.utilities.handlers
 
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      chunked_read_gpkg
+      gpkg_crs
+      num_feats_in_gpkg
+   
    
 
    
@@ -19,6 +28,7 @@ revrt.utilities.handlers
       :toctree:
       :template: custom-class-template.rst
    
+      IncrementalWriter
       LayeredFile
    
    

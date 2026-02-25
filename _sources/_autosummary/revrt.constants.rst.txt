@@ -13,6 +13,10 @@ revrt.constants
       BARRIER_H5_LAYER_NAME
       DEFAULT_DTYPE
       METERS_IN_MILE
+      SHORT_MULT
+      MEDIUM_MULT
+      SHORT_CUTOFF
+      MEDIUM_CUTOFF
    
    
 

@@ -21,10 +21,8 @@ revrt.models.cost\_layers.LandUseMultipliers
       ~LandUseMultipliers.get
       ~LandUseMultipliers.items
       ~LandUseMultipliers.keys
-      ~LandUseMultipliers.pop
       ~LandUseMultipliers.popitem
       ~LandUseMultipliers.setdefault
-      ~LandUseMultipliers.update
       ~LandUseMultipliers.values
    
    

@@ -1,0 +1,32 @@
+revrt.routing.base.RoutingLayerManager
+======================================
+
+.. currentmodule:: revrt.routing.base
+
+.. autoclass:: RoutingLayerManager
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RoutingLayerManager.build
+      ~RoutingLayerManager.close
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RoutingLayerManager.latitudes
+      ~RoutingLayerManager.longitudes
+   
+   

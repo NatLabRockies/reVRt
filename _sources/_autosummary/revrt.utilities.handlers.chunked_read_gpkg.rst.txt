@@ -1,0 +1,6 @@
+revrt.utilities.handlers.chunked\_read\_gpkg
+============================================
+
+.. currentmodule:: revrt.utilities.handlers
+
+.. autofunction:: chunked_read_gpkg

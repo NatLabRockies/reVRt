@@ -1,0 +1,6 @@
+revrt.constants.SHORT\_MULT
+===========================
+
+.. currentmodule:: revrt.constants
+
+.. autodata:: SHORT_MULT

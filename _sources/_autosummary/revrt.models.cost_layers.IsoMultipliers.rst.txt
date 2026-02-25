@@ -21,10 +21,8 @@ revrt.models.cost\_layers.IsoMultipliers
       ~IsoMultipliers.get
       ~IsoMultipliers.items
       ~IsoMultipliers.keys
-      ~IsoMultipliers.pop
       ~IsoMultipliers.popitem
       ~IsoMultipliers.setdefault
-      ~IsoMultipliers.update
       ~IsoMultipliers.values
    
    

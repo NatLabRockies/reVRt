@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.utilities.handlers &#8212; reVRt 0.2.1 documentation</title>
+    <title>revrt.utilities.handlers &#8212; reVRt 0.3.0 documentation</title>
   
   
   
@@ -39,26 +39,383 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=37f418d5"></script>
+    <script src="../../../_static/documentation_options.js?v=e259d695"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/tabs.js?v=3030b3cb"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
-    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script type="module">
-import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-window.addEventListener("load", () => mermaid.run());
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
+
+const defaultStyle = document.createElement('style');
+defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+`;
+document.head.appendChild(defaultStyle);
+
+const fullscreenStyle = document.createElement('style');
+fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+document.head.appendChild(fullscreenStyle);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const load = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(load, 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(load, 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(load, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    let previousScrollOffset = [window.scrollX, window.scrollY];
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", load);
 </script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/revrt/utilities/handlers';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.1" />
+  <meta name="docsearch:version" content="0.3.0" />
   </head>
   
   
@@ -120,7 +477,7 @@ window.addEventListener("load", () => mermaid.run());
   
   
   
-    <p class="title logo__title">reVRt 0.2.1 documentation</p>
+    <p class="title logo__title">reVRt 0.3.0 documentation</p>
   
 </a></div>
     
@@ -149,8 +506,8 @@ window.addEventListener("load", () => mermaid.run());
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../../../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -179,6 +536,13 @@ window.addEventListener("load", () => mermaid.run());
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../../../dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -271,8 +635,8 @@ window.addEventListener("load", () => mermaid.run());
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../../../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -294,6 +658,13 @@ window.addEventListener("load", () => mermaid.run());
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -378,6 +749,7 @@ window.addEventListener("load", () => mermaid.run());
 <span></span><span class="sd">&quot;&quot;&quot;Handler for file containing GeoTIFF layers&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
@@ -387,10 +759,13 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dask</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyproj</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transformer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fiona</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyproj</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transformer</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">revrtFileExistsError</span><span class="p">,</span>
@@ -417,6 +792,94 @@ window.addEventListener("load", () => mermaid.run());
 <span class="p">)</span>
 
 
+<div class="viewcode-block" id="IncrementalWriter">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.IncrementalWriter.html#revrt.utilities.handlers.IncrementalWriter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IncrementalWriter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stream results to disk by appending result in chunks to a file</span>
+
+<span class="sd">    File can be of type CSV or GeoPackage. A new file is created if one</span>
+<span class="sd">    does not exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        out_fp : path-like</span>
+<span class="sd">            Path to output file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="IncrementalWriter.preprocess_chunk">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.IncrementalWriter.html#revrt.utilities.handlers.IncrementalWriter.preprocess_chunk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>  <span class="c1"># noqa</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocess chunk before saving</span>
+
+<span class="sd">        By default this method just passes the data through (underlying</span>
+<span class="sd">        assumption is that the chunk data is already in a DataFrame).</span>
+<span class="sd">        If the underlying data is not in a DataFrame, users can subclass</span>
+<span class="sd">        and overwrite this method to convert the data into a DataFrame</span>
+<span class="sd">        for writing.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chunk : pandas.DataFrame or geopandas.GeoDataFrame</span>
+<span class="sd">            A chunk of data that will eventually be written to file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame or geopandas.GeoDataFrame</span>
+<span class="sd">            A dataframe holding the chunk of data to be written to file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">chunk</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_gpkg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;bool: Check if output file is GeoPackage&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.gpkg&quot;</span>
+
+<div class="viewcode-block" id="IncrementalWriter.save">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.IncrementalWriter.html#revrt.utilities.handlers.IncrementalWriter.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write result chunk to file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : pandas.DataFrame or geopandas.GeoDataFrame</span>
+<span class="sd">            A chunk of data that will eventually be written to file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_chunk</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gpkg</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_save_gpkg</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_csv</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_gpkg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save route result to GeoPackage file&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">)</span>
+
+        <span class="n">data</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GPKG&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save route result to CSV file&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">)</span>
+
+        <span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="LayeredFile">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LayeredFile</span><span class="p">:</span>
@@ -426,10 +889,10 @@ window.addEventListener("load", () => mermaid.run());
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Supported template file endings&quot;&quot;&quot;</span>
 
     <span class="n">LATITUDE</span> <span class="o">=</span> <span class="s2">&quot;latitude&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of latitude values layer in :class:`LayeredFile`&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of latitude values layer in LayeredFile&quot;&quot;&quot;</span>
 
     <span class="n">LONGITUDE</span> <span class="o">=</span> <span class="s2">&quot;longitude&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of longitude values layer in :class:`LayeredFile`&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of longitude values layer in LayeredFile&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -461,7 +924,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Extracting </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
             <span class="n">profile</span> <span class="o">=</span> <span class="n">_layer_profile_from_open_ds</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">ds</span><span class="p">)</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">profile</span><span class="p">,</span> <span class="n">values</span>
 
@@ -483,6 +946,11 @@ window.addEventListener("load", () => mermaid.run());
     <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;tuple: Template layer shape&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cell_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;float: Size of cell in layer file&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -533,7 +1001,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">                - &quot;crs&quot;: :class:`pyproj.crs.CRS` object for layer</span>
 <span class="sd">                - &quot;count&quot;: number of bands in layer</span>
 <span class="sd">                - &quot;dtype&quot;: data type of layer</span>
-<span class="sd">                - &quot;transform&quot;: :class:`Affine` transform for layer</span>
+<span class="sd">                - &quot;transform&quot;: :class:`affine.Affine` transform for</span>
+<span class="sd">                               layer</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
@@ -564,17 +1033,18 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        chunk_x, chunk_y : int, default=2048</span>
 <span class="sd">            Chunk size of x and y dimension for newly-created layered</span>
 <span class="sd">            file. By default, ``2048``.</span>
-<span class="sd">        read_chunks : int | str, default=&quot;auto&quot;</span>
+<span class="sd">        read_chunks : int or str, default=&quot;auto&quot;</span>
 <span class="sd">            Chunk size to use when reading the template file. This will</span>
 <span class="sd">            be passed down as the ``chunks`` argument to</span>
-<span class="sd">            :meth:`rioxarray.open_rasterio` or</span>
-<span class="sd">            :meth:`xarray.open_dataset`, depending on what template file</span>
+<span class="sd">            :func:`rioxarray.open_rasterio` or</span>
+<span class="sd">            :func:`xarray.open_dataset`, depending on what template file</span>
 <span class="sd">            is passed in. By default, ``&quot;auto&quot;``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        LayeredFile</span>
-<span class="sd">            This `LayeredFile` object with a corresponding file on disk.</span>
+<span class="sd">            This :class:`~revrt.utilities.handlers.LayeredFile` object</span>
+<span class="sd">            with a corresponding file on disk.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">!r}</span><span class="s2"> exits and overwrite=False&quot;</span>
@@ -632,7 +1102,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">            Description of layer being added. By default, ``None``.</span>
 <span class="sd">        overwrite : bool, default=False</span>
 <span class="sd">            Option to overwrite layer data if layer already exists in</span>
-<span class="sd">            :class:`LayeredFile`.</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`.</span>
 
 <span class="sd">            .. IMPORTANT::</span>
 <span class="sd">              When overwriting data, the encoding (and therefore things</span>
@@ -641,7 +1111,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">              new type of data, manually remove it from the file first.</span>
 
 <span class="sd">            By default, ``False``.</span>
-<span class="sd">        nodata : int | float, optional</span>
+<span class="sd">        nodata : int or float, optional</span>
 <span class="sd">            Optional nodata value for the raster layer. This value will</span>
 <span class="sd">            be added to the layer&#39;s attributes meta dictionary under the</span>
 <span class="sd">            &quot;nodata&quot; key.</span>
@@ -650,7 +1120,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">               ``rioxarray`` does not recognize the &quot;nodata&quot; value when</span>
 <span class="sd">               reading from a zarr file (because zarr uses the</span>
 <span class="sd">               ``_FillValue`` encoding internally). To get the correct</span>
-<span class="sd">               &quot;nodata&quot; value back when reading a :class:`LayeredFile`,</span>
+<span class="sd">               &quot;nodata&quot; value back when reading a</span>
+<span class="sd">               :class:`~revrt.utilities.handlers.LayeredFile`,</span>
 <span class="sd">               you can either 1) read from ``da.rio.encoded_nodata`` or</span>
 <span class="sd">               2) check the layer&#39;s attributes for the ``&quot;nodata&quot;`` key,</span>
 <span class="sd">               and if present, use ``da.rio.write_nodata`` to write the</span>
@@ -660,7 +1131,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        revrtFileNotFoundError</span>
-<span class="sd">            If :class:`LayeredFile` does not exist.</span>
+<span class="sd">            If :class:`~revrt.utilities.handlers.LayeredFile` does not</span>
+<span class="sd">            exist.</span>
 <span class="sd">        revrtKeyError</span>
 <span class="sd">            If layer with the same name already exists and</span>
 <span class="sd">            ``overwrite=False``.</span>
@@ -786,7 +1258,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">            Description of layer being added. By default, ``None``.</span>
 <span class="sd">        overwrite : bool, default=False</span>
 <span class="sd">            Option to overwrite layer data if layer already exists in</span>
-<span class="sd">            :class:`LayeredFile`.</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`.</span>
 
 <span class="sd">            .. IMPORTANT::</span>
 <span class="sd">              When overwriting data, the encoding (and therefore things</span>
@@ -795,7 +1267,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">              new type of data, manually remove it from the file first.</span>
 
 <span class="sd">            By default, ``False``.</span>
-<span class="sd">        nodata : int | float, optional</span>
+<span class="sd">        nodata : int or float, optional</span>
 <span class="sd">            Optional nodata value for the raster layer. This value will</span>
 <span class="sd">            be added to the layer&#39;s attributes meta dictionary under the</span>
 <span class="sd">            &quot;nodata&quot; key.</span>
@@ -804,17 +1276,18 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">               ``rioxarray`` does not recognize the &quot;nodata&quot; value when</span>
 <span class="sd">               reading from a zarr file (because zarr uses the</span>
 <span class="sd">               ``_FillValue`` encoding internally). To get the correct</span>
-<span class="sd">               &quot;nodata&quot; value back when reading a :class:`LayeredFile`,</span>
+<span class="sd">               &quot;nodata&quot; value back when reading a</span>
+<span class="sd">               :class:`~revrt.utilities.handlers.LayeredFile`,</span>
 <span class="sd">               you can either 1) read from ``da.rio.encoded_nodata`` or</span>
 <span class="sd">               2) check the layer&#39;s attributes for the ``&quot;nodata&quot;`` key,</span>
 <span class="sd">               and if present, use ``da.rio.write_nodata`` to write the</span>
 <span class="sd">               nodata value so that ``da.rio.nodata`` gives the right</span>
 <span class="sd">               value.</span>
 
-<span class="sd">        tiff_chunks : int | str, default=&quot;auto&quot;</span>
+<span class="sd">        tiff_chunks : int or str, default=&quot;auto&quot;</span>
 <span class="sd">            Chunk size to use when reading the GeoTIFF file. This will</span>
 <span class="sd">            be passed down as the ``chunks`` argument to</span>
-<span class="sd">            :meth:`rioxarray.open_rasterio`. By default, ``&quot;auto&quot;``.</span>
+<span class="sd">            :func:`rioxarray.open_rasterio`. By default, ``&quot;auto&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not found - creating from </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">)</span>
@@ -862,18 +1335,20 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">            Layer to extract,</span>
 <span class="sd">        geotiff : path-like</span>
 <span class="sd">            Path to output GeoTIFF file.</span>
-<span class="sd">        ds_chunks : int | str, default=&quot;auto&quot;</span>
-<span class="sd">            Chunk size to use when reading the :class:`LayeredFile`.</span>
+<span class="sd">        ds_chunks : int or str, default=&quot;auto&quot;</span>
+<span class="sd">            Chunk size to use when reading the</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`.</span>
 <span class="sd">            This will be passed down as the ``chunks`` argument to</span>
-<span class="sd">            :meth:`xarray.open_dataset`. By default, ``&quot;auto&quot;``.</span>
-<span class="sd">        lock : bool | `dask.distributed.Lock`, optional</span>
+<span class="sd">            :func:`xarray.open_dataset`. By default, ``&quot;auto&quot;``.</span>
+<span class="sd">        lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">            Lock to use to write data using dask. If not supplied, a</span>
 <span class="sd">            single process is used for writing data to the GeoTIFF.</span>
 <span class="sd">            By default, ``None``.</span>
 <span class="sd">        **profile_kwargs</span>
 <span class="sd">            Additional keyword arguments to pass into writing the</span>
 <span class="sd">            raster. The following attributes ar ignored (they are set</span>
-<span class="sd">            using properties of the source :class:`LayeredFile`):</span>
+<span class="sd">            using properties of the source</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`):</span>
 
 <span class="sd">                - nodata</span>
 <span class="sd">                - transform</span>
@@ -908,9 +1383,10 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        layers : list | dict</span>
+<span class="sd">        layers : list or dict</span>
 <span class="sd">            Dictionary mapping layer names to GeoTIFFs filepaths. Each</span>
-<span class="sd">            GeoTIFF will be loaded into the :class:`LayeredFile` user</span>
+<span class="sd">            GeoTIFF will be loaded into the</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile` user</span>
 <span class="sd">            the layer name. If a list of GeoTIFFs filepaths is provided,</span>
 <span class="sd">            the file name stems are used as the layer names.</span>
 <span class="sd">        check_tiff : bool, optional</span>
@@ -921,7 +1397,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">            By default, ``None``, which does not store any descriptions.</span>
 <span class="sd">        overwrite : bool, default=False</span>
 <span class="sd">            Option to overwrite layer data if layer already exists in</span>
-<span class="sd">            :class:`LayeredFile`.</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`.</span>
 
 <span class="sd">            .. IMPORTANT::</span>
 <span class="sd">              When overwriting data, the encoding (and therefore things</span>
@@ -930,7 +1406,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">              new type of data, manually remove it from the file first.</span>
 
 <span class="sd">            By default, ``False``.</span>
-<span class="sd">        nodata : int | float, optional</span>
+<span class="sd">        nodata : int or float, optional</span>
 <span class="sd">            Optional nodata value for the raster layer. This value will</span>
 <span class="sd">            be added to the layer&#39;s attributes meta dictionary under the</span>
 <span class="sd">            &quot;nodata&quot; key.</span>
@@ -939,7 +1415,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">               ``rioxarray`` does not recognize the &quot;nodata&quot; value when</span>
 <span class="sd">               reading from a zarr file (because zarr uses the</span>
 <span class="sd">               ``_FillValue`` encoding internally). To get the correct</span>
-<span class="sd">               &quot;nodata&quot; value back when reading a :class:`LayeredFile`,</span>
+<span class="sd">               &quot;nodata&quot; value back when reading a</span>
+<span class="sd">               :class:`~revrt.utilities.handlers.LayeredFile`,</span>
 <span class="sd">               you can either 1) read from ``da.rio.encoded_nodata`` or</span>
 <span class="sd">               2) check the layer&#39;s attributes for the ``&quot;nodata&quot;`` key,</span>
 <span class="sd">               and if present, use ``da.rio.write_nodata`` to write the</span>
@@ -985,18 +1462,20 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        ----------</span>
 <span class="sd">        layers : dict</span>
 <span class="sd">            Dictionary mapping layer names to GeoTIFF files to create.</span>
-<span class="sd">        ds_chunks : int | str, default=&quot;auto&quot;</span>
-<span class="sd">            Chunk size to use when reading the :class:`LayeredFile`.</span>
+<span class="sd">        ds_chunks : int or str, default=&quot;auto&quot;</span>
+<span class="sd">            Chunk size to use when reading the</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`.</span>
 <span class="sd">            This will be passed down as the ``chunks`` argument to</span>
-<span class="sd">            :meth:`xarray.open_dataset`. By default, ``&quot;auto&quot;``.</span>
-<span class="sd">        lock : bool | `dask.distributed.Lock`, optional</span>
+<span class="sd">            :func:`xarray.open_dataset`. By default, ``&quot;auto&quot;``.</span>
+<span class="sd">        lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">            Lock to use to write data using dask. If not supplied, a</span>
 <span class="sd">            single process is used for writing data to the GeoTIFFs.</span>
 <span class="sd">            By default, ``None``.</span>
 <span class="sd">        **profile_kwargs</span>
 <span class="sd">            Additional keyword arguments to pass into writing the</span>
 <span class="sd">            raster. The following attributes ar ignored (they are set</span>
-<span class="sd">            using properties of the source :class:`LayeredFile`):</span>
+<span class="sd">            using properties of the source</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`):</span>
 
 <span class="sd">                - nodata</span>
 <span class="sd">                - transform</span>
@@ -1030,18 +1509,19 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">            Path to output directory into which layers should be saved</span>
 <span class="sd">            as GeoTIFFs. This directory will be created if it does not</span>
 <span class="sd">            already exist.</span>
-<span class="sd">        ds_chunks : int | str, default=&quot;auto&quot;</span>
+<span class="sd">        ds_chunks : int or str, default=&quot;auto&quot;</span>
 <span class="sd">            Chunk size to use when reading the :class:`LayeredFile`.</span>
 <span class="sd">            This will be passed down as the ``chunks`` argument to</span>
-<span class="sd">            :meth:`xarray.open_dataset`. By default, ``&quot;auto&quot;``.</span>
-<span class="sd">        lock : bool | `dask.distributed.Lock`, optional</span>
+<span class="sd">            :func:`xarray.open_dataset`. By default, ``&quot;auto&quot;``.</span>
+<span class="sd">        lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">            Lock to use to write data using dask. If not supplied, a</span>
 <span class="sd">            single process is used for writing data to the GeoTIFFs.</span>
 <span class="sd">            By default, ``None``.</span>
 <span class="sd">        **profile_kwargs</span>
 <span class="sd">            Additional keyword arguments to pass into writing the</span>
 <span class="sd">            raster. The following attributes ar ignored (they are set</span>
-<span class="sd">            using properties of the source :class:`LayeredFile`):</span>
+<span class="sd">            using properties of the source</span>
+<span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`):</span>
 
 <span class="sd">                - nodata</span>
 <span class="sd">                - transform</span>
@@ -1068,6 +1548,104 @@ window.addEventListener("load", () => mermaid.run());
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">layers</span></div>
 </div>
+
+
+
+<div class="viewcode-block" id="num_feats_in_gpkg">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.num_feats_in_gpkg.html#revrt.utilities.handlers.num_feats_in_gpkg">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">num_feats_in_gpkg</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lightweight func to get number of features in GeoPackage file</span>
+
+<span class="sd">    This function does not load the entire GeoPackage into memory.</span>
+<span class="sd">    Instead, it queries the internal SQLite database to get the number</span>
+<span class="sd">    of features.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : path-like</span>
+<span class="sd">        Path to GeoPackage file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Number of features in the GeoPackage file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;SELECT table_name, column_name FROM gpkg_geometry_columns;&quot;</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">geom_table_suffix</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>  <span class="c1"># No geometry columns found</span>
+
+        <span class="n">geom_table</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;rtree_</span><span class="si">{</span><span class="n">geom_table_suffix</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT COUNT(distinct id) FROM </span><span class="si">{</span><span class="n">geom_table</span><span class="si">}</span><span class="s2">;&quot;</span>  <span class="c1"># noqa</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="gpkg_crs">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.gpkg_crs.html#revrt.utilities.handlers.gpkg_crs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gpkg_crs</span><span class="p">(</span><span class="n">data_fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get CRS of GeoPackage file</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_fp : path-like</span>
+<span class="sd">        Path to GeoPackage file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyproj.crs.CRS</span>
+<span class="sd">        CRS of GeoPackage file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">fiona</span><span class="o">.</span><span class="n">Env</span><span class="p">(),</span> <span class="n">fiona</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">data_fp</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">src</span><span class="o">.</span><span class="n">crs</span></div>
+
+
+
+<div class="viewcode-block" id="chunked_read_gpkg">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.chunked_read_gpkg.html#revrt.utilities.handlers.chunked_read_gpkg">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">chunked_read_gpkg</span><span class="p">(</span><span class="n">data_fp</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read GeoPackage file in chunks</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_fp : path-like</span>
+<span class="sd">        Path to GeoPackage file to read in chunks.</span>
+<span class="sd">    chunk_size : int</span>
+<span class="sd">        Number of rows per chunk.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    geopandas.GeoDataFrame</span>
+<span class="sd">        Chunk of data as GeoDataFrame.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">fiona</span><span class="o">.</span><span class="n">Env</span><span class="p">(),</span> <span class="n">fiona</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">data_fp</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+        <span class="n">total_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Processing </span><span class="si">%s</span><span class="s2"> with </span><span class="si">%d</span><span class="s2"> rows in chunks of </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">data_fp</span><span class="p">,</span>
+        <span class="n">total_rows</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">total_rows</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">data_fp</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">chunk_size</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">- Processing </span><span class="si">%d</span><span class="s2"> rows starting at index </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="n">start</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">yield</span> <span class="n">df</span></div>
 
 
 

@@ -1,0 +1,42 @@
+revrt.routing.utilities
+=======================
+
+.. automodule:: revrt.routing.utilities
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      convert_lat_lon_to_row_col
+      filter_points_outside_cost_domain
+      make_rev_sc_points
+      map_to_costs
+      points_csv_to_geo_dataframe
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      PointToFeatureMapper
+   
+   
+
+   
+   
+   
+
+
+

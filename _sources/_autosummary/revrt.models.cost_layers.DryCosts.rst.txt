@@ -15,24 +15,6 @@ revrt.models.cost\_layers.DryCosts
 
    .. autosummary::
    
-      ~DryCosts.construct
-      ~DryCosts.copy
-      ~DryCosts.dict
-      ~DryCosts.from_orm
-      ~DryCosts.json
-      ~DryCosts.model_parametrized_name
-      ~DryCosts.model_post_init
-      ~DryCosts.model_rebuild
-      ~DryCosts.model_validate
-      ~DryCosts.model_validate_json
-      ~DryCosts.model_validate_strings
-      ~DryCosts.parse_file
-      ~DryCosts.parse_obj
-      ~DryCosts.parse_raw
-      ~DryCosts.schema
-      ~DryCosts.schema_json
-      ~DryCosts.update_forward_refs
-      ~DryCosts.validate
    
    
 

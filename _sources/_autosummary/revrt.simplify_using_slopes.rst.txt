@@ -1,0 +1,6 @@
+revrt.simplify\_using\_slopes
+=============================
+
+.. currentmodule:: revrt
+
+.. autofunction:: simplify_using_slopes

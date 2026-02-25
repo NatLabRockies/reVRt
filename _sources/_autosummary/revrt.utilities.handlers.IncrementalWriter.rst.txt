@@ -1,0 +1,25 @@
+revrt.utilities.handlers.IncrementalWriter
+==========================================
+
+.. currentmodule:: revrt.utilities.handlers
+
+.. autoclass:: IncrementalWriter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~IncrementalWriter.preprocess_chunk
+      ~IncrementalWriter.save
+   
+   
+
+   
+   
+   

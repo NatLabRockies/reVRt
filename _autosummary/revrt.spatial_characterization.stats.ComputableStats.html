@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.spatial_characterization.stats.ComputableStats &#8212; reVRt 0.2.1 documentation</title>
+    <title>revrt.spatial_characterization.stats.ComputableStats &#8212; reVRt 0.3.0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=37f418d5"></script>
+    <script src="../_static/documentation_options.js?v=e259d695"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="prev" title="revrt.spatial_characterization.stats" href="revrt.spatial_characterization.stats.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.1" />
+  <meta name="docsearch:version" content="0.3.0" />
   </head>
   
   
@@ -113,7 +113,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.2.1 documentation</p>
+    <p class="title logo__title">reVRt 0.3.0 documentation</p>
   
 </a></div>
     
@@ -142,8 +142,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -172,6 +172,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -266,8 +273,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -289,6 +296,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -319,11 +333,22 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="revrt.find_paths.html">revrt.find_paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="revrt.simplify_using_slopes.html">revrt.simplify_using_slopes</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="revrt.RouteFinder.html">revrt.RouteFinder</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="revrt.constants.html">revrt.constants</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.BARRIER_H5_LAYER_NAME.html">revrt.constants.BARRIER_H5_LAYER_NAME</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.DEFAULT_DTYPE.html">revrt.constants.DEFAULT_DTYPE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.METERS_IN_MILE.html">revrt.constants.METERS_IN_MILE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.SHORT_MULT.html">revrt.constants.SHORT_MULT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.MEDIUM_MULT.html">revrt.constants.MEDIUM_MULT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.SHORT_CUTOFF.html">revrt.constants.SHORT_CUTOFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.MEDIUM_CUTOFF.html">revrt.constants.MEDIUM_CUTOFF</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="revrt.costs.html">revrt.costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -332,6 +357,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.cli.html">revrt.costs.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_masks.html">revrt.costs.cli.build_masks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_routing_layers.html">revrt.costs.cli.build_routing_layers</a></li>
 </ul>
 </details></li>
@@ -373,7 +399,9 @@
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtError.html">revrt.exceptions.revrtError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtFileExistsError.html">revrt.exceptions.revrtFileExistsError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtFileNotFoundError.html">revrt.exceptions.revrtFileNotFoundError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtInvalidStartCostError.html">revrt.exceptions.revrtInvalidStartCostError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtKeyError.html">revrt.exceptions.revrtKeyError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtLeastCostPathNotFoundError.html">revrt.exceptions.revrtLeastCostPathNotFoundError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtNotImplementedError.html">revrt.exceptions.revrtNotImplementedError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtProfileCheckError.html">revrt.exceptions.revrtProfileCheckError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtRuntimeError.html">revrt.exceptions.revrtRuntimeError</a></li>
@@ -396,6 +424,58 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.Rasterize.html">revrt.models.cost_layers.Rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.SlopeMultipliers.html">revrt.models.cost_layers.SlopeMultipliers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.TransmissionLayerCreationConfig.html">revrt.models.cost_layers.TransmissionLayerCreationConfig</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="revrt.routing.html">revrt.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.base.html">revrt.routing.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.LCP_AGG_COST_LAYER_NAME.html">revrt.routing.base.LCP_AGG_COST_LAYER_NAME</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.BatchRouteProcessor.html">revrt.routing.base.BatchRouteProcessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.CharacterizedLayer.html">revrt.routing.base.CharacterizedLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.IncrementalRouteWriter.html">revrt.routing.base.IncrementalRouteWriter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RouteMetrics.html">revrt.routing.base.RouteMetrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingLayerManager.html">revrt.routing.base.RoutingLayerManager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingScenario.html">revrt.routing.base.RoutingScenario</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.cli.html">revrt.routing.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.base.html">revrt.routing.cli.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.base.RouteToDefinitionConverter.html">revrt.routing.cli.base.RouteToDefinitionConverter</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_costs.html">revrt.routing.cli.build_costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.build_costs.build_routing_layer.html">revrt.routing.cli.build_costs.build_routing_layer</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_route_table.html">revrt.routing.cli.build_route_table</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.build_route_table.point_to_feature_route_table.html">revrt.routing.cli.build_route_table.point_to_feature_route_table</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.finalize.html">revrt.routing.cli.finalize</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.finalize.RoutePostProcessor.html">revrt.routing.cli.finalize.RoutePostProcessor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.finalize.RouteToFeatureMapper.html">revrt.routing.cli.finalize.RouteToFeatureMapper</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.point_to_feature.html">revrt.routing.cli.point_to_feature</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_feature.compute_lcp_routes.html">revrt.routing.cli.point_to_feature.compute_lcp_routes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.html">revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.point_to_point.html">revrt.routing.cli.point_to_point</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.compute_lcp_routes.html">revrt.routing.cli.point_to_point.compute_lcp_routes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html">revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.convert_lat_lon_to_row_col.html">revrt.routing.utilities.convert_lat_lon_to_row_col</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.filter_points_outside_cost_domain.html">revrt.routing.utilities.filter_points_outside_cost_domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.make_rev_sc_points.html">revrt.routing.utilities.make_rev_sc_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.map_to_costs.html">revrt.routing.utilities.map_to_costs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.points_csv_to_geo_dataframe.html">revrt.routing.utilities.points_csv_to_geo_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.PointToFeatureMapper.html">revrt.routing.utilities.PointToFeatureMapper</a></li>
 </ul>
 </details></li>
 </ul>
@@ -425,22 +505,33 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html">revrt.utilities.base.elapsed_time_as_str</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html">revrt.utilities.base.expand_dim_if_needed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html">revrt.utilities.base.features_to_route_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.log_mem.html">revrt.utilities.base.log_mem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.cli.html">revrt.utilities.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.add_rr_to_nn.html">revrt.utilities.cli.add_rr_to_nn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.convert_pois_to_lines.html">revrt.utilities.cli.convert_pois_to_lines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.layers_from_file.html">revrt.utilities.cli.layers_from_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.map_ss_to_rr.html">revrt.utilities.cli.map_ss_to_rr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.ss_from_conn.html">revrt.utilities.cli.ss_from_conn</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.handlers.html">revrt.utilities.handlers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.chunked_read_gpkg.html">revrt.utilities.handlers.chunked_read_gpkg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.gpkg_crs.html">revrt.utilities.handlers.gpkg_crs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.num_feats_in_gpkg.html">revrt.utilities.handlers.num_feats_in_gpkg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.IncrementalWriter.html">revrt.utilities.handlers.IncrementalWriter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.integer_dimension_window.html">revrt.utilities.raster.integer_dimension_window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize.html">revrt.utilities.raster.rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize_shape_file.html">revrt.utilities.raster.rasterize_shape_file</a></li>
 </ul>
@@ -528,12 +619,12 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_stats</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-iterable" title="(in Python v3.14)"><span class="xref std std-term">iterable</span></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of “base” statistics to compute (i.e. not
+<li><p><strong>base_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of “base” statistics to compute (i.e. not
 fractional or percentile). By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>percentiles</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary mapping the percentile stat name to the int or
 float representing the percentile that can be passed to
-<code class="xref py py-func docutils literal notranslate"><span class="pre">np.percentile()</span></code>. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>fractional_stats</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-iterable" title="(in Python v3.14)"><span class="xref std std-term">iterable</span></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – One or mre stats from the <a class="reference internal" href="revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat" title="revrt.spatial_characterization.stats.FractionalStat"><code class="xref py py-class docutils literal notranslate"><span class="pre">FractionalStat</span></code></a> enum to
+<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.percentile.html#numpy.percentile" title="(in NumPy v2.4)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.percentile()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>fractional_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – One or mre stats from the <a class="reference internal" href="revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat" title="revrt.spatial_characterization.stats.FractionalStat"><code class="xref py py-class docutils literal notranslate"><span class="pre">FractionalStat</span></code></a> enum to
 compute. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -587,7 +678,7 @@ compute. By default, <code class="docutils literal notranslate"><span class="pre
 does not contain any stats that require a pixel count.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.3)"><span class="xref std std-term">array-like</span></a>) – List or array of data to compute pixel counts from. This
+<dd class="field-odd"><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.4)"><span class="xref std std-term">array-like</span></a>) – List or array of data to compute pixel counts from. This
 collection can contain NaN values, which will be ignored in
 the final output.</p>
 </dd>
@@ -604,22 +695,22 @@ that require a pixel count.</p>
 <dt class="sig sig-object py" id="revrt.spatial_characterization.stats.ComputableStats.computed_base_stats">
 <span class="sig-name descname"><span class="pre">computed_base_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processed_raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/spatial_characterization/stats.html#ComputableStats.computed_base_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.spatial_characterization.stats.ComputableStats.computed_base_stats" title="Link to this definition">#</a></dt>
 <dd><p>Compute statistics on array</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul>
-<li><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.3)"><span class="xref std std-term">array-like</span></a>) – Array to compute statistics for. This collection can
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.4)"><span class="xref std std-term">array-like</span></a>) – Array to compute statistics for. This collection can
 contain NaN values, which will be ignored in the final
 output.</p></li>
 <li><p><strong>category_map</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary mapping raster values to new names. If given,
 this mapping will be applied to the pixel count dictionary,
 so you can use it to map raster values to human-readable
 category names. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>**kwargs</strong> – Extra keyword-argument pairs to pass to statistic
+<li><p><strong>**kwargs</strong> – <p>Extra keyword-argument pairs to pass to statistic
 computation functions. Currently this is only necessary for
 the <cite>nodata</cite> stat, which requires the following extra
 parameters:</p>
 <blockquote>
-<div><ul class="simple">
+<div><ul>
 <li><dl class="simple">
 <dt><cite>masked_raster</cite>: Raster masked to zone, but still</dt><dd><p>containing the “nodata” value (i.e.
 it’s not masked out with NaNs).</p>
@@ -633,7 +724,7 @@ it’s not masked out with NaNs).</p>
 </li>
 </ul>
 </div></blockquote>
-</li>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -649,16 +740,16 @@ it’s not masked out with NaNs).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>zone</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">shapely.geometry</span></code>) – Geometry object representing the zone to compute statistics
+<li><p><strong>zone</strong> (<a class="reference external" href="https://shapely.readthedocs.io/en/stable/reference/shapely.GeometryType.html#shapely.GeometryType" title="(in Shapely)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shapely.GeometryType</span></code></a>) – Geometry object representing the zone to compute statistics
 over.</p></li>
-<li><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.3)"><span class="xref std std-term">array-like</span></a>) – Array to compute statistics for. This collection can
+<li><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.4)"><span class="xref std std-term">array-like</span></a>) – Array to compute statistics for. This collection can
 contain NaN values, which will be ignored in the final
 output.</p></li>
-<li><p><strong>transform</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">affine.Affine</span></code>) – Affine transform object representing the raster
+<li><p><strong>transform</strong> (<a class="reference external" href="https://affine.readthedocs.io/en/latest/index.html#affine.Affine" title="(in rasterio/affine)"><code class="xref py py-class docutils literal notranslate"><span class="pre">affine.Affine</span></code></a>) – Affine transform object representing the raster
 transformation. This is used to compute the raster shapes
 for statistics computations as well as the pixel area
 for each pixel value in the raster.</p></li>
-<li><p><strong>nodata</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code>, <em>optional</em>) – Value representing “nodata” in the array. These values in
+<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Value representing “nodata” in the array. These values in
 the raster will be ignored and will not contribute to the
 statistics and will not be reported. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>category_map</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping for raster values. If given, the outputs
@@ -682,12 +773,12 @@ enum and the values are the computed statistics.</p>
 <dd><p>Generate percentile statistics for array</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.3)"><span class="xref std std-term">array-like</span></a>) – Array to compute percentiles for.</p>
+<dd class="field-odd"><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.4)"><span class="xref std std-term">array-like</span></a>) – Array to compute percentiles for.</p>
 </dd>
 <dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> – Name of percentile stat</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code> – Value representing that percentile in the array.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> – Value representing that percentile in the array.</p></li>
 </ul>
 </dd>
 </dl>
@@ -697,9 +788,9 @@ enum and the values are the computed statistics.</p>
 <dt class="sig sig-object py" id="revrt.spatial_characterization.stats.ComputableStats.from_iter">
 <em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/spatial_characterization/stats.html#ComputableStats.from_iter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.spatial_characterization.stats.ComputableStats.from_iter" title="Link to this definition">#</a></dt>
 <dd><p>Create a ComputableStats object from an iterable of stats</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>stats</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">iterable</span></code> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Names of all statistics to compute. Statistics must be one
+<dd class="field-odd"><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – <p>Names of all statistics to compute. Statistics must be one
 of the members of <a class="reference internal" href="revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat" title="revrt.spatial_characterization.stats.Stat"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stat</span></code></a> or <a class="reference internal" href="revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat" title="revrt.spatial_characterization.stats.FractionalStat"><code class="xref py py-class docutils literal notranslate"><span class="pre">FractionalStat</span></code></a>,
 or must start with the <code class="docutils literal notranslate"><span class="pre">percentile_</span></code> prefix and end with
 an int or float representing the percentile to compute (e.g.
@@ -722,6 +813,7 @@ the following are valid inputs:</p>
 </ul>
 </div></blockquote>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#revrt.spatial_characterization.stats.ComputableStats" title="revrt.spatial_characterization.stats.ComputableStats"><code class="xref py py-class docutils literal notranslate"><span class="pre">ComputableStats</span></code></a> – An initialized <a class="reference internal" href="#revrt.spatial_characterization.stats.ComputableStats" title="revrt.spatial_characterization.stats.ComputableStats"><code class="xref py py-class docutils literal notranslate"><span class="pre">ComputableStats</span></code></a> object.</p>

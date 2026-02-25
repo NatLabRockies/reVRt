@@ -1,0 +1,6 @@
+revrt.exceptions.revrtLeastCostPathNotFoundError
+================================================
+
+.. currentmodule:: revrt.exceptions
+
+.. autoexception:: revrtLeastCostPathNotFoundError

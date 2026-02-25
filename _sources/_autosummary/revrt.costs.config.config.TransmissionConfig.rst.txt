@@ -16,21 +16,10 @@ revrt.costs.config.config.TransmissionConfig
    .. autosummary::
    
       ~TransmissionConfig.capacity_to_kv
-      ~TransmissionConfig.clear
-      ~TransmissionConfig.copy
-      ~TransmissionConfig.fromkeys
-      ~TransmissionConfig.get
-      ~TransmissionConfig.items
-      ~TransmissionConfig.keys
       ~TransmissionConfig.kv_to_capacity
       ~TransmissionConfig.new_sub_cost
-      ~TransmissionConfig.pop
-      ~TransmissionConfig.popitem
-      ~TransmissionConfig.setdefault
       ~TransmissionConfig.sub_upgrade_cost
       ~TransmissionConfig.transformer_cost
-      ~TransmissionConfig.update
-      ~TransmissionConfig.values
    
    
 

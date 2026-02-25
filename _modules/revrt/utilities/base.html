@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.utilities.base &#8212; reVRt 0.2.1 documentation</title>
+    <title>revrt.utilities.base &#8212; reVRt 0.3.0 documentation</title>
   
   
   
@@ -39,26 +39,383 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=37f418d5"></script>
+    <script src="../../../_static/documentation_options.js?v=e259d695"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/tabs.js?v=3030b3cb"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
-    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script type="module">
-import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-window.addEventListener("load", () => mermaid.run());
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
+
+const defaultStyle = document.createElement('style');
+defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+`;
+document.head.appendChild(defaultStyle);
+
+const fullscreenStyle = document.createElement('style');
+fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+document.head.appendChild(fullscreenStyle);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const load = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(load, 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(load, 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(load, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    let previousScrollOffset = [window.scrollX, window.scrollY];
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", load);
 </script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/revrt/utilities/base';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.1" />
+  <meta name="docsearch:version" content="0.3.0" />
   </head>
   
   
@@ -120,7 +477,7 @@ window.addEventListener("load", () => mermaid.run());
   
   
   
-    <p class="title logo__title">reVRt 0.2.1 documentation</p>
+    <p class="title logo__title">reVRt 0.3.0 documentation</p>
   
 </a></div>
     
@@ -149,8 +506,8 @@ window.addEventListener("load", () => mermaid.run());
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../../../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -179,6 +536,13 @@ window.addEventListener("load", () => mermaid.run());
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../../../dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -271,8 +635,8 @@ window.addEventListener("load", () => mermaid.run());
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../../../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -294,6 +658,13 @@ window.addEventListener("load", () => mermaid.run());
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../../dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -385,6 +756,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">odc.geo.xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rasterio.warp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resampling</span>
@@ -537,7 +909,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    layer_file_fp : path-like</span>
-<span class="sd">        Path to data representing a :class:`LayeredFile` instance.</span>
+<span class="sd">        Path to data representing a</span>
+<span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile` instance.</span>
 <span class="sd">    geotiff : path-like</span>
 <span class="sd">        Path to GeoTIFF file.</span>
 <span class="sd">    transform_atol : float, default=0.01</span>
@@ -644,10 +1017,10 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        Path to layered file on disk. This file must already exist.</span>
 <span class="sd">    geotiff : path-like</span>
 <span class="sd">        Path to GeoTIFF from which data should be read.</span>
-<span class="sd">    tiff_chunks : int | str, default=&quot;file&quot;</span>
+<span class="sd">    tiff_chunks : int or str, default=&quot;file&quot;</span>
 <span class="sd">        Chunk size to use when reading the GeoTIFF file. This will be</span>
 <span class="sd">        passed down as the ``chunks`` argument to</span>
-<span class="sd">        :meth:`rioxarray.open_rasterio`. By default, ``&quot;file&quot;``.</span>
+<span class="sd">        :func:`rioxarray.open_rasterio`. By default, ``&quot;file&quot;``.</span>
 <span class="sd">    layer_dirs : iterable of path-like, optional</span>
 <span class="sd">        Directories to search for `geotiff` in, if not found in current</span>
 <span class="sd">        directory. By default, ``None``, which means only the current</span>
@@ -716,20 +1089,22 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    layer_fp : path-like</span>
 <span class="sd">        Path to layered file on disk. This file must already exist.</span>
 <span class="sd">    data : array-like</span>
-<span class="sd">        Data to write to GeoTIFF using ``LayeredFile`` profile.</span>
+<span class="sd">        Data to write to GeoTIFF using</span>
+<span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile` profile.</span>
 <span class="sd">    geotiff : path-like</span>
 <span class="sd">        Path to output GeoTIFF file.</span>
-<span class="sd">    nodata : int | float, optional</span>
+<span class="sd">    nodata : int or float, optional</span>
 <span class="sd">        Optional nodata value for the raster layer. By default,</span>
 <span class="sd">        ``None``, which does not add a &quot;nodata&quot; value.</span>
-<span class="sd">    lock : bool | `dask.distributed.Lock`, optional</span>
+<span class="sd">    lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">        Lock to use to write data using dask. If not supplied, a single</span>
 <span class="sd">        process is used for writing data to the GeoTIFF.</span>
 <span class="sd">        By default, ``None``.</span>
 <span class="sd">    **profile_kwargs</span>
 <span class="sd">        Additional keyword arguments to pass into writing the</span>
 <span class="sd">        raster. The following attributes ar ignored (they are set</span>
-<span class="sd">        using properties of the source :class:`LayeredFile`):</span>
+<span class="sd">        using properties of the source</span>
+<span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile`):</span>
 
 <span class="sd">            - nodata</span>
 <span class="sd">            - transform</span>
@@ -742,7 +1117,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    ------</span>
 <span class="sd">    revrtValueError</span>
 <span class="sd">        If shape of provided data does not match shape of</span>
-<span class="sd">        :class:`LayeredFile`.</span>
+<span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">layer_fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
         <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
@@ -779,26 +1154,28 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data : array-like</span>
-<span class="sd">        Data to write to GeoTIFF using ``LayeredFile`` profile.</span>
+<span class="sd">        Data to write to GeoTIFF using</span>
+<span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile` profile.</span>
 <span class="sd">    geotiff : path-like</span>
 <span class="sd">        Path to output GeoTIFF file.</span>
 <span class="sd">    shape : tuple</span>
 <span class="sd">        Shape of output raster (height, width).</span>
-<span class="sd">    crs : str | dict</span>
+<span class="sd">    crs : str or dict</span>
 <span class="sd">        Coordinate reference system of output raster.</span>
 <span class="sd">    transform : affine.Affine</span>
 <span class="sd">        Affine transform of output raster.</span>
-<span class="sd">    nodata : int | float, optional</span>
+<span class="sd">    nodata : int or float, optional</span>
 <span class="sd">        Optional nodata value for the raster layer. By default,</span>
 <span class="sd">        ``None``, which does not add a &quot;nodata&quot; value.</span>
-<span class="sd">    lock : bool | `dask.distributed.Lock`, optional</span>
+<span class="sd">    lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">        Lock to use to write data using dask. If not supplied, a single</span>
 <span class="sd">        process is used for writing data to the GeoTIFF.</span>
 <span class="sd">        By default, ``None``.</span>
 <span class="sd">    **profile_kwargs</span>
 <span class="sd">        Additional keyword arguments to pass into writing the</span>
 <span class="sd">        raster. The following attributes ar ignored (they are set</span>
-<span class="sd">        using properties of the source :class:`LayeredFile`):</span>
+<span class="sd">        using properties of the source</span>
+<span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile`):</span>
 
 <span class="sd">            - nodata</span>
 <span class="sd">            - transform</span>
@@ -811,7 +1188,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    ------</span>
 <span class="sd">    revrtValueError</span>
 <span class="sd">        If shape of provided data does not match shape of</span>
-<span class="sd">        :class:`LayeredFile`.</span>
+<span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">expand_dim_if_needed</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
@@ -881,35 +1258,29 @@ window.addEventListener("load", () => mermaid.run());
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_compute_half_width_using_ranges</span><span class="p">(</span>
-    <span class="n">routes</span><span class="p">,</span> <span class="n">row_width_ranges</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">&quot;voltage&quot;</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute half-width for routes using row width ranges&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="region_mapper">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.region_mapper.html#revrt.utilities.base.region_mapper">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">region_mapper</span><span class="p">(</span><span class="n">regions</span><span class="p">,</span> <span class="n">region_identifier_column</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a function to map points to a region</span>
 
-    <span class="n">ranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">row_width_ranges</span><span class="p">]</span>
+<span class="sd">    The returned mapping function maps a point to a unique value from</span>
+<span class="sd">    the `region_identifier_column` column in the input GeoDataFrame.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_half_width</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">ranges</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">min_val</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">max_val</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span>
-        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    regions : geopandas.GeoDataFrame</span>
+<span class="sd">        GeoDataFrame defining the regions. This table must</span>
+<span class="sd">        have a `region_identifier_column` column which uniquely</span>
+<span class="sd">        identifies the region, as well as a geometry for each region.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">return</span> <span class="n">routes</span><span class="p">[</span><span class="n">row_width_key</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">get_half_width</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_map_region</span><span class="p">(</span><span class="n">point</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the region ID for the input point.&quot;&quot;&quot;</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">regions</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">regions</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">region_identifier_column</span><span class="p">]</span>
 
+    <span class="k">return</span> <span class="n">_map_region</span></div>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_compute_half_width_using_voltages</span><span class="p">(</span>
-    <span class="n">routes</span><span class="p">,</span> <span class="n">row_widths</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">&quot;voltage&quot;</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute half-width for routes using row width ranges&quot;&quot;&quot;</span>
-    <span class="n">row_widths</span> <span class="o">=</span> <span class="p">{</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row_widths</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_half_width</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">row_widths</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">voltage</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span>
-        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
-
-    <span class="k">return</span> <span class="n">routes</span><span class="p">[</span><span class="n">row_width_key</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">get_half_width</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="log_mem">
@@ -966,6 +1337,84 @@ window.addEventListener("load", () => mermaid.run());
         <span class="n">time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">days</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> day</span><span class="si">{</span><span class="s1">&#39;s&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">abs</span><span class="p">(</span><span class="n">days</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">time_str</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">return</span> <span class="n">time_str</span></div>
 
+
+
+<div class="viewcode-block" id="features_to_route_table">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.features_to_route_table.html#revrt.utilities.base.features_to_route_table">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">features_to_route_table</span><span class="p">(</span><span class="n">features</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert features GDF into route start/end point table</span>
+
+<span class="sd">    This function builds a routing table to define start/end points for</span>
+<span class="sd">    routes between all permutations of the given features. This is</span>
+<span class="sd">    mostly for easy backward-compatibility, since the old routing code</span>
+<span class="sd">    computed paths between all feature permutations by default.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    features : geopandas.GeoDataFrame</span>
+<span class="sd">        Geopandas DataFrame containing features to route between.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        Pandas DataFrame with the expected routing columns: `start_lat`,</span>
+<span class="sd">        `start_lon`, `end_lat`, and `end_lon`. Also includes</span>
+<span class="sd">        `start_index` and `index` columns for convenience. DataFrame</span>
+<span class="sd">        index name is set to &quot;rid&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">centroid</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">)</span>
+    <span class="n">all_routes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">start_ind</span><span class="p">,</span> <span class="n">start_coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coords</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">start_lat</span><span class="p">,</span> <span class="n">start_lon</span> <span class="o">=</span> <span class="n">start_coord</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">start_coord</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">end_coords</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">start_ind</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+        <span class="n">end_idx</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>
+        <span class="n">new_routes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;end_lat&quot;</span><span class="p">:</span> <span class="n">end_coords</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                <span class="s2">&quot;end_lon&quot;</span><span class="p">:</span> <span class="n">end_coords</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">end_idx</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">new_routes</span><span class="p">[</span><span class="s2">&quot;start_lat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_lat</span>
+        <span class="n">new_routes</span><span class="p">[</span><span class="s2">&quot;start_lon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_lon</span>
+        <span class="n">new_routes</span><span class="p">[</span><span class="s2">&quot;start_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_ind</span>
+        <span class="n">all_routes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_routes</span><span class="p">)</span>
+
+    <span class="n">all_routes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">all_routes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">all_routes</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;rid&quot;</span>
+    <span class="k">return</span> <span class="n">all_routes</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_half_width_using_ranges</span><span class="p">(</span>
+    <span class="n">routes</span><span class="p">,</span> <span class="n">row_width_ranges</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">&quot;voltage&quot;</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute half-width for routes using row width ranges&quot;&quot;&quot;</span>
+
+    <span class="n">ranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">row_width_ranges</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_half_width</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">ranges</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">min_val</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">max_val</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">routes</span><span class="p">[</span><span class="n">row_width_key</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">get_half_width</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_half_width_using_voltages</span><span class="p">(</span>
+    <span class="n">routes</span><span class="p">,</span> <span class="n">row_widths</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">&quot;voltage&quot;</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute half-width for routes using row width ranges&quot;&quot;&quot;</span>
+    <span class="n">row_widths</span> <span class="o">=</span> <span class="p">{</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row_widths</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_half_width</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">row_widths</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">voltage</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">routes</span><span class="p">[</span><span class="n">row_width_key</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">get_half_width</span><span class="p">)</span>
 </pre></div>
 
                 </article>

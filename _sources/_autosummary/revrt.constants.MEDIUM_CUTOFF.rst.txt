@@ -1,0 +1,6 @@
+revrt.constants.MEDIUM\_CUTOFF
+==============================
+
+.. currentmodule:: revrt.constants
+
+.. autodata:: MEDIUM_CUTOFF

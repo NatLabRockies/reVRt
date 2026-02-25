@@ -1,0 +1,1322 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>revrt.routing.cli.point_to_feature &#8212; reVRt 0.3.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/tabs.css?v=a5c4661c" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../_static/documentation_options.js?v=e259d695"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/tabs.js?v=3030b3cb"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
+
+const defaultStyle = document.createElement('style');
+defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+`;
+document.head.appendChild(defaultStyle);
+
+const fullscreenStyle = document.createElement('style');
+fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+document.head.appendChild(fullscreenStyle);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const load = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(load, 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(load, 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(load, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    let previousScrollOffset = [window.scrollX, window.scrollY];
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", load);
+</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/revrt/routing/cli/point_to_feature';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">reVRt 0.3.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../index.html">
+    Home page
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../misc/installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../guides/index.html">
+    Guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../_autosummary/revrt.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../_cli/cli.html">
+    CLI reference
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../dev/index.html">
+    Development
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../index.html">
+    Home page
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../misc/installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../guides/index.html">
+    Guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../_autosummary/revrt.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../_cli/cli.html">
+    CLI reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../dev/index.html">
+    Development
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">revrt.routing.cli.point_to_feature</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for revrt.routing.cli.point_to_feature</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;reVRt point-to-feature routing CLI command&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">rasterio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gaps.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLICommandFromFunction</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.cli.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">run_lcp</span><span class="p">,</span>
+    <span class="n">route_points_subset</span><span class="p">,</span>
+    <span class="n">split_routes</span><span class="p">,</span>
+    <span class="n">RouteToDefinitionConverter</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">map_to_costs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.costs.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.raster</span><span class="w"> </span><span class="kn">import</span> <span class="n">integer_dimension_window</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="PointToFeatureRouteDefinitionConverter">
+<a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.html#revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PointToFeatureRouteDefinitionConverter</span><span class="p">(</span><span class="n">RouteToDefinitionConverter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert route points DataFrame to route definition for Rust&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cost_fpath</span><span class="p">,</span>
+        <span class="n">route_points</span><span class="p">,</span>
+        <span class="n">features_fpath</span><span class="p">,</span>
+        <span class="n">out_fp</span><span class="p">,</span>
+        <span class="n">cost_layers</span><span class="p">,</span>
+        <span class="n">friction_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">transmission_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cost_fpath : path-like</span>
+<span class="sd">            Path to layered Zarr file containing cost and other required</span>
+<span class="sd">            routing layers.</span>
+<span class="sd">        route_points : pandas.DataFrame</span>
+<span class="sd">            DataFrame defining the points to be routed. This DataFrame</span>
+<span class="sd">            should contain route definitions to be transformed and</span>
+<span class="sd">            passed down to the Rust routing algorithm.</span>
+<span class="sd">        out_fp : path-like</span>
+<span class="sd">            Path to output file where computed routes will be saved.</span>
+<span class="sd">            This file will be checked for existing routes to avoid</span>
+<span class="sd">            recomputation.</span>
+<span class="sd">        cost_layers : list</span>
+<span class="sd">            List of dictionaries defining the layers that are summed to</span>
+<span class="sd">            determine total costs raster used for routing. Each layer is</span>
+<span class="sd">            pre-processed before summation according to the user input.</span>
+<span class="sd">            See the description of</span>
+<span class="sd">            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`</span>
+<span class="sd">            for more details.</span>
+<span class="sd">        friction_layers : list</span>
+<span class="sd">            Layers to be multiplied onto the aggregated cost layer to</span>
+<span class="sd">            influence routing but NOT be reported in final cost</span>
+<span class="sd">            (i.e. friction, barriers, etc.). See the description of</span>
+<span class="sd">            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`</span>
+<span class="sd">            for more details.</span>
+<span class="sd">        transmission_config : path-like or dict, optional</span>
+<span class="sd">            Dictionary of transmission cost configuration values, or</span>
+<span class="sd">            path to JSON/JSON5 file containing this dictionary. See the</span>
+<span class="sd">            description of</span>
+<span class="sd">            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`</span>
+<span class="sd">            for more details.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
+            <span class="n">route_points</span><span class="o">=</span><span class="n">route_points</span><span class="p">,</span>
+            <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
+            <span class="n">cost_layers</span><span class="o">=</span><span class="n">cost_layers</span><span class="p">,</span>
+            <span class="n">friction_layers</span><span class="o">=</span><span class="n">friction_layers</span><span class="p">,</span>
+            <span class="n">transmission_config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features_fpath</span> <span class="o">=</span> <span class="n">features_fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span> <span class="o">=</span> <span class="n">connection_identifier_column</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_route_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure route points has required columns&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;start_row&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="o">.</span><span class="n">columns</span>
+            <span class="ow">or</span> <span class="s2">&quot;start_col&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="o">.</span><span class="n">columns</span>
+        <span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Mapping route start points to cost grid...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span> <span class="o">=</span> <span class="n">map_to_costs</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="p">,</span>
+                <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;crs&quot;</span><span class="p">],</span>
+                <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">],</span>
+                <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_validate_route_points</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_route_as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert route row to a tuple for existing route checking&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;start_col&quot;</span><span class="p">]),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="p">]),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;polarity&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;voltage&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_route_definitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert route DataFrame to route definitions format&quot;&quot;&quot;</span>
+        <span class="n">start_point_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">,</span> <span class="s2">&quot;start_col&quot;</span><span class="p">]</span>
+
+        <span class="n">route_definitions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">route_attrs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">cost_height</span><span class="p">,</span> <span class="n">cost_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">route_id</span><span class="p">,</span> <span class="p">(</span><span class="n">feat_id</span><span class="p">,</span> <span class="n">sub_routes</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="n">routes</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">end_feats</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">features_fpath</span><span class="p">,</span>
+                <span class="n">where</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="si">}</span><span class="s2"> == </span><span class="si">{</span><span class="n">feat_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">end_feats</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;No features found with &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="si">}</span><span class="s2"> == </span><span class="si">{</span><span class="n">feat_id</span><span class="si">}</span><span class="s2">!&quot;</span>
+                <span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_feats_to_row_col</span><span class="p">(</span><span class="n">end_feats</span><span class="p">)</span>
+
+            <span class="n">start_points</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">__</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">sub_routes</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="n">start_idx</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="n">start_point_cols</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">))</span>
+                <span class="n">route_attrs</span><span class="p">[(</span><span class="n">route_id</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">)]</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                <span class="n">start_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start_idx</span><span class="p">)</span>
+
+            <span class="n">route_definitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">route_id</span><span class="p">,</span>
+                    <span class="n">start_points</span><span class="p">,</span>
+                    <span class="p">[</span>
+                        <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="n">cost_height</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">cost_width</span>
+                    <span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_end_feats_to_row_col</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end_feats</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert end features to row/col indices in cost grid&quot;&quot;&quot;</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">integer_dimension_window</span><span class="p">(</span>
+            <span class="n">bounds</span><span class="o">=</span><span class="n">end_feats</span><span class="o">.</span><span class="n">total_bounds</span><span class="p">,</span>
+            <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">window_transform</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">windows</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+            <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">geometry_mask</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">end_feats</span><span class="o">.</span><span class="n">union_all</span><span class="p">()],</span>
+            <span class="n">out_shape</span><span class="o">=</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">window</span><span class="o">.</span><span class="n">width</span><span class="p">),</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">window_transform</span><span class="p">,</span>
+            <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">+=</span> <span class="n">window</span><span class="o">.</span><span class="n">row_off</span>
+        <span class="n">cols</span> <span class="o">+=</span> <span class="n">window</span><span class="o">.</span><span class="n">col_off</span>
+        <span class="k">return</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span></div>
+
+
+
+<div class="viewcode-block" id="compute_lcp_routes">
+<a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.point_to_feature.compute_lcp_routes.html#revrt.routing.cli.point_to_feature.compute_lcp_routes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_lcp_routes</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913, PLR0917</span>
+    <span class="n">cost_fpath</span><span class="p">,</span>
+    <span class="n">route_table_fpath</span><span class="p">,</span>
+    <span class="n">features_fpath</span><span class="p">,</span>
+    <span class="n">cost_layers</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">,</span>
+    <span class="n">job_name</span><span class="p">,</span>
+    <span class="n">friction_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">tracked_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">transmission_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">save_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
+    <span class="n">_split_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run least-cost path routing for points mapped to features</span>
+
+<span class="sd">    Given a table that defines each route as a start point (via latitude</span>
+<span class="sd">    and longitude input or preferably a row/column index into the data)</span>
+<span class="sd">    and a feature ID representing the feature to connect to, compute the</span>
+<span class="sd">    least-cost paths (LCPs) for each route using the cost layers defined</span>
+<span class="sd">    in the `cost_layers` parameter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cost_fpath : path-like</span>
+<span class="sd">        Path to layered Zarr file containing cost and other required</span>
+<span class="sd">        routing layers.</span>
+<span class="sd">    route_table_fpath : path-like</span>
+<span class="sd">        Path to CSV file defining the start points and end features of</span>
+<span class="sd">        all routes. Must have the following columns:</span>
+
+<span class="sd">            - &quot;start_lat&quot;: Stating point latitude (can alternatively use</span>
+<span class="sd">              &quot;start_col&quot; to define the start point column index in the</span>
+<span class="sd">              cost raster).</span>
+<span class="sd">            - &quot;start_lon&quot;: Stating point longitude (can alternatively</span>
+<span class="sd">              use &quot;start_row&quot; to define the start point row index in the</span>
+<span class="sd">              cost raster).</span>
+<span class="sd">            - `connection_identifier_column`: ID of the feature that</span>
+<span class="sd">              should be mapped to. This ID should match at least one of</span>
+<span class="sd">              the feature IDs in the `features_fpath` input; otherwise,</span>
+<span class="sd">              no route will be computed for that point.</span>
+
+<span class="sd">    features_fpath : path-like</span>
+<span class="sd">        Path to vector file containing features to map points to. This</span>
+<span class="sd">        file must have a column matching the</span>
+<span class="sd">        `connection_identifier_column` parameter that maps each feature</span>
+<span class="sd">        back to the starting points defined in the `route_table`.</span>
+<span class="sd">    cost_layers : list</span>
+<span class="sd">        List of dictionaries defining the layers that are summed to</span>
+<span class="sd">        determine total costs raster used for routing. Each layer is</span>
+<span class="sd">        pre-processed before summation according to the user input.</span>
+<span class="sd">        Each dict in the list should have the following keys:</span>
+
+<span class="sd">            - &quot;layer_name&quot;: (REQUIRED) Name of layer in layered file</span>
+<span class="sd">              containing cost data.</span>
+<span class="sd">            - &quot;multiplier_layer&quot;: (OPTIONAL) Name of layer in layered</span>
+<span class="sd">              file containing spatially explicit multiplier values to</span>
+<span class="sd">              apply to this cost layer before summing it with the</span>
+<span class="sd">              others. Default is ``None``.</span>
+<span class="sd">            - &quot;multiplier_scalar&quot;: (OPTIONAL) Scalar value to multiply</span>
+<span class="sd">              this layer by before summing it with the others. Default</span>
+<span class="sd">              is ``1``.</span>
+<span class="sd">            - &quot;is_invariant&quot;: (OPTIONAL) Boolean flag indicating whether</span>
+<span class="sd">              this layer is length invariant (i.e. should NOT be</span>
+<span class="sd">              multiplied by path length; values should be $). Default is</span>
+<span class="sd">              ``False``.</span>
+<span class="sd">            - &quot;include_in_final_cost&quot;: (OPTIONAL) Boolean flag</span>
+<span class="sd">              indicating whether this layer should contribute to the</span>
+<span class="sd">              final cost output for each route in the LCP table.</span>
+<span class="sd">              Default is ``True``.</span>
+<span class="sd">            - &quot;include_in_report&quot;: (OPTIONAL) Boolean flag indicating</span>
+<span class="sd">              whether the costs and distances for this layer should be</span>
+<span class="sd">              output in the final LCP table. Default is ``True``.</span>
+<span class="sd">            - &quot;apply_row_mult&quot;: (OPTIONAL) Boolean flag indicating</span>
+<span class="sd">              whether the right-of-way width multiplier should be</span>
+<span class="sd">              applied for this layer. If ``True``, then the transmission</span>
+<span class="sd">              config should have a &quot;row_width&quot; dictionary that maps</span>
+<span class="sd">              voltages to right-of-way width multipliers. Also, the</span>
+<span class="sd">              routing table input should have a &quot;voltage&quot; entry for</span>
+<span class="sd">              every route. Every &quot;voltage&quot; value in the routing table</span>
+<span class="sd">              must be given in the &quot;row_width&quot; dictionary in the</span>
+<span class="sd">              transmission config, otherwise an error will be thrown.</span>
+<span class="sd">              Default is ``False``.</span>
+<span class="sd">            - &quot;apply_polarity_mult&quot;: (OPTIONAL) Boolean flag indicating</span>
+<span class="sd">              whether the polarity multiplier should be applied for this</span>
+<span class="sd">              layer. If ``True``, then the transmission config should</span>
+<span class="sd">              have a &quot;voltage_polarity_mult&quot; dictionary that maps</span>
+<span class="sd">              voltages to a new dictionary, the latter mapping</span>
+<span class="sd">              polarities to multipliers. For example, a valid</span>
+<span class="sd">              &quot;voltage_polarity_mult&quot; dictionary might be</span>
+<span class="sd">              ``{&quot;138&quot;: {&quot;ac&quot;: 1.15, &quot;dc&quot;: 2}}``.</span>
+<span class="sd">              In addition, the routing table input should have a</span>
+<span class="sd">              &quot;voltage&quot; **and** a &quot;polarity&quot; entry for every route.</span>
+<span class="sd">              Every &quot;voltage&quot; + &quot;polarity&quot; combination in the routing</span>
+<span class="sd">              table must be given in the &quot;voltage_polarity_mult&quot;</span>
+<span class="sd">              dictionary in the transmission config, otherwise an error</span>
+<span class="sd">              will be thrown.</span>
+
+<span class="sd">              .. IMPORTANT::</span>
+<span class="sd">                 The multiplier in this config is assumed to be in units</span>
+<span class="sd">                 of &quot;million $ per mile&quot; and will be converted to</span>
+<span class="sd">                 &quot;$ per pixel&quot; before being applied to the layer!</span>
+
+<span class="sd">              Default is ``False``.</span>
+
+<span class="sd">        The summed layers define the cost routing surface, which</span>
+<span class="sd">        determines the cost output for each route. Specifically, the</span>
+<span class="sd">        cost at each pixel is multiplied by the length that the route</span>
+<span class="sd">        takes through the pixel, and all of these values are summed for</span>
+<span class="sd">        each route to determine the final cost.</span>
+
+<span class="sd">        .. IMPORTANT::</span>
+<span class="sd">           If a pixel has a final cost of :math:`\leq 0`, it is treated</span>
+<span class="sd">           as a barrier (i.e. no paths can ever cross this pixel).</span>
+
+<span class="sd">    out_dir : path-like</span>
+<span class="sd">        Directory where routing outputs should be written.</span>
+<span class="sd">    job_name : str</span>
+<span class="sd">        Label used to name the generated output file.</span>
+<span class="sd">    friction_layers : list, optional</span>
+<span class="sd">        Layers to be multiplied onto the aggregated cost layer to</span>
+<span class="sd">        influence routing but NOT be reported in final cost</span>
+<span class="sd">        (i.e. friction, barriers, etc.). These layers are first</span>
+<span class="sd">        aggregated, and then the aggregated friction layer is applied</span>
+<span class="sd">        to the aggregated cost. The cost at each pixel is therefore</span>
+<span class="sd">        computed as:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            C = (\sum_{i} c_i) * (1 + \sum_{j} f_j)</span>
+
+<span class="sd">        where :math:`C` is the final cost at each pixel, :math:`c_i` are</span>
+<span class="sd">        the individual cost layers, and :math:`f_j` are the individual</span>
+<span class="sd">        friction layers.</span>
+
+<span class="sd">        .. NOTE:: :math:`\sum_{j} f_j` is always clamped to be</span>
+<span class="sd">           :math:`\gt -1` to prevent zero or negative routing costs.</span>
+<span class="sd">           In other words, :math:`(1 + \sum_{j} f_j) &gt; 0` always holds.</span>
+<span class="sd">           This means friction can scale costs to/away from zero but</span>
+<span class="sd">           never cause the sign of the cost layer to flip (even if</span>
+<span class="sd">           friction values themselves are negative). This means all</span>
+<span class="sd">           &quot;barrier&quot; pixels (i.e. cost value :math:`\leq 0`) will remain</span>
+<span class="sd">           barriers after friction is applied.</span>
+
+<span class="sd">        Each item in this list should be a dictionary containing the</span>
+<span class="sd">        following keys:</span>
+
+<span class="sd">            - &quot;multiplier_layer&quot; or &quot;mask&quot;: (REQUIRED) Name of layer in</span>
+<span class="sd">              layered file containing the spatial friction multipliers</span>
+<span class="sd">              or mask that will be turned into the friction multipliers</span>
+<span class="sd">              by applying the `multiplier_scalar`.</span>
+<span class="sd">            - &quot;multiplier_scalar&quot;: (OPTIONAL) Scalar value to multiply</span>
+<span class="sd">              the spatial friction layer by before using it as a</span>
+<span class="sd">              multiplier on the aggregated costs. Default is ``1``.</span>
+<span class="sd">            - &quot;include_in_report&quot;: (OPTIONAL) Boolean flag indicating</span>
+<span class="sd">              whether the routing and distances for this layer should be</span>
+<span class="sd">              output in the final LCP table. Default is ``False``.</span>
+<span class="sd">            - &quot;apply_row_mult&quot;: (OPTIONAL) Boolean flag indicating</span>
+<span class="sd">              whether the right-of-way width multiplier should be</span>
+<span class="sd">              applied for this layer. If ``True``, then the transmission</span>
+<span class="sd">              config should have a &quot;row_width&quot; dictionary that maps</span>
+<span class="sd">              voltages to right-of-way width multipliers. Also, the</span>
+<span class="sd">              routing table input should have a &quot;voltage&quot; entry for</span>
+<span class="sd">              every route. Every &quot;voltage&quot; value in the routing table</span>
+<span class="sd">              must be given in the &quot;row_width&quot; dictionary in the</span>
+<span class="sd">              transmission config, otherwise an error will be thrown.</span>
+<span class="sd">              Default is ``False``.</span>
+<span class="sd">            - &quot;apply_polarity_mult&quot;: (OPTIONAL) Boolean flag indicating</span>
+<span class="sd">              whether the polarity multiplier should be applied for this</span>
+<span class="sd">              layer. If ``True``, then the transmission config should</span>
+<span class="sd">              have a &quot;voltage_polarity_mult&quot; dictionary that maps</span>
+<span class="sd">              voltages to a new dictionary, the latter mapping</span>
+<span class="sd">              polarities to multipliers. For example, a valid</span>
+<span class="sd">              &quot;voltage_polarity_mult&quot; dictionary might be</span>
+<span class="sd">              ``{&quot;138&quot;: {&quot;ac&quot;: 1.15, &quot;dc&quot;: 2}}``.</span>
+<span class="sd">              In addition, the routing table input should have a</span>
+<span class="sd">              &quot;voltage&quot; **and** a &quot;polarity&quot; entry for every route.</span>
+<span class="sd">              Every &quot;voltage&quot; + &quot;polarity&quot; combination in the routing</span>
+<span class="sd">              table must be given in the &quot;voltage_polarity_mult&quot;</span>
+<span class="sd">              dictionary in the transmission config, otherwise an error</span>
+<span class="sd">              will be thrown.</span>
+
+<span class="sd">              .. IMPORTANT::</span>
+<span class="sd">                 The multiplier in this config is assumed to be in units</span>
+<span class="sd">                 of &quot;million $ per mile&quot; and will be converted to</span>
+<span class="sd">                 &quot;$ per pixel&quot; before being applied to the layer!</span>
+
+<span class="sd">              Default is ``False``.</span>
+
+<span class="sd">        By default, ``None``.</span>
+<span class="sd">    tracked_layers : dict, optional</span>
+<span class="sd">        Dictionary mapping layer names to strings, where the strings are</span>
+<span class="sd">        dask aggregation methods (similar to what numpy has) that</span>
+<span class="sd">        should be applied to the layer along the LCP to be included as a</span>
+<span class="sd">        characterization column in the output. By default, ``None``.</span>
+<span class="sd">    cost_multiplier_layer : str, optional</span>
+<span class="sd">        Name of the spatial multiplier layer applied to final costs.</span>
+<span class="sd">        By default, ``None``.</span>
+<span class="sd">    cost_multiplier_scalar : int, default=1</span>
+<span class="sd">        Scalar multiplier applied to the final cost surface.</span>
+<span class="sd">        By default, ``1``.</span>
+<span class="sd">    transmission_config : path-like or dict, optional</span>
+<span class="sd">        Dictionary of transmission cost configuration values, or</span>
+<span class="sd">        path to JSON/JSON5 file containing this dictionary. The</span>
+<span class="sd">        dictionary should have a subset of the following keys:</span>
+
+<span class="sd">            - base_line_costs</span>
+<span class="sd">            - iso_lookup</span>
+<span class="sd">            - iso_multipliers</span>
+<span class="sd">            - land_use_classes</span>
+<span class="sd">            - new_substation_costs</span>
+<span class="sd">            - power_classes</span>
+<span class="sd">            - power_to_voltage</span>
+<span class="sd">            - transformer_costs</span>
+<span class="sd">            - upgrade_substation_costs</span>
+<span class="sd">            - voltage_polarity_mult</span>
+<span class="sd">            - row_width</span>
+
+<span class="sd">        Each of these keys should point to another dictionary or</span>
+<span class="sd">        path to JSON/JSON5 file containing a dictionary of</span>
+<span class="sd">        configurations for each section. For the expected contents</span>
+<span class="sd">        of each dictionary, see the default config. If ``None``,</span>
+<span class="sd">        values from the default config are used.</span>
+<span class="sd">        By default, ``None``.</span>
+<span class="sd">    save_paths : bool, default=False</span>
+<span class="sd">        Save outputs as a GeoPackage with path geometries when ``True``.</span>
+<span class="sd">        Defaults to ``False``.</span>
+<span class="sd">    ignore_invalid_costs : bool, optional</span>
+<span class="sd">        Optional flag to treat any cost values &lt;= 0 as impassable</span>
+<span class="sd">        (i.e. no paths can ever cross this). If ``False``, cost values</span>
+<span class="sd">        of &lt;= 0 are set to a large value to simulate a strong but</span>
+<span class="sd">        permeable &quot;quasi-barrier&quot;. By default, ``False``.</span>
+<span class="sd">    connection_identifier_column : str, default=&quot;end_feat_id&quot;</span>
+<span class="sd">        Column in the `features_fpath` data used to uniquely identify</span>
+<span class="sd">        each feature. This column is also expected to be in the</span>
+<span class="sd">        `route_table` input to map points to features. If a column name</span>
+<span class="sd">        is given that does not exist in the data, an error will be</span>
+<span class="sd">        raised. By default, ``&quot;end_feat_id&quot;``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        Path to the output table if any routes were computed.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    revrt.routing.cli.point_to_point.compute_lcp_routes</span>
+<span class="sd">        Compute LCP routes between pairs of points.</span>
+<span class="sd">    revrt.routing.cli.build_route_table.point_to_feature_route_table</span>
+<span class="sd">        Helper function to build a routing table for points mapped to</span>
+<span class="sd">        features.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+    <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tracked layers input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">tracked_layers</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Transmission config input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">)</span>
+
+    <span class="n">transmission_config</span> <span class="o">=</span> <span class="n">parse_config</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">)</span>
+
+    <span class="n">route_points</span> <span class="o">=</span> <span class="n">route_points_subset</span><span class="p">(</span>
+        <span class="n">route_table_fpath</span><span class="p">,</span> <span class="n">split_params</span><span class="o">=</span><span class="n">_split_params</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No routes to process!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">out_fp</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.gpkg&quot;</span>
+        <span class="k">if</span> <span class="n">save_paths</span>
+        <span class="k">else</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">routes_to_compute</span> <span class="o">=</span> <span class="n">PointToFeatureRouteDefinitionConverter</span><span class="p">(</span>
+        <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
+        <span class="n">route_points</span><span class="o">=</span><span class="n">route_points</span><span class="p">,</span>
+        <span class="n">features_fpath</span><span class="o">=</span><span class="n">features_fpath</span><span class="p">,</span>
+        <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
+        <span class="n">cost_layers</span><span class="o">=</span><span class="n">cost_layers</span><span class="p">,</span>
+        <span class="n">friction_layers</span><span class="o">=</span><span class="n">friction_layers</span><span class="p">,</span>
+        <span class="n">transmission_config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">,</span>
+        <span class="n">connection_identifier_column</span><span class="o">=</span><span class="n">connection_identifier_column</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">run_lcp</span><span class="p">(</span>
+        <span class="n">cost_fpath</span><span class="p">,</span>
+        <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
+        <span class="n">routes_to_compute</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="p">,</span>
+        <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">cost_multiplier_layer</span><span class="p">,</span>
+        <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">cost_multiplier_scalar</span><span class="p">,</span>
+        <span class="n">tracked_layers</span><span class="o">=</span><span class="n">tracked_layers</span><span class="p">,</span>
+        <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">elapsed_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing took </span><span class="si">%.2f</span><span class="s2"> minutes&quot;</span><span class="p">,</span> <span class="n">elapsed_time</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span></div>
+
+
+
+<span class="n">route_features_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
+    <span class="n">compute_lcp_routes</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;route-features&quot;</span><span class="p">,</span>
+    <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">split_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;_split_params&quot;</span><span class="p">},</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">split_routes</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

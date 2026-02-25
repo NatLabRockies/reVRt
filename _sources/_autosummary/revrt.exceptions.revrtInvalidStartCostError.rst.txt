@@ -1,0 +1,6 @@
+revrt.exceptions.revrtInvalidStartCostError
+===========================================
+
+.. currentmodule:: revrt.exceptions
+
+.. autoexception:: revrtInvalidStartCostError

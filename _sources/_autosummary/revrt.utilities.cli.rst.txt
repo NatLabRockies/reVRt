@@ -14,7 +14,11 @@ revrt.utilities.cli
    .. autosummary::
       :toctree:
    
+      add_rr_to_nn
+      convert_pois_to_lines
       layers_from_file
+      map_ss_to_rr
+      ss_from_conn
    
    
 

@@ -1,0 +1,31 @@
+revrt.routing.cli.base.RouteToDefinitionConverter
+=================================================
+
+.. currentmodule:: revrt.routing.cli.base
+
+.. autoclass:: RouteToDefinitionConverter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RouteToDefinitionConverter.cost_metadata
+      ~RouteToDefinitionConverter.existing_routes
+      ~RouteToDefinitionConverter.num_routes
+   
+   

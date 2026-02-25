@@ -14,6 +14,7 @@ revrt.utilities.raster
    .. autosummary::
       :toctree:
    
+      integer_dimension_window
       rasterize
       rasterize_shape_file
    

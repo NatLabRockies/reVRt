@@ -1,0 +1,29 @@
+revrt.routing.base.RoutingScenario
+==================================
+
+.. currentmodule:: revrt.routing.base
+
+.. autoclass:: RoutingScenario
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RoutingScenario.cost_function_json
+   
+   

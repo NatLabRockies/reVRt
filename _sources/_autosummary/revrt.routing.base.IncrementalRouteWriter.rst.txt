@@ -1,0 +1,25 @@
+revrt.routing.base.IncrementalRouteWriter
+=========================================
+
+.. currentmodule:: revrt.routing.base
+
+.. autoclass:: IncrementalRouteWriter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~IncrementalRouteWriter.preprocess_chunk
+      ~IncrementalRouteWriter.save
+   
+   
+
+   
+   
+   

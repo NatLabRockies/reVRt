@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.utilities.handlers.LayeredFile &#8212; reVRt 0.2.1 documentation</title>
+    <title>revrt.utilities.handlers.LayeredFile &#8212; reVRt 0.3.0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=37f418d5"></script>
+    <script src="../_static/documentation_options.js?v=e259d695"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -48,10 +48,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="revrt.utilities.raster" href="revrt.utilities.raster.html" />
-    <link rel="prev" title="revrt.utilities.handlers" href="revrt.utilities.handlers.html" />
+    <link rel="prev" title="revrt.utilities.handlers.IncrementalWriter" href="revrt.utilities.handlers.IncrementalWriter.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.1" />
+  <meta name="docsearch:version" content="0.3.0" />
   </head>
   
   
@@ -113,7 +113,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.2.1 documentation</p>
+    <p class="title logo__title">reVRt 0.3.0 documentation</p>
   
 </a></div>
     
@@ -142,8 +142,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -172,6 +172,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -266,8 +273,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -289,6 +296,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -319,11 +333,22 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="revrt.find_paths.html">revrt.find_paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="revrt.simplify_using_slopes.html">revrt.simplify_using_slopes</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="revrt.RouteFinder.html">revrt.RouteFinder</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="revrt.constants.html">revrt.constants</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.BARRIER_H5_LAYER_NAME.html">revrt.constants.BARRIER_H5_LAYER_NAME</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.DEFAULT_DTYPE.html">revrt.constants.DEFAULT_DTYPE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.METERS_IN_MILE.html">revrt.constants.METERS_IN_MILE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.SHORT_MULT.html">revrt.constants.SHORT_MULT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.MEDIUM_MULT.html">revrt.constants.MEDIUM_MULT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.SHORT_CUTOFF.html">revrt.constants.SHORT_CUTOFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.MEDIUM_CUTOFF.html">revrt.constants.MEDIUM_CUTOFF</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="revrt.costs.html">revrt.costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -332,6 +357,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.cli.html">revrt.costs.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_masks.html">revrt.costs.cli.build_masks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_routing_layers.html">revrt.costs.cli.build_routing_layers</a></li>
 </ul>
 </details></li>
@@ -373,7 +399,9 @@
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtError.html">revrt.exceptions.revrtError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtFileExistsError.html">revrt.exceptions.revrtFileExistsError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtFileNotFoundError.html">revrt.exceptions.revrtFileNotFoundError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtInvalidStartCostError.html">revrt.exceptions.revrtInvalidStartCostError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtKeyError.html">revrt.exceptions.revrtKeyError</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtLeastCostPathNotFoundError.html">revrt.exceptions.revrtLeastCostPathNotFoundError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtNotImplementedError.html">revrt.exceptions.revrtNotImplementedError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtProfileCheckError.html">revrt.exceptions.revrtProfileCheckError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.exceptions.revrtRuntimeError.html">revrt.exceptions.revrtRuntimeError</a></li>
@@ -396,6 +424,58 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.Rasterize.html">revrt.models.cost_layers.Rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.SlopeMultipliers.html">revrt.models.cost_layers.SlopeMultipliers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.TransmissionLayerCreationConfig.html">revrt.models.cost_layers.TransmissionLayerCreationConfig</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="revrt.routing.html">revrt.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.base.html">revrt.routing.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.LCP_AGG_COST_LAYER_NAME.html">revrt.routing.base.LCP_AGG_COST_LAYER_NAME</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.BatchRouteProcessor.html">revrt.routing.base.BatchRouteProcessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.CharacterizedLayer.html">revrt.routing.base.CharacterizedLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.IncrementalRouteWriter.html">revrt.routing.base.IncrementalRouteWriter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RouteMetrics.html">revrt.routing.base.RouteMetrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingLayerManager.html">revrt.routing.base.RoutingLayerManager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingScenario.html">revrt.routing.base.RoutingScenario</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.cli.html">revrt.routing.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.base.html">revrt.routing.cli.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.base.RouteToDefinitionConverter.html">revrt.routing.cli.base.RouteToDefinitionConverter</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_costs.html">revrt.routing.cli.build_costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.build_costs.build_routing_layer.html">revrt.routing.cli.build_costs.build_routing_layer</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_route_table.html">revrt.routing.cli.build_route_table</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.build_route_table.point_to_feature_route_table.html">revrt.routing.cli.build_route_table.point_to_feature_route_table</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.finalize.html">revrt.routing.cli.finalize</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.finalize.RoutePostProcessor.html">revrt.routing.cli.finalize.RoutePostProcessor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.finalize.RouteToFeatureMapper.html">revrt.routing.cli.finalize.RouteToFeatureMapper</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.point_to_feature.html">revrt.routing.cli.point_to_feature</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_feature.compute_lcp_routes.html">revrt.routing.cli.point_to_feature.compute_lcp_routes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.html">revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.point_to_point.html">revrt.routing.cli.point_to_point</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.compute_lcp_routes.html">revrt.routing.cli.point_to_point.compute_lcp_routes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html">revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.convert_lat_lon_to_row_col.html">revrt.routing.utilities.convert_lat_lon_to_row_col</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.filter_points_outside_cost_domain.html">revrt.routing.utilities.filter_points_outside_cost_domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.make_rev_sc_points.html">revrt.routing.utilities.make_rev_sc_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.map_to_costs.html">revrt.routing.utilities.map_to_costs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.points_csv_to_geo_dataframe.html">revrt.routing.utilities.points_csv_to_geo_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.PointToFeatureMapper.html">revrt.routing.utilities.PointToFeatureMapper</a></li>
 </ul>
 </details></li>
 </ul>
@@ -425,22 +505,33 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html">revrt.utilities.base.elapsed_time_as_str</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html">revrt.utilities.base.expand_dim_if_needed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html">revrt.utilities.base.features_to_route_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.log_mem.html">revrt.utilities.base.log_mem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.cli.html">revrt.utilities.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.add_rr_to_nn.html">revrt.utilities.cli.add_rr_to_nn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.convert_pois_to_lines.html">revrt.utilities.cli.convert_pois_to_lines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.layers_from_file.html">revrt.utilities.cli.layers_from_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.map_ss_to_rr.html">revrt.utilities.cli.map_ss_to_rr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.ss_from_conn.html">revrt.utilities.cli.ss_from_conn</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.utilities.handlers.html">revrt.utilities.handlers</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.chunked_read_gpkg.html">revrt.utilities.handlers.chunked_read_gpkg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.gpkg_crs.html">revrt.utilities.handlers.gpkg_crs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.num_feats_in_gpkg.html">revrt.utilities.handlers.num_feats_in_gpkg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.IncrementalWriter.html">revrt.utilities.handlers.IncrementalWriter</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.integer_dimension_window.html">revrt.utilities.raster.integer_dimension_window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize.html">revrt.utilities.raster.rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize_shape_file.html">revrt.utilities.raster.rasterize_shape_file</a></li>
 </ul>
@@ -564,24 +655,27 @@
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.LATITUDE" title="revrt.utilities.handlers.LayeredFile.LATITUDE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LATITUDE</span></code></a></p></td>
-<td><p>Name of latitude values layer in <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a></p></td>
+<td><p>Name of latitude values layer in LayeredFile</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.LONGITUDE" title="revrt.utilities.handlers.LayeredFile.LONGITUDE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LONGITUDE</span></code></a></p></td>
-<td><p>Name of longitude values layer in <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a></p></td>
+<td><p>Name of longitude values layer in LayeredFile</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.SUPPORTED_FILE_ENDINGS" title="revrt.utilities.handlers.LayeredFile.SUPPORTED_FILE_ENDINGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SUPPORTED_FILE_ENDINGS</span></code></a></p></td>
 <td><p>Supported template file endings</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.data_layers" title="revrt.utilities.handlers.LayeredFile.data_layers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_layers</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.cell_size" title="revrt.utilities.handlers.LayeredFile.cell_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cell_size</span></code></a></p></td>
+<td><p>Size of cell in layer file</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.data_layers" title="revrt.utilities.handlers.LayeredFile.data_layers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_layers</span></code></a></p></td>
 <td><p>Available data layers in file</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.layers" title="revrt.utilities.handlers.LayeredFile.layers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">layers</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.layers" title="revrt.utilities.handlers.LayeredFile.layers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">layers</span></code></a></p></td>
 <td><p>All available layers in file</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.profile" title="revrt.utilities.handlers.LayeredFile.profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">profile</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.profile" title="revrt.utilities.handlers.LayeredFile.profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">profile</span></code></a></p></td>
 <td><p>Template layer profile</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.shape" title="revrt.utilities.handlers.LayeredFile.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile.shape" title="revrt.utilities.handlers.LayeredFile.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></p></td>
 <td><p>Template layer shape</p></td>
 </tr>
 </tbody>
@@ -596,13 +690,13 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="revrt.utilities.handlers.LayeredFile.LATITUDE">
 <span class="sig-name descname"><span class="pre">LATITUDE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'latitude'</span></em><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.LATITUDE" title="Link to this definition">#</a></dt>
-<dd><p>Name of latitude values layer in <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a></p>
+<dd><p>Name of latitude values layer in LayeredFile</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="revrt.utilities.handlers.LayeredFile.LONGITUDE">
 <span class="sig-name descname"><span class="pre">LONGITUDE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'longitude'</span></em><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.LONGITUDE" title="Link to this definition">#</a></dt>
-<dd><p>Name of longitude values layer in <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a></p>
+<dd><p>Name of longitude values layer in LayeredFile</p>
 </dd></dl>
 
 <dl class="py property">
@@ -623,6 +717,17 @@
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="revrt.utilities.handlers.LayeredFile.cell_size">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cell_size</span></span><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.cell_size" title="Link to this definition">#</a></dt>
+<dd><p>Size of cell in layer file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -665,10 +770,14 @@ the following keys:</p>
 <li><p>”nodata”: NoData value for layer</p></li>
 <li><p>”width”: width of layer</p></li>
 <li><p>”height”: height of layer</p></li>
-<li><p>”crs”: <code class="xref py py-class docutils literal notranslate"><span class="pre">pyproj.crs.CRS</span></code> object for layer</p></li>
+<li><p>”crs”: <a class="reference external" href="https://pyproj4.github.io/pyproj/stable/api/crs/crs.html#pyproj.crs.CRS" title="(in pyproj v3.7.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyproj.crs.CRS</span></code></a> object for layer</p></li>
 <li><p>”count”: number of bands in layer</p></li>
 <li><p>”dtype”: data type of layer</p></li>
-<li><p>”transform”: <code class="xref py py-class docutils literal notranslate"><span class="pre">Affine</span></code> transform for layer</p></li>
+<li><dl class="simple">
+<dt>”transform”: <a class="reference external" href="https://affine.readthedocs.io/en/latest/index.html#affine.Affine" title="(in rasterio/affine)"><code class="xref py py-class docutils literal notranslate"><span class="pre">affine.Affine</span></code></a> transform for</dt><dd><p>layer</p>
+</dd>
+</dl>
+</li>
 </ul>
 </div></blockquote>
 </p>
@@ -688,17 +797,20 @@ the following keys:</p>
 used for the layered file. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, then the <cite>fp</cite>
 input is used as the template. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Overwrite file if is exists. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>chunk_x, chunk_y</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">2048</span></code>) – Chunk size of x and y dimension for newly-created layered
+<li><p><strong>chunk_x</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">2048</span></code>) – Chunk size of x and y dimension for newly-created layered
 file. By default, <code class="docutils literal notranslate"><span class="pre">2048</span></code>.</p></li>
-<li><p><strong>read_chunks</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">str</span></code>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the template file. This will
+<li><p><strong>chunk_y</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">2048</span></code>) – Chunk size of x and y dimension for newly-created layered
+file. By default, <code class="docutils literal notranslate"><span class="pre">2048</span></code>.</p></li>
+<li><p><strong>read_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the template file. This will
 be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code> or
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code>, depending on what template file
+<a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.21.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a> or
+<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.open_dataset.html#xarray.open_dataset" title="(in xarray v2026.2.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code></a>, depending on what template file
 is passed in. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a> – This <cite>LayeredFile</cite> object with a corresponding file on disk.</p>
+<dd class="field-even"><p><a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a> – This <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a> object
+with a corresponding file on disk.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -707,14 +819,14 @@ is passed in. By default, <code class="docutils literal notranslate"><span class
 <dt class="sig sig-object py" id="revrt.utilities.handlers.LayeredFile.write_layer">
 <span class="sig-name descname"><span class="pre">write_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/utilities/handlers.html#LayeredFile.write_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.write_layer" title="Link to this definition">#</a></dt>
 <dd><p>Write a layer to the file</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul>
-<li><p><strong>values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.3)"><span class="xref std std-term">array-like</span></a>) – Layer data (can be numpy array, xarray.DataArray, or
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.4)"><span class="xref std std-term">array-like</span></a>) – Layer data (can be numpy array, xarray.DataArray, or
 dask.array).</p></li>
 <li><p><strong>layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of layer to be written to file.</p></li>
 <li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Description of layer being added. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Option to overwrite layer data if layer already exists in
+<li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – <p>Option to overwrite layer data if layer already exists in
 <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -724,8 +836,8 @@ change. If you need to overwrite an existing layer with a
 new type of data, manually remove it from the file first.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
-</li>
-<li><p><strong>nodata</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code>, <em>optional</em>) – Optional nodata value for the raster layer. This value will
+</p></li>
+<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – <p>Optional nodata value for the raster layer. This value will
 be added to the layer’s attributes meta dictionary under the
 “nodata” key.</p>
 <div class="admonition warning">
@@ -733,19 +845,21 @@ be added to the layer’s attributes meta dictionary under the
 <p><code class="docutils literal notranslate"><span class="pre">rioxarray</span></code> does not recognize the “nodata” value when
 reading from a zarr file (because zarr uses the
 <code class="docutils literal notranslate"><span class="pre">_FillValue</span></code> encoding internally). To get the correct
-“nodata” value back when reading a <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>,
+“nodata” value back when reading a
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>,
 you can either 1) read from <code class="docutils literal notranslate"><span class="pre">da.rio.encoded_nodata</span></code> or
 2) check the layer’s attributes for the <code class="docutils literal notranslate"><span class="pre">&quot;nodata&quot;</span></code> key,
 and if present, use <code class="docutils literal notranslate"><span class="pre">da.rio.write_nodata</span></code> to write the
 nodata value so that <code class="docutils literal notranslate"><span class="pre">da.rio.nodata</span></code> gives the right
 value.</p>
 </div>
-</li>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="revrt.exceptions.revrtFileNotFoundError.html#revrt.exceptions.revrtFileNotFoundError" title="revrt.exceptions.revrtFileNotFoundError"><strong>revrtFileNotFoundError</strong></a> – If <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a> does not exist.</p></li>
+<li><p><a class="reference internal" href="revrt.exceptions.revrtFileNotFoundError.html#revrt.exceptions.revrtFileNotFoundError" title="revrt.exceptions.revrtFileNotFoundError"><strong>revrtFileNotFoundError</strong></a> – If <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a> does not
+    exist.</p></li>
 <li><p><a class="reference internal" href="revrt.exceptions.revrtKeyError.html#revrt.exceptions.revrtKeyError" title="revrt.exceptions.revrtKeyError"><strong>revrtKeyError</strong></a> – If layer with the same name already exists and
     <code class="docutils literal notranslate"><span class="pre">overwrite=False</span></code>.</p></li>
 </ul>
@@ -757,15 +871,15 @@ value.</p>
 <dt class="sig sig-object py" id="revrt.utilities.handlers.LayeredFile.write_geotiff_to_file">
 <span class="sig-name descname"><span class="pre">write_geotiff_to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geotiff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_tiff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiff_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/utilities/handlers.html#LayeredFile.write_geotiff_to_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.write_geotiff_to_file" title="Link to this definition">#</a></dt>
 <dd><p>Transfer GeoTIFF to layered file</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>geotiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to GeoTIFF file.</p></li>
 <li><p><strong>layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of layer to be written to file.</p></li>
 <li><p><strong>check_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Option to check GeoTIFF profile, CRS, and shape against
 layered file profile, CRS, and shape. By default, <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Description of layer being added. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Option to overwrite layer data if layer already exists in
+<li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – <p>Option to overwrite layer data if layer already exists in
 <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -775,8 +889,8 @@ change. If you need to overwrite an existing layer with a
 new type of data, manually remove it from the file first.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
-</li>
-<li><p><strong>nodata</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code>, <em>optional</em>) – Optional nodata value for the raster layer. This value will
+</p></li>
+<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – <p>Optional nodata value for the raster layer. This value will
 be added to the layer’s attributes meta dictionary under the
 “nodata” key.</p>
 <div class="admonition warning">
@@ -784,17 +898,18 @@ be added to the layer’s attributes meta dictionary under the
 <p><code class="docutils literal notranslate"><span class="pre">rioxarray</span></code> does not recognize the “nodata” value when
 reading from a zarr file (because zarr uses the
 <code class="docutils literal notranslate"><span class="pre">_FillValue</span></code> encoding internally). To get the correct
-“nodata” value back when reading a <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>,
+“nodata” value back when reading a
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>,
 you can either 1) read from <code class="docutils literal notranslate"><span class="pre">da.rio.encoded_nodata</span></code> or
 2) check the layer’s attributes for the <code class="docutils literal notranslate"><span class="pre">&quot;nodata&quot;</span></code> key,
 and if present, use <code class="docutils literal notranslate"><span class="pre">da.rio.write_nodata</span></code> to write the
 nodata value so that <code class="docutils literal notranslate"><span class="pre">da.rio.nodata</span></code> gives the right
 value.</p>
 </div>
-</li>
-<li><p><strong>tiff_chunks</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">str</span></code>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the GeoTIFF file. This will
+</p></li>
+<li><p><strong>tiff_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the GeoTIFF file. This will
 be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
+<a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.21.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -804,22 +919,24 @@ be passed down as the <code class="docutils literal notranslate"><span class="pr
 <dt class="sig sig-object py" id="revrt.utilities.handlers.LayeredFile.layer_to_geotiff">
 <span class="sig-name descname"><span class="pre">layer_to_geotiff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geotiff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">profile_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/utilities/handlers.html#LayeredFile.layer_to_geotiff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.layer_to_geotiff" title="Link to this definition">#</a></dt>
 <dd><p>Extract layer from file and write to GeoTIFF file</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>layer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Layer to extract,</p></li>
 <li><p><strong>geotiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to output GeoTIFF file.</p></li>
-<li><p><strong>ds_chunks</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">str</span></code>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.
+<li><p><strong>ds_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.
 This will be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
-<li><p><strong>lock</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span> <span class="pre">|</span> <span class="pre">`dask.distributed.Lock`</span></code>, <em>optional</em>) – Lock to use to write data using dask. If not supplied, a
+<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.open_dataset.html#xarray.open_dataset" title="(in xarray v2026.2.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
+<li><p><strong>lock</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> or <cite>dask.distributed.Lock</cite>, <em>optional</em>) – Lock to use to write data using dask. If not supplied, a
 single process is used for writing data to the GeoTIFF.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>**profile_kwargs</strong> – Additional keyword arguments to pass into writing the
+<li><p><strong>**profile_kwargs</strong> – <p>Additional keyword arguments to pass into writing the
 raster. The following attributes ar ignored (they are set
-using properties of the source <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>):</p>
+using properties of the source
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>):</p>
 <blockquote>
-<div><ul class="simple">
+<div><ul>
 <li><p>nodata</p></li>
 <li><p>transform</p></li>
 <li><p>crs</p></li>
@@ -828,7 +945,7 @@ using properties of the source <a class="reference internal" href="#revrt.utilit
 <li><p>height</p></li>
 </ul>
 </div></blockquote>
-</li>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -839,18 +956,19 @@ using properties of the source <a class="reference internal" href="#revrt.utilit
 <span class="sig-name descname"><span class="pre">layers_to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_tiff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/utilities/handlers.html#LayeredFile.layers_to_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.layers_to_file" title="Link to this definition">#</a></dt>
 <dd><p>Transfer GeoTIFF layers into layered file</p>
 <p>If layered file does not exist, it is created and populated.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul>
-<li><p><strong>layers</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span> <span class="pre">|</span> <span class="pre">dict</span></code>) – Dictionary mapping layer names to GeoTIFFs filepaths. Each
-GeoTIFF will be loaded into the <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a> user
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Dictionary mapping layer names to GeoTIFFs filepaths. Each
+GeoTIFF will be loaded into the
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a> user
 the layer name. If a list of GeoTIFFs filepaths is provided,
 the file name stems are used as the layer names.</p></li>
 <li><p><strong>check_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Flag to check tiff profile and coordinates against layered
 file profile and coordinates. By default, <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Mapping of layer name to layer description of layers.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not store any descriptions.</p></li>
-<li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Option to overwrite layer data if layer already exists in
+<li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – <p>Option to overwrite layer data if layer already exists in
 <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -860,8 +978,8 @@ change. If you need to overwrite an existing layer with a
 new type of data, manually remove it from the file first.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
-</li>
-<li><p><strong>nodata</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">float</span></code>, <em>optional</em>) – Optional nodata value for the raster layer. This value will
+</p></li>
+<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – <p>Optional nodata value for the raster layer. This value will
 be added to the layer’s attributes meta dictionary under the
 “nodata” key.</p>
 <div class="admonition warning">
@@ -869,14 +987,15 @@ be added to the layer’s attributes meta dictionary under the
 <p><code class="docutils literal notranslate"><span class="pre">rioxarray</span></code> does not recognize the “nodata” value when
 reading from a zarr file (because zarr uses the
 <code class="docutils literal notranslate"><span class="pre">_FillValue</span></code> encoding internally). To get the correct
-“nodata” value back when reading a <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>,
+“nodata” value back when reading a
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>,
 you can either 1) read from <code class="docutils literal notranslate"><span class="pre">da.rio.encoded_nodata</span></code> or
 2) check the layer’s attributes for the <code class="docutils literal notranslate"><span class="pre">&quot;nodata&quot;</span></code> key,
 and if present, use <code class="docutils literal notranslate"><span class="pre">da.rio.write_nodata</span></code> to write the
 nodata value so that <code class="docutils literal notranslate"><span class="pre">da.rio.nodata</span></code> gives the right
 value.</p>
 </div>
-</li>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -889,21 +1008,23 @@ value.</p>
 <dt class="sig sig-object py" id="revrt.utilities.handlers.LayeredFile.extract_layers">
 <span class="sig-name descname"><span class="pre">extract_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">profile_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/utilities/handlers.html#LayeredFile.extract_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.extract_layers" title="Link to this definition">#</a></dt>
 <dd><p>Extract layers from file and save to disk as GeoTIFFs</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Dictionary mapping layer names to GeoTIFF files to create.</p></li>
-<li><p><strong>ds_chunks</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">str</span></code>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.
+<li><p><strong>ds_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.
 This will be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
-<li><p><strong>lock</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span> <span class="pre">|</span> <span class="pre">`dask.distributed.Lock`</span></code>, <em>optional</em>) – Lock to use to write data using dask. If not supplied, a
+<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.open_dataset.html#xarray.open_dataset" title="(in xarray v2026.2.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
+<li><p><strong>lock</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> or <cite>dask.distributed.Lock</cite>, <em>optional</em>) – Lock to use to write data using dask. If not supplied, a
 single process is used for writing data to the GeoTIFFs.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>**profile_kwargs</strong> – Additional keyword arguments to pass into writing the
+<li><p><strong>**profile_kwargs</strong> – <p>Additional keyword arguments to pass into writing the
 raster. The following attributes ar ignored (they are set
-using properties of the source <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>):</p>
+using properties of the source
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>):</p>
 <blockquote>
-<div><ul class="simple">
+<div><ul>
 <li><p>nodata</p></li>
 <li><p>transform</p></li>
 <li><p>crs</p></li>
@@ -912,7 +1033,7 @@ using properties of the source <a class="reference internal" href="#revrt.utilit
 <li><p>height</p></li>
 </ul>
 </div></blockquote>
-</li>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -922,23 +1043,24 @@ using properties of the source <a class="reference internal" href="#revrt.utilit
 <dt class="sig sig-object py" id="revrt.utilities.handlers.LayeredFile.extract_all_layers">
 <span class="sig-name descname"><span class="pre">extract_all_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">profile_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/utilities/handlers.html#LayeredFile.extract_all_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.utilities.handlers.LayeredFile.extract_all_layers" title="Link to this definition">#</a></dt>
 <dd><p>Extract all layers from file and save to disk as GeoTIFFs</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>out_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to output directory into which layers should be saved
 as GeoTIFFs. This directory will be created if it does not
 already exist.</p></li>
-<li><p><strong>ds_chunks</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">str</span></code>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.
+<li><p><strong>ds_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – Chunk size to use when reading the <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>.
 This will be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
-<li><p><strong>lock</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span> <span class="pre">|</span> <span class="pre">`dask.distributed.Lock`</span></code>, <em>optional</em>) – Lock to use to write data using dask. If not supplied, a
+<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.open_dataset.html#xarray.open_dataset" title="(in xarray v2026.2.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
+<li><p><strong>lock</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> or <cite>dask.distributed.Lock</cite>, <em>optional</em>) – Lock to use to write data using dask. If not supplied, a
 single process is used for writing data to the GeoTIFFs.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>**profile_kwargs</strong> – Additional keyword arguments to pass into writing the
+<li><p><strong>**profile_kwargs</strong> – <p>Additional keyword arguments to pass into writing the
 raster. The following attributes ar ignored (they are set
-using properties of the source <a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>):</p>
+using properties of the source
+<a class="reference internal" href="#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>):</p>
 <blockquote>
-<div><ul class="simple">
+<div><ul>
 <li><p>nodata</p></li>
 <li><p>transform</p></li>
 <li><p>crs</p></li>
@@ -947,7 +1069,7 @@ using properties of the source <a class="reference internal" href="#revrt.utilit
 <li><p>height</p></li>
 </ul>
 </div></blockquote>
-</li>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -971,12 +1093,12 @@ using properties of the source <a class="reference internal" href="#revrt.utilit
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="revrt.utilities.handlers.html"
+       href="revrt.utilities.handlers.IncrementalWriter.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">revrt.utilities.handlers</p>
+        <p class="prev-next-title">revrt.utilities.handlers.IncrementalWriter</p>
       </div>
     </a>
     <a class="right-next"
@@ -1013,6 +1135,7 @@ using properties of the source <a class="reference internal" href="#revrt.utilit
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.utilities.handlers.LayeredFile.LONGITUDE"><code class="docutils literal notranslate"><span class="pre">LayeredFile.LONGITUDE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.utilities.handlers.LayeredFile.profile"><code class="docutils literal notranslate"><span class="pre">LayeredFile.profile</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.utilities.handlers.LayeredFile.shape"><code class="docutils literal notranslate"><span class="pre">LayeredFile.shape</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.utilities.handlers.LayeredFile.cell_size"><code class="docutils literal notranslate"><span class="pre">LayeredFile.cell_size</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.utilities.handlers.LayeredFile.layers"><code class="docutils literal notranslate"><span class="pre">LayeredFile.layers</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.utilities.handlers.LayeredFile.data_layers"><code class="docutils literal notranslate"><span class="pre">LayeredFile.data_layers</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.utilities.handlers.LayeredFile.layer_profile"><code class="docutils literal notranslate"><span class="pre">LayeredFile.layer_profile()</span></code></a></li>

@@ -1,0 +1,6 @@
+revrt.constants.SHORT\_CUTOFF
+=============================
+
+.. currentmodule:: revrt.constants
+
+.. autodata:: SHORT_CUTOFF

@@ -1,0 +1,6 @@
+revrt.utilities.base.region\_mapper
+===================================
+
+.. currentmodule:: revrt.utilities.base
+
+.. autofunction:: region_mapper

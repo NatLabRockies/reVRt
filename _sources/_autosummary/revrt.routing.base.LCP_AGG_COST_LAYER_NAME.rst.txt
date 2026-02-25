@@ -1,0 +1,6 @@
+revrt.routing.base.LCP\_AGG\_COST\_LAYER\_NAME
+==============================================
+
+.. currentmodule:: revrt.routing.base
+
+.. autodata:: LCP_AGG_COST_LAYER_NAME

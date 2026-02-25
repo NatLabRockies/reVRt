@@ -1,0 +1,37 @@
+revrt.routing.cli
+=================
+
+.. automodule:: revrt.routing.cli
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   base
+   build_costs
+   build_route_table
+   finalize
+   point_to_feature
+   point_to_point
+

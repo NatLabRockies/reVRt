@@ -1,0 +1,6 @@
+revrt.routing.cli.build\_route\_table.point\_to\_feature\_route\_table
+======================================================================
+
+.. currentmodule:: revrt.routing.cli.build_route_table
+
+.. autofunction:: point_to_feature_route_table

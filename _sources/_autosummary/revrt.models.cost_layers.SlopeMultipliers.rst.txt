@@ -21,10 +21,8 @@ revrt.models.cost\_layers.SlopeMultipliers
       ~SlopeMultipliers.get
       ~SlopeMultipliers.items
       ~SlopeMultipliers.keys
-      ~SlopeMultipliers.pop
       ~SlopeMultipliers.popitem
       ~SlopeMultipliers.setdefault
-      ~SlopeMultipliers.update
       ~SlopeMultipliers.values
    
    

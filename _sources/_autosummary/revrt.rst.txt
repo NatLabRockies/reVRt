@@ -9,17 +9,35 @@
 
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      find_paths
+      simplify_using_slopes
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      RouteFinder
+   
    
 
    
    
    
 
-   
-   
-   
 
 
+.. rubric:: Modules
 
 .. autosummary::
    :toctree:
@@ -30,6 +48,7 @@
    costs
    exceptions
    models
+   routing
    spatial_characterization
    utilities
    warn

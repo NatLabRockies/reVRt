@@ -15,24 +15,6 @@ revrt.models.cost\_layers.MergeFrictionBarriers
 
    .. autosummary::
    
-      ~MergeFrictionBarriers.construct
-      ~MergeFrictionBarriers.copy
-      ~MergeFrictionBarriers.dict
-      ~MergeFrictionBarriers.from_orm
-      ~MergeFrictionBarriers.json
-      ~MergeFrictionBarriers.model_parametrized_name
-      ~MergeFrictionBarriers.model_post_init
-      ~MergeFrictionBarriers.model_rebuild
-      ~MergeFrictionBarriers.model_validate
-      ~MergeFrictionBarriers.model_validate_json
-      ~MergeFrictionBarriers.model_validate_strings
-      ~MergeFrictionBarriers.parse_file
-      ~MergeFrictionBarriers.parse_obj
-      ~MergeFrictionBarriers.parse_raw
-      ~MergeFrictionBarriers.schema
-      ~MergeFrictionBarriers.schema_json
-      ~MergeFrictionBarriers.update_forward_refs
-      ~MergeFrictionBarriers.validate
    
    
 

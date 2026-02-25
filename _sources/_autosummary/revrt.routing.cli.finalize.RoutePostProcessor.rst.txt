@@ -1,0 +1,35 @@
+revrt.routing.cli.finalize.RoutePostProcessor
+=============================================
+
+.. currentmodule:: revrt.routing.cli.finalize
+
+.. autoclass:: RoutePostProcessor
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RoutePostProcessor.process
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RoutePostProcessor.chunk_dir
+      ~RoutePostProcessor.file_suffix
+      ~RoutePostProcessor.files_to_collect
+      ~RoutePostProcessor.out_fp
+      ~RoutePostProcessor.rtf_mapper
+      ~RoutePostProcessor.writer
+   
+   

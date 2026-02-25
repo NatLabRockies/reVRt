@@ -7,11 +7,11 @@ Installing from PyPI
 --------------------
 
 reVRt can be installed via pip from
-`PyPI <https://pypi.org/project/NREL-reVRt>`__.
+`PyPI <https://pypi.org/project/NLR-reVRt>`__.
 
 .. code-block:: shell
 
-    pip install nrel-revrt
+    pip install nlr-revrt
 
 .. note::
 
@@ -57,8 +57,8 @@ results.
 
 Start by cloning the ``reVRt`` repository:
 
-- Using ssh: :code:`git clone git@github.com:NREL/reVRt.git`
-- Using https: :code:`git clone https://github.com/NREL/reVRt.git`
+- Using ssh: :code:`git clone git@github.com:NatLabRockies/reVRt.git`
+- Using https: :code:`git clone https://github.com/NatLabRockies/reVRt.git`
 
 If you don't already have ``pixi`` installed on your system, follow the (simple) `installation
 instructions <https://pixi.sh/latest/#installation>`_.

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; reVRt 0.2.1 documentation</title>
+    <title>Index &#8212; reVRt 0.3.0 documentation</title>
   
   
   
@@ -39,26 +39,383 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=37f418d5"></script>
+    <script src="_static/documentation_options.js?v=e259d695"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/tabs.js?v=3030b3cb"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
-    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script type="module">
-import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-window.addEventListener("load", () => mermaid.run());
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
+
+const defaultStyle = document.createElement('style');
+defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+`;
+document.head.appendChild(defaultStyle);
+
+const fullscreenStyle = document.createElement('style');
+fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+document.head.appendChild(fullscreenStyle);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const load = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(load, 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(load, 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(load, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    let previousScrollOffset = [window.scrollX, window.scrollY];
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", load);
 </script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.1" />
+  <meta name="docsearch:version" content="0.3.0" />
   </head>
   
   
@@ -120,7 +477,7 @@ window.addEventListener("load", () => mermaid.run());
   
   
   
-    <p class="title logo__title">reVRt 0.2.1 documentation</p>
+    <p class="title logo__title">reVRt 0.3.0 documentation</p>
   
 </a></div>
     
@@ -149,8 +506,8 @@ window.addEventListener("load", () => mermaid.run());
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -179,6 +536,13 @@ window.addEventListener("load", () => mermaid.run());
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -271,8 +635,8 @@ window.addEventListener("load", () => mermaid.run());
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -294,6 +658,13 @@ window.addEventListener("load", () => mermaid.run());
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="dev/index.html">
     Development
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -408,19 +779,39 @@ window.addEventListener("load", () => mermaid.run());
     --config_file
 
       <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-add-rr-to-nn-c">reVRt-add-rr-to-nn command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-batch-c">reVRt-batch command line option</a>
 </li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-feature-route-table-c">reVRt-build-feature-route-table command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-masks-c">reVRt-build-masks command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-route-costs-c">reVRt-build-route-costs command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layers-c">reVRt-build-routing-layers command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-convert-pois-to-lines-c">reVRt-convert-pois-to-lines command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-finalize-routes-c">reVRt-finalize-routes command line option</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-layers-from-file-c">reVRt-layers-from-file command line option</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-layers-to-file-c">reVRt-layers-to-file command line option</a>
 </li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-map-ss-to-rr-c">reVRt-map-ss-to-rr command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-pipeline-c">reVRt-pipeline command line option</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-characterization-c">reVRt-route-characterization command line option</a>
 </li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-features-c">reVRt-route-features command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-points-c">reVRt-route-points command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-script-c">reVRt-script command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-ss-from-conn-c">reVRt-ss-from-conn command line option</a>
 </li>
       </ul></li>
       <li>
@@ -522,19 +913,39 @@ window.addEventListener("load", () => mermaid.run());
     -c
 
       <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-add-rr-to-nn-c">reVRt-add-rr-to-nn command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-batch-c">reVRt-batch command line option</a>
 </li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-feature-route-table-c">reVRt-build-feature-route-table command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-masks-c">reVRt-build-masks command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-route-costs-c">reVRt-build-route-costs command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layers-c">reVRt-build-routing-layers command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-convert-pois-to-lines-c">reVRt-convert-pois-to-lines command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-finalize-routes-c">reVRt-finalize-routes command line option</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-layers-from-file-c">reVRt-layers-from-file command line option</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-layers-to-file-c">reVRt-layers-to-file command line option</a>
 </li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-map-ss-to-rr-c">reVRt-map-ss-to-rr command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-pipeline-c">reVRt-pipeline command line option</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-characterization-c">reVRt-route-characterization command line option</a>
 </li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-features-c">reVRt-route-features command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-points-c">reVRt-route-points command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-script-c">reVRt-script command line option</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-ss-from-conn-c">reVRt-ss-from-conn command line option</a>
 </li>
       </ul></li>
       <li>
@@ -614,6 +1025,10 @@ window.addEventListener("load", () => mermaid.run());
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.utilities.cli.add_rr_to_nn.html#revrt.utilities.cli.add_rr_to_nn">add_rr_to_nn() (in module revrt.utilities.cli)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.all_touched">all_touched (Rasterize attribute)</a>
 </li>
   </ul></td>
@@ -622,6 +1037,10 @@ window.addEventListener("load", () => mermaid.run());
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glossary.html#term-barrier-layer"><strong>barrier layer</strong></a>
+</li>
+      <li><a href="glossary.html#term-barrier-multiplier"><strong>barrier multiplier</strong></a>
+</li>
       <li><a href="_autosummary/revrt.constants.BARRIER_H5_LAYER_NAME.html#revrt.constants.BARRIER_H5_LAYER_NAME">BARRIER_H5_LAYER_NAME (in module revrt.constants)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.barrier_layer">barrier_layer (MergeFrictionBarriers attribute)</a>
@@ -629,6 +1048,8 @@ window.addEventListener("load", () => mermaid.run());
       <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.barrier_multiplier">barrier_multiplier (MergeFrictionBarriers attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.costs.base.BaseLayerCreator.html#revrt.costs.base.BaseLayerCreator">BaseLayerCreator (class in revrt.costs.base)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor">BatchRouteProcessor (class in revrt.routing.base)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.bins">bins (LayerBuildConfig attribute)</a>
 </li>
@@ -649,7 +1070,13 @@ window.addEventListener("load", () => mermaid.run());
 </li>
         <li><a href="_autosummary/revrt.costs.layer_creator.LayerCreator.html#revrt.costs.layer_creator.LayerCreator.build">(LayerCreator method)</a>
 </li>
+        <li><a href="_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager.build">(RoutingLayerManager method)</a>
+</li>
       </ul></li>
+      <li><a href="_autosummary/revrt.costs.cli.build_masks.html#revrt.costs.cli.build_masks">build_masks() (in module revrt.costs.cli)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.build_costs.build_routing_layer.html#revrt.routing.cli.build_costs.build_routing_layer">build_routing_layer() (in module revrt.routing.cli.build_costs)</a>
+</li>
       <li><a href="_autosummary/revrt.costs.cli.build_routing_layers.html#revrt.costs.cli.build_routing_layers">build_routing_layers() (in module revrt.costs.cli)</a>
 </li>
   </ul></td>
@@ -674,12 +1101,18 @@ window.addEventListener("load", () => mermaid.run());
       </ul></li>
       <li><a href="_autosummary/revrt.spatial_characterization.zonal.ZonalStats.html#revrt.spatial_characterization.zonal.ZonalStats.category_map">category_map (ZonalStats property)</a>
 </li>
+      <li><a href="glossary.html#term-cell-size"><strong>cell size</strong></a>
+</li>
       <li><a href="_autosummary/revrt.costs.base.BaseLayerCreator.html#revrt.costs.base.BaseLayerCreator.cell_size">cell_size (BaseLayerCreator property)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.costs.dry_costs_creator.DryCostsCreator.html#revrt.costs.dry_costs_creator.DryCostsCreator.cell_size">(DryCostsCreator property)</a>
 </li>
         <li><a href="_autosummary/revrt.costs.layer_creator.LayerCreator.html#revrt.costs.layer_creator.LayerCreator.cell_size">(LayerCreator property)</a>
+</li>
+        <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.cell_size">(LayeredFile property)</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics.cell_size">(RouteMetrics property)</a>
 </li>
       </ul></li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.center">center() (FractionalStat method)</a>
@@ -688,7 +1121,13 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.center">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.routing.base.CharacterizedLayer.html#revrt.routing.base.CharacterizedLayer">CharacterizedLayer (class in revrt.routing.base)</a>
+</li>
       <li><a href="_autosummary/revrt.utilities.base.check_geotiff.html#revrt.utilities.base.check_geotiff">check_geotiff() (in module revrt.utilities.base)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.chunk_dir">chunk_dir (RoutePostProcessor property)</a>
+</li>
+      <li><a href="_autosummary/revrt.utilities.handlers.chunked_read_gpkg.html#revrt.utilities.handlers.chunked_read_gpkg">chunked_read_gpkg() (in module revrt.utilities.handlers)</a>
 </li>
       <li><a href="_autosummary/revrt.costs.base.BaseLayerCreator.html#revrt.costs.base.BaseLayerCreator.chunks">chunks (BaseLayerCreator property)</a>
 
@@ -705,9 +1144,9 @@ window.addEventListener("load", () => mermaid.run());
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.clear">(SlopeMultipliers method)</a>
 </li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.clear">(TransmissionConfig method)</a>
-</li>
       </ul></li>
+      <li><a href="_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager.close">close() (RoutingLayerManager method)</a>
+</li>
       <li>
     COMMANDS
 
@@ -717,12 +1156,24 @@ window.addEventListener("load", () => mermaid.run());
       </ul></li>
       <li><a href="_autosummary/revrt.spatial_characterization.zonal.ZonalStats.html#revrt.spatial_characterization.zonal.ZonalStats.computable_stats">computable_stats (ZonalStats property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.ComputableStats.html#revrt.spatial_characterization.stats.ComputableStats">ComputableStats (class in revrt.spatial_characterization.stats)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.routing.base.CharacterizedLayer.html#revrt.routing.base.CharacterizedLayer.compute">compute() (CharacterizedLayer method)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics.compute">(RouteMetrics method)</a>
+</li>
+      </ul></li>
       <li><a href="_autosummary/revrt.costs.dry_costs_creator.compute_land_use_multipliers.html#revrt.costs.dry_costs_creator.compute_land_use_multipliers">compute_land_use_multipliers() (in module revrt.costs.dry_costs_creator)</a>
 </li>
+      <li><a href="_autosummary/revrt.routing.cli.point_to_feature.compute_lcp_routes.html#revrt.routing.cli.point_to_feature.compute_lcp_routes">compute_lcp_routes() (in module revrt.routing.cli.point_to_feature)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.point_to_point.compute_lcp_routes.html#revrt.routing.cli.point_to_point.compute_lcp_routes">(in module revrt.routing.cli.point_to_point)</a>
+</li>
+      </ul></li>
       <li><a href="_autosummary/revrt.costs.dry_costs_creator.compute_slope_multipliers.html#revrt.costs.dry_costs_creator.compute_slope_multipliers">compute_slope_multipliers() (in module revrt.costs.dry_costs_creator)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.ComputableStats.html#revrt.spatial_characterization.stats.ComputableStats.computed_base_stats">computed_base_stats() (ComputableStats method)</a>
@@ -731,30 +1182,38 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.ComputableStats.html#revrt.spatial_characterization.stats.ComputableStats.computed_percentiles">computed_percentiles() (ComputableStats method)</a>
 </li>
-      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.copy">copy() (DryCosts method)</a>
+      <li><a href="_autosummary/revrt.routing.utilities.convert_lat_lon_to_row_col.html#revrt.routing.utilities.convert_lat_lon_to_row_col">convert_lat_lon_to_row_col() (in module revrt.routing.utilities)</a>
+</li>
+      <li><a href="_autosummary/revrt.utilities.cli.convert_pois_to_lines.html#revrt.utilities.cli.convert_pois_to_lines">convert_pois_to_lines() (in module revrt.utilities.cli)</a>
+</li>
+      <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.copy">copy() (IsoMultipliers method)</a>
 
       <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.copy">(IsoMultipliers method)</a>
-</li>
         <li><a href="_autosummary/revrt.models.cost_layers.LandUseMultipliers.html#revrt.models.cost_layers.LandUseMultipliers.copy">(LandUseMultipliers method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.copy">(LayerBuildConfig method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.copy">(LayerConfig method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.copy">(MergeFrictionBarriers method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.RangeConfig.html#revrt.models.cost_layers.RangeConfig.copy">(RangeConfig method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.copy">(Rasterize method)</a>
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.copy">(SlopeMultipliers method)</a>
 </li>
-        <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.copy">(TransmissionLayerCreationConfig method)</a>
-</li>
       </ul></li>
+      <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics.cost">cost (RouteMetrics property)</a>
+</li>
+      <li><a href="glossary.html#term-cost-layer"><strong>cost layer</strong></a>
+</li>
+      <li><a href="glossary.html#term-cost-per-mile"><strong>cost per mile</strong></a>
+</li>
+      <li><a href="glossary.html#term-cost-surface"><strong>cost surface</strong></a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.cost_configs">cost_configs (DryCosts attribute)</a>
 </li>
+      <li><a href="_autosummary/revrt.routing.base.RoutingScenario.html#revrt.routing.base.RoutingScenario.cost_function_json">cost_function_json (RoutingScenario property)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.html#revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.cost_metadata">cost_metadata (PointToFeatureRouteDefinitionConverter property)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html#revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.cost_metadata">(PointToPointRouteDefinitionConverter property)</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter.cost_metadata">(RouteToDefinitionConverter property)</a>
+</li>
+      </ul></li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.COUNT">COUNT (Stat attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.count">count() (FractionalStat method)</a>
@@ -775,7 +1234,11 @@ window.addEventListener("load", () => mermaid.run());
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glossary.html#term-Dask"><strong>Dask</strong></a>
+</li>
       <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.data_layers">data_layers (LayeredFile property)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.default_attrs">default_attrs (BatchRouteProcessor property)</a>
 </li>
       <li><a href="_autosummary/revrt.constants.DEFAULT_DTYPE.html#revrt.constants.DEFAULT_DTYPE">DEFAULT_DTYPE (in module revrt.constants)</a>
 </li>
@@ -789,10 +1252,10 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.default_mults">default_mults (DryCosts attribute)</a>
 </li>
-      <li><a href="_autosummary/revrt.utilities.base.delete_data_file.html#revrt.utilities.base.delete_data_file">delete_data_file() (in module revrt.utilities.base)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.utilities.base.delete_data_file.html#revrt.utilities.base.delete_data_file">delete_data_file() (in module revrt.utilities.base)</a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.description">description (LayerConfig attribute)</a>
 </li>
       <li>
@@ -802,6 +1265,8 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-reset-status-arg-DIRECTORY">reVRt-reset-status command line option</a>
 </li>
       </ul></li>
+      <li><a href="glossary.html#term-dry-mask"><strong>dry mask</strong></a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.dry_costs">dry_costs (TransmissionLayerCreationConfig attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks.dry_mask">dry_mask (Masks property)</a>
@@ -828,24 +1293,40 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.encode">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics.end_lat">end_lat (RouteMetrics property)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics.end_lon">end_lon (RouteMetrics property)</a>
+</li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.endswith">endswith() (FractionalStat method)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.endswith">(Stat method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/revrt.utilities.base.expand_dim_if_needed.html#revrt.utilities.base.expand_dim_if_needed">expand_dim_if_needed() (in module revrt.utilities.base)</a>
+      <li><a href="_autosummary/revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.html#revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.existing_routes">existing_routes (PointToFeatureRouteDefinitionConverter property)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html#revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.existing_routes">(PointToPointRouteDefinitionConverter property)</a>
 </li>
+        <li><a href="_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter.existing_routes">(RouteToDefinitionConverter property)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.utilities.base.expand_dim_if_needed.html#revrt.utilities.base.expand_dim_if_needed">expand_dim_if_needed() (in module revrt.utilities.base)</a>
+</li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.expandtabs">expandtabs() (FractionalStat method)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.expandtabs">(Stat method)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.extent">extent (LayerBuildConfig attribute)</a>
+      <li><a href="glossary.html#term-extent"><strong>extent</strong></a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.extent">(LayerBuildConfig attribute)</a>
 </li>
+      </ul></li>
       <li><a href="_autosummary/revrt.models.cost_layers.Extents.html#revrt.models.cost_layers.Extents">Extents (in module revrt.models.cost_layers)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.extra_tiffs">extra_tiffs (DryCosts attribute)</a>
@@ -860,7 +1341,15 @@ window.addEventListener("load", () => mermaid.run());
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.utilities.base.features_to_route_table.html#revrt.utilities.base.features_to_route_table">features_to_route_table() (in module revrt.utilities.base)</a>
+</li>
       <li><a href="_autosummary/revrt.utilities.base.file_full_path.html#revrt.utilities.base.file_full_path">file_full_path() (in module revrt.utilities.base)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.file_suffix">file_suffix (RoutePostProcessor property)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.files_to_collect">files_to_collect (RoutePostProcessor property)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.utilities.filter_points_outside_cost_domain.html#revrt.routing.utilities.filter_points_outside_cost_domain">filter_points_outside_cost_domain() (in module revrt.routing.utilities)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.find">find() (FractionalStat method)</a>
 
@@ -868,6 +1357,8 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.find">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.find_paths.html#revrt.find_paths">find_paths() (in module revrt)</a>
+</li>
       <li>
     FOLDER
 
@@ -875,6 +1366,8 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-status-arg-FOLDER">reVRt-status command line option</a>
 </li>
       </ul></li>
+      <li><a href="glossary.html#term-forced-inclusion"><strong>forced inclusion</strong></a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.forced_inclusion">forced_inclusion (LayerBuildConfig attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.LandUseMultipliers.html#revrt.models.cost_layers.LandUseMultipliers.forest">forest (LandUseMultipliers attribute)</a>
@@ -885,19 +1378,21 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.format">(Stat method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.format_map">format_map() (FractionalStat method)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.format_map">(Stat method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.FRACTIONAL_AREA">FRACTIONAL_AREA (FractionalStat attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.FRACTIONAL_PIXEL_COUNT">FRACTIONAL_PIXEL_COUNT (FractionalStat attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat">FractionalStat (class in revrt.spatial_characterization.stats)</a>
+</li>
+      <li><a href="glossary.html#term-friction-layer"><strong>friction layer</strong></a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.friction_layer">friction_layer (MergeFrictionBarriers attribute)</a>
 </li>
@@ -921,6 +1416,10 @@ window.addEventListener("load", () => mermaid.run());
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics.geom">geom (RouteMetrics property)</a>
+</li>
+      <li><a href="glossary.html#term-GeoTIFF"><strong>GeoTIFF</strong></a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.get">get() (IsoMultipliers method)</a>
 
       <ul>
@@ -928,12 +1427,12 @@ window.addEventListener("load", () => mermaid.run());
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.get">(SlopeMultipliers method)</a>
 </li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.get">(TransmissionConfig method)</a>
-</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.global_value">global_value (LayerBuildConfig attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.utilities.handlers.gpkg_crs.html#revrt.utilities.handlers.gpkg_crs">gpkg_crs() (in module revrt.utilities.handlers)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -955,6 +1454,10 @@ window.addEventListener("load", () => mermaid.run());
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.include_in_file">include_in_file (LayerConfig attribute)</a>
 </li>
+      <li><a href="_autosummary/revrt.routing.base.IncrementalRouteWriter.html#revrt.routing.base.IncrementalRouteWriter">IncrementalRouteWriter (class in revrt.routing.base)</a>
+</li>
+      <li><a href="_autosummary/revrt.utilities.handlers.IncrementalWriter.html#revrt.utilities.handlers.IncrementalWriter">IncrementalWriter (class in revrt.utilities.handlers)</a>
+</li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.index">index() (FractionalStat method)</a>
 
       <ul>
@@ -962,6 +1465,8 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       </ul></li>
       <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.input_layer_dir">input_layer_dir (TransmissionLayerCreationConfig attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.utilities.raster.integer_dimension_window.html#revrt.utilities.raster.integer_dimension_window">integer_dimension_window() (in module revrt.utilities.raster)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.isalnum">isalnum() (FractionalStat method)</a>
 
@@ -999,14 +1504,14 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.isidentifier">(Stat method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.islower">islower() (FractionalStat method)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.islower">(Stat method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.isnumeric">isnumeric() (FractionalStat method)</a>
 
       <ul>
@@ -1050,8 +1555,6 @@ window.addEventListener("load", () => mermaid.run());
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.items">(SlopeMultipliers method)</a>
 </li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.items">(TransmissionConfig method)</a>
-</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -1078,8 +1581,6 @@ window.addEventListener("load", () => mermaid.run());
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.keys">(SlopeMultipliers method)</a>
 </li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.keys">(TransmissionConfig method)</a>
-</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -1095,6 +1596,8 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.land_use">land_use (IsoMultipliers attribute)</a>
 </li>
+      <li><a href="glossary.html#term-landfall-mask"><strong>landfall mask</strong></a>
+</li>
       <li><a href="_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks.landfall_mask">landfall_mask (Masks property)</a>
 </li>
       <li><a href="_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks.LANDFALL_MASK_FNAME">LANDFALL_MASK_FNAME (Masks attribute)</a>
@@ -1102,6 +1605,8 @@ window.addEventListener("load", () => mermaid.run());
       <li><a href="_autosummary/revrt.models.cost_layers.LandUseMultipliers.html#revrt.models.cost_layers.LandUseMultipliers">LandUseMultipliers (class in revrt.models.cost_layers)</a>
 </li>
       <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.LATITUDE">LATITUDE (LayeredFile attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager.latitudes">latitudes (RoutingLayerManager property)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.layer_name">layer_name (LayerConfig attribute)</a>
 </li>
@@ -1117,8 +1622,12 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.costs.layer_creator.LayerCreator.html#revrt.costs.layer_creator.LayerCreator">LayerCreator (class in revrt.costs.layer_creator)</a>
 </li>
-      <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile">LayeredFile (class in revrt.utilities.handlers)</a>
+      <li><a href="glossary.html#term-LayeredFile"><strong>LayeredFile</strong></a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile">(class in revrt.utilities.handlers)</a>
 </li>
+      </ul></li>
       <li><a href="_autosummary/revrt.models.cost_layers.Layers.html#revrt.models.cost_layers.Layers">Layers (in module revrt.models.cost_layers)</a>
 </li>
   </ul></td>
@@ -1135,6 +1644,10 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.ComputableStats.html#revrt.spatial_characterization.stats.ComputableStats.lazy_pixel_count">lazy_pixel_count() (ComputableStats method)</a>
 </li>
+      <li><a href="_autosummary/revrt.routing.base.LCP_AGG_COST_LAYER_NAME.html#revrt.routing.base.LCP_AGG_COST_LAYER_NAME">LCP_AGG_COST_LAYER_NAME (in module revrt.routing.base)</a>
+</li>
+      <li><a href="glossary.html#term-least-cost-path"><strong>least-cost path</strong></a>
+</li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.ljust">ljust() (FractionalStat method)</a>
 
       <ul>
@@ -1148,6 +1661,8 @@ window.addEventListener("load", () => mermaid.run());
       <li><a href="_autosummary/revrt.utilities.base.log_mem.html#revrt.utilities.base.log_mem">log_mem() (in module revrt.utilities.base)</a>
 </li>
       <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.LONGITUDE">LONGITUDE (LayeredFile attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager.longitudes">longitudes (RoutingLayerManager property)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.lower">lower() (FractionalStat method)</a>
 
@@ -1169,6 +1684,8 @@ window.addEventListener("load", () => mermaid.run());
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.MAJORITY">MAJORITY (Stat attribute)</a>
 </li>
+      <li><a href="_autosummary/revrt.routing.utilities.make_rev_sc_points.html#revrt.routing.utilities.make_rev_sc_points">make_rev_sc_points() (in module revrt.routing.utilities)</a>
+</li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.maketrans">maketrans() (FractionalStat static method)</a>
 
       <ul>
@@ -1176,6 +1693,14 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       </ul></li>
       <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.map">map (LayerBuildConfig attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.utilities.PointToFeatureMapper.html#revrt.routing.utilities.PointToFeatureMapper.map_points">map_points() (PointToFeatureMapper method)</a>
+</li>
+      <li><a href="_autosummary/revrt.utilities.cli.map_ss_to_rr.html#revrt.utilities.cli.map_ss_to_rr">map_ss_to_rr() (in module revrt.utilities.cli)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.utilities.map_to_costs.html#revrt.routing.utilities.map_to_costs">map_to_costs() (in module revrt.routing.utilities)</a>
+</li>
+      <li><a href="glossary.html#term-masks"><strong>masks</strong></a>
 </li>
       <li><a href="_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks">Masks (class in revrt.costs.masks)</a>
 </li>
@@ -1188,6 +1713,10 @@ window.addEventListener("load", () => mermaid.run());
       <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.MEAN">MEAN (Stat attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.MEDIAN">MEDIAN (Stat attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.constants.MEDIUM_CUTOFF.html#revrt.constants.MEDIUM_CUTOFF">MEDIUM_CUTOFF (in module revrt.constants)</a>
+</li>
+      <li><a href="_autosummary/revrt.constants.MEDIUM_MULT.html#revrt.constants.MEDIUM_MULT">MEDIUM_MULT (in module revrt.constants)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.merge_friction_and_barriers">merge_friction_and_barriers (TransmissionLayerCreationConfig attribute)</a>
 </li>
@@ -1249,104 +1778,8 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.model_fields_set">(TransmissionLayerCreationConfig property)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.model_parametrized_name">model_parametrized_name() (DryCosts class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.model_parametrized_name">(LayerBuildConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.model_parametrized_name">(LayerConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.model_parametrized_name">(MergeFrictionBarriers class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.RangeConfig.html#revrt.models.cost_layers.RangeConfig.model_parametrized_name">(RangeConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.model_parametrized_name">(Rasterize class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.model_parametrized_name">(TransmissionLayerCreationConfig class method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.model_post_init">model_post_init() (DryCosts method)</a>
-
-      <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.model_post_init">(LayerBuildConfig method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.model_post_init">(LayerConfig method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.model_post_init">(MergeFrictionBarriers method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.RangeConfig.html#revrt.models.cost_layers.RangeConfig.model_post_init">(RangeConfig method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.model_post_init">(Rasterize method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.model_post_init">(TransmissionLayerCreationConfig method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.model_rebuild">model_rebuild() (DryCosts class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.model_rebuild">(LayerBuildConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.model_rebuild">(LayerConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.model_rebuild">(MergeFrictionBarriers class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.RangeConfig.html#revrt.models.cost_layers.RangeConfig.model_rebuild">(RangeConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.model_rebuild">(Rasterize class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.model_rebuild">(TransmissionLayerCreationConfig class method)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.model_validate">model_validate() (DryCosts class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.model_validate">(LayerBuildConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.model_validate">(LayerConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.model_validate">(MergeFrictionBarriers class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.RangeConfig.html#revrt.models.cost_layers.RangeConfig.model_validate">(RangeConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.model_validate">(Rasterize class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.model_validate">(TransmissionLayerCreationConfig class method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.model_validate_json">model_validate_json() (DryCosts class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.model_validate_json">(LayerBuildConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.model_validate_json">(LayerConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.model_validate_json">(MergeFrictionBarriers class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.RangeConfig.html#revrt.models.cost_layers.RangeConfig.model_validate_json">(RangeConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.model_validate_json">(Rasterize class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.model_validate_json">(TransmissionLayerCreationConfig class method)</a>
-</li>
-      </ul></li>
-      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.model_validate_strings">model_validate_strings() (DryCosts class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig.model_validate_strings">(LayerBuildConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.model_validate_strings">(LayerConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.model_validate_strings">(MergeFrictionBarriers class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.RangeConfig.html#revrt.models.cost_layers.RangeConfig.model_validate_strings">(RangeConfig class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.model_validate_strings">(Rasterize class method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.model_validate_strings">(TransmissionLayerCreationConfig class method)</a>
-</li>
-      </ul></li>
       <li>
     module
 
@@ -1376,6 +1809,26 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.models.html#module-revrt.models">revrt.models</a>
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.html#module-revrt.models.cost_layers">revrt.models.cost_layers</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.html#module-revrt.routing">revrt.routing</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.base.html#module-revrt.routing.base">revrt.routing.base</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.html#module-revrt.routing.cli">revrt.routing.cli</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.base.html#module-revrt.routing.cli.base">revrt.routing.cli.base</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.build_costs.html#module-revrt.routing.cli.build_costs">revrt.routing.cli.build_costs</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.build_route_table.html#module-revrt.routing.cli.build_route_table">revrt.routing.cli.build_route_table</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.finalize.html#module-revrt.routing.cli.finalize">revrt.routing.cli.finalize</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.point_to_feature.html#module-revrt.routing.cli.point_to_feature">revrt.routing.cli.point_to_feature</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.point_to_point.html#module-revrt.routing.cli.point_to_point">revrt.routing.cli.point_to_point</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.utilities.html#module-revrt.routing.utilities">revrt.routing.utilities</a>
 </li>
         <li><a href="_autosummary/revrt.spatial_characterization.html#module-revrt.spatial_characterization">revrt.spatial_characterization</a>
 </li>
@@ -1412,12 +1865,22 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.costs.dry_costs_creator.NLCD_LAND_USE_CLASSES.html#revrt.costs.dry_costs_creator.NLCD_LAND_USE_CLASSES">NLCD_LAND_USE_CLASSES (in module revrt.costs.dry_costs_creator)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.nlcd_tiff">nlcd_tiff (DryCosts attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.NODATA">NODATA (Stat attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.utilities.handlers.num_feats_in_gpkg.html#revrt.utilities.handlers.num_feats_in_gpkg">num_feats_in_gpkg() (in module revrt.utilities.handlers)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.html#revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.num_routes">num_routes (PointToFeatureRouteDefinitionConverter property)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html#revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.num_routes">(PointToPointRouteDefinitionConverter property)</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter.num_routes">(RouteToDefinitionConverter property)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1426,8 +1889,12 @@ window.addEventListener("load", () => mermaid.run());
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks.OFFSHORE_MASK_FNAME">OFFSHORE_MASK_FNAME (Masks attribute)</a>
 </li>
+      <li><a href="_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.out_fp">out_fp (RoutePostProcessor property)</a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.output_layer_name">output_layer_name (MergeFrictionBarriers attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.costs.base.BaseLayerCreator.html#revrt.costs.base.BaseLayerCreator.output_tiff_dir">output_tiff_dir (BaseLayerCreator property)</a>
 
       <ul>
@@ -1458,18 +1925,22 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.PIXEL_COUNT">PIXEL_COUNT (Stat attribute)</a>
 </li>
-      <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.pop">pop() (IsoMultipliers method)</a>
-
-      <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.LandUseMultipliers.html#revrt.models.cost_layers.LandUseMultipliers.pop">(LandUseMultipliers method)</a>
+      <li><a href="glossary.html#term-Pixi"><strong>Pixi</strong></a>
 </li>
-        <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.pop">(SlopeMultipliers method)</a>
+      <li><a href="glossary.html#term-point-of-interconnection"><strong>point of interconnection</strong></a>
 </li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.pop">(TransmissionConfig method)</a>
+      <li><a href="_autosummary/revrt.routing.cli.build_route_table.point_to_feature_route_table.html#revrt.routing.cli.build_route_table.point_to_feature_route_table">point_to_feature_route_table() (in module revrt.routing.cli.build_route_table)</a>
 </li>
-      </ul></li>
+      <li><a href="_autosummary/revrt.routing.utilities.points_csv_to_geo_dataframe.html#revrt.routing.utilities.points_csv_to_geo_dataframe">points_csv_to_geo_dataframe() (in module revrt.routing.utilities)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.utilities.PointToFeatureMapper.html#revrt.routing.utilities.PointToFeatureMapper">PointToFeatureMapper (class in revrt.routing.utilities)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.html#revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter">PointToFeatureRouteDefinitionConverter (class in revrt.routing.cli.point_to_feature)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html#revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter">PointToPointRouteDefinitionConverter (class in revrt.routing.cli.point_to_point)</a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.popitem">popitem() (IsoMultipliers method)</a>
 
       <ul>
@@ -1477,10 +1948,24 @@ window.addEventListener("load", () => mermaid.run());
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.popitem">(SlopeMultipliers method)</a>
 </li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.popitem">(TransmissionConfig method)</a>
+      </ul></li>
+      <li><a href="_autosummary/revrt.routing.base.IncrementalRouteWriter.html#revrt.routing.base.IncrementalRouteWriter.preprocess_chunk">preprocess_chunk() (IncrementalRouteWriter method)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.utilities.handlers.IncrementalWriter.html#revrt.utilities.handlers.IncrementalWriter.preprocess_chunk">(IncrementalWriter method)</a>
+</li>
+      </ul></li>
+      <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.process">process() (BatchRouteProcessor method)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.process">(RoutePostProcessor method)</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.finalize.RouteToFeatureMapper.html#revrt.routing.cli.finalize.RouteToFeatureMapper.process">(RouteToFeatureMapper method)</a>
 </li>
       </ul></li>
       <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.profile">profile (LayeredFile property)</a>
+</li>
+      <li><a href="glossary.html#term-PyO3"><strong>PyO3</strong></a>
 </li>
   </ul></td>
 </tr></table>
@@ -1502,6 +1987,8 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks.RAW_LAND_MASK_FNAME">RAW_LAND_MASK_FNAME (Masks attribute)</a>
 </li>
+      <li><a href="_autosummary/revrt.utilities.base.region_mapper.html#revrt.utilities.base.region_mapper">region_mapper() (in module revrt.utilities.base)</a>
+</li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.removeprefix">removeprefix() (FractionalStat method)</a>
 
       <ul>
@@ -1522,6 +2009,10 @@ window.addEventListener("load", () => mermaid.run());
       </ul></li>
       <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.reproject">reproject (Rasterize attribute)</a>
 </li>
+      <li><a href="glossary.html#term-reV"><strong>reV</strong></a>
+</li>
+      <li><a href="glossary.html#term-reVRt"><strong>reVRt</strong></a>
+</li>
       <li>
     revrt
 
@@ -1538,6 +2029,15 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-version">--version</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-v">-v</a>
+</li>
+      </ul></li>
+      <li>
+    reVRt-add-rr-to-nn command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-add-rr-to-nn-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-add-rr-to-nn-c">-c</a>
 </li>
       </ul></li>
       <li>
@@ -1558,12 +2058,57 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       </ul></li>
       <li>
+    reVRt-build-feature-route-table command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-feature-route-table-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-feature-route-table-c">-c</a>
+</li>
+      </ul></li>
+      <li>
+    reVRt-build-masks command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-masks-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-masks-c">-c</a>
+</li>
+      </ul></li>
+      <li>
+    reVRt-build-route-costs command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-route-costs-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-route-costs-c">-c</a>
+</li>
+      </ul></li>
+      <li>
     reVRt-build-routing-layers command line option
 
       <ul>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layers-c">--config_file</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layers-c">-c</a>
+</li>
+      </ul></li>
+      <li>
+    reVRt-convert-pois-to-lines command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-convert-pois-to-lines-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-convert-pois-to-lines-c">-c</a>
+</li>
+      </ul></li>
+      <li>
+    reVRt-finalize-routes command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-finalize-routes-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-finalize-routes-c">-c</a>
 </li>
       </ul></li>
       <li>
@@ -1582,6 +2127,15 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-layers-to-file-c">--config_file</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-layers-to-file-c">-c</a>
+</li>
+      </ul></li>
+      <li>
+    reVRt-map-ss-to-rr command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-map-ss-to-rr-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-map-ss-to-rr-c">-c</a>
 </li>
       </ul></li>
       <li>
@@ -1628,12 +2182,39 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       </ul></li>
       <li>
+    reVRt-route-features command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-features-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-features-c">-c</a>
+</li>
+      </ul></li>
+      <li>
+    reVRt-route-points command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-points-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-route-points-c">-c</a>
+</li>
+      </ul></li>
+      <li>
     reVRt-script command line option
 
       <ul>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-script-c">--config_file</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-script-c">-c</a>
+</li>
+      </ul></li>
+      <li>
+    reVRt-ss-from-conn command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-ss-from-conn-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-ss-from-conn-c">-c</a>
 </li>
       </ul></li>
       <li>
@@ -1757,6 +2338,76 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       </ul></li>
       <li>
+    revrt.routing
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.html#module-revrt.routing">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.base
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.base.html#module-revrt.routing.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.cli
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.html#module-revrt.routing.cli">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.cli.base
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.base.html#module-revrt.routing.cli.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.cli.build_costs
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.build_costs.html#module-revrt.routing.cli.build_costs">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.cli.build_route_table
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.build_route_table.html#module-revrt.routing.cli.build_route_table">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.cli.finalize
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.finalize.html#module-revrt.routing.cli.finalize">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.cli.point_to_feature
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.point_to_feature.html#module-revrt.routing.cli.point_to_feature">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.cli.point_to_point
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.point_to_point.html#module-revrt.routing.cli.point_to_point">module</a>
+</li>
+      </ul></li>
+      <li>
+    revrt.routing.utilities
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.utilities.html#module-revrt.routing.utilities">module</a>
+</li>
+      </ul></li>
+      <li>
     revrt.spatial_characterization
 
       <ul>
@@ -1838,7 +2489,11 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.exceptions.revrtFileNotFoundError.html#revrt.exceptions.revrtFileNotFoundError">revrtFileNotFoundError</a>
 </li>
+      <li><a href="_autosummary/revrt.exceptions.revrtInvalidStartCostError.html#revrt.exceptions.revrtInvalidStartCostError">revrtInvalidStartCostError</a>
+</li>
       <li><a href="_autosummary/revrt.exceptions.revrtKeyError.html#revrt.exceptions.revrtKeyError">revrtKeyError</a>
+</li>
+      <li><a href="_autosummary/revrt.exceptions.revrtLeastCostPathNotFoundError.html#revrt.exceptions.revrtLeastCostPathNotFoundError">revrtLeastCostPathNotFoundError</a>
 </li>
       <li><a href="_autosummary/revrt.exceptions.revrtNotImplementedError.html#revrt.exceptions.revrtNotImplementedError">revrtNotImplementedError</a>
 </li>
@@ -1870,7 +2525,29 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.rjust">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.route_attrs">route_attrs (BatchRouteProcessor property)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.route_definitions">route_definitions (BatchRouteProcessor property)</a>
+</li>
+      <li><a href="_autosummary/revrt.RouteFinder.html#revrt.RouteFinder">RouteFinder (class in revrt)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics">RouteMetrics (class in revrt.routing.base)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor">RoutePostProcessor (class in revrt.routing.cli.finalize)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter">RouteToDefinitionConverter (class in revrt.routing.cli.base)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.finalize.RouteToFeatureMapper.html#revrt.routing.cli.finalize.RouteToFeatureMapper">RouteToFeatureMapper (class in revrt.routing.cli.finalize)</a>
+</li>
+      <li><a href="glossary.html#term-routing-file"><strong>routing file</strong></a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.routing_file">routing_file (TransmissionLayerCreationConfig attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.routing_layers">routing_layers (BatchRouteProcessor property)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager">RoutingLayerManager (class in revrt.routing.base)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.base.RoutingScenario.html#revrt.routing.base.RoutingScenario">RoutingScenario (class in revrt.routing.base)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.rpartition">rpartition() (FractionalStat method)</a>
 
@@ -1890,12 +2567,20 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.rstrip">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.rtf_mapper">rtf_mapper (RoutePostProcessor property)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.routing.base.IncrementalRouteWriter.html#revrt.routing.base.IncrementalRouteWriter.save">save() (IncrementalRouteWriter method)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.utilities.handlers.IncrementalWriter.html#revrt.utilities.handlers.IncrementalWriter.save">(IncrementalWriter method)</a>
+</li>
+      </ul></li>
       <li><a href="_autosummary/revrt.utilities.base.save_data_using_custom_props.html#revrt.utilities.base.save_data_using_custom_props">save_data_using_custom_props() (in module revrt.utilities.base)</a>
 </li>
       <li><a href="_autosummary/revrt.utilities.base.save_data_using_layer_file_profile.html#revrt.utilities.base.save_data_using_layer_file_profile">save_data_using_layer_file_profile() (in module revrt.utilities.base)</a>
@@ -1906,8 +2591,6 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.models.cost_layers.LandUseMultipliers.html#revrt.models.cost_layers.LandUseMultipliers.setdefault">(LandUseMultipliers method)</a>
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.setdefault">(SlopeMultipliers method)</a>
-</li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.setdefault">(TransmissionConfig method)</a>
 </li>
       </ul></li>
       <li><a href="_autosummary/revrt.costs.base.BaseLayerCreator.html#revrt.costs.base.BaseLayerCreator.shape">shape (BaseLayerCreator property)</a>
@@ -1920,26 +2603,34 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.shape">(LayeredFile property)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.constants.SHORT_CUTOFF.html#revrt.constants.SHORT_CUTOFF">SHORT_CUTOFF (in module revrt.constants)</a>
+</li>
+      <li><a href="_autosummary/revrt.constants.SHORT_MULT.html#revrt.constants.SHORT_MULT">SHORT_MULT (in module revrt.constants)</a>
+</li>
+      <li><a href="_autosummary/revrt.simplify_using_slopes.html#revrt.simplify_using_slopes">simplify_using_slopes() (in module revrt)</a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.slope">slope (IsoMultipliers attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.slope_tiff">slope_tiff (DryCosts attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers">SlopeMultipliers (class in revrt.models.cost_layers)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.split">split() (FractionalStat method)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.split">(Stat method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.splitlines">splitlines() (FractionalStat method)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.splitlines">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.utilities.cli.ss_from_conn.html#revrt.utilities.cli.ss_from_conn">ss_from_conn() (in module revrt.utilities.cli)</a>
+</li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.startswith">startswith() (FractionalStat method)</a>
 
       <ul>
@@ -1984,6 +2675,8 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.title">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics.total_path_length">total_path_length (RouteMetrics property)</a>
+</li>
       <li><a href="_autosummary/revrt.utilities.base.TRANSFORM_ATOL.html#revrt.utilities.base.TRANSFORM_ATOL">TRANSFORM_ATOL (in module revrt.utilities.base)</a>
 </li>
   </ul></td>
@@ -1996,6 +2689,8 @@ window.addEventListener("load", () => mermaid.run());
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.translate">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="glossary.html#term-transmission-corridor"><strong>transmission corridor</strong></a>
+</li>
       <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig">TransmissionConfig (class in revrt.costs.config.config)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig">TransmissionLayerCreationConfig (class in revrt.models.cost_layers)</a>
@@ -2008,24 +2703,14 @@ window.addEventListener("load", () => mermaid.run());
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.UNIQUE">UNIQUE (Stat attribute)</a>
 </li>
-      <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.update">update() (IsoMultipliers method)</a>
-
-      <ul>
-        <li><a href="_autosummary/revrt.models.cost_layers.LandUseMultipliers.html#revrt.models.cost_layers.LandUseMultipliers.update">(LandUseMultipliers method)</a>
-</li>
-        <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.update">(SlopeMultipliers method)</a>
-</li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.update">(TransmissionConfig method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.upper">upper() (FractionalStat method)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.upper">(Stat method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.models.cost_layers.LandUseMultipliers.html#revrt.models.cost_layers.LandUseMultipliers.urban">urban (LandUseMultipliers attribute)</a>
 </li>
   </ul></td>
@@ -2042,6 +2727,8 @@ window.addEventListener("load", () => mermaid.run());
       </ul></li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.VALUE_MULTIPLIED_BY_FRACTIONAL_AREA">VALUE_MULTIPLIED_BY_FRACTIONAL_AREA (FractionalStat attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.values">values() (IsoMultipliers method)</a>
 
       <ul>
@@ -2049,11 +2736,7 @@ window.addEventListener("load", () => mermaid.run());
 </li>
         <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers.values">(SlopeMultipliers method)</a>
 </li>
-        <li><a href="_autosummary/revrt.costs.config.config.TransmissionConfig.html#revrt.costs.config.config.TransmissionConfig.values">(TransmissionConfig method)</a>
-</li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig.values_are_costs_per_mile">values_are_costs_per_mile (LayerConfig attribute)</a>
 </li>
   </ul></td>
@@ -2065,6 +2748,8 @@ window.addEventListener("load", () => mermaid.run());
       <li><a href="_autosummary/revrt.costs.dry_costs_creator.WATER_MULTIPLIER.html#revrt.costs.dry_costs_creator.WATER_MULTIPLIER">WATER_MULTIPLIER (in module revrt.costs.dry_costs_creator)</a>
 </li>
       <li><a href="_autosummary/revrt.costs.dry_costs_creator.WATER_NLCD_CODE.html#revrt.costs.dry_costs_creator.WATER_NLCD_CODE">WATER_NLCD_CODE (in module revrt.costs.dry_costs_creator)</a>
+</li>
+      <li><a href="glossary.html#term-wet-mask"><strong>wet mask</strong></a>
 </li>
       <li><a href="_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks.wet_mask">wet_mask (Masks property)</a>
 </li>
@@ -2078,12 +2763,16 @@ window.addEventListener("load", () => mermaid.run());
 </li>
       <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.write_layer">write_layer() (LayeredFile method)</a>
 </li>
+      <li><a href="_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.writer">writer (RoutePostProcessor property)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="Z">Z</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="glossary.html#term-Zarr"><strong>Zarr</strong></a>
+</li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.zfill">zfill() (FractionalStat method)</a>
 
       <ul>

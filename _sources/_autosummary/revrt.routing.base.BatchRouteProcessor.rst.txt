@@ -1,0 +1,33 @@
+revrt.routing.base.BatchRouteProcessor
+======================================
+
+.. currentmodule:: revrt.routing.base
+
+.. autoclass:: BatchRouteProcessor
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BatchRouteProcessor.process
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BatchRouteProcessor.default_attrs
+      ~BatchRouteProcessor.route_attrs
+      ~BatchRouteProcessor.route_definitions
+      ~BatchRouteProcessor.routing_layers
+   
+   

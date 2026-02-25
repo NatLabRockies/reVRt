@@ -1,0 +1,6 @@
+revrt.utilities.base.features\_to\_route\_table
+===============================================
+
+.. currentmodule:: revrt.utilities.base
+
+.. autofunction:: features_to_route_table

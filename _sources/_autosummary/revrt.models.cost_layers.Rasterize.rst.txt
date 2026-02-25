@@ -15,24 +15,6 @@ revrt.models.cost\_layers.Rasterize
 
    .. autosummary::
    
-      ~Rasterize.construct
-      ~Rasterize.copy
-      ~Rasterize.dict
-      ~Rasterize.from_orm
-      ~Rasterize.json
-      ~Rasterize.model_parametrized_name
-      ~Rasterize.model_post_init
-      ~Rasterize.model_rebuild
-      ~Rasterize.model_validate
-      ~Rasterize.model_validate_json
-      ~Rasterize.model_validate_strings
-      ~Rasterize.parse_file
-      ~Rasterize.parse_obj
-      ~Rasterize.parse_raw
-      ~Rasterize.schema
-      ~Rasterize.schema_json
-      ~Rasterize.update_forward_refs
-      ~Rasterize.validate
    
    
 

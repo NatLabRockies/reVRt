@@ -21,6 +21,8 @@ revrt.utilities
 
 
 
+.. rubric:: Modules
+
 .. autosummary::
    :toctree:
    :template: custom-module-template.rst

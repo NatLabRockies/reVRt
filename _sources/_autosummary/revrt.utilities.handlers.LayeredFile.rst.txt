@@ -35,6 +35,7 @@ revrt.utilities.handlers.LayeredFile
       ~LayeredFile.LATITUDE
       ~LayeredFile.LONGITUDE
       ~LayeredFile.SUPPORTED_FILE_ENDINGS
+      ~LayeredFile.cell_size
       ~LayeredFile.data_layers
       ~LayeredFile.layers
       ~LayeredFile.profile

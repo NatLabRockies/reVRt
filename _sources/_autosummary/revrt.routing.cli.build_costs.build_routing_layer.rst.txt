@@ -1,0 +1,6 @@
+revrt.routing.cli.build\_costs.build\_routing\_layer
+====================================================
+
+.. currentmodule:: revrt.routing.cli.build_costs
+
+.. autofunction:: build_routing_layer

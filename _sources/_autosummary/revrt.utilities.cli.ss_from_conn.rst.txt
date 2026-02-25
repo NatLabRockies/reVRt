@@ -1,0 +1,6 @@
+revrt.utilities.cli.ss\_from\_conn
+==================================
+
+.. currentmodule:: revrt.utilities.cli
+
+.. autofunction:: ss_from_conn

@@ -1,0 +1,6 @@
+revrt.constants.MEDIUM\_MULT
+============================
+
+.. currentmodule:: revrt.constants
+
+.. autodata:: MEDIUM_MULT

@@ -1,0 +1,6 @@
+revrt.utilities.handlers.num\_feats\_in\_gpkg
+=============================================
+
+.. currentmodule:: revrt.utilities.handlers
+
+.. autofunction:: num_feats_in_gpkg

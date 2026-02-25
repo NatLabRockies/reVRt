@@ -1,0 +1,6 @@
+revrt.utilities.raster.integer\_dimension\_window
+=================================================
+
+.. currentmodule:: revrt.utilities.raster
+
+.. autofunction:: integer_dimension_window

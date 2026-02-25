@@ -1,0 +1,43 @@
+revrt.routing.base
+==================
+
+.. automodule:: revrt.routing.base
+
+   
+   
+   .. rubric:: Module attributes
+
+   .. autosummary::
+      :toctree:
+   
+      LCP_AGG_COST_LAYER_NAME
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      BatchRouteProcessor
+      CharacterizedLayer
+      IncrementalRouteWriter
+      RouteMetrics
+      RoutingLayerManager
+      RoutingScenario
+   
+   
+
+   
+   
+   
+
+
+

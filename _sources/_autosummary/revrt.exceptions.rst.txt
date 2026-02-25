@@ -27,7 +27,9 @@ revrt.exceptions
       revrtError
       revrtFileExistsError
       revrtFileNotFoundError
+      revrtInvalidStartCostError
       revrtKeyError
+      revrtLeastCostPathNotFoundError
       revrtNotImplementedError
       revrtProfileCheckError
       revrtRuntimeError

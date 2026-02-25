@@ -1,0 +1,6 @@
+revrt.utilities.cli.map\_ss\_to\_rr
+===================================
+
+.. currentmodule:: revrt.utilities.cli
+
+.. autofunction:: map_ss_to_rr

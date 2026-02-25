@@ -1,0 +1,670 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Path optimization with custom cost function &#8212; reVRt 0.3.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=e259d695"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.3.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">reVRt 0.3.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home page
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../misc/installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../_autosummary/revrt.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../_cli/cli.html">
+    CLI reference
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="index.html">
+    Development
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Home page
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../misc/installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../_autosummary/revrt.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../_cli/cli.html">
+    CLI reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="index.html">
+    Development
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Path optimization with custom cost function</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="path-optimization-with-custom-cost-function">
+<h1>Path optimization with custom cost function<a class="headerlink" href="#path-optimization-with-custom-cost-function" title="Link to this heading">#</a></h1>
+<section id="inbox-ideas-to-be-organized">
+<h2>Inbox (ideas to be organized)<a class="headerlink" href="#inbox-ideas-to-be-organized" title="Link to this heading">#</a></h2>
+<p>Ideally this section should be empty, so whenever there is a chance, this
+points should be organized and moved to the appropriate section.</p>
+<ul>
+<li><p>Miscellaneous topics to dive deeper later</p>
+<ul>
+<li><p>profile.release</p>
+<ul class="simple">
+<li><p>incremental</p></li>
+<li><p>lto</p>
+<ul>
+<li><p>lto off when running dhat</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Profile with: export RUSTFLAGS=”-C target-cpu=native”</p></li>
+<li><p>Supported names: rustc –print target-cpus</p></li>
+<li><p>Profile with <code class="docutils literal notranslate"><span class="pre">Cargo.toml</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">profile</span><span class="o">.</span><span class="n">release</span><span class="p">]</span>
+<span class="n">debug</span> <span class="o">=</span> <span class="s2">&quot;line-tables-only&quot;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p>Profiling memory usage:</p>
+<ul>
+<li><p>Using dhat:</p>
+<ul>
+<li><p>cargo run –release -p revrt-cli –features dhat-heap – -vv -d ../transmission_costs.zarr –cost-function=’{“cost_layers”: [{“layer_name”: “fmv_dollar_per_acre”}, {“layer_name”: “swca_natural_resources_risk_2”}]}’ –start 20012,40000 –end 20012,40100 –cache-size=250000
+Which gives this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dhat</span><span class="p">:</span> <span class="n">Total</span><span class="p">:</span>     <span class="mi">730</span><span class="p">,</span><span class="mi">183</span><span class="p">,</span><span class="mi">928</span> <span class="nb">bytes</span> <span class="ow">in</span> <span class="mi">5</span><span class="p">,</span><span class="mi">192</span><span class="p">,</span><span class="mi">541</span> <span class="n">blocks</span>
+<span class="n">dhat</span><span class="p">:</span> <span class="n">At</span> <span class="n">t</span><span class="o">-</span><span class="n">gmax</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span><span class="mi">245</span><span class="p">,</span><span class="mi">023</span> <span class="nb">bytes</span> <span class="ow">in</span> <span class="mi">428</span> <span class="n">blocks</span>
+<span class="n">dhat</span><span class="p">:</span> <span class="n">At</span> <span class="n">t</span><span class="o">-</span><span class="n">end</span><span class="p">:</span>  <span class="mi">158</span><span class="p">,</span><span class="mi">992</span> <span class="nb">bytes</span> <span class="ow">in</span> <span class="mi">268</span> <span class="n">blocks</span>
+<span class="n">dhat</span><span class="p">:</span> <span class="n">The</span> <span class="n">data</span> <span class="n">has</span> <span class="n">been</span> <span class="n">saved</span> <span class="n">to</span> <span class="n">dhat</span><span class="o">-</span><span class="n">heap</span><span class="o">.</span><span class="n">json</span><span class="p">,</span> <span class="ow">and</span> <span class="ow">is</span> <span class="n">viewable</span> <span class="k">with</span> <span class="n">dhat</span><span class="o">/</span><span class="n">dh_view</span><span class="o">.</span><span class="n">html</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p>Somes results:</p>
+<ul class="simple">
+<li><p>distance: t-gmax (Total)</p></li>
+<li><p>0: 2.7MB</p></li>
+<li><p>1: 56MB</p></li>
+<li><p>2: 56MB</p></li>
+<li><p>10: 56MB (120MB</p></li>
+<li><p>20 (1 feature): 32MB</p></li>
+<li><p>20 (5 features, 1 chunks): 104MB</p></li>
+<li><p>20 (5 features, 2 chunks): 104MB</p></li>
+<li><p>20 (5 features, 4 chunks): 104MB</p></li>
+<li><p>25: 56MB (150MB)</p></li>
+<li><p>100: 56MB (496MB)</p></li>
+<li><p>200: 56MB (1.8 GB)</p></li>
+<li><p>300 (5 features, 1 chunk): 104MB (3.6 GB), 442s</p></li>
+<li><p>500 (5 features, 3 chunks): 161MB (9.7GB), 1193s</p></li>
+<li><p>1000 (5 features, 6 chunks): 230MB (34GB), 4246s</p></li>
+<li><p>1500 (5 features, 8 chunks): 794MB (96GB), 12144s - Cache size 125MB</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Benchmarking with smaply</p>
+<ul class="simple">
+<li><p>cargo install –locked samply</p></li>
+<li><p>cargo build –release -p revrt-cli</p></li>
+<li><p>samply record  ./target/release/revrt-cli  -vv -d ../transmission_costs.zarr –cost-function=’{“cost_layers”: [{“layer_name”: “fmv_dollar_per_acre”}, {“layer_name”: “swca_natural_resources_risk_2”}]}’ –start 20500,40500 –end 20500,40600 –cache-size=250000</p></li>
+</ul>
+</li>
+<li><p>Benchmarking with criterion:</p>
+<ul class="simple">
+<li><p>Instructions to run benchmark locally:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">bench</span> <span class="pre">--bench</span> <span class="pre">standard</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">bench</span> <span class="pre">--bench</span> <span class="pre">serial</span> <span class="pre">--</span> <span class="pre">--save-baseline</span> <span class="pre">mybaseline</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">criterion</span> <span class="pre">--output-format</span> <span class="pre">bencher</span> <span class="pre">--benches</span></code></p></li>
+</ul>
+</li>
+<li><p>Visualize output at <code class="docutils literal notranslate"><span class="pre">target/criterion/</span></code></p></li>
+</ul>
+</li>
+<li><p>Use a cache for the chunks.</p></li>
+<li><p>Does it make sense a cache on the final weight calculated? Maybe
+a HashMap with (x, y), and rolling the oldest out to minimize
+the overhead by tracking use such as LRU?</p></li>
+<li><p>Should it try to read ahead? Maybe a trigger when get too close
+to the edge of a chunk, so it already request the next neighbor?</p></li>
+<li><p>Certainly async!</p></li>
+<li><p>Read the chunk is probably the most expensive operation, and
+calculate the cost for each grid point is probably next. Thus:</p>
+<ul class="simple">
+<li><p>Request one point in the database;</p></li>
+<li><p>From the point, designate which chunk it is;</p></li>
+<li><p>Load the full chunk (I don’t think it is possible or efficient
+don’t do a full chunk at once), for all required variables;</p></li>
+<li><p>Calculate the cost for all points in the chunk in parallel.
+This is a place easy to parallelize. The question is how the
+pathfinding algorithm prioritize the next target. Due to I/O,
+depth first search can’t be a good deal because read a full
+chunk to use only a line of points.</p></li>
+<li><p>Some implementations require Copy, thus float is not possible.</p></li>
+<li><p>Goal can be multiple targets. Return the best solution for each target
+and return the best of the best. Maybe return in order of best cost.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="contract-of-service">
+<h2>Contract of service:<a class="headerlink" href="#contract-of-service" title="Link to this heading">#</a></h2>
+<p>This project is commited to deliver:</p>
+<ul class="simple">
+<li><p>Find the best path. Local or partial optimal is not enough.</p></li>
+<li><p>Able to scan routes on national scale with resolution O[10m].</p></li>
+<li><p>Be at least as fast as the former application.</p></li>
+<li><p>While taking the best from HPC, be able to run in a regular laptop.</p></li>
+<li><p>Able to scan multiple solutions concurrently.</p></li>
+<li><p>Be able to use it as an analysis tool without requiring advanced knowledge on Python or Rust.</p></li>
+<li><p>Provide a smooth transition such that users from former application should require at most 1hr to adapt to this new solution.</p></li>
+</ul>
+</section>
+<section id="priorities">
+<h2>Priorities:<a class="headerlink" href="#priorities" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Correctness. Give a correct answer at any cost.
+Simplifications:</p>
+<ul class="simple">
+<li><p>Don’t worry about memory requirements or speed.</p></li>
+<li><p>All serial and synchronous.</p></li>
+<li><p>Tests are welcome, but not required.</p></li>
+<li><p>unwrap() is fine.</p></li>
+<li><p>Ignore the first pixel in the boundary (i.e. i=0 &amp; i=len-1).</p></li>
+<li><p>Use as many public resources as convenient. Avoid custom solutions
+at this stage.</p></li>
+</ul>
+</li>
+<li><p>Python interface.
+Allow realworld usage of the code even if it is not the most efficient.
+The goal here is to minimize the effort on maintaining the Python
+library to allow diverting the effort to the Rust code.</p></li>
+<li><p>Asynchronous operations.</p>
+<ul class="simple">
+<li><p>At least the I/O.</p></li>
+<li><p>Depending on the final design, the cost calculation might be a good
+case for that as well.</p></li>
+<li><p>It is annoying to have that before implementing the tests, but it
+might impose too many changes in the code and probably would result
+in re-writing the tests.</p></li>
+</ul>
+</li>
+<li><p>Harness the code with minimum tests.</p>
+<ul class="simple">
+<li><p>Focus on high level results, since the low level specific operations
+might change soon.</p></li>
+<li><p>Some basic integration tests to build the grounds for future. Keep
+in mind that this might get heavy.</p></li>
+<li><p>Initiate the samples features so as we evolve the code, we can keep
+track on the edge cases right the way. The goal here is to add and
+modify the samples right the way as a new edge case is identified.</p></li>
+</ul>
+</li>
+<li><p>Manageable memory footprint.
+We don’t need to limit ourselves to the smallest memory footprint
+possible, but we should keep in mind that the memory requirements.
+It’s OK to use some memory, but it should be possible to run it with
+a reasonable ammount.</p>
+<ul class="simple">
+<li><p>What is a reasonable ammount? 30GB? It should not necessarily require
+HPC, but feasible in a regular computer, even if slow.</p></li>
+<li><p>Be able to run in a laptop must not compromise the performance in
+the HPC. If a choice is to be made, the priority is to take full
+advantage of extra resouces, and pay an extra price in the regular
+laptop. I.e. if has access to 150GB or 100 cores, take full advantage
+of that, while keeping an alternative, even if costly, for a laptop.</p></li>
+<li><p>We don’t need to be ready for infinite memory requirements. That
+would probably create restrictions along the design. What is a fair
+limit? Expect 1TB of input data, i.e. all variables in multiple
+datasets required to estimate the cost and path?
+(20 variables f64, with 50m resolution)</p></li>
+</ul>
+</li>
+<li><p>Speed.</p>
+<ul class="simple">
+<li><p>Assume availability of multiple cores, so parallelism might
+be an advantage.</p></li>
+<li><p>Given the grid size, I/O is probably the bottleneck.</p></li>
+</ul>
+</li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inbox-ideas-to-be-organized">Inbox (ideas to be organized)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contract-of-service">Contract of service:</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#priorities">Priorities:</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

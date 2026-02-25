@@ -15,24 +15,6 @@ revrt.models.cost\_layers.LayerConfig
 
    .. autosummary::
    
-      ~LayerConfig.construct
-      ~LayerConfig.copy
-      ~LayerConfig.dict
-      ~LayerConfig.from_orm
-      ~LayerConfig.json
-      ~LayerConfig.model_parametrized_name
-      ~LayerConfig.model_post_init
-      ~LayerConfig.model_rebuild
-      ~LayerConfig.model_validate
-      ~LayerConfig.model_validate_json
-      ~LayerConfig.model_validate_strings
-      ~LayerConfig.parse_file
-      ~LayerConfig.parse_obj
-      ~LayerConfig.parse_raw
-      ~LayerConfig.schema
-      ~LayerConfig.schema_json
-      ~LayerConfig.update_forward_refs
-      ~LayerConfig.validate
    
    
 

@@ -1,0 +1,6 @@
+revrt.costs.cli.build\_masks
+============================
+
+.. currentmodule:: revrt.costs.cli
+
+.. autofunction:: build_masks

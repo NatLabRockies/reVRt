@@ -1,0 +1,6 @@
+revrt.routing.utilities.make\_rev\_sc\_points
+=============================================
+
+.. currentmodule:: revrt.routing.utilities
+
+.. autofunction:: make_rev_sc_points

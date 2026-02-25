@@ -1,0 +1,6 @@
+revrt.utilities.cli.add\_rr\_to\_nn
+===================================
+
+.. currentmodule:: revrt.utilities.cli
+
+.. autofunction:: add_rr_to_nn

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contributing to reVRt &#8212; reVRt 0.2.1 documentation</title>
+    <title>Contributing to reVRt &#8212; reVRt 0.3.0 documentation</title>
   
   
   
@@ -40,17 +40,18 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=37f418d5"></script>
+    <script src="../_static/documentation_options.js?v=e259d695"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Glossary" href="../glossary.html" />
     <link rel="prev" title="reVRt" href="../_cli/reVRt.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.2.1" />
+  <meta name="docsearch:version" content="0.3.0" />
   </head>
   
   
@@ -112,7 +113,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.2.1 documentation</p>
+    <p class="title logo__title">reVRt 0.3.0 documentation</p>
   
 </a></div>
     
@@ -141,8 +142,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -171,6 +172,13 @@
 <li class=" current active">
   <a class="nav-link dropdown-item nav-internal" href="#">
     Development
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -265,8 +273,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../examples/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../guides/index.html">
+    Guides
   </a>
 </li>
 
@@ -288,6 +296,13 @@
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
     Development
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -398,7 +413,7 @@ learn how to <a class="reference external" href="https://docs.github.com/en/pull
 <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request">open a pull request</a>,
 and <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/requesting-a-pull-request-review">request a review</a>.</p>
 <p>If you are not sure where or how to start contributing to reVRt, consider reaching out to the
-current developer(s): <strong>Paul Pinchuk</strong> [”<a class="reference external" href="mailto:ppinchuk&#37;&#52;&#48;nrel&#46;gov">ppinchuk<span>&#64;</span>nrel<span>&#46;</span>gov</a>”] or <strong>Guilherme Pimenta Castelao</strong> [”<a class="reference external" href="mailto:gpimenta&#37;&#52;&#48;nrel&#46;gov">gpimenta<span>&#64;</span>nrel<span>&#46;</span>gov</a>”].</p>
+current developer(s): <strong>Paul Pinchuk</strong> [”<a class="reference external" href="mailto:ppinchuk&#37;&#52;&#48;nlr&#46;gov">ppinchuk<span>&#64;</span>nlr<span>&#46;</span>gov</a>”] or <strong>Guilherme Pimenta Castelao</strong> [”<a class="reference external" href="mailto:gpimenta&#37;&#52;&#48;nlr&#46;gov">gpimenta<span>&#64;</span>nlr<span>&#46;</span>gov</a>”].</p>
 <p>When you are ready to contribute to reVRt, clone a copy of the reVRt repository from GitHub, check out your
 own branch, and make the appropriate changes locally. Ensure that your new code adheres to all of the guidelines
 below. When you are happy with your code, commit it locally. Ensure that you commit all tests that go along
@@ -474,7 +489,7 @@ minimizing the chances of introducing formatting inconsistencies or potential is
 <p>Pull requests (PRs) that modify code should either have new tests, or modify existing
 tests to fail before the PR and pass afterwards.</p>
 <p>You can run python reVRt tests locally using <code class="docutils literal notranslate"><span class="pre">pixi</span></code>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>r<span class="w"> </span>tests
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>tests
 </pre></div>
 </div>
 <p>Tests for a module should ideally cover all code in that module,
@@ -540,7 +555,7 @@ which renders as <a class="reference internal" href="../_autosummary/revrt.utili
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Numpy: <code class="docutils literal notranslate"><span class="pre">numpy</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:obj:`~numpy.array`</span></code>, which renders as <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v2.3)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></p>
+<dt>Numpy: <code class="docutils literal notranslate"><span class="pre">numpy</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:obj:`~numpy.array`</span></code>, which renders as <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array</span></code></a></p>
 </dd>
 </dl>
 </li>
@@ -550,17 +565,17 @@ which renders as <a class="reference internal" href="../_autosummary/revrt.utili
 </dl>
 </li>
 <li><dl class="simple">
-<dt>dask.distributed: <code class="docutils literal notranslate"><span class="pre">distributed</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`~distributed.Client`</span></code>, which renders as <a class="reference external" href="https://distributed.dask.org/en/stable/api.html#distributed.Client" title="(in Dask.distributed v2025.11.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a></p>
+<dt>dask.distributed: <code class="docutils literal notranslate"><span class="pre">distributed</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`~distributed.Client`</span></code>, which renders as <a class="reference external" href="https://distributed.dask.org/en/stable/api.html#distributed.Client" title="(in Dask.distributed v2026.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>gaps: <code class="docutils literal notranslate"><span class="pre">gaps</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`~gaps.cli.command.CLICommandFromFunction`</span></code>, which renders as <a class="reference external" href="https://nrel.github.io/gaps/_autosummary/gaps.cli.command.CLICommandFromFunction.html#gaps.cli.command.CLICommandFromFunction" title="(in gaps v0.8.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">CLICommandFromFunction</span></code></a></p>
+<dt>gaps: <code class="docutils literal notranslate"><span class="pre">gaps</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`~gaps.cli.command.CLICommandFromFunction`</span></code>, which renders as <a class="reference external" href="https://natlabrockies.github.io/gaps/_autosummary/gaps.cli.command.CLICommandFromFunction.html#gaps.cli.command.CLICommandFromFunction" title="(in gaps v0.8.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">CLICommandFromFunction</span></code></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>GeoPandas: <code class="docutils literal notranslate"><span class="pre">geopandas</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`geopandas.GeoDataFrame`</span></code>, which renders as <a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a></p>
+<dt>GeoPandas: <code class="docutils literal notranslate"><span class="pre">geopandas</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`geopandas.GeoDataFrame`</span></code>, which renders as <a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a></p>
 </dd>
 </dl>
 </li>
@@ -580,17 +595,17 @@ which renders as <a class="reference internal" href="../_autosummary/revrt.utili
 </dl>
 </li>
 <li><dl class="simple">
-<dt>RioXarray: <code class="docutils literal notranslate"><span class="pre">rioxarray</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`~rioxarray.raster_array.RasterArray`</span></code>, which renders as <a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.raster_array.RasterArray" title="(in rioxarray v0.20.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RasterArray</span></code></a></p>
+<dt>RioXarray: <code class="docutils literal notranslate"><span class="pre">rioxarray</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`~rioxarray.raster_array.RasterArray`</span></code>, which renders as <a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.raster_array.RasterArray" title="(in rioxarray v0.21.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RasterArray</span></code></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Xarray: <code class="docutils literal notranslate"><span class="pre">xarray</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:func:`~xarray.open_dataset`</span></code>, which renders as <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.open_dataset.html#xarray.open_dataset" title="(in xarray v2025.11.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">open_dataset()</span></code></a></p>
+<dt>Xarray: <code class="docutils literal notranslate"><span class="pre">xarray</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:func:`~xarray.open_dataset`</span></code>, which renders as <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.open_dataset.html#xarray.open_dataset" title="(in xarray v2026.2.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">open_dataset()</span></code></a></p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>MatplotLib: <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:func:`~matplotlib.pyplot.plot`</span></code>, which renders as <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot" title="(in Matplotlib v3.10.7)"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot()</span></code></a></p>
+<dt>MatplotLib: <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:func:`~matplotlib.pyplot.plot`</span></code>, which renders as <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.plot.html#matplotlib.pyplot.plot" title="(in Matplotlib v3.10.8)"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot()</span></code></a></p>
 </dd>
 </dl>
 </li>
@@ -615,7 +630,7 @@ import dask.array as da</p>
 </dd>
 </dl>
 <p>To check your docstring additions/updates, you can build a local version of the HTML documentation:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>r<span class="w"> </span>make-html
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>make-html
 </pre></div>
 </div>
 <p>After running this command, simply open <code class="docutils literal notranslate"><span class="pre">docs/_build/html/index.html</span></code> using your favorite browser, e.g.:</p>
@@ -719,11 +734,35 @@ you would increment the <code class="docutils literal notranslate"><span class="
 <section id="rust-benchmarking">
 <h3>Rust Benchmarking<a class="headerlink" href="#rust-benchmarking" title="Link to this heading">#</a></h3>
 <p>To ensure the routing algorithm remains performant, we have set up
-<a class="reference external" href="https://nrel.github.io/reVRt/dev/bench/index.html">Rust benchmarks</a>
+<a class="reference external" href="https://natlabrockies.github.io/reVRt/dev/bench/index.html">Rust benchmarks</a>
 that are automatically run on GitHub Actions on the main branch. If
 you are actively developing the Rust-based routing algorithm, you
 should monitor the benchmarks to ensure that your changes do not
 introduce performance regressions.</p>
+</section>
+<section id="rust-development">
+<h3>Rust Development<a class="headerlink" href="#rust-development" title="Link to this heading">#</a></h3>
+<p>If you are working on the Rust routing logic, you can use this command
+to run all tests locally:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span><span class="nb">test</span>
+</pre></div>
+</div>
+<p>To run specific tests, just add their name after the command, like so:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span><span class="nb">test</span><span class="w"> </span>test_get_3x3_two_by_two_array::bottom_right_corner
+</pre></div>
+</div>
+<p>If you want to run the benchmarks locally, you can use this command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span>criterion<span class="w"> </span>--output-format<span class="w"> </span>bencher<span class="w"> </span>--benches<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>output.txt
+</pre></div>
+</div>
+<p>This will save all of the benchmarking outputs to <code class="docutils literal notranslate"><span class="pre">output.txt</span></code>.
+If you are working on routing internals and would like to check the
+output of a routing scenario, you can use this command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span>revrt-cli<span class="w"> </span>--<span class="w"> </span>-v<span class="w"> </span>--dataset<span class="w"> </span>./tests/data/utilities/transmission_layers.zarr<span class="w"> </span>--cost-function<span class="w"> </span><span class="s1">&#39;{&quot;cost_layers&quot;: [{&quot;layer_name&quot;: &quot;tie_line_costs_102MW&quot;}]}&#39;</span><span class="w"> </span>--start<span class="w"> </span><span class="m">10</span>,10<span class="w"> </span>--end<span class="w"> </span><span class="m">20</span>,20<span class="w"> </span>--cache-size<span class="w"> </span><span class="m">250000000</span>
+</pre></div>
+</div>
+<p>You can of course change the start and end points and cache size as needed.
+If you need to see more verbose logs, simply add more <code class="docutils literal notranslate"><span class="pre">-v</span></code> flags (e.g. <code class="docutils literal notranslate"><span class="pre">-vvv</span></code>).</p>
 </section>
 </section>
 </section>
@@ -746,6 +785,15 @@ introduce performance regressions.</p>
         <p class="prev-next-subtitle">previous</p>
         <p class="prev-next-title">reVRt</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="../glossary.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Glossary</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -785,6 +833,7 @@ introduce performance regressions.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-file-structure">Test File Structure</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#versioning">Versioning</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-benchmarking">Rust Benchmarking</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-development">Rust Development</a></li>
 </ul>
 </li>
 </ul>

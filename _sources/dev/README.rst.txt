@@ -29,7 +29,7 @@ learn how to `create a branch <https://docs.github.com/en/pull-requests/collabor
 and `request a review <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/requesting-a-pull-request-review>`_.
 
 If you are not sure where or how to start contributing to reVRt, consider reaching out to the
-current developer(s): **Paul Pinchuk** ["ppinchuk@nrel.gov"] or **Guilherme Pimenta Castelao** ["gpimenta@nrel.gov"].
+current developer(s): **Paul Pinchuk** ["ppinchuk@nlr.gov"] or **Guilherme Pimenta Castelao** ["gpimenta@nlr.gov"].
 
 When you are ready to contribute to reVRt, clone a copy of the reVRt repository from GitHub, check out your
 own branch, and make the appropriate changes locally. Ensure that your new code adheres to all of the guidelines
@@ -136,7 +136,7 @@ You can run python reVRt tests locally using ``pixi``:
 
 .. code-block:: shell
 
-    pixi r tests
+    pixi run tests
 
 Tests for a module should ideally cover all code in that module,
 i.e., statement coverage should be at 100%, though this alone does not ensure that
@@ -226,7 +226,7 @@ To check your docstring additions/updates, you can build a local version of the 
 
 .. code-block:: shell
 
-    pixi r make-html
+    pixi run make-html
 
 After running this command, simply open ``docs/_build/html/index.html`` using your favorite browser, e.g.:
 
@@ -351,8 +351,41 @@ you would increment the ``rX.X.X`` version number, but not the ``cX.X.X`` or
 Rust Benchmarking
 ^^^^^^^^^^^^^^^^^
 To ensure the routing algorithm remains performant, we have set up
-`Rust benchmarks <https://nrel.github.io/reVRt/dev/bench/index.html>`_
+`Rust benchmarks <https://natlabrockies.github.io/reVRt/dev/bench/index.html>`_
 that are automatically run on GitHub Actions on the main branch. If
 you are actively developing the Rust-based routing algorithm, you
 should monitor the benchmarks to ensure that your changes do not
 introduce performance regressions.
+
+
+Rust Development
+^^^^^^^^^^^^^^^^
+If you are working on the Rust routing logic, you can use this command
+to run all tests locally:
+
+.. code-block:: shell
+
+    cargo test
+
+To run specific tests, just add their name after the command, like so:
+
+.. code-block:: shell
+
+    cargo test test_get_3x3_two_by_two_array::bottom_right_corner
+
+If you want to run the benchmarks locally, you can use this command:
+
+.. code-block:: shell
+
+    cargo criterion --output-format bencher --benches 2>&1 | tee output.txt
+
+This will save all of the benchmarking outputs to ``output.txt``.
+If you are working on routing internals and would like to check the
+output of a routing scenario, you can use this command:
+
+.. code-block:: shell
+
+    cargo run -p revrt-cli -- -v --dataset ./tests/data/utilities/transmission_layers.zarr --cost-function '{"cost_layers": [{"layer_name": "tie_line_costs_102MW"}]}' --start 10,10 --end 20,20 --cache-size 250000000
+
+You can of course change the start and end points and cache size as needed.
+If you need to see more verbose logs, simply add more ``-v`` flags (e.g. ``-vvv``).

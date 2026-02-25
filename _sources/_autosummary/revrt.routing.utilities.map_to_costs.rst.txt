@@ -1,0 +1,6 @@
+revrt.routing.utilities.map\_to\_costs
+======================================
+
+.. currentmodule:: revrt.routing.utilities
+
+.. autofunction:: map_to_costs

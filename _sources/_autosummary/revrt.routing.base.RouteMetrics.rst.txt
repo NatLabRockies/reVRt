@@ -1,0 +1,35 @@
+revrt.routing.base.RouteMetrics
+===============================
+
+.. currentmodule:: revrt.routing.base
+
+.. autoclass:: RouteMetrics
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RouteMetrics.compute
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RouteMetrics.cell_size
+      ~RouteMetrics.cost
+      ~RouteMetrics.end_lat
+      ~RouteMetrics.end_lon
+      ~RouteMetrics.geom
+      ~RouteMetrics.total_path_length
+   
+   

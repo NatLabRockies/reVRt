@@ -1,0 +1,6 @@
+revrt.routing.utilities.filter\_points\_outside\_cost\_domain
+=============================================================
+
+.. currentmodule:: revrt.routing.utilities
+
+.. autofunction:: filter_points_outside_cost_domain
