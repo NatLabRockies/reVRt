@@ -653,6 +653,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::approx_constant)]
     fn layer_dtype_float64_stores_correct_values() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(2, 2)
