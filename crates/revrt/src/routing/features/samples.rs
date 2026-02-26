@@ -45,6 +45,7 @@ pub(crate) enum FillStrategy {
 /// the type's maximum value (`i8::MAX`, `u32::MAX`, etc.) is used for
 /// integer types, making unwritten cells easy to distinguish from valid data.
 #[derive(Debug, Clone, Copy, Default)]
+#[allow(dead_code)]
 pub(crate) enum FeatureDataType {
     #[default]
     Float32,
