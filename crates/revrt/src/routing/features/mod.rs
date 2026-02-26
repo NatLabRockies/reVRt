@@ -3,6 +3,9 @@
 //! Support for asynchronous reading of features from a Zarr store
 //! to be used by the cost function.
 
+#[cfg(test)]
+mod samples;
+
 use std::sync::Arc;
 
 use object_store::local::LocalFileSystem;
@@ -32,16 +35,24 @@ impl Features {
 
 #[cfg(test)]
 mod test {
+    use super::samples::{FeaturesTestBuilder, LayerConfig};
     use super::*;
-    use crate::dataset::samples::multi_variable_zarr;
 
     #[tokio::test]
     async fn dev() {
-        let path = multi_variable_zarr();
-        let features = Features::new(&path).unwrap();
+        let (tmp, _storage) = FeaturesTestBuilder::new()
+            .dimensions(8, 8)
+            .chunks(4, 4)
+            .layer(LayerConfig::random("A", 0.0, 1.0))
+            .build()
+            .unwrap();
+        let features = Features::new(tmp.path()).unwrap();
         let array = zarrs::array::Array::async_open(features.storage, "/A")
             .await
             .unwrap();
-        let _data = array.async_retrieve_chunk(&[0, 0, 0]).await.unwrap();
+        let _data = array
+            .async_retrieve_chunk_elements::<f32>(&[0, 0])
+            .await
+            .unwrap();
     }
 }
