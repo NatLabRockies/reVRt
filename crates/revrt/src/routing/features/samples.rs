@@ -653,12 +653,11 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::approx_constant)]
     fn layer_dtype_float64_stores_correct_values() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(2, 2)
             .chunks(2, 2)
-            .layer(LayerConfig::constant("temp", 3.14).with_dtype(FeatureDataType::Float64))
+            .layer(LayerConfig::constant("temp", 1.62).with_dtype(FeatureDataType::Float64))
             .build()
             .unwrap();
 
@@ -667,10 +666,10 @@ mod tests {
         let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]);
         let vals: Vec<f64> = array.retrieve_array_subset_elements(&subset).unwrap();
         for v in vals {
-            let diff = (v - 3.14_f64).abs();
-            // The fill value is specified as f32 (3.14f32 ≈ 3.1400001e0),
+            let diff = (v - 1.62_f64).abs();
+            // The fill value is specified as f32 (1.62f32 ≈ 1.6200001e0),
             // so the round-trip error vs the true f64 value is ~1e-7.
-            assert!(diff < 1e-6, "expected ~3.14, got {v}");
+            assert!(diff < 1e-6, "expected ~1.62, got {v}");
         }
     }
 
