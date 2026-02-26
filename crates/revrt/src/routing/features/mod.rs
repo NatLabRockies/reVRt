@@ -23,7 +23,7 @@ pub(super) struct Features {
 }
 
 impl Features {
-    pub(super) fn new<P: AsRef<std::path::Path>>(path: P) -> Result<Self> {
+    pub(super) fn open<P: AsRef<std::path::Path>>(path: P) -> Result<Self> {
         debug!("Opening features at {:?}", path.as_ref());
 
         let store = LocalFileSystem::new_with_prefix(path).unwrap();
@@ -46,7 +46,7 @@ mod test {
             .layer(LayerConfig::random("A", 0.0, 1.0))
             .build()
             .unwrap();
-        let features = Features::new(tmp.path()).unwrap();
+        let features = Features::open(tmp.path()).unwrap();
         let array = zarrs::array::Array::async_open(features.storage, "/A")
             .await
             .unwrap();

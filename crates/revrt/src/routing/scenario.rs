@@ -33,7 +33,7 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
-        let features = Features::new(&store_path)?;
+        let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open(store_path, cost_function.clone(), cache_size)?;
 
         Ok(Self {
