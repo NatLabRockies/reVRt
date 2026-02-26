@@ -19,7 +19,7 @@ use crate::error::Result;
 pub(super) struct Features {
     #[allow(dead_code)]
     /// Async readable storage holding the features.
-    storage: zarrs::storage::AsyncReadableListableStorage,
+    storage: AsyncReadableListableStorage,
 }
 
 impl Features {
