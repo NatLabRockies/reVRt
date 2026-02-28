@@ -5,6 +5,7 @@
 mod cost;
 mod dataset;
 mod error;
+#[allow(non_camel_case_types)]
 mod ffi;
 mod routing;
 mod solution;
