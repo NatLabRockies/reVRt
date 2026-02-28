@@ -25,14 +25,14 @@ dhat = "0.3.3"
 ndarray = { version = "0.16.1", features = ["rayon"] }
 object_store = "0.12.5"
 pathfinding = "4.14.0"
-pyo3 = { version = "0.26.0", features = [
+pyo3 = { version = "0.28.2", features = [
     "abi3-py311",
     "extension-module",
     "macros",
     "chrono",
     "chrono-tz",
 ] }
-pyo3-build-config = "0.26.0"
+pyo3-build-config = "0.28.2"
 rand = "0.10.0"
 rayon = "1.11.0"
 serde = { version = "1.0.226", features = ["derive"] }
