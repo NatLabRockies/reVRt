@@ -138,6 +138,7 @@ impl LayerConfig {
     }
 
     /// Layer filled with `0.0` everywhere.
+    #[allow(dead_code)]
     pub(crate) fn zeros(name: impl Into<String>) -> Self {
         Self::constant(name, 0.0)
     }
