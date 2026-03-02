@@ -24,7 +24,7 @@ use revrt::ArrayIndex;
 use revrt::bench_minimalist;
 
 use ndarray::Array3;
-use rand::Rng;
+use rand::RngExt;
 
 enum FeaturesType {
     AllOnes,
