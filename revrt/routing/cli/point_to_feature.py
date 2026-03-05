@@ -194,6 +194,8 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     save_paths=False,
     ignore_invalid_costs=False,
     connection_identifier_column="end_feat_id",
+    memory_utilization_limit=0.8,
+    system_mem_limit_gb=5,
     _split_params=None,
 ):
     r"""Run least-cost path routing for points mapped to features
@@ -420,6 +422,13 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         `route_table` input to map points to features. If a column name
         is given that does not exist in the data, an error will be
         raised. By default, ``"end_feat_id"``.
+    memory_utilization_limit : float, default=0.8
+        Fraction of system memory to utilize for routing. Should be a
+        value between 0 and 1. By default, ``0.8``.
+    system_mem_limit_gb : int or float, default=5
+        Maximum amount of system memory (in GB) to utilize for routing.
+        This is used in conjunction with `memory_utilization_limit` to
+        determine the memory limit for routing. By default, ``5`` GB.
 
     Returns
     -------
@@ -477,6 +486,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         cost_multiplier_scalar=cost_multiplier_scalar,
         tracked_layers=tracked_layers,
         ignore_invalid_costs=ignore_invalid_costs,
+        mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
     )
 
     elapsed_time = (time.time() - start_time) / 60
@@ -491,4 +501,5 @@ route_features_command = CLICommandFromFunction(
     add_collect=False,
     split_keys={"_split_params"},
     config_preprocessor=split_routes,
+    skip_doc_params=["system_mem_limit_gb"],
 )
