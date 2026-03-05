@@ -259,6 +259,9 @@ def split_routes(config):
     else:
         num_nodes = exec_control.pop("nodes", 1)
 
+    if mem_limit_gb := exec_control.get("memory"):
+        config["system_mem_limit_gb"] = float(mem_limit_gb)
+
     config["_split_params"] = [(i, num_nodes) for i in range(num_nodes)]
     return config
 
