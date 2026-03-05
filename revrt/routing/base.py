@@ -713,7 +713,7 @@ class BatchRouteProcessor:
                 (rid, sp, ep)
                 for rid, (sp, ep) in self.route_definitions.items()
             ],
-            cache_size=self.mem_limit_gb * 1_000_000_000,
+            cache_size=int(self.mem_limit_gb * 1_000_000_000),
             log_level=logging.getLogger("revrt").level or None,
         )
         yield from self._skip_failed_routes(route_results)
