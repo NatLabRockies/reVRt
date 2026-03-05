@@ -599,7 +599,13 @@ class IncrementalRouteWriter(IncrementalWriter):
 class BatchRouteProcessor:
     """Class to manage batches of route computations"""
 
-    def __init__(self, routing_scenario, route_definitions, route_attrs=None):
+    def __init__(
+        self,
+        routing_scenario,
+        route_definitions,
+        route_attrs=None,
+        mem_limit_gb=4,
+    ):
         """
 
         Parameters
@@ -617,10 +623,14 @@ class BatchRouteProcessor:
             integers represents the starting index to additional
             attributes to include in the output for that route.
             By default, ``None``.
+        mem_limit_gb : int or float, default=4
+            Memory limit in gigabytes for routing computations.
+            By default, ``4``.
         """
         self.routing_scenario = routing_scenario
         self._route_definitions = route_definitions
         self._route_attrs = route_attrs or {}
+        self.mem_limit_gb = mem_limit_gb
 
     @cached_property
     def default_attrs(self):
@@ -703,7 +713,7 @@ class BatchRouteProcessor:
                 (rid, sp, ep)
                 for rid, (sp, ep) in self.route_definitions.items()
             ],
-            cache_size=2_000_000_000,
+            cache_size=self.mem_limit_gb * 1_000_000_000,
             log_level=logging.getLogger("revrt").level or None,
         )
         yield from self._skip_failed_routes(route_results)
