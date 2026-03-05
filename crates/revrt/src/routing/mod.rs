@@ -4,6 +4,7 @@ mod algorithm;
 mod features;
 mod scenario;
 
+use std::collections::HashSet;
 use std::sync::{Arc, mpsc};
 
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -61,7 +62,7 @@ impl Routing {
 pub(super) struct RouteDefinition {
     pub(super) route_id: u32,
     pub(super) start_inds: Vec<ArrayIndex>,
-    pub(super) end_inds: Vec<ArrayIndex>,
+    pub(super) end_inds: HashSet<ArrayIndex>,
 }
 
 pub(super) struct ParRouting {
