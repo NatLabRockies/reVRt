@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 # -- Project information -----------------------------------------------------
 
 project = "reVRt"
-copyright = "2025, Alliance for Sustainable Energy, LLC"
+copyright = "2026, Alliance for Energy Innovation, LLC"
 author = "NLR: Guilherme Pimenta Castelao, Paul Pinchuk"
 
 pkg = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
@@ -76,7 +76,10 @@ intersphinx_mapping = {
     "plotly": ("https://plotly.com/python-api-reference", None),
     "psycopg": ("https://www.psycopg.org/psycopg3/docs", None),
     "pyproj": ("https://pyproj4.github.io/pyproj/stable/", None),
+    "PySAM": ("https://nrel-pysam.readthedocs.io/en/latest/", None),
     "rasterio": ("https://rasterio.readthedocs.io/en/stable/", None),
+    "rex": ("https://natlabrockies.github.io/rex/", None),
+    "reVX": ("https://natlabrockies.github.io/reVX/", None),
     "rioxarray": ("https://corteva.github.io/rioxarray/stable/", None),
     "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
@@ -139,7 +142,7 @@ html_css_file = ["custom.css"]
 
 html_context = {
     "display_github": True,
-    "github_user": "nlr",
+    "github_user": "NatLabRockies",
     "github_repo": "reVRt",
     "github_version": "main",
     "conf_py_path": "/docs/source/",
