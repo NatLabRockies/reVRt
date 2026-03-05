@@ -706,6 +706,10 @@ class BatchRouteProcessor:
 
     def _route_results(self):
         """Generator yielding route results from Rust computations"""
+        logger.debug(
+            "Setting memory limit to %.2f GB for Rust computations",
+            self.mem_limit_gb,
+        )
         route_results = RouteFinder(
             zarr_fp=self.routing_scenario.cost_fpath,
             cost_function=self.routing_scenario.cost_function_json,
