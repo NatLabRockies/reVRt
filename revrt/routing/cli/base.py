@@ -192,6 +192,7 @@ def run_lcp(
     cost_multiplier_scalar=1,
     tracked_layers=None,
     ignore_invalid_costs=True,
+    mem_limit_gb=4,
 ):
     """[NOT PUBLIC API] Run LCP routing and save to output file"""
 
@@ -219,6 +220,7 @@ def run_lcp(
             routing_scenario=scenario,
             route_definitions=route_definitions,
             route_attrs=route_attrs,
+            mem_limit_gb=mem_limit_gb,
         )
         route_computer.process(out_fp=out_fp, save_paths=save_paths)
 
