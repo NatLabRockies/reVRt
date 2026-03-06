@@ -766,7 +766,9 @@ class BatchRouteProcessor:
         """Yield only successfully computed routes from Rust results"""
 
         results_iter = iter(routing_results)
+        num_complete = 0
         while True:
+            num_complete += 1
             try:
                 route_id, solutions = next(results_iter)
                 start_points, end_points = self.route_definitions[route_id]
@@ -791,11 +793,18 @@ class BatchRouteProcessor:
                     attrs_key = (route_id, indices[0])
                     attrs = self.route_attrs.get(attrs_key, self.default_attrs)
                     yield indices, optimized_objective, attrs
+
+                logger.info(
+                    "%d/%d (%.2f%%) routes processed",
+                    num_complete,
+                    len(self.route_definitions),
+                    (num_complete / len(self.route_definitions)) * 100,
+                )
             except revrtRustError:  # pragma: no cover
                 logger.exception("Rust error when computing route")
                 continue
             except StopIteration:
-                logger.debug("Routing complete")
+                logger.info("Routing complete")
                 break
 
     def _validate_start_points(self, points):
