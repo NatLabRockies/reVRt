@@ -30,11 +30,13 @@ impl Scenario {
         store_path: P,
         cost_function: crate::cost::CostFunction,
         cache_size: u64,
+        swap_fp: Option<std::path::PathBuf>,
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
         let features = Features::new(&store_path)?;
-        let dataset = crate::dataset::Dataset::open(store_path, cost_function.clone(), cache_size)?;
+        let dataset =
+            crate::dataset::Dataset::open(store_path, cost_function.clone(), cache_size, swap_fp)?;
 
         Ok(Self {
             dataset,

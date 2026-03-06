@@ -127,6 +127,10 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     the indices in the array for the any allowed final pixel.
 ///     When the algorithm reaches any of these points, the routing
 ///     is terminated and the final path + cost is returned.
+/// cost_fp : path-like, optional
+///    Optional path to a cost zarr file that will be used to store the routing
+///    cost layers. If not given, the routing layers will be kept in a temporary
+///    directory and deleted after the routing is done. By default, `None`.
 /// cache_size : int, default=250_000_000
 ///     Cache size to use for computation, in bytes.
 ///     By default, `250,000,000` (250MB).
@@ -139,13 +143,14 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     route goes through and the second element is the final
 ///     route cost.
 #[pyfunction]
-#[pyo3(signature = (zarr_fp, cost_function, start, end, cache_size=250_000_000))]
+#[pyo3(signature = (zarr_fp, cost_function, start, end, cost_fp=None, cache_size=250_000_000))]
 #[allow(clippy::type_complexity)]
 fn find_paths(
     zarr_fp: PathBuf,
     cost_function: String,
     start: Vec<(u64, u64)>,
     end: Vec<(u64, u64)>,
+    cost_fp: Option<PathBuf>,
     cache_size: u64,
 ) -> Result<PyRoutingSolutions> {
     let start: Vec<ArrayIndex> = start
@@ -153,7 +158,7 @@ fn find_paths(
         .map(|(i, j)| ArrayIndex { i, j })
         .collect();
     let end: Vec<ArrayIndex> = end.into_iter().map(|(i, j)| ArrayIndex { i, j }).collect();
-    let paths = resolve(zarr_fp, &cost_function, cache_size, &start, end)?;
+    let paths = resolve(zarr_fp, &cost_function, &start, end, cost_fp, cache_size)?;
     Ok(paths.into_iter().map(Into::into).collect())
 }
 
@@ -180,6 +185,10 @@ fn find_paths(
 ///     begin/end. A unique path will be returned for each of the starting
 ///     points in each of the path definition tuples (assuming a valid path
 ///     exists).
+/// cost_fp : path-like, optional
+///    Optional path to a cost zarr file that will be used to store the routing
+///    cost layers. If not given, the routing layers will be kept in a temporary
+///    directory and deleted after the routing is done. By default, `None`.
 /// cache_size : int, default=250_000_000
 ///     Cache size to use for computation, in bytes.
 ///     By default, `250,000,000` (250MB).
@@ -205,20 +214,27 @@ fn find_paths(
 ///     so use the route ID input to match results to inputs.
 #[pyclass]
 struct RouteFinder {
+    #[pyo3(get)]
     zarr_fp: PathBuf,
+    #[pyo3(get)]
     cost_function: String,
+    #[pyo3(get)]
     route_definitions: Vec<PyRouteDefinition>,
+    #[pyo3(get)]
     cache_size: u64,
+    #[pyo3(get)]
+    cost_fp: Option<PathBuf>,
 }
 
 #[pymethods]
 impl RouteFinder {
     #[new]
-    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, cache_size=250_000_000, log_level=None))]
+    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, cost_fp=None, cache_size=250_000_000, log_level=None))]
     fn new(
         zarr_fp: PathBuf,
         cost_function: String,
         route_definitions: Vec<PyRouteDefinition>,
+        cost_fp: Option<PathBuf>,
         cache_size: u64,
         log_level: Option<u8>,
     ) -> PyResult<Self> {
@@ -229,6 +245,7 @@ impl RouteFinder {
             cost_function,
             route_definitions,
             cache_size,
+            cost_fp,
         })
     }
 
@@ -264,6 +281,7 @@ impl RouteOutputIter {
                 .collect::<Vec<_>>(),
             tx,
             user_input.cache_size,
+            user_input.cost_fp.clone(),
         )?;
         Ok(Self {
             receiver: Some(rx),

@@ -61,7 +61,15 @@ fn main() {
     let end = vec![revrt::ArrayIndex::new(cli.end[0] as u64, cli.end[1] as u64)];
     trace!("Ending point: {:?}", end);
 
-    let result = resolve(cli.dataset, &cli.cost_function, 250_000_000, &[start], end).unwrap();
+    let result = resolve(
+        cli.dataset,
+        &cli.cost_function,
+        &[start],
+        end,
+        None,
+        250_000_000,
+    )
+    .unwrap();
     println!("Results: {:?}", result);
     info!("Final solutions: {:?}", result);
 }

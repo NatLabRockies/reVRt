@@ -47,8 +47,9 @@ impl Routing {
         store_path: P,
         cost_function: crate::cost::CostFunction,
         cache_size: u64,
+        swap_fp: Option<std::path::PathBuf>,
     ) -> Result<Self> {
-        let scenario = Scenario::new(store_path, cost_function, cache_size)?;
+        let scenario = Scenario::new(store_path, cost_function, cache_size, swap_fp)?;
 
         let algorithm = Algorithm::new();
 
@@ -75,8 +76,9 @@ impl ParRouting {
         store_path: P,
         cost_function: crate::cost::CostFunction,
         cache_size: u64,
+        swap_fp: Option<std::path::PathBuf>,
     ) -> Result<Self> {
-        let scenario = Scenario::new(store_path, cost_function, cache_size)?;
+        let scenario = Scenario::new(store_path, cost_function, cache_size, swap_fp)?;
         Ok(Self {
             scenario: Arc::new(scenario),
             algorithm: Arc::new(Algorithm::new()),

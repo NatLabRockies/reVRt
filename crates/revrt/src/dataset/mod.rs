@@ -64,6 +64,7 @@ impl Dataset {
         path: P,
         cost_function: CostFunction,
         cache_size: u64,
+        swap_fp: Option<std::path::PathBuf>,
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
         let filesystem =
@@ -71,13 +72,25 @@ impl Dataset {
         let source = std::sync::Arc::new(filesystem);
 
         // ==== Create the swap dataset ====
-        let tmp_path = tempfile::TempDir::new().unwrap();
-        debug!(
-            "Initializing a temporary swap dataset at {:?}",
-            tmp_path.path()
-        );
+        let tmp_path = tempfile::TempDir::new()
+            .expect("could not create temporary directory for swap dataset");
+        let swap_fp = match swap_fp {
+            Some(path) => path,
+            None => tmp_path.path().to_path_buf(),
+        };
+        // let swap_fp = match swap_fp {
+        //     Some(path) => {
+        //         // debug!("Using provided swap dataset at {:?}", path);
+        //         path
+        //     }
+        //     None => {
+        //         let tmp = tmp_path.path(); // .to_owned();
+        //         debug!("Initializing a temporary swap dataset at {:?}", tmp);
+        //         tmp
+        //     }
+        // };
         let swap: ReadableWritableListableStorage = std::sync::Arc::new(
-            zarrs::filesystem::FilesystemStore::new(tmp_path.path())
+            zarrs::filesystem::FilesystemStore::new(swap_fp)
                 .expect("could not open filesystem store"),
         );
 
@@ -447,7 +460,7 @@ mod tests {
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
@@ -499,7 +512,7 @@ mod tests {
         )
         .unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
@@ -526,7 +539,7 @@ mod tests {
         let tmp = samples::multi_variable_zarr();
         let cost_function = crate::cost::sample::cost_function();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
         let array_a = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
@@ -611,7 +624,7 @@ mod tests {
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: 0, j: 0 });
 
@@ -634,7 +647,7 @@ mod tests {
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
 
@@ -671,7 +684,7 @@ mod tests {
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
 
@@ -711,7 +724,7 @@ mod tests {
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
 
@@ -749,7 +762,7 @@ mod tests {
         let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0.2_f32, 10.0_f32);
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         // Request center neighbors
         let point = ArrayIndex { i: 1, j: 1 };
@@ -823,7 +836,7 @@ mod tests {
         let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0_f32, -1_f32);
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
         assert!(
@@ -838,7 +851,7 @@ mod tests {
         let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0_f32, -1_f32);
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+            Dataset::open(tmp.path(), cost_function, 1_000, None).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
         assert_eq!(results.len(), 8);

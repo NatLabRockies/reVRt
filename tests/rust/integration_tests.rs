@@ -14,9 +14,10 @@ fn basic_routing_in_data() {
     let result = resolve(
         layers_path.to_str().expect("test data path is valid UTF-8"),
         r#"{"cost_layers": [{"layer_name": "tie_line_costs_102MW"}]}"#,
-        250_000_000,
         std::slice::from_ref(start),
         end,
+        None,
+        250_000_000,
     )
     .unwrap();
     dbg!(&result);
@@ -38,9 +39,10 @@ fn basic_routing_in_data_with_friction() {
                 {"multiplier_layer": "transmission_barrier", "multiplier_scalar": 100}
             ]
         }"#,
-        250_000_000,
         std::slice::from_ref(start),
         end,
+        None,
+        250_000_000,
     )
     .unwrap();
     dbg!(&result);
