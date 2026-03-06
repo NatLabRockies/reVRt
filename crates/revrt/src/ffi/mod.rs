@@ -134,6 +134,11 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// cache_size : int, default=250_000_000
 ///     Cache size to use for computation, in bytes.
 ///     By default, `250,000,000` (250MB).
+/// log_level : int, optional
+///     Logging level for Rust tracing emitted to stderr. Roughly follows the
+///     Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,
+///     30 = WARN, and 40 = ERROR. If None is given, no logging is set up.
+///     By default, `None`.
 ///
 /// Returns
 /// -------
@@ -143,7 +148,7 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     route goes through and the second element is the final
 ///     route cost.
 #[pyfunction]
-#[pyo3(signature = (zarr_fp, cost_function, start, end, cost_fp=None, cache_size=250_000_000))]
+#[pyo3(signature = (zarr_fp, cost_function, start, end, cost_fp=None, cache_size=250_000_000, log_level=None))]
 #[allow(clippy::type_complexity)]
 fn find_paths(
     zarr_fp: PathBuf,
@@ -152,7 +157,10 @@ fn find_paths(
     end: Vec<(u64, u64)>,
     cost_fp: Option<PathBuf>,
     cache_size: u64,
-) -> Result<PyRoutingSolutions> {
+    log_level: Option<u8>,
+) -> PyResult<PyRoutingSolutions> {
+    py_tracing::configure(log_level).map_err(PyErr::from)?;
+
     let start: Vec<ArrayIndex> = start
         .into_iter()
         .map(|(i, j)| ArrayIndex { i, j })
