@@ -43,13 +43,13 @@ pub fn resolve<P: AsRef<std::path::Path>>(
     cost_function: &str,
     start: &[ArrayIndex],
     end: Vec<ArrayIndex>,
-    cost_fp: Option<std::path::PathBuf>,
+    swap_fp: Option<std::path::PathBuf>,
     cache_size: u64,
 ) -> Result<RevrtRoutingSolutions> {
     let cost_function = CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
     let mut simulation: Routing =
-        Routing::new(store_path, cost_function, cache_size, cost_fp).unwrap();
+        Routing::new(store_path, cost_function, cache_size, swap_fp).unwrap();
     let result = simulation.compute(start, end).collect();
     Ok(result)
 }
@@ -61,7 +61,7 @@ pub(crate) fn resolve_generator<P, I>(
     route_definitions: I,
     tx: mpsc::Sender<(u32, RevrtRoutingSolutions)>,
     cache_size: u64,
-    cost_fp: Option<std::path::PathBuf>,
+    swap_fp: Option<std::path::PathBuf>,
 ) -> Result<()>
 where
     P: AsRef<std::path::Path>,
@@ -70,7 +70,7 @@ where
 {
     let cost_function = crate::cost::CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let simulation = ParRouting::new(store_path, cost_function, cache_size, cost_fp)?;
+    let simulation = ParRouting::new(store_path, cost_function, cache_size, swap_fp)?;
     simulation.lazy_scout(route_definitions, tx);
     Ok(())
 }
