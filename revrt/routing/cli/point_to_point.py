@@ -306,8 +306,8 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         of <= 0 are set to a large value to simulate a strong but
         permeable "quasi-barrier". By default, ``False``.
     memory_utilization_limit : float, default=0.9
-        Fraction of system memory to utilize for routing. Should be a
-        value between 0 and 1. By default, ``0.9``.
+        Fraction of `system_mem_limit_gb` to utilize for routing. Should
+        be a value between 0 and 1. By default, ``0.9``.
     system_mem_limit_gb : int or float, default=5
         Maximum amount of system memory (in GB) to utilize for routing.
         This is used in conjunction with `memory_utilization_limit` to
