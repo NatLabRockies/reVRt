@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772746978604,
+  "lastUpdate": 1772828988812,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -6383,6 +6383,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 369888156,
             "range": "± 7112517",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "31e49a903e0a90bc0176f2ca3ad1a1645a3faed8",
+          "message": "Allow users to specify memory limit (#230)\n\n* Add new links\n\n* `BatchRouteProcessor` now takes mem limit as arg\n\n* `run_lcp` now passes mem limit down to `BatchRouteProcessor`\n\n* Ensure input is an int\n\n* Add new params to run functions\n\n* update preprocessor to pull memory from exec control\n\n* Add logger call\n\n* Add logging\n\n* Add `_CACHE_MEM_FRACTION`\n\n* Update default limit",
+          "timestamp": "2026-03-06T13:14:16-07:00",
+          "tree_id": "a2b849ab8e6563a7a9772546531563075b5ec90a",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/31e49a903e0a90bc0176f2ca3ad1a1645a3faed8"
+        },
+        "date": 1772828987529,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 74099309,
+            "range": "± 1368578",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 85548651,
+            "range": "± 1113012",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 100697481,
+            "range": "± 1901666",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 153053611,
+            "range": "± 1969461",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 626043488,
+            "range": "± 17124363",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 153335660,
+            "range": "± 1975115",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 157542464,
+            "range": "± 591538",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 170977297,
+            "range": "± 807205",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 213313061,
+            "range": "± 3364965",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 367335110,
+            "range": "± 4394882",
             "unit": "ns/iter"
           }
         ]
