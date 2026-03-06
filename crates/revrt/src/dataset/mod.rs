@@ -75,20 +75,16 @@ impl Dataset {
         let tmp_path = tempfile::TempDir::new()
             .expect("could not create temporary directory for swap dataset");
         let swap_fp = match swap_fp {
-            Some(path) => path,
-            None => tmp_path.path().to_path_buf(),
+            Some(path) => {
+                debug!("Using provided swap dataset at {:?}", path);
+                path
+            }
+            None => {
+                let tmp = tmp_path.path().to_path_buf();
+                debug!("Initializing a temporary swap dataset at {:?}", tmp);
+                tmp
+            }
         };
-        // let swap_fp = match swap_fp {
-        //     Some(path) => {
-        //         // debug!("Using provided swap dataset at {:?}", path);
-        //         path
-        //     }
-        //     None => {
-        //         let tmp = tmp_path.path(); // .to_owned();
-        //         debug!("Initializing a temporary swap dataset at {:?}", tmp);
-        //         tmp
-        //     }
-        // };
         let swap: ReadableWritableListableStorage = std::sync::Arc::new(
             zarrs::filesystem::FilesystemStore::new(swap_fp)
                 .expect("could not open filesystem store"),
