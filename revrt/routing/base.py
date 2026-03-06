@@ -599,7 +599,13 @@ class IncrementalRouteWriter(IncrementalWriter):
 class BatchRouteProcessor:
     """Class to manage batches of route computations"""
 
-    def __init__(self, routing_scenario, route_definitions, route_attrs=None):
+    def __init__(
+        self,
+        routing_scenario,
+        route_definitions,
+        route_attrs=None,
+        mem_limit_gb=4,
+    ):
         """
 
         Parameters
@@ -617,10 +623,14 @@ class BatchRouteProcessor:
             integers represents the starting index to additional
             attributes to include in the output for that route.
             By default, ``None``.
+        mem_limit_gb : int or float, default=4
+            Memory limit in gigabytes for routing computations.
+            By default, ``4``.
         """
         self.routing_scenario = routing_scenario
         self._route_definitions = route_definitions
         self._route_attrs = route_attrs or {}
+        self.mem_limit_gb = mem_limit_gb
 
     @cached_property
     def default_attrs(self):
@@ -696,6 +706,10 @@ class BatchRouteProcessor:
 
     def _route_results(self):
         """Generator yielding route results from Rust computations"""
+        logger.debug(
+            "Setting memory limit to %.2f GB for Rust computations",
+            self.mem_limit_gb,
+        )
         route_results = RouteFinder(
             zarr_fp=self.routing_scenario.cost_fpath,
             cost_function=self.routing_scenario.cost_function_json,
@@ -703,7 +717,7 @@ class BatchRouteProcessor:
                 (rid, sp, ep)
                 for rid, (sp, ep) in self.route_definitions.items()
             ],
-            cache_size=2_000_000_000,
+            cache_size=int(self.mem_limit_gb * 1_000_000_000),
             log_level=logging.getLogger("revrt").level or None,
         )
         yield from self._skip_failed_routes(route_results)
@@ -752,7 +766,9 @@ class BatchRouteProcessor:
         """Yield only successfully computed routes from Rust results"""
 
         results_iter = iter(routing_results)
+        num_complete = 0
         while True:
+            num_complete += 1
             try:
                 route_id, solutions = next(results_iter)
                 start_points, end_points = self.route_definitions[route_id]
@@ -777,11 +793,18 @@ class BatchRouteProcessor:
                     attrs_key = (route_id, indices[0])
                     attrs = self.route_attrs.get(attrs_key, self.default_attrs)
                     yield indices, optimized_objective, attrs
+
+                logger.info(
+                    "%d/%d (%.2f%%) routes processed",
+                    num_complete,
+                    len(self.route_definitions),
+                    (num_complete / len(self.route_definitions)) * 100,
+                )
             except revrtRustError:  # pragma: no cover
                 logger.exception("Rust error when computing route")
                 continue
             except StopIteration:
-                logger.debug("Routing complete")
+                logger.info("Routing complete")
                 break
 
     def _validate_start_points(self, points):
