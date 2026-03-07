@@ -411,13 +411,15 @@ fn add_layer_to_data(
 ) -> Result<()> {
     trace!("Creating an empty {} array", layer_name);
     let dataset_path = format!("/{layer_name}");
-    let builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
+    let mut builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
         chunk_shape.clone(),
         zarrs::array::DataType::Float32,
         zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
     );
 
-    let built = builder.build(swap.clone(), &dataset_path)?;
+    let built = builder
+        .dimension_names(["band", "y", "x"].into())
+        .build(swap.clone(), &dataset_path)?;
     built.store_metadata()?;
 
     let array = zarrs::array::Array::open(swap.clone(), &dataset_path)?;
