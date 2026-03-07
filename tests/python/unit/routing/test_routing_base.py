@@ -204,6 +204,41 @@ def test_basic_single_route_layered_file_short_path(
     assert route["cost"] == route["optimized_objective"]
 
 
+def test_route_results_passes_routing_layer_out_fp(
+    sample_layered_data, tmp_path, monkeypatch
+):
+    """routing_layer_out_fp should be passed through to RouteFinder"""
+
+    recorded_kwargs = {}
+
+    class FakeRouteFinder:
+        def __init__(self, *_args, **kwargs):
+            recorded_kwargs.update(kwargs)
+
+        def __iter__(self):
+            return iter([])
+
+    monkeypatch.setattr("revrt.routing.base.RouteFinder", FakeRouteFinder)
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+    )
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 1)], [(2, 6)]),
+        ],
+    )
+    routing_layer_out_fp = tmp_path / "routing_layer.zarr"
+    list(
+        route_computer._route_results(
+            routing_layer_out_fp=routing_layer_out_fp
+        )
+    )
+    assert recorded_kwargs["routing_layer_out_fp"] == routing_layer_out_fp
+
+
 def test_basic_single_route_layered_file(sample_layered_data, tmp_path):
     """Test routing using a LayeredFile-generated cost surface"""
 
