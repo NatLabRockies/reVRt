@@ -192,6 +192,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     cost_multiplier_scalar=1,
     transmission_config=None,
     save_paths=False,
+    save_routing_layer=False,
     ignore_invalid_costs=False,
     connection_identifier_column="end_feat_id",
     memory_utilization_limit=0.9,
@@ -411,6 +412,9 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     save_paths : bool, default=False
         Save outputs as a GeoPackage with path geometries when ``True``.
         Defaults to ``False``.
+    save_routing_layer : bool, default=False
+        Save Rust routing layer outputs to ``out_dir/extra_outputs``
+        when ``True``. Defaults to ``False``.
     ignore_invalid_costs : bool, optional
         Optional flag to treat any cost values <= 0 as impassable
         (i.e. no paths can ever cross this). If ``False``, cost values
@@ -482,11 +486,13 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         cost_fpath,
         out_fp=out_fp,
         routes_to_compute=routes_to_compute,
+        job_name=job_name,
         cost_multiplier_layer=cost_multiplier_layer,
         cost_multiplier_scalar=cost_multiplier_scalar,
         tracked_layers=tracked_layers,
         ignore_invalid_costs=ignore_invalid_costs,
         user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
+        save_routing_layer=save_routing_layer,
     )
 
     elapsed_time = (time.time() - start_time) / 60
