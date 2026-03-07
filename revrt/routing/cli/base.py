@@ -10,9 +10,11 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 
 import pandas as pd
+import rioxarray  # noqa: F401
 import geopandas as gpd
 import xarray as xr
 
+from revrt.routing.cli.utilities import routing_layer_mover
 from revrt.routing.base import BatchRouteProcessor, RoutingScenario
 from revrt.exceptions import revrtKeyError
 
@@ -190,11 +192,13 @@ def run_lcp(
     cost_fpath,
     out_fp,
     routes_to_compute,
+    job_name="routes",
     cost_multiplier_layer=None,
     cost_multiplier_scalar=1,
     tracked_layers=None,
     ignore_invalid_costs=True,
     user_mem_limit_gb=4,
+    save_routing_layer=False,
 ):
     """[NOT PUBLIC API] Run LCP routing and save to output file"""
 
@@ -224,7 +228,23 @@ def run_lcp(
             route_attrs=route_attrs,
             mem_limit_gb=user_mem_limit_gb * _CACHE_MEM_FRACTION,
         )
-        route_computer.process(out_fp=out_fp, save_paths=save_paths)
+
+        rl_mover = routing_layer_mover(
+            save=save_routing_layer,
+            cost_fpath=cost_fpath,
+            out_fp=out_fp,
+            route_attrs=route_attrs,
+            job_name=job_name,
+            route_cl=route_cl,
+            route_fl=route_fl,
+        )
+
+        with rl_mover as routing_layer_out_fp:
+            route_computer.process(
+                out_fp=out_fp,
+                save_paths=save_paths,
+                routing_layer_out_fp=routing_layer_out_fp,
+            )
 
     time_elapsed = f"{(time.monotonic() - ts) / 3600:.4f} hour(s)"
     logger.info(
