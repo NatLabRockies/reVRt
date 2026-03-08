@@ -21,7 +21,7 @@ pub(crate) mod samples;
 use std::iter;
 use std::sync::{Arc, RwLock};
 
-use tracing::{debug, trace, warn};
+use tracing::{debug, info, trace, warn};
 use zarrs::array::codec::CodecOptions;
 use zarrs::array::{ChunkCache, ChunkCacheDecodedLruSizeLimit, ChunkGrid};
 use zarrs::storage::{
@@ -76,12 +76,12 @@ impl Dataset {
             .expect("could not create temporary directory for swap dataset");
         let swap_fp = match swap_fp {
             Some(path) => {
-                debug!("Using provided swap dataset at {:?}", path);
+                info!("Using provided swap dataset at {:?}", path);
                 path
             }
             None => {
                 let tmp = tmp_path.path().to_path_buf();
-                debug!("Initializing a temporary swap dataset at {:?}", tmp);
+                info!("Initializing a temporary swap dataset at {:?}", tmp);
                 tmp
             }
         };
