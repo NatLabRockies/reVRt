@@ -229,14 +229,19 @@ fn find_paths(
 ///     so use the route ID input to match results to inputs.
 #[pyclass]
 struct RouteFinder {
+    /// Path to the Zarr file containing the cost layers
     #[pyo3(get)]
     zarr_fp: PathBuf,
+    /// JSON string representation of the cost function configuration
     #[pyo3(get)]
     cost_function: String,
+    /// Route definitions as ``(route_id, start_points, end_points)`` tuples
     #[pyo3(get)]
     route_definitions: Vec<PyRouteDefinition>,
+    /// Cache size used during routing, in bytes
     #[pyo3(get)]
     cache_size: u64,
+    /// Optional output path where routing layers are persisted
     #[pyo3(get)]
     routing_layer_out_fp: Option<PathBuf>,
 }
