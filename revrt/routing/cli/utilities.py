@@ -28,21 +28,23 @@ def routing_layer_mover(
     Parameters
     ----------
     save : bool
-        Whether to capture and persist routing layer output
+        Whether to capture and persist routing layer output.
     cost_fpath : path-like
-        Path to the source layered cost dataset used for coordinates
+        Path to the source layered cost dataset used for coordinates.
     out_fp : path-like
         Output route-table path. Routing layers are written under
-        ``out_fp.parent / "extra_outputs"``
+        ``out_fp.parent / "extra_outputs"``.
     route_attrs : dict
         Route attribute mapping. The first route entry is used to
-        derive ``polarity`` and ``voltage`` labels for the output name
+        derive ``polarity`` and ``voltage`` labels for the output name.
     job_name : str
-        Job name included in the saved routing-layer filename
-    route_cl : list[dict]
-        Cost layer definitions used to build the output hash suffix
-    route_fl : list[dict]
-        Friction layer definitions used to build the output hash suffix
+        Job name included in the saved routing-layer filename.
+    route_cl : list
+        List of dictionaries representing cost layer definitions used to
+        build the output hash suffix.
+    route_fl : list
+        List of dictionaries representing friction layer definitions
+        used to build the output hash suffix.
 
     Yields
     ------
