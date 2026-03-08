@@ -66,4 +66,8 @@ impl Scenario {
         trace!("Adjusting neighbors' types: {:?}", neighbors);
         neighbors
     }
+
+    pub(super) fn grid_shape(&self) -> (u64, u64) {
+        self.dataset.grid_shape()
+    }
 }

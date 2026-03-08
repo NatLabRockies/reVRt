@@ -57,6 +57,10 @@ pub(super) struct Dataset {
     cost_cache: ChunkCacheDecodedLruSizeLimit,
     /// Cache for decoded invariant cost chunks shared across calls
     cost_invariant_cache: ChunkCacheDecodedLruSizeLimit,
+    /// Number of rows in the routing grid
+    grid_nrows: u64,
+    /// Number of columns in the routing grid
+    grid_ncols: u64,
 }
 
 impl Dataset {
@@ -120,6 +124,9 @@ impl Dataset {
         };
         debug!("Using '{}' to determine shape of cost data", varname);
         let tmp = zarrs::array::Array::open(source.clone(), &format!("/{varname}"))?;
+        let shape = tmp.shape();
+        let grid_nrows = shape[1];
+        let grid_ncols = shape[2];
         let chunk_grid = tmp.chunk_grid();
         debug!("Chunk grid info: {:?}", &chunk_grid);
 
@@ -161,6 +168,8 @@ impl Dataset {
             cost_function,
             cost_cache,
             cost_invariant_cache,
+            grid_nrows,
+            grid_ncols,
         })
     }
 
@@ -392,6 +401,10 @@ impl Dataset {
 
         trace!("Neighbors {:?}", neighbor_costs);
         neighbor_costs
+    }
+
+    pub(super) fn grid_shape(&self) -> (u64, u64) {
+        (self.grid_nrows, self.grid_ncols)
     }
 }
 

@@ -10,21 +10,26 @@
  */
 
 use num_traits::Zero;
-use std::hash::Hash;
 
+use tracing::{debug, warn};
+
+use super::bounded;
 use crate::{ArrayIndex, Solution};
+
+const MIN_MEMORY_BUDGET_GB: u64 = 2;
 
 #[derive(Clone, Debug)]
 /// Types of algorithms to determine optimal paths
 pub(super) enum AlgorithmType {
     // Astar,
     Dijkstra,
-    // LongRangeDijkstra,
+    LongRangeDijkstra,
 }
 
 #[derive(Debug)]
 pub(super) struct Algorithm {
     algorithm_type: AlgorithmType,
+    memory_budget_bytes: Option<u64>,
 }
 
 #[allow(dead_code)]
@@ -48,30 +53,69 @@ impl Algorithm {
     pub(super) fn new() -> Self {
         Self {
             algorithm_type: AlgorithmType::Dijkstra,
+            memory_budget_bytes: None,
+        }
+    }
+
+    pub(super) fn new_bounded(memory_budget_bytes: u64) -> Self {
+        if memory_budget_bytes < MIN_MEMORY_BUDGET_GB * 1024 * 1024 * 1024 {
+            warn!(
+                "Long-range Dijkstra memory budget smaller than the {}GB limit! Setting to {}GB...",
+                MIN_MEMORY_BUDGET_GB, MIN_MEMORY_BUDGET_GB
+            );
+            Self {
+                algorithm_type: AlgorithmType::LongRangeDijkstra,
+                memory_budget_bytes: Some(MIN_MEMORY_BUDGET_GB * 1024 * 1024 * 1024),
+            }
+        } else {
+            debug!(
+                "Long-range Dijkstra memory budget set to {}GB",
+                memory_budget_bytes / (1024 * 1024 * 1024)
+            );
+            Self {
+                algorithm_type: AlgorithmType::LongRangeDijkstra,
+                memory_budget_bytes: Some(memory_budget_bytes),
+            }
         }
     }
 
     #[allow(unused_variables)]
-    pub(super) fn compute<I, C, FN, IN, FH, FS>(
+    pub(super) fn compute<C, FN, IN, FH, FS>(
         &self,
-        start: &I,
+        start: &ArrayIndex,
         successors: FN,
         heuristic: Option<FH>,
         success: FS,
-    ) -> Option<Solution<I, f32>>
+        grid_shape: (u64, u64),
+    ) -> Option<Solution<ArrayIndex, f32>>
     //) -> Option<Solution<I, C>>
     where
-        I: Eq + Hash + Clone,
-        C: Zero + Ord + Copy,
-        FN: FnMut(&I) -> IN,
-        IN: IntoIterator<Item = (I, C)>,
-        FH: FnMut(&I) -> C,
-        FS: FnMut(&I) -> bool,
+        // I: Eq + Hash + Clone,
+        C: Zero + Ord + Copy + From<u64>,
+        // I: From<(u64, u64)>,
+        // (u64, u64): From<I>,
+        // C: Zero + Ord + Copy + From<u64>,
+        FN: FnMut(&ArrayIndex) -> IN,
+        IN: IntoIterator<Item = (ArrayIndex, C)>,
+        FH: FnMut(&ArrayIndex) -> C,
+        FS: FnMut(&ArrayIndex) -> bool,
         // Temporary solution while we can't compare f32
         u64: From<C>,
     {
         let ans = match self.algorithm_type {
             AlgorithmType::Dijkstra => pathfinding::prelude::dijkstra(start, successors, success),
+            AlgorithmType::LongRangeDijkstra => {
+                let memory_budget_bytes = self
+                    .memory_budget_bytes
+                    .expect("Memory budget not set for long-range Dijkstra");
+                bounded::bounded_dijkstra(
+                    start,
+                    successors,
+                    success,
+                    memory_budget_bytes,
+                    grid_shape,
+                )
+            }
         };
 
         ans.map(|(route, total_cost)| {

@@ -1,6 +1,7 @@
 //! Routing module
 
 mod algorithm;
+mod bounded;
 mod features;
 mod scenario;
 
@@ -27,6 +28,7 @@ impl Routing {
         end: Vec<ArrayIndex>,
     ) -> impl Iterator<Item = Solution<ArrayIndex, f32>> {
         debug!("Starting compute with {} start points", start.len());
+        let grid_shape = self.scenario.grid_shape();
 
         let solution: Vec<Solution<ArrayIndex, f32>> = start
             .into_par_iter()
@@ -36,6 +38,7 @@ impl Routing {
                     |p| self.scenario.successors(p),
                     None::<fn(&ArrayIndex) -> u64>,
                     |p| end.contains(p),
+                    grid_shape,
                 )
             })
             .collect();
@@ -50,7 +53,8 @@ impl Routing {
     ) -> Result<Self> {
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
 
-        let algorithm = Algorithm::new();
+        // let algorithm = Algorithm::new();
+        let algorithm = Algorithm::new_bounded(4 * 1024 * 1024 * 1024);
 
         Ok(Self {
             scenario,
@@ -102,6 +106,7 @@ impl ParRouting {
                      end_inds,
                  }| {
                     debug!("Computing routes between {start_inds:?} and {end_inds:?}");
+                    let grid_shape = scenario.grid_shape();
                     // if end_inds.last() == Some(&ArrayIndex { i: 2, j: 6 }) {
                     //     use std::thread;
                     //     use std::time::Duration;
@@ -127,6 +132,7 @@ impl ParRouting {
                                 |p| scenario.successors(p),
                                 None::<fn(&ArrayIndex) -> u64>,
                                 |p| end_inds.contains(p),
+                                grid_shape,
                             )
                             // pathfinding::prelude::dijkstra(
                             //     &s,
