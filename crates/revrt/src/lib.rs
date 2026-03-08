@@ -48,8 +48,7 @@ pub fn resolve<P: AsRef<std::path::Path>>(
 ) -> Result<RevrtRoutingSolutions> {
     let cost_function = CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let mut simulation: Routing =
-        Routing::new(store_path, cost_function, cache_size, swap_fp).unwrap();
+    let mut simulation: Routing = Routing::new(store_path, cost_function, cache_size, swap_fp)?;
     let result = simulation.compute(start, end).collect();
     Ok(result)
 }
