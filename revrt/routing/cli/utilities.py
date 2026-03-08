@@ -46,8 +46,11 @@ def routing_layer_mover(
     Yields
     ------
     path-like or None
-        Temporary zarr directory path when ``save`` is True,
-        otherwise None
+        Temporary zarr directory path used as the routing-layer swap
+        location. When ``save`` is True the directory contents are
+        also persisted to a named output under ``out_fp.parent /
+        "extra_outputs"``; otherwise the temporary directory is
+        removed on context exit.
     """
     scratch_dir = _make_scratch_dir()
     tfc = tempfile.TemporaryDirectory(dir=scratch_dir, suffix=".zarr")
