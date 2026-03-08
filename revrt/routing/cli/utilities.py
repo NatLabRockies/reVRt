@@ -4,6 +4,7 @@ import json
 import getpass
 import hashlib
 import logging
+import os
 import tempfile
 import contextlib
 from pathlib import Path
@@ -93,11 +94,37 @@ def _make_scratch_dir():
 
 
 def _create_routing_layer_tmp_dir():
-    """[NOT PUBLIC API] Create a temporary directory in $TMPDIR"""
-    user = getpass.getuser()
+    """Create a temporary directory in $TMPDIR"""
+    user = _get_scratch_username()
     out_dir = Path(tempfile.gettempdir()) / "scratch" / user
     out_dir.mkdir(parents=True, exist_ok=True)
     return out_dir
+
+
+def _get_scratch_username():
+    """Resolve a filesystem-safe username"""
+    for env_name in ("LOGNAME", "USER", "LNAME", "USERNAME"):
+        if user := os.environ.get(env_name):
+            return _sanitize_username(user)
+
+    with contextlib.suppress(Exception):
+        if user := getpass.getuser():
+            return _sanitize_username(user)
+
+    with contextlib.suppress(Exception):
+        if user := Path.home().name:
+            return _sanitize_username(user)
+
+    return "unknown-user"
+
+
+def _sanitize_username(user):
+    """Keep username path-safe and non-empty"""
+    clean = "".join(
+        char if (char.isalnum() or char in "._-") else "_"
+        for char in str(user)
+    ).strip("._-")
+    return clean or "unknown-user"
 
 
 def _extract_batch_group(route_attrs):
