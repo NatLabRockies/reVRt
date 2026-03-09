@@ -83,7 +83,8 @@ impl ParRouting {
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
         Ok(Self {
             scenario: Arc::new(scenario),
-            algorithm: Arc::new(Algorithm::new()),
+            algorithm: Arc::new(Algorithm::new_bounded(75 * 1024 * 1024 * 1024)),
+            // algorithm: Arc::new(Algorithm::new()),
         })
     }
     pub(super) fn lazy_scout<I>(
