@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use ndarray::Array2;
 use object_store::local::LocalFileSystem;
-use rand::Rng;
+use rand::RngExt;
 use tempfile::TempDir;
 use zarrs::array::{ArrayBuilder, DataType, FillValue};
 use zarrs::array_subset::ArraySubset;
