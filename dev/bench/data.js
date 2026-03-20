@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773171693311,
+  "lastUpdate": 1774049834694,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -6551,6 +6551,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 380745233,
             "range": "± 8838815",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e357ac9b981a5304c35256187d16b703ad7d8fb9",
+          "message": "Build(deps): Bump release-drafter/release-drafter from 6.4.0 to 7.0.0 (#233)",
+          "timestamp": "2026-03-20T17:09:39-06:00",
+          "tree_id": "3e1dbf2627832f21111b82d6fabc6c0972db0fd8",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/e357ac9b981a5304c35256187d16b703ad7d8fb9"
+        },
+        "date": 1774049834094,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 73601241,
+            "range": "± 802542",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 127999368,
+            "range": "± 4209715",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 100205313,
+            "range": "± 2207780",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 153757448,
+            "range": "± 2661331",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 623988032,
+            "range": "± 18234024",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 152082231,
+            "range": "± 2630306",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 156646323,
+            "range": "± 745121",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 169544834,
+            "range": "± 1019341",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 212732771,
+            "range": "± 5906580",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 366899225,
+            "range": "± 6434741",
             "unit": "ns/iter"
           }
         ]
