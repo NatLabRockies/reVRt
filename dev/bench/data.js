@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774373974935,
+  "lastUpdate": 1774981744060,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -6719,6 +6719,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 227698274,
             "range": "± 2349433",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "420ceef064bc7f76e89ccebfd3e0ce5091809e22",
+          "message": "Build(deps): Bump codecov/codecov-action from 5 to 6 (#235)\n\nBumps [codecov/codecov-action](https://github.com/codecov/codecov-action) from 5 to 6.\n- [Release notes](https://github.com/codecov/codecov-action/releases)\n- [Changelog](https://github.com/codecov/codecov-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/codecov/codecov-action/compare/v5...v6)\n\n---\nupdated-dependencies:\n- dependency-name: codecov/codecov-action\n  dependency-version: '6'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-03-31T12:16:12-06:00",
+          "tree_id": "fbe9339ac082f33ad9fbe963e243467aa12d400d",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/420ceef064bc7f76e89ccebfd3e0ce5091809e22"
+        },
+        "date": 1774981740908,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 74043821,
+            "range": "± 975183",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 87389389,
+            "range": "± 915368",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 97441595,
+            "range": "± 2224031",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 150332186,
+            "range": "± 2312310",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 652482104,
+            "range": "± 16877811",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 146694393,
+            "range": "± 3602149",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 151290845,
+            "range": "± 880696",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 165312652,
+            "range": "± 1445757",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 207458479,
+            "range": "± 2004066",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 369618548,
+            "range": "± 6160670",
             "unit": "ns/iter"
           }
         ]
