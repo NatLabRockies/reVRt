@@ -135,7 +135,11 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     By default, `250,000,000` (250MB).
 /// algorithm : str, default="long_range"
 ///     Routing algorithm implementation to use. Supported values are
-///     ``"long_range"`` and ``"dijkstra"``.
+///     ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a faster
+///     implementation but foes not respect the `mem_limit_bytes` input.
+///     Prefer the default ``"long_range"`` option unless you know for a
+///     fact that your route computations will not need much memory and
+///     speed is very important to you. By default, ``"long_range"``.
 ///
 /// Returns
 /// -------
@@ -200,7 +204,11 @@ fn find_paths(
 ///     By default, `250,000,000` (250MB).
 /// algorithm : str, default="long_range"
 ///     Routing algorithm implementation to use. Supported values are
-///     ``"long_range"`` and ``"dijkstra"``.
+///     ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a faster
+///     implementation but foes not respect the `mem_limit_bytes` input.
+///     Prefer the default ``"long_range"`` option unless you know for a
+///     fact that your route computations will not need much memory and
+///     speed is very important to you. By default, ``"long_range"``.
 /// log_level : int, optional
 ///     Logging level for Rust tracing emitted to stderr. Roughly follows the
 ///     Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,
