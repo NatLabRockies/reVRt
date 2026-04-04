@@ -1,0 +1,360 @@
+pub(super) mod swap;
+pub(super) mod utilities;
+
+use std::collections::{BinaryHeap, HashMap};
+use std::sync::Arc;
+
+use tracing::debug;
+
+use super::cost::NodeCost;
+use crate::ArrayIndex;
+use crate::routing::memory_budget::{BudgetCoordinator, BudgetReservation};
+use swap::SwapStore;
+use utilities::{FinalizedBits, GridIndexer};
+
+const MAX_PQ_TO_FRONTIER_NODE_RATIO: usize = 4;
+
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct MemoryConfig {
+    pub(crate) memory_budget_bytes: u64,
+    pub(crate) spill_buffer_capacity: usize,
+}
+
+impl MemoryConfig {
+    pub(crate) fn standard(memory_budget_bytes: u64) -> Self {
+        Self {
+            memory_budget_bytes,
+            spill_buffer_capacity: 4096,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct FinalizedNode {
+    slot: usize,
+    pub(crate) array_index: ArrayIndex,
+    cost: u64,
+}
+
+impl FinalizedNode {
+    fn route(&self, state: &mut MemoryBoundedSearchState) -> Option<Vec<ArrayIndex>> {
+        state.reconstruct_path_to(self.slot)
+    }
+}
+
+#[derive(Debug)]
+/// Tracks the mutable state for a memory-bounded shortest-path search.
+///
+/// Frontier nodes stay in memory so the search can continue expanding the
+/// cheapest known path, while finalized node costs and parent links are
+/// written to the swap store for later path reconstruction.
+pub(crate) struct MemoryBoundedSearchState {
+    grid: GridIndexer,
+    config: MemoryConfig,
+    // Frontier nodes ordered by estimated total cost.
+    pq: BinaryHeap<NodeCost<usize, u64>>,
+    // Cheapest known cost for each frontier node still tracked in memory.
+    // Once a node is finalized, its cost is removed from this map and can
+    // be recovered from the swap store during path reconstruction.
+    best_node_costs: HashMap<usize, u64>,
+    // Parent slot for each frontier node's current best path.
+    parents: HashMap<usize, usize>,
+    // Compact membership set for nodes whose cheapest path is finalized.
+    finalized_bits: FinalizedBits,
+    // Spill area for finalized node records needed to rebuild a route.
+    swap: SwapStore,
+    // Reservation held with the shared budget coordinator.
+    budget_reservation: BudgetReservation,
+    // Number of finalized nodes removed from the frontier.
+    num_nodes_checked: usize,
+}
+
+impl MemoryBoundedSearchState {
+    const CONSERVATIVE_PQ_ENTRY_ESTIMATE_BYTES: u64 = 64;
+    const CONSERVATIVE_BEST_COST_ENTRY_ESTIMATE_BYTES: u64 = 96;
+    const CONSERVATIVE_PARENT_ENTRY_ESTIMATE_BYTES: u64 = 96;
+    const SPILL_BUFFER_ENTRY_BYTES: u64 = 24;
+
+    pub(crate) fn new(
+        start: &ArrayIndex,
+        config: MemoryConfig,
+        grid_shape: (u64, u64),
+        budget_coordinator: Arc<BudgetCoordinator>,
+    ) -> Option<Self> {
+        let grid = GridIndexer::new(grid_shape.0, grid_shape.1)?;
+        let start_slot = grid.slot_of(start)?;
+        let initial_budget_bytes = (Self::CONSERVATIVE_PQ_ENTRY_ESTIMATE_BYTES
+            + Self::CONSERVATIVE_BEST_COST_ENTRY_ESTIMATE_BYTES
+            + grid.finalized_bits_bytes())
+        .min(config.memory_budget_bytes);
+        let budget_reservation = budget_coordinator.acquire(initial_budget_bytes)?;
+
+        let mut state = Self {
+            grid,
+            config,
+            pq: BinaryHeap::new(),
+            best_node_costs: HashMap::new(),
+            parents: HashMap::new(),
+            finalized_bits: grid.new_finalized_bits()?,
+            swap: SwapStore::new(config.spill_buffer_capacity).ok()?,
+            budget_reservation,
+            num_nodes_checked: 0,
+        };
+
+        state.best_node_costs.insert(start_slot, 0);
+        state.pq.push(NodeCost {
+            index: start_slot,
+            cost: 0,
+            estimated_cost: 0,
+        });
+        state.sync_budget()?;
+        Some(state)
+    }
+
+    pub(crate) fn pop_next_node(&mut self) -> Option<FinalizedNode> {
+        while let Some(NodeCost { index, cost, .. }) = self.pq.pop() {
+            if self.finalized_bits.contains(index) {
+                continue;
+            }
+
+            let Some(current_best) = self.best_node_costs.get(&index).copied() else {
+                continue;
+            };
+
+            if cost != current_best {
+                continue;
+            }
+
+            let array_index = self.grid.index_of(index);
+            let parent_slot = self.parents.remove(&index);
+            self.best_node_costs.remove(&index);
+
+            self.finalized_bits.set(index);
+            self.swap.write_slot(index, (cost, parent_slot)).ok()?;
+            self.num_nodes_checked += 1;
+
+            return Some(FinalizedNode {
+                slot: index,
+                array_index,
+                cost,
+            });
+        }
+
+        None
+    }
+
+    pub(crate) fn finalize_route(&mut self, node: FinalizedNode) -> Option<(Vec<ArrayIndex>, u64)> {
+        let cost = node.cost;
+        let route = node.route(self)?;
+        Some((route, cost))
+    }
+
+    pub(crate) fn add_successors<C, IN>(&mut self, node: &FinalizedNode, successors: IN)
+    where
+        IN: IntoIterator<Item = (ArrayIndex, C)>,
+        C: Copy,
+        u64: From<C>,
+    {
+        for (neighbor, edge_cost) in successors {
+            self.add_neighbor(node.slot, node.cost, &neighbor, edge_cost);
+        }
+    }
+
+    fn add_neighbor<C>(
+        &mut self,
+        from_slot: usize,
+        from_cost: u64,
+        neighbor: &ArrayIndex,
+        edge_cost: C,
+    ) where
+        C: Copy,
+        u64: From<C>,
+    {
+        let Some(neighbor_slot) = self.grid.slot_of(neighbor) else {
+            return;
+        };
+
+        if self.finalized_bits.contains(neighbor_slot) {
+            return;
+        }
+
+        let next_cost = from_cost.saturating_add(u64::from(edge_cost));
+        let should_update = self
+            .best_node_costs
+            .get(&neighbor_slot)
+            .map(|current_best_cost| next_cost < *current_best_cost)
+            .unwrap_or(true);
+
+        if should_update {
+            self.best_node_costs.insert(neighbor_slot, next_cost);
+            self.parents.insert(neighbor_slot, from_slot);
+            self.pq.push(NodeCost {
+                index: neighbor_slot,
+                cost: next_cost,
+                estimated_cost: next_cost,
+            });
+        }
+    }
+
+    pub(crate) fn enforce_memory_budget(&mut self) -> Option<()> {
+        if self.estimated_state_bytes() > self.config.memory_budget_bytes {
+            debug!(
+                "Memory pressure exceeded after checking {} nodes, spilling to swap file",
+                self.num_nodes_checked
+            );
+            self.pq = compact_pq_set(&self.best_node_costs);
+            self.swap.flush().ok()?;
+        } else if self.pq.len() > self.best_node_costs.len() * MAX_PQ_TO_FRONTIER_NODE_RATIO {
+            debug!(
+                "Compacting priority queue after checking {} nodes",
+                self.num_nodes_checked
+            );
+            self.pq = compact_pq_set(&self.best_node_costs);
+        }
+
+        self.sync_budget()?;
+
+        Some(())
+    }
+
+    fn reconstruct_path_to(&mut self, goal_slot: usize) -> Option<Vec<ArrayIndex>> {
+        let mut path = Vec::new();
+        let mut current_slot = Some(goal_slot);
+
+        while let Some(slot) = current_slot {
+            path.push(self.grid.index_of(slot));
+            let (_, parent) = self.swap.read_slot(slot).ok()?;
+            current_slot = parent;
+        }
+
+        path.reverse();
+        Some(path)
+    }
+
+    fn estimated_state_bytes(&self) -> u64 {
+        let priority_queue_bytes =
+            self.pq.len() as u64 * Self::CONSERVATIVE_PQ_ENTRY_ESTIMATE_BYTES;
+        let best_cost_bytes =
+            self.best_node_costs.len() as u64 * Self::CONSERVATIVE_BEST_COST_ENTRY_ESTIMATE_BYTES;
+        let parent_bytes =
+            self.parents.len() as u64 * Self::CONSERVATIVE_PARENT_ENTRY_ESTIMATE_BYTES;
+        let buffered_spill_bytes = self.swap.buffered_len() as u64 * Self::SPILL_BUFFER_ENTRY_BYTES;
+
+        priority_queue_bytes
+            + best_cost_bytes
+            + parent_bytes
+            + buffered_spill_bytes
+            + self.grid.finalized_bits_bytes()
+    }
+
+    fn budget_target_bytes(&self) -> u64 {
+        self.estimated_state_bytes()
+            .min(self.config.memory_budget_bytes)
+    }
+
+    fn sync_budget(&mut self) -> Option<()> {
+        self.budget_reservation.resize(self.budget_target_bytes())
+    }
+}
+
+fn compact_pq_set(best_node_costs: &HashMap<usize, u64>) -> BinaryHeap<NodeCost<usize, u64>> {
+    best_node_costs
+        .iter()
+        .map(|(index, cost)| NodeCost {
+            index: *index,
+            cost: *cost,
+            estimated_cost: *cost,
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use super::*;
+
+    fn run_to_goal(
+        state: &mut MemoryBoundedSearchState,
+        goal: ArrayIndex,
+        mut successors: impl FnMut(&ArrayIndex) -> Vec<(ArrayIndex, u64)>,
+    ) -> Option<(Vec<ArrayIndex>, u64)> {
+        while let Some(node) = state.pop_next_node() {
+            if node.array_index == goal {
+                return state.finalize_route(node);
+            }
+
+            state.add_successors(&node, successors(&node.array_index));
+            state.enforce_memory_budget()?;
+        }
+
+        None
+    }
+
+    #[test]
+    fn state_spills_when_pressure_exceeds_budget() {
+        let start = ArrayIndex::new(10, 10);
+        let goal = ArrayIndex::new(15, 15);
+        let config = MemoryConfig {
+            memory_budget_bytes: 2_000,
+            spill_buffer_capacity: 8,
+        };
+        let mut state = MemoryBoundedSearchState::new(
+            &start,
+            config,
+            (31, 31),
+            Arc::new(BudgetCoordinator::new(config.memory_budget_bytes)),
+        )
+        .unwrap();
+
+        let ans = run_to_goal(&mut state, goal.clone(), |p| {
+            let mut out = Vec::new();
+            for di in -1_i64..=1 {
+                for dj in -1_i64..=1 {
+                    if di == 0 && dj == 0 {
+                        continue;
+                    }
+                    let ni = p.i as i64 + di;
+                    let nj = p.j as i64 + dj;
+                    if ni >= 0 && nj >= 0 && ni <= 30 && nj <= 30 {
+                        out.push((ArrayIndex::new(ni as u64, nj as u64), 1_u64));
+                    }
+                }
+            }
+            out
+        })
+        .unwrap();
+
+        assert_eq!(ans.0.first(), Some(&start));
+        assert_eq!(ans.0.last(), Some(&goal));
+    }
+
+    #[test]
+    fn state_returns_none_when_frontier_never_reaches_goal() {
+        let start = ArrayIndex::new(0, 0);
+        let config = MemoryConfig {
+            memory_budget_bytes: 2_000,
+            spill_buffer_capacity: 4,
+        };
+        let mut state = MemoryBoundedSearchState::new(
+            &start,
+            config,
+            (21, 21),
+            Arc::new(BudgetCoordinator::new(config.memory_budget_bytes)),
+        )
+        .unwrap();
+
+        let ans = run_to_goal(&mut state, ArrayIndex::new(99, 99), |p| {
+            let mut out = Vec::new();
+            if p.i < 20 {
+                out.push((ArrayIndex::new(p.i + 1, p.j), 1_u64));
+            }
+            if p.j < 20 {
+                out.push((ArrayIndex::new(p.i, p.j + 1), 1_u64));
+            }
+            out
+        });
+
+        assert!(ans.is_none());
+    }
+}
