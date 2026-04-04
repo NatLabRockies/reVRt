@@ -9,20 +9,24 @@
  * pathfinding::dfs(start, successor, success)
  */
 
+use std::str::FromStr;
+
 use num_traits::Zero;
 
+use pathfinding::prelude::dijkstra;
 use tracing::{debug, warn};
 
 use super::long_range;
-use crate::{ArrayIndex, Solution};
+use crate::{ArrayIndex, Solution, error::Error, error::Result};
 
 const MIN_MEMORY_BUDGET_MB: u64 = 2;
+const SUPPORTED_ALGORITHMS: &[&str] = &["dijkstra", "long_range"];
 
-#[derive(Clone, Debug)]
 /// Types of algorithms to determine optimal paths
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum AlgorithmType {
     // Astar,
-    // Dijkstra,
+    Dijkstra,
     LongRangeDijkstra,
 }
 
@@ -130,7 +134,7 @@ impl Algorithm {
         u64: From<C>,
     {
         let ans = match self.algorithm_type {
-            // AlgorithmType::Dijkstra => pathfinding::prelude::dijkstra(start, successors, success),
+            AlgorithmType::Dijkstra => dijkstra(start, successors, success),
             AlgorithmType::LongRangeDijkstra => {
                 let per_worker_memory_budget_bytes = self
                     .per_worker_memory_budget_bytes
@@ -148,5 +152,55 @@ impl Algorithm {
         ans.map(|(route, total_cost)| {
             Solution::new(route, super::unscaled_cost(u64::from(total_cost)))
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use super::{AlgorithmType, SUPPORTED_ALGORITHMS};
+    use crate::error::Error;
+
+    #[test]
+    fn parses_supported_algorithm_names() {
+        assert_eq!(
+            AlgorithmType::from_str("dijkstra").unwrap(),
+            AlgorithmType::Dijkstra
+        );
+        assert_eq!(
+            AlgorithmType::from_str("long_range").unwrap(),
+            AlgorithmType::LongRangeDijkstra
+        );
+        assert_eq!(
+            AlgorithmType::from_str("long_range_dijkstra").unwrap(),
+            AlgorithmType::LongRangeDijkstra
+        );
+    }
+
+    #[test]
+    fn normalizes_case_whitespace_and_hyphens() {
+        assert_eq!(
+            AlgorithmType::from_str("  Dijkstra  ").unwrap(),
+            AlgorithmType::Dijkstra
+        );
+        assert_eq!(
+            AlgorithmType::from_str(" LONG-RANGE ").unwrap(),
+            AlgorithmType::LongRangeDijkstra
+        );
+    }
+
+    #[test]
+    fn reports_invalid_algorithm_with_original_value() {
+        let invalid_value = " long range ";
+        let error = AlgorithmType::from_str(invalid_value).unwrap_err();
+
+        assert!(matches!(
+            error,
+            Error::InvalidAlgorithm {
+                value,
+                allowed,
+            } if value == invalid_value && allowed == SUPPORTED_ALGORITHMS
+        ));
     }
 }
