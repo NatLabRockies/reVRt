@@ -1,8 +1,8 @@
 //! Routing module
 
 mod algorithm;
-mod bounded;
 mod features;
+mod long_range;
 mod scenario;
 
 use std::collections::HashSet;
@@ -60,7 +60,7 @@ impl Routing {
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
 
         // let algorithm = Algorithm::new();
-        let algorithm = Algorithm::new_bounded(per_rayon_worker_memory_budget(
+        let algorithm = Algorithm::new_long_range(per_rayon_worker_memory_budget(
             rayon_worker_total_budget_bytes,
         ));
 
@@ -93,7 +93,7 @@ impl ParRouting {
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
         Ok(Self {
             scenario: Arc::new(scenario),
-            algorithm: Arc::new(Algorithm::new_bounded(per_rayon_worker_memory_budget(
+            algorithm: Arc::new(Algorithm::new_long_range(per_rayon_worker_memory_budget(
                 rayon_worker_total_budget_bytes,
             ))),
             // algorithm: Arc::new(Algorithm::new()),

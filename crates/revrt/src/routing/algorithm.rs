@@ -13,7 +13,7 @@ use num_traits::Zero;
 
 use tracing::{debug, warn};
 
-use super::bounded;
+use super::long_range;
 use crate::{ArrayIndex, Solution};
 
 const MIN_MEMORY_BUDGET_MB: u64 = 2;
@@ -58,7 +58,7 @@ impl Algorithm {
     //     }
     // }
 
-    pub(super) fn new_bounded(per_worker_memory_budget_bytes: u64) -> Self {
+    pub(super) fn new_long_range(per_worker_memory_budget_bytes: u64) -> Self {
         if per_worker_memory_budget_bytes < MIN_MEMORY_BUDGET_MB * 1024 * 1024 {
             warn!(
                 "Long-range Dijkstra per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
@@ -109,7 +109,7 @@ impl Algorithm {
                 let per_worker_memory_budget_bytes = self
                     .per_worker_memory_budget_bytes
                     .expect("Memory budget not set for long-range Dijkstra");
-                bounded::long_range_dijkstra(
+                long_range::long_range_dijkstra(
                     start,
                     successors,
                     success,

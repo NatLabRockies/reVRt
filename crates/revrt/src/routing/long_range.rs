@@ -1,4 +1,4 @@
-//! Memory-bounded routing algorithms
+//! Long-range (memory-bounded) routing algorithms
 //!
 //! This module provides a Dijkstra implementation that keeps active
 //! frontier state in memory and spills finalized nodes to a swap file.
@@ -25,7 +25,7 @@ where
     C: From<u64>,
 {
     debug!(
-        "Starting bounded Dijkstra with memory budget of {} bytes",
+        "Starting long-range Dijkstra with memory budget of {} bytes",
         memory_budget_bytes
     );
     let mut state = FrontierOnlySearchState::new(start, memory_budget_bytes, grid_shape)?;
