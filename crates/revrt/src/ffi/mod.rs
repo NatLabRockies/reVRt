@@ -127,8 +127,8 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     the indices in the array for the any allowed final pixel.
 ///     When the algorithm reaches any of these points, the routing
 ///     is terminated and the final path + cost is returned.
-/// cache_size : int, default=250_000_000
-///     Cache size to use for computation, in bytes.
+/// mem_limit_bytes : int, default=250_000_000
+///     Memory limit to use for routing computation, in bytes.
 ///     By default, `250,000,000` (250MB).
 ///
 /// Returns
@@ -139,21 +139,21 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     route goes through and the second element is the final
 ///     route cost.
 #[pyfunction]
-#[pyo3(signature = (zarr_fp, cost_function, start, end, cache_size=250_000_000))]
+#[pyo3(signature = (zarr_fp, cost_function, start, end, mem_limit_bytes=250_000_000))]
 #[allow(clippy::type_complexity)]
 fn find_paths(
     zarr_fp: PathBuf,
     cost_function: String,
     start: Vec<(u64, u64)>,
     end: Vec<(u64, u64)>,
-    cache_size: u64,
+    mem_limit_bytes: u64,
 ) -> Result<PyRoutingSolutions> {
     let start: Vec<ArrayIndex> = start
         .into_iter()
         .map(|(i, j)| ArrayIndex { i, j })
         .collect();
     let end: Vec<ArrayIndex> = end.into_iter().map(|(i, j)| ArrayIndex { i, j }).collect();
-    let paths = resolve(zarr_fp, &cost_function, cache_size, &start, end)?;
+    let paths = resolve(zarr_fp, &cost_function, mem_limit_bytes, &start, end)?;
     Ok(paths.into_iter().map(Into::into).collect())
 }
 
@@ -180,7 +180,7 @@ fn find_paths(
 ///     begin/end. A unique path will be returned for each of the starting
 ///     points in each of the path definition tuples (assuming a valid path
 ///     exists).
-/// cache_size : int, default=250_000_000
+/// mem_limit_bytes : int, default=250_000_000
 ///     Cache size to use for computation, in bytes.
 ///     By default, `250,000,000` (250MB).
 /// log_level : int, optional
@@ -208,18 +208,18 @@ struct RouteFinder {
     zarr_fp: PathBuf,
     cost_function: String,
     route_definitions: Vec<PyRouteDefinition>,
-    cache_size: u64,
+    mem_limit_bytes: u64,
 }
 
 #[pymethods]
 impl RouteFinder {
     #[new]
-    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, cache_size=250_000_000, log_level=None))]
+    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, mem_limit_bytes=250_000_000, log_level=None))]
     fn new(
         zarr_fp: PathBuf,
         cost_function: String,
         route_definitions: Vec<PyRouteDefinition>,
-        cache_size: u64,
+        mem_limit_bytes: u64,
         log_level: Option<u8>,
     ) -> PyResult<Self> {
         py_tracing::configure(log_level).map_err(PyErr::from)?;
@@ -228,7 +228,7 @@ impl RouteFinder {
             zarr_fp,
             cost_function,
             route_definitions,
-            cache_size,
+            mem_limit_bytes,
         })
     }
 
@@ -263,7 +263,7 @@ impl RouteOutputIter {
                 .map(Into::into)
                 .collect::<Vec<_>>(),
             tx,
-            user_input.cache_size,
+            user_input.mem_limit_bytes,
         )?;
         Ok(Self {
             receiver: Some(rx),

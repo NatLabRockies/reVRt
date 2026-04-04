@@ -42,13 +42,13 @@ impl From<ArrayIndex> for (u64, u64) {
 pub fn resolve<P: AsRef<std::path::Path>>(
     store_path: P,
     cost_function: &str,
-    cache_size: u64,
+    mem_limit_bytes: u64,
     start: &[ArrayIndex],
     end: Vec<ArrayIndex>,
 ) -> Result<RevrtRoutingSolutions> {
     let cost_function = CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let mut simulation: Routing = Routing::new(store_path, cost_function, cache_size).unwrap();
+    let mut simulation: Routing = Routing::new(store_path, cost_function, mem_limit_bytes).unwrap();
     let result = simulation.compute(start, end).collect();
     Ok(result)
 }
@@ -59,7 +59,7 @@ pub(crate) fn resolve_generator<P, I>(
     cost_function: &str,
     route_definitions: I,
     tx: mpsc::Sender<(u32, RevrtRoutingSolutions)>,
-    cache_size: u64,
+    mem_limit_bytes: u64,
 ) -> Result<()>
 where
     P: AsRef<std::path::Path>,
@@ -68,7 +68,7 @@ where
 {
     let cost_function = crate::cost::CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let simulation = ParRouting::new(store_path, cost_function, cache_size)?;
+    let simulation = ParRouting::new(store_path, cost_function, mem_limit_bytes)?;
     simulation.lazy_scout(route_definitions, tx);
     Ok(())
 }

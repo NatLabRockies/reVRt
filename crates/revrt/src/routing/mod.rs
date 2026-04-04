@@ -16,6 +16,10 @@ use algorithm::Algorithm;
 use features::Features;
 use scenario::Scenario;
 
+// Percent of the total memory allocation given to the Zarr cache.
+// Rest of memory is allocated to the routing algorithm's rayon workers
+const CACHE_BUDGET_PERCENT: u64 = 25;
+
 pub(super) struct Routing {
     scenario: Scenario,
     algorithm: Algorithm,
@@ -49,13 +53,16 @@ impl Routing {
     pub(super) fn new<P: AsRef<std::path::Path>>(
         store_path: P,
         cost_function: crate::cost::CostFunction,
-        cache_size: u64,
+        mem_limit_bytes: u64,
     ) -> Result<Self> {
+        let cache_size = cache_budget_bytes(mem_limit_bytes);
+        let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
 
         // let algorithm = Algorithm::new();
-        let algorithm =
-            Algorithm::new_bounded(per_rayon_worker_memory_budget(4 * 1024 * 1024 * 1024));
+        let algorithm = Algorithm::new_bounded(per_rayon_worker_memory_budget(
+            rayon_worker_total_budget_bytes,
+        ));
 
         Ok(Self {
             scenario,
@@ -79,13 +86,15 @@ impl ParRouting {
     pub(super) fn new<P: AsRef<std::path::Path>>(
         store_path: P,
         cost_function: crate::cost::CostFunction,
-        cache_size: u64,
+        mem_limit_bytes: u64,
     ) -> Result<Self> {
+        let cache_size = cache_budget_bytes(mem_limit_bytes);
+        let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
         Ok(Self {
             scenario: Arc::new(scenario),
             algorithm: Arc::new(Algorithm::new_bounded(per_rayon_worker_memory_budget(
-                75 * 1024 * 1024 * 1024,
+                rayon_worker_total_budget_bytes,
             ))),
             // algorithm: Arc::new(Algorithm::new()),
         })
@@ -163,6 +172,10 @@ fn cost_as_u64(cost: f32) -> u64 {
 
 fn unscaled_cost(cost: u64) -> f32 {
     (cost as f32) / PRECISION_SCALAR
+}
+
+fn cache_budget_bytes(mem_limit_bytes: u64) -> u64 {
+    mem_limit_bytes * CACHE_BUDGET_PERCENT / 100
 }
 
 fn per_rayon_worker_memory_budget(total_budget_bytes: u64) -> u64 {
