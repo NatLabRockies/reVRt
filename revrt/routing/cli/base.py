@@ -195,6 +195,7 @@ def run_lcp(
     tracked_layers=None,
     ignore_invalid_costs=True,
     user_mem_limit_gb=4,
+    algorithm="long_range",
 ):
     """[NOT PUBLIC API] Run LCP routing and save to output file"""
 
@@ -216,6 +217,7 @@ def run_lcp(
             cost_multiplier_layer=cost_multiplier_layer,
             cost_multiplier_scalar=cost_multiplier_scalar,
             ignore_invalid_costs=ignore_invalid_costs,
+            algorithm=algorithm,
         )
 
         route_computer = BatchRouteProcessor(
