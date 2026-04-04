@@ -42,6 +42,7 @@ class RoutingScenario:
         cost_multiplier_layer=None,
         cost_multiplier_scalar=1,
         ignore_invalid_costs=True,
+        algorithm="long_range",
     ):
         """
 
@@ -64,6 +65,14 @@ class RoutingScenario:
             Scalar multiplier applied to the final cost surface.
         ignore_invalid_costs : bool, optional
             Flag indicating whether non-positive costs block traversal.
+        algorithm : str, default="long_range"
+            Routing algorithm implementation to use. Supported values
+            are ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a
+            faster implementation but foes not respect the memory limit.
+            Prefer the default ``"long_range"`` option unless you know
+            for a fact that your route computations will not need much
+            memory and speed is very important to you.
+            By default, ``"long_range"``.
         """
         self.cost_fpath = cost_fpath
         self.cost_layers = cost_layers
@@ -72,6 +81,7 @@ class RoutingScenario:
         self.cost_multiplier_layer = cost_multiplier_layer
         self.cost_multiplier_scalar = cost_multiplier_scalar
         self.ignore_invalid_costs = ignore_invalid_costs
+        self.algorithm = algorithm
 
     def __repr__(self):
         return (
@@ -80,6 +90,7 @@ class RoutingScenario:
             f"\n\t- friction_layers: {self.friction_layers}"
             f"\n\t- cost_multiplier_layer: {self.cost_multiplier_layer}"
             f"\n\t- cost_multiplier_scalar: {self.cost_multiplier_scalar}"
+            f"\n\t- algorithm: {self.algorithm}"
         )
 
     @cached_property
@@ -718,6 +729,7 @@ class BatchRouteProcessor:
                 for rid, (sp, ep) in self.route_definitions.items()
             ],
             mem_limit_bytes=int(self.mem_limit_gb * 1_000_000_000),
+            algorithm=self.routing_scenario.algorithm,
             log_level=logging.getLogger("revrt").level or None,
         )
         yield from self._skip_failed_routes(route_results)
