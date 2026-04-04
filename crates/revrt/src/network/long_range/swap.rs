@@ -81,11 +81,16 @@ impl SwapStore {
             .suffix(".bin")
             .tempfile()?;
 
+        let write_buffer_capacity = write_buffer_capacity.max(1);
         debug!("Swap for Dijkstra graph at {:?}", file.path());
+        debug!(
+            "Swap buffer capacity set to {} entries",
+            write_buffer_capacity
+        );
         Ok(Self {
             file,
-            write_buffer: Vec::with_capacity(write_buffer_capacity.max(1)),
-            write_buffer_capacity: write_buffer_capacity.max(1),
+            write_buffer: Vec::with_capacity(write_buffer_capacity),
+            write_buffer_capacity,
         })
     }
 
