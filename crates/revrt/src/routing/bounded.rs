@@ -9,7 +9,7 @@ use tracing::debug;
 
 use super::memory_budget::BudgetCoordinator;
 use crate::ArrayIndex;
-use crate::network::memory_bounded::{MemoryBoundedSearchState, MemoryConfig};
+use crate::network::long_range::{MemoryBoundedSearchState, MemoryConfig};
 
 pub(super) fn long_range_dijkstra<C, FN, IN, FS>(
     start: &ArrayIndex,

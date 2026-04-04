@@ -1,2 +1,2 @@
 mod cost;
-pub(crate) mod memory_bounded;
+pub(crate) mod long_range;
