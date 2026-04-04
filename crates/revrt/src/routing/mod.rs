@@ -6,6 +6,7 @@ mod long_range;
 mod scenario;
 
 use std::collections::HashSet;
+use std::str::FromStr;
 use std::sync::{Arc, mpsc};
 
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -13,6 +14,7 @@ use tracing::debug;
 
 use crate::{ArrayIndex, RevrtRoutingSolutions, Solution, error::Result};
 use algorithm::Algorithm;
+use algorithm::AlgorithmType;
 use features::Features;
 use scenario::Scenario;
 
@@ -54,15 +56,16 @@ impl Routing {
         store_path: P,
         cost_function: crate::cost::CostFunction,
         mem_limit_bytes: u64,
+        algorithm: &str,
     ) -> Result<Self> {
+        let algorithm = AlgorithmType::from_str(algorithm)?;
         let cache_size = cache_budget_bytes(mem_limit_bytes);
         let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
-
-        // let algorithm = Algorithm::new();
-        let algorithm = Algorithm::new_long_range(per_rayon_worker_memory_budget(
-            rayon_worker_total_budget_bytes,
-        ));
+        let algorithm = Algorithm::from_selection(
+            algorithm,
+            per_rayon_worker_memory_budget(rayon_worker_total_budget_bytes),
+        );
 
         Ok(Self {
             scenario,
@@ -87,16 +90,18 @@ impl ParRouting {
         store_path: P,
         cost_function: crate::cost::CostFunction,
         mem_limit_bytes: u64,
+        algorithm: &str,
     ) -> Result<Self> {
+        let algorithm = AlgorithmType::from_str(algorithm)?;
         let cache_size = cache_budget_bytes(mem_limit_bytes);
         let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
         Ok(Self {
             scenario: Arc::new(scenario),
-            algorithm: Arc::new(Algorithm::new_long_range(per_rayon_worker_memory_budget(
-                rayon_worker_total_budget_bytes,
-            ))),
-            // algorithm: Arc::new(Algorithm::new()),
+            algorithm: Arc::new(Algorithm::from_selection(
+                algorithm,
+                per_rayon_worker_memory_budget(rayon_worker_total_budget_bytes),
+            )),
         })
     }
     pub(super) fn lazy_scout<I>(
