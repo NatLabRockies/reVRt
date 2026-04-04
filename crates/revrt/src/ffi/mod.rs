@@ -133,6 +133,9 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// mem_limit_bytes : int, default=250_000_000
 ///     Memory limit to use for routing computation, in bytes.
 ///     By default, `250,000,000` (250MB).
+/// algorithm : str, default="long_range"
+///     Routing algorithm implementation to use. Supported values are
+///     ``"long_range"`` and ``"dijkstra"``.
 ///
 /// Returns
 /// -------
@@ -142,7 +145,7 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     route goes through and the second element is the final
 ///     route cost.
 #[pyfunction]
-#[pyo3(signature = (zarr_fp, cost_function, start, end, mem_limit_bytes=250_000_000))]
+#[pyo3(signature = (zarr_fp, cost_function, start, end, mem_limit_bytes=250_000_000, algorithm="long_range"))]
 #[allow(clippy::type_complexity)]
 fn find_paths(
     zarr_fp: PathBuf,
@@ -150,13 +153,22 @@ fn find_paths(
     start: Vec<(u64, u64)>,
     end: Vec<(u64, u64)>,
     mem_limit_bytes: u64,
-) -> Result<PyRoutingSolutions> {
+    algorithm: &str,
+) -> PyResult<PyRoutingSolutions> {
     let start: Vec<ArrayIndex> = start
         .into_iter()
         .map(|(i, j)| ArrayIndex { i, j })
         .collect();
     let end: Vec<ArrayIndex> = end.into_iter().map(|(i, j)| ArrayIndex { i, j }).collect();
-    let paths = resolve(zarr_fp, &cost_function, mem_limit_bytes, &start, end)?;
+    let paths = resolve(
+        zarr_fp,
+        &cost_function,
+        mem_limit_bytes,
+        algorithm,
+        &start,
+        end,
+    )
+    .map_err(PyErr::from)?;
     Ok(paths.into_iter().map(Into::into).collect())
 }
 
@@ -186,6 +198,9 @@ fn find_paths(
 /// mem_limit_bytes : int, default=250_000_000
 ///     Cache size to use for computation, in bytes.
 ///     By default, `250,000,000` (250MB).
+/// algorithm : str, default="long_range"
+///     Routing algorithm implementation to use. Supported values are
+///     ``"long_range"`` and ``"dijkstra"``.
 /// log_level : int, optional
 ///     Logging level for Rust tracing emitted to stderr. Roughly follows the
 ///     Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,
@@ -212,17 +227,19 @@ struct RouteFinder {
     cost_function: String,
     route_definitions: Vec<PyRouteDefinition>,
     mem_limit_bytes: u64,
+    algorithm: String,
 }
 
 #[pymethods]
 impl RouteFinder {
     #[new]
-    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, mem_limit_bytes=250_000_000, log_level=None))]
+    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, mem_limit_bytes=250_000_000, algorithm="long_range", log_level=None))]
     fn new(
         zarr_fp: PathBuf,
         cost_function: String,
         route_definitions: Vec<PyRouteDefinition>,
         mem_limit_bytes: u64,
+        algorithm: &str,
         log_level: Option<u8>,
     ) -> PyResult<Self> {
         py_tracing::configure(log_level).map_err(PyErr::from)?;
@@ -232,6 +249,7 @@ impl RouteFinder {
             cost_function,
             route_definitions,
             mem_limit_bytes,
+            algorithm: algorithm.to_string(),
         })
     }
 
@@ -267,6 +285,7 @@ impl RouteOutputIter {
                 .collect::<Vec<_>>(),
             tx,
             user_input.mem_limit_bytes,
+            &user_input.algorithm,
         )?;
         Ok(Self {
             receiver: Some(rx),
