@@ -37,10 +37,6 @@ impl GridIndexer {
         }
     }
 
-    pub(super) fn finalized_bits_bytes(&self) -> u64 {
-        self.total_cells.div_ceil(8)
-    }
-
     pub(super) fn new_finalized_bits(&self) -> Option<FinalizedBits> {
         FinalizedBits::new(self.total_cells)
     }
@@ -122,10 +118,6 @@ mod tests {
         let single = GridIndexer::new(1, 1).unwrap();
         let full_byte = GridIndexer::new(2, 4).unwrap();
         let partial_byte = GridIndexer::new(3, 3).unwrap();
-
-        assert_eq!(single.finalized_bits_bytes(), 1);
-        assert_eq!(full_byte.finalized_bits_bytes(), 1);
-        assert_eq!(partial_byte.finalized_bits_bytes(), 2);
 
         assert_eq!(single.new_finalized_bits().unwrap().bits.len(), 1);
         assert_eq!(full_byte.new_finalized_bits().unwrap().bits.len(), 1);

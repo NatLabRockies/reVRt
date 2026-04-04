@@ -38,8 +38,7 @@ where
                 .map(|(route, cost)| (route, C::from(cost)));
         }
 
-        state.add_successors(&node, successors(&node.array_index));
-        state.enforce_memory_budget()?;
+        state.add_successors(&node, successors(&node.array_index))?;
     }
 
     None

@@ -123,10 +123,6 @@ impl SwapStore {
         self.file.as_file_mut().flush()
     }
 
-    pub(super) fn buffered_len(&self) -> usize {
-        self.write_buffer.len()
-    }
-
     pub(super) fn read_slot(&mut self, slot: usize) -> std::io::Result<(u64, Option<usize>)> {
         self.flush()?;
 

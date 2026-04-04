@@ -48,7 +48,6 @@ impl FinalizedNode {
 /// written to the swap store for later path reconstruction.
 pub(crate) struct FrontierOnlySearchState {
     grid: GridIndexer,
-    config: MemoryConfig,
     // Frontier nodes ordered by estimated total cost.
     pq: BinaryHeap<NodeCost<usize, u64>>,
     // Cheapest known cost for each frontier node still tracked in memory.
@@ -66,11 +65,6 @@ pub(crate) struct FrontierOnlySearchState {
 }
 
 impl FrontierOnlySearchState {
-    const CONSERVATIVE_PQ_ENTRY_ESTIMATE_BYTES: u64 = 64;
-    const CONSERVATIVE_BEST_COST_ENTRY_ESTIMATE_BYTES: u64 = 96;
-    const CONSERVATIVE_PARENT_ENTRY_ESTIMATE_BYTES: u64 = 96;
-    const SPILL_BUFFER_ENTRY_BYTES: u64 = 24;
-
     pub(crate) fn new(
         start: &ArrayIndex,
         config: MemoryConfig,
@@ -81,7 +75,6 @@ impl FrontierOnlySearchState {
 
         let mut state = Self {
             grid,
-            config,
             pq: BinaryHeap::new(),
             best_node_costs: HashMap::new(),
             parents: HashMap::new(),
@@ -137,7 +130,11 @@ impl FrontierOnlySearchState {
         Some((route, cost))
     }
 
-    pub(crate) fn add_successors<C, IN>(&mut self, node: &FinalizedNode, successors: IN)
+    pub(crate) fn add_successors<C, IN>(
+        &mut self,
+        node: &FinalizedNode,
+        successors: IN,
+    ) -> Option<()>
     where
         IN: IntoIterator<Item = (ArrayIndex, C)>,
         C: Copy,
@@ -146,6 +143,7 @@ impl FrontierOnlySearchState {
         for (neighbor, edge_cost) in successors {
             self.add_neighbor(node.slot, node.cost, &neighbor, edge_cost);
         }
+        self.enforce_memory_budget()
     }
 
     fn add_neighbor<C>(
@@ -210,22 +208,6 @@ impl FrontierOnlySearchState {
         path.reverse();
         Some(path)
     }
-
-    fn estimated_state_bytes(&self) -> u64 {
-        let priority_queue_bytes =
-            self.pq.len() as u64 * Self::CONSERVATIVE_PQ_ENTRY_ESTIMATE_BYTES;
-        let best_cost_bytes =
-            self.best_node_costs.len() as u64 * Self::CONSERVATIVE_BEST_COST_ENTRY_ESTIMATE_BYTES;
-        let parent_bytes =
-            self.parents.len() as u64 * Self::CONSERVATIVE_PARENT_ENTRY_ESTIMATE_BYTES;
-        let buffered_spill_bytes = self.swap.buffered_len() as u64 * Self::SPILL_BUFFER_ENTRY_BYTES;
-
-        priority_queue_bytes
-            + best_cost_bytes
-            + parent_bytes
-            + buffered_spill_bytes
-            + self.grid.finalized_bits_bytes()
-    }
 }
 
 fn compact_pq_set(best_node_costs: &HashMap<usize, u64>) -> BinaryHeap<NodeCost<usize, u64>> {
@@ -253,8 +235,7 @@ mod tests {
                 return state.finalize_route(node);
             }
 
-            state.add_successors(&node, successors(&node.array_index));
-            state.enforce_memory_budget()?;
+            state.add_successors(&node, successors(&node.array_index))?;
         }
 
         None
