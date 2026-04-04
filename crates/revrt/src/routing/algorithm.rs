@@ -20,7 +20,6 @@ use super::long_range;
 use crate::{ArrayIndex, Solution, error::Error, error::Result};
 
 const MIN_MEMORY_BUDGET_MB: u64 = 2;
-const SUPPORTED_ALGORITHMS: &[&str] = &["dijkstra", "long_range"];
 
 /// Types of algorithms to determine optimal paths
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -39,7 +38,7 @@ impl FromStr for AlgorithmType {
             "long_range" | "long_range_dijkstra" => Ok(Self::LongRangeDijkstra),
             _ => Err(Error::InvalidAlgorithm {
                 value: value.to_string(),
-                allowed: SUPPORTED_ALGORITHMS,
+                allowed: &["dijkstra", "long_range"],
             }),
         }
     }
@@ -159,7 +158,7 @@ impl Algorithm {
 mod tests {
     use std::str::FromStr;
 
-    use super::{AlgorithmType, SUPPORTED_ALGORITHMS};
+    use super::AlgorithmType;
     use crate::error::Error;
 
     #[test]
@@ -200,7 +199,7 @@ mod tests {
             Error::InvalidAlgorithm {
                 value,
                 allowed,
-            } if value == invalid_value && allowed == SUPPORTED_ALGORITHMS
+            } if value == invalid_value
         ));
     }
 }
