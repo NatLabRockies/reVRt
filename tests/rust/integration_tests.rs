@@ -15,6 +15,7 @@ fn basic_routing_in_data() {
         layers_path.to_str().expect("test data path is valid UTF-8"),
         r#"{"cost_layers": [{"layer_name": "tie_line_costs_102MW"}]}"#,
         250_000_000,
+        "dijkstra",
         std::slice::from_ref(start),
         end,
     )
@@ -39,6 +40,7 @@ fn basic_routing_in_data_with_friction() {
             ]
         }"#,
         250_000_000,
+        "long-range",
         std::slice::from_ref(start),
         end,
     )
