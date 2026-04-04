@@ -7,7 +7,7 @@ use num_traits::Zero;
 use tracing::debug;
 
 use crate::ArrayIndex;
-use crate::network::long_range::{MemoryBoundedSearchState, MemoryConfig};
+use crate::network::long_range::{FrontierOnlySearchState, MemoryConfig};
 
 pub(super) fn long_range_dijkstra<C, FN, IN, FS>(
     start: &ArrayIndex,
@@ -29,7 +29,7 @@ where
         "Starting bounded Dijkstra with memory budget of {} bytes",
         config.memory_budget_bytes
     );
-    let mut state = MemoryBoundedSearchState::new(start, config, grid_shape)?;
+    let mut state = FrontierOnlySearchState::new(start, config, grid_shape)?;
 
     while let Some(node) = state.pop_next_node() {
         if success(&node.array_index) {

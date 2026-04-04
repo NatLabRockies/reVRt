@@ -35,18 +35,18 @@ pub(crate) struct FinalizedNode {
 }
 
 impl FinalizedNode {
-    fn route(&self, state: &mut MemoryBoundedSearchState) -> Option<Vec<ArrayIndex>> {
+    fn route(&self, state: &mut FrontierOnlySearchState) -> Option<Vec<ArrayIndex>> {
         state.reconstruct_path_to(self.slot)
     }
 }
 
 #[derive(Debug)]
-/// Tracks the mutable state for a memory-bounded shortest-path search.
+/// Tracks the mutable state for a search that spills finalized nodes to disk.
 ///
 /// Frontier nodes stay in memory so the search can continue expanding the
 /// cheapest known path, while finalized node costs and parent links are
 /// written to the swap store for later path reconstruction.
-pub(crate) struct MemoryBoundedSearchState {
+pub(crate) struct FrontierOnlySearchState {
     grid: GridIndexer,
     config: MemoryConfig,
     // Frontier nodes ordered by estimated total cost.
@@ -65,7 +65,7 @@ pub(crate) struct MemoryBoundedSearchState {
     num_nodes_checked: usize,
 }
 
-impl MemoryBoundedSearchState {
+impl FrontierOnlySearchState {
     const CONSERVATIVE_PQ_ENTRY_ESTIMATE_BYTES: u64 = 64;
     const CONSERVATIVE_BEST_COST_ENTRY_ESTIMATE_BYTES: u64 = 96;
     const CONSERVATIVE_PARENT_ENTRY_ESTIMATE_BYTES: u64 = 96;
@@ -185,19 +185,13 @@ impl MemoryBoundedSearchState {
     }
 
     pub(crate) fn enforce_memory_budget(&mut self) -> Option<()> {
-        if self.estimated_state_bytes() > self.config.memory_budget_bytes {
-            debug!(
-                "Memory pressure exceeded after checking {} nodes, spilling to swap file",
-                self.num_nodes_checked
-            );
-            self.pq = compact_pq_set(&self.best_node_costs);
-            self.swap.flush().ok()?;
-        } else if self.pq.len() > self.best_node_costs.len() * MAX_PQ_TO_FRONTIER_NODE_RATIO {
+        if self.pq.len() > self.best_node_costs.len() * MAX_PQ_TO_FRONTIER_NODE_RATIO {
             debug!(
                 "Compacting priority queue after checking {} nodes",
                 self.num_nodes_checked
             );
             self.pq = compact_pq_set(&self.best_node_costs);
+            self.swap.flush().ok()?;
         }
 
         Some(())
@@ -250,7 +244,7 @@ mod tests {
     use super::*;
 
     fn run_to_goal(
-        state: &mut MemoryBoundedSearchState,
+        state: &mut FrontierOnlySearchState,
         goal: ArrayIndex,
         mut successors: impl FnMut(&ArrayIndex) -> Vec<(ArrayIndex, u64)>,
     ) -> Option<(Vec<ArrayIndex>, u64)> {
@@ -274,7 +268,7 @@ mod tests {
             memory_budget_bytes: 2_000,
             spill_buffer_capacity: 8,
         };
-        let mut state = MemoryBoundedSearchState::new(&start, config, (31, 31)).unwrap();
+        let mut state = FrontierOnlySearchState::new(&start, config, (31, 31)).unwrap();
 
         let ans = run_to_goal(&mut state, goal.clone(), |p| {
             let mut out = Vec::new();
@@ -305,7 +299,7 @@ mod tests {
             memory_budget_bytes: 2_000,
             spill_buffer_capacity: 4,
         };
-        let mut state = MemoryBoundedSearchState::new(&start, config, (21, 21)).unwrap();
+        let mut state = FrontierOnlySearchState::new(&start, config, (21, 21)).unwrap();
 
         let ans = run_to_goal(&mut state, ArrayIndex::new(99, 99), |p| {
             let mut out = Vec::new();
