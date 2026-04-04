@@ -94,6 +94,18 @@ impl Algorithm {
         }
     }
 
+    pub(super) fn from_selection(
+        algorithm: AlgorithmType,
+        per_worker_memory_budget_bytes: u64,
+    ) -> Self {
+        match algorithm {
+            AlgorithmType::Dijkstra => Self::new(),
+            AlgorithmType::LongRangeDijkstra => {
+                Self::new_long_range(per_worker_memory_budget_bytes)
+            }
+        }
+    }
+
     #[allow(unused_variables)]
     pub(super) fn compute<C, FN, IN, FH, FS>(
         &self,
