@@ -10,22 +10,8 @@ use crate::ArrayIndex;
 use swap::SwapStore;
 use utilities::{FinalizedBits, GridIndexer};
 
+const SPILL_BUFFER_ENTRY_BYTES: u64 = 24;
 const MAX_PQ_TO_FRONTIER_NODE_RATIO: usize = 4;
-
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct MemoryConfig {
-    pub(crate) memory_budget_bytes: u64,
-    pub(crate) spill_buffer_capacity: usize,
-}
-
-impl MemoryConfig {
-    pub(crate) fn standard(memory_budget_bytes: u64) -> Self {
-        Self {
-            memory_budget_bytes,
-            spill_buffer_capacity: 4096,
-        }
-    }
-}
 
 #[derive(Clone, Debug)]
 pub(crate) struct FinalizedNode {
@@ -67,7 +53,7 @@ pub(crate) struct FrontierOnlySearchState {
 impl FrontierOnlySearchState {
     pub(crate) fn new(
         start: &ArrayIndex,
-        config: MemoryConfig,
+        memory_budget_bytes: u64,
         grid_shape: (u64, u64),
     ) -> Option<Self> {
         let grid = GridIndexer::new(grid_shape.0, grid_shape.1)?;
@@ -79,7 +65,7 @@ impl FrontierOnlySearchState {
             best_node_costs: HashMap::new(),
             parents: HashMap::new(),
             finalized_bits: grid.new_finalized_bits()?,
-            swap: SwapStore::new(config.spill_buffer_capacity).ok()?,
+            swap: SwapStore::new(spill_buffer_capacity(memory_budget_bytes)).ok()?,
             num_nodes_checked: 0,
         };
 
@@ -221,6 +207,17 @@ fn compact_pq_set(best_node_costs: &HashMap<usize, u64>) -> BinaryHeap<NodeCost<
         .collect()
 }
 
+fn spill_buffer_capacity(memory_budget_bytes: u64) -> usize {
+    let max_entries = memory_budget_bytes.saturating_sub(1) / SPILL_BUFFER_ENTRY_BYTES;
+    let capped_entries = max_entries.min(usize::MAX as u64);
+
+    if capped_entries == 0 {
+        0
+    } else {
+        (1_u64 << capped_entries.ilog2()) as usize
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -242,14 +239,19 @@ mod tests {
     }
 
     #[test]
+    fn spill_buffer_capacity_is_power_of_two_under_budget() {
+        assert_eq!(spill_buffer_capacity(24), 0);
+        assert_eq!(spill_buffer_capacity(25), 1);
+        assert_eq!(spill_buffer_capacity(48), 1);
+        assert_eq!(spill_buffer_capacity(49), 2);
+        assert_eq!(spill_buffer_capacity(1024), 32);
+    }
+
+    #[test]
     fn state_spills_when_pressure_exceeds_budget() {
         let start = ArrayIndex::new(10, 10);
         let goal = ArrayIndex::new(15, 15);
-        let config = MemoryConfig {
-            memory_budget_bytes: 2_000,
-            spill_buffer_capacity: 8,
-        };
-        let mut state = FrontierOnlySearchState::new(&start, config, (31, 31)).unwrap();
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (31, 31)).unwrap();
 
         let ans = run_to_goal(&mut state, goal.clone(), |p| {
             let mut out = Vec::new();
@@ -276,11 +278,7 @@ mod tests {
     #[test]
     fn state_returns_none_when_frontier_never_reaches_goal() {
         let start = ArrayIndex::new(0, 0);
-        let config = MemoryConfig {
-            memory_budget_bytes: 2_000,
-            spill_buffer_capacity: 4,
-        };
-        let mut state = FrontierOnlySearchState::new(&start, config, (21, 21)).unwrap();
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (21, 21)).unwrap();
 
         let ans = run_to_goal(&mut state, ArrayIndex::new(99, 99), |p| {
             let mut out = Vec::new();
