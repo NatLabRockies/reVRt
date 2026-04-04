@@ -26,6 +26,21 @@ pub(super) enum AlgorithmType {
     LongRangeDijkstra,
 }
 
+impl FromStr for AlgorithmType {
+    type Err = Error;
+
+    fn from_str(value: &str) -> Result<Self> {
+        match value.trim().to_ascii_lowercase().replace('-', "_").as_str() {
+            "dijkstra" => Ok(Self::Dijkstra),
+            "long_range" | "long_range_dijkstra" => Ok(Self::LongRangeDijkstra),
+            _ => Err(Error::InvalidAlgorithm {
+                value: value.to_string(),
+                allowed: SUPPORTED_ALGORITHMS,
+            }),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub(super) struct Algorithm {
     algorithm_type: AlgorithmType,
