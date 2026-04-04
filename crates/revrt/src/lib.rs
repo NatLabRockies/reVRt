@@ -7,6 +7,7 @@ mod dataset;
 mod error;
 #[allow(non_camel_case_types)]
 mod ffi;
+mod network;
 mod routing;
 mod solution;
 
