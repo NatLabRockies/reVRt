@@ -3,6 +3,7 @@
 mod algorithm;
 mod bounded;
 mod features;
+pub(crate) mod memory_budget;
 mod scenario;
 
 use std::collections::HashSet;
