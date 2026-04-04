@@ -65,13 +65,12 @@ fn manhattan_distance(start: &ArrayIndex, end: &[ArrayIndex]) -> u64 {
 }
 
 impl Algorithm {
-    // pub(super) fn new() -> Self {
-    //     Self {
-    //         algorithm_type: AlgorithmType::Dijkstra,
-    //         memory_budget_bytes: None,
-    //         budget_coordinator: None,
-    //     }
-    // }
+    pub(super) fn new() -> Self {
+        Self {
+            algorithm_type: AlgorithmType::Dijkstra,
+            per_worker_memory_budget_bytes: None,
+        }
+    }
 
     pub(super) fn new_long_range(per_worker_memory_budget_bytes: u64) -> Self {
         if per_worker_memory_budget_bytes < MIN_MEMORY_BUDGET_MB * 1024 * 1024 {
