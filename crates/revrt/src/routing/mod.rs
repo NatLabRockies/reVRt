@@ -54,7 +54,8 @@ impl Routing {
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
 
         // let algorithm = Algorithm::new();
-        let algorithm = Algorithm::new_bounded(4 * 1024 * 1024 * 1024);
+        let algorithm =
+            Algorithm::new_bounded(per_rayon_worker_memory_budget(4 * 1024 * 1024 * 1024));
 
         Ok(Self {
             scenario,
@@ -83,7 +84,9 @@ impl ParRouting {
         let scenario = Scenario::new(store_path, cost_function, cache_size)?;
         Ok(Self {
             scenario: Arc::new(scenario),
-            algorithm: Arc::new(Algorithm::new_bounded(75 * 1024 * 1024 * 1024)),
+            algorithm: Arc::new(Algorithm::new_bounded(per_rayon_worker_memory_budget(
+                75 * 1024 * 1024 * 1024,
+            ))),
             // algorithm: Arc::new(Algorithm::new()),
         })
     }
@@ -160,4 +163,18 @@ fn cost_as_u64(cost: f32) -> u64 {
 
 fn unscaled_cost(cost: u64) -> f32 {
     (cost as f32) / PRECISION_SCALAR
+}
+
+fn per_rayon_worker_memory_budget(total_budget_bytes: u64) -> u64 {
+    // Routing uses Rayon global-pool APIs, so this reflects the worker count
+    // that will execute the searches, even at initialization
+    let worker_count = rayon::current_num_threads().max(1) as u64;
+    let per_worker_budget = total_budget_bytes / worker_count;
+
+    debug!(
+        "Splitting {} bytes across {} Rayon workers ({} bytes per worker)",
+        total_budget_bytes, worker_count, per_worker_budget
+    );
+
+    per_worker_budget
 }

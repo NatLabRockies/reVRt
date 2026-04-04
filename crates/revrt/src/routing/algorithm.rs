@@ -16,7 +16,7 @@ use tracing::{debug, warn};
 use super::bounded;
 use crate::{ArrayIndex, Solution};
 
-const MIN_MEMORY_BUDGET_GB: u64 = 2;
+const MIN_MEMORY_BUDGET_MB: u64 = 2;
 
 #[derive(Clone, Debug)]
 /// Types of algorithms to determine optimal paths
@@ -29,7 +29,7 @@ pub(super) enum AlgorithmType {
 #[derive(Debug)]
 pub(super) struct Algorithm {
     algorithm_type: AlgorithmType,
-    memory_budget_bytes: Option<u64>,
+    per_worker_memory_budget_bytes: Option<u64>,
 }
 
 #[allow(dead_code)]
@@ -58,24 +58,24 @@ impl Algorithm {
     //     }
     // }
 
-    pub(super) fn new_bounded(memory_budget_bytes: u64) -> Self {
-        if memory_budget_bytes < MIN_MEMORY_BUDGET_GB * 1024 * 1024 * 1024 {
+    pub(super) fn new_bounded(per_worker_memory_budget_bytes: u64) -> Self {
+        if per_worker_memory_budget_bytes < MIN_MEMORY_BUDGET_MB * 1024 * 1024 {
             warn!(
-                "Long-range Dijkstra memory budget smaller than the {}GB limit! Setting to {}GB...",
-                MIN_MEMORY_BUDGET_GB, MIN_MEMORY_BUDGET_GB
+                "Long-range Dijkstra per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
+                MIN_MEMORY_BUDGET_MB, MIN_MEMORY_BUDGET_MB
             );
             Self {
                 algorithm_type: AlgorithmType::LongRangeDijkstra,
-                memory_budget_bytes: Some(MIN_MEMORY_BUDGET_GB * 1024 * 1024 * 1024),
+                per_worker_memory_budget_bytes: Some(MIN_MEMORY_BUDGET_MB * 1024 * 1024),
             }
         } else {
             debug!(
-                "Long-range Dijkstra memory budget set to {}GB",
-                memory_budget_bytes / (1024 * 1024 * 1024)
+                "Long-range Dijkstra per-worker memory budget set to {}MB",
+                per_worker_memory_budget_bytes / (1024 * 1024 * 1024)
             );
             Self {
                 algorithm_type: AlgorithmType::LongRangeDijkstra,
-                memory_budget_bytes: Some(memory_budget_bytes),
+                per_worker_memory_budget_bytes: Some(per_worker_memory_budget_bytes),
             }
         }
     }
@@ -106,14 +106,14 @@ impl Algorithm {
         let ans = match self.algorithm_type {
             // AlgorithmType::Dijkstra => pathfinding::prelude::dijkstra(start, successors, success),
             AlgorithmType::LongRangeDijkstra => {
-                let memory_budget_bytes = self
-                    .memory_budget_bytes
+                let per_worker_memory_budget_bytes = self
+                    .per_worker_memory_budget_bytes
                     .expect("Memory budget not set for long-range Dijkstra");
                 bounded::long_range_dijkstra(
                     start,
                     successors,
                     success,
-                    memory_budget_bytes,
+                    per_worker_memory_budget_bytes,
                     grid_shape,
                 )
             }
