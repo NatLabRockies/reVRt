@@ -2,13 +2,11 @@ pub(super) mod swap;
 pub(super) mod utilities;
 
 use std::collections::{BinaryHeap, HashMap};
-use std::sync::Arc;
 
 use tracing::debug;
 
 use super::cost::NodeCost;
 use crate::ArrayIndex;
-use crate::routing::memory_budget::{BudgetCoordinator, BudgetReservation};
 use swap::SwapStore;
 use utilities::{FinalizedBits, GridIndexer};
 
@@ -63,8 +61,6 @@ pub(crate) struct MemoryBoundedSearchState {
     finalized_bits: FinalizedBits,
     // Spill area for finalized node records needed to rebuild a route.
     swap: SwapStore,
-    // Reservation held with the shared budget coordinator.
-    budget_reservation: BudgetReservation,
     // Number of finalized nodes removed from the frontier.
     num_nodes_checked: usize,
 }
@@ -79,15 +75,9 @@ impl MemoryBoundedSearchState {
         start: &ArrayIndex,
         config: MemoryConfig,
         grid_shape: (u64, u64),
-        budget_coordinator: Arc<BudgetCoordinator>,
     ) -> Option<Self> {
         let grid = GridIndexer::new(grid_shape.0, grid_shape.1)?;
         let start_slot = grid.slot_of(start)?;
-        let initial_budget_bytes = (Self::CONSERVATIVE_PQ_ENTRY_ESTIMATE_BYTES
-            + Self::CONSERVATIVE_BEST_COST_ENTRY_ESTIMATE_BYTES
-            + grid.finalized_bits_bytes())
-        .min(config.memory_budget_bytes);
-        let budget_reservation = budget_coordinator.acquire(initial_budget_bytes)?;
 
         let mut state = Self {
             grid,
@@ -97,7 +87,6 @@ impl MemoryBoundedSearchState {
             parents: HashMap::new(),
             finalized_bits: grid.new_finalized_bits()?,
             swap: SwapStore::new(config.spill_buffer_capacity).ok()?,
-            budget_reservation,
             num_nodes_checked: 0,
         };
 
@@ -107,7 +96,6 @@ impl MemoryBoundedSearchState {
             cost: 0,
             estimated_cost: 0,
         });
-        state.sync_budget()?;
         Some(state)
     }
 
@@ -212,8 +200,6 @@ impl MemoryBoundedSearchState {
             self.pq = compact_pq_set(&self.best_node_costs);
         }
 
-        self.sync_budget()?;
-
         Some(())
     }
 
@@ -246,15 +232,6 @@ impl MemoryBoundedSearchState {
             + buffered_spill_bytes
             + self.grid.finalized_bits_bytes()
     }
-
-    fn budget_target_bytes(&self) -> u64 {
-        self.estimated_state_bytes()
-            .min(self.config.memory_budget_bytes)
-    }
-
-    fn sync_budget(&mut self) -> Option<()> {
-        self.budget_reservation.resize(self.budget_target_bytes())
-    }
 }
 
 fn compact_pq_set(best_node_costs: &HashMap<usize, u64>) -> BinaryHeap<NodeCost<usize, u64>> {
@@ -270,8 +247,6 @@ fn compact_pq_set(best_node_costs: &HashMap<usize, u64>) -> BinaryHeap<NodeCost<
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use super::*;
 
     fn run_to_goal(
@@ -299,13 +274,7 @@ mod tests {
             memory_budget_bytes: 2_000,
             spill_buffer_capacity: 8,
         };
-        let mut state = MemoryBoundedSearchState::new(
-            &start,
-            config,
-            (31, 31),
-            Arc::new(BudgetCoordinator::new(config.memory_budget_bytes)),
-        )
-        .unwrap();
+        let mut state = MemoryBoundedSearchState::new(&start, config, (31, 31)).unwrap();
 
         let ans = run_to_goal(&mut state, goal.clone(), |p| {
             let mut out = Vec::new();
@@ -336,13 +305,7 @@ mod tests {
             memory_budget_bytes: 2_000,
             spill_buffer_capacity: 4,
         };
-        let mut state = MemoryBoundedSearchState::new(
-            &start,
-            config,
-            (21, 21),
-            Arc::new(BudgetCoordinator::new(config.memory_budget_bytes)),
-        )
-        .unwrap();
+        let mut state = MemoryBoundedSearchState::new(&start, config, (21, 21)).unwrap();
 
         let ans = run_to_goal(&mut state, ArrayIndex::new(99, 99), |p| {
             let mut out = Vec::new();

@@ -10,12 +10,10 @@
  */
 
 use num_traits::Zero;
-use std::sync::Arc;
 
 use tracing::{debug, warn};
 
 use super::bounded;
-use super::memory_budget::BudgetCoordinator;
 use crate::{ArrayIndex, Solution};
 
 const MIN_MEMORY_BUDGET_GB: u64 = 2;
@@ -32,7 +30,6 @@ pub(super) enum AlgorithmType {
 pub(super) struct Algorithm {
     algorithm_type: AlgorithmType,
     memory_budget_bytes: Option<u64>,
-    budget_coordinator: Option<Arc<BudgetCoordinator>>,
 }
 
 #[allow(dead_code)]
@@ -70,9 +67,6 @@ impl Algorithm {
             Self {
                 algorithm_type: AlgorithmType::LongRangeDijkstra,
                 memory_budget_bytes: Some(MIN_MEMORY_BUDGET_GB * 1024 * 1024 * 1024),
-                budget_coordinator: Some(Arc::new(BudgetCoordinator::new(
-                    MIN_MEMORY_BUDGET_GB * 1024 * 1024 * 1024,
-                ))),
             }
         } else {
             debug!(
@@ -82,7 +76,6 @@ impl Algorithm {
             Self {
                 algorithm_type: AlgorithmType::LongRangeDijkstra,
                 memory_budget_bytes: Some(memory_budget_bytes),
-                budget_coordinator: Some(Arc::new(BudgetCoordinator::new(memory_budget_bytes))),
             }
         }
     }
@@ -116,18 +109,12 @@ impl Algorithm {
                 let memory_budget_bytes = self
                     .memory_budget_bytes
                     .expect("Memory budget not set for long-range Dijkstra");
-                let budget_coordinator = Arc::clone(
-                    self.budget_coordinator
-                        .as_ref()
-                        .expect("Budget coordinator not set for long-range Dijkstra"),
-                );
                 bounded::long_range_dijkstra(
                     start,
                     successors,
                     success,
                     memory_budget_bytes,
                     grid_shape,
-                    budget_coordinator,
                 )
             }
         };

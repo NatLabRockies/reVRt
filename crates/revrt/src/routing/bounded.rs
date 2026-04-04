@@ -4,10 +4,8 @@
 //! frontier state in memory and spills finalized nodes to a swap file.
 
 use num_traits::Zero;
-use std::sync::Arc;
 use tracing::debug;
 
-use super::memory_budget::BudgetCoordinator;
 use crate::ArrayIndex;
 use crate::network::long_range::{MemoryBoundedSearchState, MemoryConfig};
 
@@ -17,7 +15,6 @@ pub(super) fn long_range_dijkstra<C, FN, IN, FS>(
     mut success: FS,
     memory_budget_bytes: u64,
     grid_shape: (u64, u64),
-    budget_coordinator: Arc<BudgetCoordinator>,
 ) -> Option<(Vec<ArrayIndex>, C)>
 where
     C: Zero + Ord + Copy,
@@ -32,7 +29,7 @@ where
         "Starting bounded Dijkstra with memory budget of {} bytes",
         config.memory_budget_bytes
     );
-    let mut state = MemoryBoundedSearchState::new(start, config, grid_shape, budget_coordinator)?;
+    let mut state = MemoryBoundedSearchState::new(start, config, grid_shape)?;
 
     while let Some(node) = state.pop_next_node() {
         if success(&node.array_index) {
@@ -50,8 +47,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use super::*;
 
     #[test]
@@ -74,7 +69,6 @@ mod tests {
             |p| *p == goal,
             2 * 1024 * 1024 * 1024,
             (3, 3),
-            Arc::new(BudgetCoordinator::new(2 * 1024 * 1024 * 1024)),
         )
         .unwrap();
 
@@ -93,7 +87,6 @@ mod tests {
             |_p| false,
             1024,
             (1, 1),
-            Arc::new(BudgetCoordinator::new(1024)),
         );
 
         assert!(ans.is_none());
