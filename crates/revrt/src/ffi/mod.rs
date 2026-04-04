@@ -4,7 +4,7 @@ mod simplify_path;
 use std::path::PathBuf;
 use std::sync::mpsc;
 
-use pyo3::exceptions::{PyException, PyIOError};
+use pyo3::exceptions::{PyException, PyIOError, PyValueError};
 use pyo3::prelude::*;
 
 use crate::error::{Error, Result};
@@ -54,6 +54,9 @@ impl From<Error> for PyErr {
             Error::ZarrsStorage(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsGroupCreate(e) => PyIOError::new_err(e.to_string()),
             Error::Undefined(msg) => revrtRustError::new_err(msg),
+            invalid_algorithm @ Error::InvalidAlgorithm { .. } => {
+                PyValueError::new_err(invalid_algorithm.to_string())
+            }
         }
     }
 }
