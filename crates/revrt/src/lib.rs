@@ -131,13 +131,14 @@ mod tests {
         assert!(!vec_of_indices.contains(&ArrayIndex { i: 8, j: 9 }));
     }
 
-    #[test]
+    #[test_case("dijkstra"; "dijkstra")]
+    #[test_case("long-range"; "long-range")]
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
-    fn minimalist() {
+    fn minimalist(algorithm: &str) {
         let store_path = dataset::samples::multi_variable_zarr();
         let cost_function = cost::sample::cost_function();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, "dijkstra").unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: 2, j: 3 }];
         let end = vec![ArrayIndex { i: 6, j: 6 }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -149,21 +150,27 @@ mod tests {
 
     // Due to truncation solution to handle f32 costs.
     #[allow(clippy::approx_constant)]
-    #[test_case((1, 1), (1, 1), 1, 0.; "no movement")]
-    #[test_case((1, 1), (1, 2), 2, 1.; "step one cell to the side")]
-    #[test_case((1, 1), (2, 1), 2, 1.; "step one cell down")]
-    #[test_case((1, 1), (2, 2), 2, 1.4142; "step one cell diagonally")]
-    #[test_case((1, 1), (2, 3), 3, 2.4142; "step diagonally and across")]
+    #[test_case((1, 1), (1, 1), 1, 0., "dijkstra"; "no movement dijkstra")]
+    #[test_case((1, 1), (1, 2), 2, 1., "dijkstra"; "step one cell to the side dijkstra")]
+    #[test_case((1, 1), (2, 1), 2, 1., "dijkstra"; "step one cell down dijkstra")]
+    #[test_case((1, 1), (2, 2), 2, 1.4142, "dijkstra"; "step one cell diagonally dijkstra")]
+    #[test_case((1, 1), (2, 3), 3, 2.4142, "dijkstra"; "step diagonally and across dijkstra")]
+    #[test_case((1, 1), (1, 1), 1, 0., "long-range"; "no movement long-range")]
+    #[test_case((1, 1), (1, 2), 2, 1., "long-range"; "step one cell to the side long-range")]
+    #[test_case((1, 1), (2, 1), 2, 1., "long-range"; "step one cell down long-range")]
+    #[test_case((1, 1), (2, 2), 2, 1.4142, "long-range"; "step one cell diagonally long-range")]
+    #[test_case((1, 1), (2, 3), 3, 2.4142, "long-range"; "step diagonally and across long-range")]
     fn basic_routing_point_to_point(
         (si, sj): (u64, u64),
         (ei, ej): (u64, u64),
         expected_num_steps: usize,
         expected_cost: f32,
+        algorithm: &str,
     ) {
         let store_path = dataset::samples::constant_value_cost_zarr(1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, "dijkstra").unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = vec![ArrayIndex { i: ei, j: ej }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -173,18 +180,20 @@ mod tests {
         assert_eq!(solutions[0].total_cost(), &expected_cost);
     }
 
-    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2.; "different cost endpoints")]
+    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "dijkstra"; "different cost endpoints dijkstra")]
+    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "long-range"; "different cost endpoints long-range")]
     fn basic_routing_one_point_to_many(
         (si, sj): (u64, u64),
         endpoints: Vec<(u64, u64)>,
         expected_endpoint: (u64, u64),
         expected_num_steps: usize,
         expected_cost: f32,
+        algorithm: &str,
     ) {
         let store_path = dataset::samples::constant_value_cost_zarr(1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, "dijkstra").unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = endpoints
             .clone()
@@ -202,18 +211,22 @@ mod tests {
         assert_eq!((ei, ej), expected_endpoint);
     }
 
-    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1.; "horizontal and vertical")]
-    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1.; "horizontal")]
-    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1.; "vertical")]
+    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "dijkstra"; "horizontal and vertical dijkstra")]
+    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "dijkstra"; "horizontal dijkstra")]
+    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "dijkstra"; "vertical dijkstra")]
+    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "long-range"; "horizontal and vertical long-range")]
+    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "long-range"; "horizontal long-range")]
+    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "long-range"; "vertical long-range")]
     fn routing_one_point_to_many_same_cost_and_length(
         (si, sj): (u64, u64),
         endpoints: Vec<(u64, u64)>,
         cost_array_fill: f32,
+        algorithm: &str,
     ) {
         let store_path = dataset::samples::constant_value_cost_zarr(cost_array_fill);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, "dijkstra").unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = endpoints
             .clone()
@@ -233,14 +246,15 @@ mod tests {
         assert!(endpoints.contains(&(ei, ej)));
     }
 
-    #[test]
+    #[test_case("dijkstra"; "dijkstra")]
+    #[test_case("long-range"; "long-range")]
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
-    fn routing_many_to_many() {
+    fn routing_many_to_many(algorithm: &str) {
         let store_path = dataset::samples::constant_value_cost_zarr(1.);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, "dijkstra").unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![
             ArrayIndex { i: 1, j: 1 },
             ArrayIndex { i: 3, j: 3 },
@@ -267,12 +281,13 @@ mod tests {
         }
     }
 
-    #[test]
-    fn routing_many_to_one() {
+    #[test_case("dijkstra"; "dijkstra")]
+    #[test_case("long-range"; "long-range")]
+    fn routing_many_to_one(algorithm: &str) {
         let store_path = dataset::samples::constant_value_cost_zarr(1.);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, "dijkstra").unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: 1, j: 1 }, ArrayIndex { i: 5, j: 5 }];
         let end = vec![ArrayIndex { i: 3, j: 3 }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -286,8 +301,9 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_routing_along_boundary() {
+    #[test_case("dijkstra"; "dijkstra")]
+    #[test_case("long-range"; "long-range")]
+    fn test_routing_along_boundary(algorithm: &str) {
         use ndarray::Array3;
 
         let (ni, nj) = (4, 4);
@@ -342,7 +358,7 @@ mod tests {
 
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, "dijkstra").unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
 
         let start = vec![ArrayIndex { i: 0, j: 0 }];
         let end = vec![ArrayIndex { i: 0, j: 2 }];
