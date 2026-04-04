@@ -5,9 +5,16 @@ use tracing::debug;
 
 const NO_PARENT_SLOT: u64 = u64::MAX;
 
+/// Fixed-width record persisted for a single spilled routing slot
+///
+/// The record stores the accumulated path cost together with the optional
+/// parent slot index. `None` parents are encoded with `NO_PARENT_SLOT` so the
+/// on-disk representation stays a constant 16 bytes per slot.
 #[derive(Clone, Copy, Debug)]
 struct SpillRecord {
+    /// Accumulated routing cost stored for this spilled slot
     cost: u64,
+    /// Parent slot index encoded as `NO_PARENT_SLOT` when absent
     parent_slot: u64,
 }
 
@@ -50,10 +57,20 @@ impl SpillRecord {
     }
 }
 
+/// Buffered backing store for long-range routing state
+///
+/// `SwapStore` batches slot writes in memory and only persists them to the
+/// temporary file once the write buffer reaches `write_buffer_capacity`, or
+/// when an explicit flush or read requires durable data. This reduces random
+/// disk writes during Dijkstra expansion while still allowing callers to read
+/// a consistent slot after pending buffered writes are drained.
 #[derive(Debug)]
 pub(super) struct SwapStore {
+    /// Temporary swap file that receives flushed records
     file: NamedTempFile,
+    /// In-memory queue of pending slot writes waiting to be flushed to disk
     write_buffer: Vec<(u64, SpillRecord)>, // (slot, values)
+    /// Maximum buffered writes before `write_slot` forces a flush
     write_buffer_capacity: usize,
 }
 
