@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774981744060,
+  "lastUpdate": 1775362544445,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -6803,6 +6803,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 369618548,
             "range": "± 6160670",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "79ec2ac12687df4eeb70cce456bf42c370177be5",
+          "message": "Build(deps): Bump actions/download-artifact from 7 to 8 (#227)\n\n* Build(deps): Bump actions/download-artifact from 7 to 8\n\nBumps [actions/download-artifact](https://github.com/actions/download-artifact) from 7 to 8.\n- [Release notes](https://github.com/actions/download-artifact/releases)\n- [Commits](https://github.com/actions/download-artifact/compare/v7...v8)\n\n---\nupdated-dependencies:\n- dependency-name: actions/download-artifact\n  dependency-version: '8'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* Upgrade download-artifact action to specific commit\n\n---------\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Guilherme Castelão <guilherme@castelao.net>",
+          "timestamp": "2026-04-04T22:04:45-06:00",
+          "tree_id": "bb27eafc6a165014fba42a11d9f3a8aa25603750",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/79ec2ac12687df4eeb70cce456bf42c370177be5"
+        },
+        "date": 1775362543783,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 72606402,
+            "range": "± 1339373",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 95207807,
+            "range": "± 1578950",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 96048734,
+            "range": "± 1583920",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 147371458,
+            "range": "± 1853393",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 626885110,
+            "range": "± 11028878",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 139434765,
+            "range": "± 2284103",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147273770,
+            "range": "± 1648957",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 160282487,
+            "range": "± 2253314",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 203327846,
+            "range": "± 1818200",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 363147238,
+            "range": "± 4120396",
             "unit": "ns/iter"
           }
         ]
