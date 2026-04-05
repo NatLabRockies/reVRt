@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775362544445,
+  "lastUpdate": 1775403775090,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -6887,6 +6887,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 363147238,
             "range": "± 4120396",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1763d839ecb885f3348dbb67391a042be06c4e5c",
+          "message": "Build(deps): Bump actions/attest-build-provenance from 3 to 4 (#228)\n\n* Build(deps): Bump actions/attest-build-provenance from 3 to 4\n\nBumps [actions/attest-build-provenance](https://github.com/actions/attest-build-provenance) from 3 to 4.\n- [Release notes](https://github.com/actions/attest-build-provenance/releases)\n- [Changelog](https://github.com/actions/attest-build-provenance/blob/main/RELEASE.md)\n- [Commits](https://github.com/actions/attest-build-provenance/compare/v3...v4)\n\n---\nupdated-dependencies:\n- dependency-name: actions/attest-build-provenance\n  dependency-version: '4'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* Upgrade attest-build-provenance action to latest version\n\n---------\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Guilherme Castelão <guilherme@castelao.net>",
+          "timestamp": "2026-04-05T09:30:30-06:00",
+          "tree_id": "a87b982d81c29a8ebe88093e3be7318db575195d",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/1763d839ecb885f3348dbb67391a042be06c4e5c"
+        },
+        "date": 1775403773705,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 70532338,
+            "range": "± 1423353",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 93238121,
+            "range": "± 1400268",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 94519608,
+            "range": "± 2451411",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 143964631,
+            "range": "± 2304114",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 605783689,
+            "range": "± 14654436",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 143291791,
+            "range": "± 774664",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147707696,
+            "range": "± 554590",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 160932998,
+            "range": "± 1125724",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 202926945,
+            "range": "± 1627955",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 357275471,
+            "range": "± 9030334",
             "unit": "ns/iter"
           }
         ]
