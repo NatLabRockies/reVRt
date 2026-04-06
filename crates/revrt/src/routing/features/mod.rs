@@ -116,22 +116,4 @@ mod test {
         assert_eq!(data[[0, 0]], 1.0);
         assert!(data[[5, 5]].is_nan());
     }
-
-    #[tokio::test]
-    async fn dev() {
-        let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(8, 8)
-            .chunks(4, 4)
-            .layer(LayerConfig::random("A", 0.0, 1.0))
-            .build()
-            .unwrap();
-        let features = Features::open(tmp.path()).unwrap();
-        let array = zarrs::array::Array::async_open(features.storage, "/A")
-            .await
-            .unwrap();
-        let _data = array
-            .async_retrieve_chunk_elements::<f32>(&[0, 0])
-            .await
-            .unwrap();
-    }
 }
