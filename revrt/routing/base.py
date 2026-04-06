@@ -68,7 +68,7 @@ class RoutingScenario:
         algorithm : str, default="long_range"
             Routing algorithm implementation to use. Supported values
             are ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a
-            faster implementation but foes not respect the memory limit.
+            faster implementation but does not respect the memory limit.
             Prefer the default ``"long_range"`` option unless you know
             for a fact that your route computations will not need much
             memory and speed is very important to you.
