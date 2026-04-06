@@ -139,7 +139,7 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// algorithm : str, default="long_range"
 ///     Routing algorithm implementation to use. Supported values are
 ///     ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a faster
-///     implementation but foes not respect the `mem_limit_bytes` input.
+///     implementation but does not respect the `mem_limit_bytes` input.
 ///     Prefer the default ``"long_range"`` option unless you know for a
 ///     fact that your route computations will not need much memory and
 ///     speed is very important to you. By default, ``"long_range"``.
@@ -208,7 +208,7 @@ fn find_paths(
 /// algorithm : str, default="long_range"
 ///     Routing algorithm implementation to use. Supported values are
 ///     ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a faster
-///     implementation but foes not respect the `mem_limit_bytes` input.
+///     implementation but does not respect the `mem_limit_bytes` input.
 ///     Prefer the default ``"long_range"`` option unless you know for a
 ///     fact that your route computations will not need much memory and
 ///     speed is very important to you. By default, ``"long_range"``.
