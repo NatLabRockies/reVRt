@@ -119,6 +119,11 @@ impl SwapStore {
         if self.write_buffer.len() > 1 {
             self.write_buffer.sort_unstable_by_key(|(slot, _)| *slot);
         }
+        if !self.write_buffer.is_empty() {
+            // Buffer can be empty for repeated `read_slot` calls
+            // Only log if buffer is non-empty
+            debug!("Flushing {} entries to disk", self.write_buffer.len());
+        }
         for (slot, record) in self.write_buffer.drain(..) {
             let offset = Self::slot_offset(slot)?;
             let file = self.file.as_file_mut();
