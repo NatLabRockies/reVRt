@@ -125,6 +125,13 @@ impl Dataset {
         debug!("Using '{}' to determine shape of cost data", varname);
         let tmp = zarrs::array::Array::open(source.clone(), &format!("/{varname}"))?;
         let shape = tmp.shape();
+        if shape.len() < 3 {
+            return Err(Error::InvalidDatasetShape {
+                variable: varname.to_string(),
+                expected_rank: 3,
+                shape: shape.to_vec(),
+            });
+        }
         let grid_nrows = shape[1];
         let grid_ncols = shape[2];
         let chunk_grid = tmp.chunk_grid();
@@ -452,7 +459,12 @@ pub(crate) fn make_lazy_subset_for_tests(
 mod tests {
     use super::*;
     use std::f32::consts::SQRT_2;
+    use std::sync::Arc;
     use test_case::test_case;
+    use zarrs::array::{ArrayBuilder, DataType, FillValue};
+    use zarrs::filesystem::FilesystemStore;
+    use zarrs::group::GroupBuilder;
+    use zarrs::storage::ReadableWritableListableStorage;
 
     #[test]
     fn test_simple_cost_function_get_3x3() {
@@ -502,6 +514,46 @@ mod tests {
                 assert_eq!(averaged_cost, val)
             }
         }
+    }
+
+    #[test]
+    fn test_open_rejects_representative_variable_with_too_few_dimensions() {
+        let tmp_path = tempfile::TempDir::new().unwrap();
+        let store: ReadableWritableListableStorage =
+            Arc::new(FilesystemStore::new(tmp_path.path()).unwrap());
+
+        GroupBuilder::new()
+            .build(store.clone(), "/")
+            .unwrap()
+            .store_metadata()
+            .unwrap();
+
+        ArrayBuilder::new(
+            vec![3, 4],
+            vec![3, 4],
+            DataType::Float32,
+            FillValue::from(zarrs::array::ZARR_NAN_F32),
+        )
+        .build(store, "/A")
+        .unwrap()
+        .store_metadata()
+        .unwrap();
+
+        let cost_function =
+            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
+
+        let error = Dataset::open(tmp_path.path(), cost_function, 1_000)
+            .err()
+            .expect("Expected Dataset::open to reject a 2D representative variable");
+
+        assert!(matches!(
+            error,
+            Error::InvalidDatasetShape {
+                variable,
+                expected_rank: 3,
+                shape,
+            } if variable == "A" && shape == vec![3, 4]
+        ));
     }
 
     #[test]
