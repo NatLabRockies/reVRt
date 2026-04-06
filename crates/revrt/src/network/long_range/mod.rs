@@ -11,7 +11,7 @@ use swap::SwapStore;
 use utilities::{FinalizedBits, GridIndexer};
 
 const SPILL_BUFFER_ENTRY_BYTES: u64 = 24;
-const MAX_PQ_TO_FRONTIER_NODE_RATIO: usize = 4;
+const MAX_PQ_TO_FRONTIER_NODE_RATIO: usize = 2;
 
 #[derive(Clone, Debug)]
 pub(crate) struct FinalizedNode {
