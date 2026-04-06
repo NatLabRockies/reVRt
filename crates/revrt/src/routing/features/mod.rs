@@ -65,6 +65,58 @@ mod test {
     use super::samples::{FeaturesTestBuilder, LayerConfig};
     use super::*;
 
+    /// Verify that `Features::lazy_subset()` produces an `AsyncLazySubset`
+    /// that correctly loads data from the underlying store. Tests both a
+    /// constant-filled layer and a sequentially-filled layer to confirm
+    /// that the subset reads from the right variable and spatial region.
+    #[tokio::test]
+    async fn lazy_subset_returns_correct_data() {
+        let (tmp, _storage) = FeaturesTestBuilder::new()
+            .dimensions(8, 8)
+            .chunks(4, 4)
+            .layer(LayerConfig::constant("A", 5.0))
+            .layer(LayerConfig::sequential("B"))
+            .build()
+            .unwrap();
+
+        let features = Features::open(tmp.path()).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let lazy = features.lazy_subset(subset).await;
+
+        let a = lazy.get("A").await.unwrap();
+        assert_eq!(a.shape(), &[4, 4]);
+        assert!(a.iter().all(|&v| v == 5.0));
+
+        let b = lazy.get("B").await.unwrap();
+        assert_eq!(b.shape(), &[4, 4]);
+        assert_eq!(b[[0, 0]], 1.0);
+        assert_eq!(b[[0, 3]], 4.0);
+    }
+
+    /// Ensure that when `Features::lazy_subset()` is given a region that
+    /// extends beyond the source array boundaries, out-of-bounds cells are
+    /// filled with NaN while in-bounds cells retain their original values.
+    /// This confirms that the padding logic in `AsyncLazySubset` is
+    /// correctly wired through the `Features` API.
+    #[tokio::test]
+    async fn lazy_subset_pads_out_of_bounds() {
+        let (tmp, _storage) = FeaturesTestBuilder::new()
+            .dimensions(4, 4)
+            .chunks(2, 2)
+            .layer(LayerConfig::ones("A"))
+            .build()
+            .unwrap();
+
+        let features = Features::open(tmp.path()).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![6, 6]).unwrap();
+        let lazy = features.lazy_subset(subset).await;
+
+        let data = lazy.get("A").await.unwrap();
+        assert_eq!(data.shape(), &[6, 6]);
+        assert_eq!(data[[0, 0]], 1.0);
+        assert!(data[[5, 5]].is_nan());
+    }
+
     #[tokio::test]
     async fn dev() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
