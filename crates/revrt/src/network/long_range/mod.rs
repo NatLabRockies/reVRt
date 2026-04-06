@@ -169,12 +169,19 @@ impl FrontierOnlySearchState {
     }
 
     pub(crate) fn enforce_memory_budget(&mut self) -> Option<()> {
+        debug!(
+            "Checking memory budget: PQ len {0}, best_node_costs len {1}",
+            self.pq.len(),
+            self.best_node_costs.len()
+        );
         if self.pq.len() > self.best_node_costs.len() * MAX_PQ_TO_FRONTIER_NODE_RATIO {
             debug!(
                 "Compacting priority queue after checking {} nodes",
                 self.num_nodes_checked
             );
+            debug!("PQ len start: {}", self.pq.len());
             self.pq = compact_pq_set(&self.best_node_costs);
+            debug!("PQ len end: {}", self.pq.len());
             self.swap.flush().ok()?;
         }
 
