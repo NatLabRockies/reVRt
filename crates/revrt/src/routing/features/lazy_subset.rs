@@ -120,6 +120,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     /// * `subset` – The array region to load.  May extend beyond the source
     ///   array boundaries; out-of-bounds cells will be filled with
     ///   [`AsyncLazyElement::nan_value`].
+    #[allow(dead_code)]
     pub(crate) fn new(source: AsyncReadableListableStorage, subset: ArraySubset) -> Self {
         trace!("Creating AsyncLazySubset for subset: {:?}", subset);
         Self {
@@ -130,6 +131,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     }
 
     /// The subset that defines this view's index region.
+    #[allow(dead_code)]
     pub(crate) fn subset(&self) -> &ArraySubset {
         &self.subset
     }
@@ -147,6 +149,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     /// * [`Error::VariableNotFound`] – the variable does not exist in the
     ///   store.
     /// * [`Error::IO`] – an I/O error occurred while reading the data.
+    #[allow(dead_code)]
     pub(crate) async fn get(&self, varname: &str) -> Result<ArrayD<T>> {
         trace!("AsyncLazySubset::get(\"{}\")", varname);
 

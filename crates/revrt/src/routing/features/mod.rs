@@ -36,8 +36,8 @@ use lazy_subset::AsyncLazySubset;
 ///
 /// Currently works with Zarrs storage only.
 pub(super) struct Features {
-    #[allow(dead_code)]
     /// Async readable storage holding the features.
+    #[allow(dead_code)]
     storage: AsyncReadableListableStorage,
 }
 
@@ -55,6 +55,7 @@ impl Features {
     ///
     /// Intended to support efficient access of [`Features`] such
     /// as when calculating cost functions.
+    #[allow(dead_code)]
     pub(super) async fn lazy_subset(&self, subset: ArraySubset) -> AsyncLazySubset<f32> {
         AsyncLazySubset::<f32>::new(Arc::clone(&self.storage), subset)
     }
