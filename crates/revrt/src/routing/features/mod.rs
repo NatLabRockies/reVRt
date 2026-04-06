@@ -1,7 +1,16 @@
 //! Input features used by the cost function
 //!
-//! Support for asynchronous reading of features from a Zarr store
-//! to be used by the cost function.
+//! Provides asynchronous access to all features used to calculate the
+//! cost of a path. Features provides read-only support and is intended
+//! to be shared among multiple route searches. It is async to allow
+//! multiple routes to move concurrently while minimizing the impact
+//! of waiting on reading data.
+//!
+//! We currently only support Zarr store, but it might have use to
+//! expand for other storage types in the future.
+//!
+//! We also provide the Lazy Subset resource to minimize redundant
+//! I/O. See the module documentation for more details.
 
 #[cfg(test)]
 mod samples;
@@ -16,6 +25,12 @@ use zarrs_object_store::AsyncObjectStore;
 use crate::error::Result;
 
 /// Input features used by the cost function.
+///
+/// Provides access to all input features used by the cost function.
+/// This is intended to be shared among multiple routes, so it is
+/// read-only and async.
+///
+/// Currently works with Zarrs storage only.
 pub(super) struct Features {
     #[allow(dead_code)]
     /// Async readable storage holding the features.
