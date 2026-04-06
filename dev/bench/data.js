@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775508071954,
+  "lastUpdate": 1775512886279,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -7055,6 +7055,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 347494480,
             "range": "± 3308290",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "525f45367f6c6e8fd2e9ec38bbc9271727e0071b",
+          "message": "Build(deps): Bump prefix-dev/setup-pixi from 0.9.4 to 0.9.5 (#239)\n\nBumps [prefix-dev/setup-pixi](https://github.com/prefix-dev/setup-pixi) from 0.9.4 to 0.9.5.\n- [Release notes](https://github.com/prefix-dev/setup-pixi/releases)\n- [Commits](https://github.com/prefix-dev/setup-pixi/compare/a0af7a228712d6121d37aba47adf55c1332c9c2e...1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0)\n\n---\nupdated-dependencies:\n- dependency-name: prefix-dev/setup-pixi\n  dependency-version: 0.9.5\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-06T15:25:54-06:00",
+          "tree_id": "bc99bbd6338252dda51a221aaf30d430d59c1342",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/525f45367f6c6e8fd2e9ec38bbc9271727e0071b"
+        },
+        "date": 1775512884676,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 73770707,
+            "range": "± 1701615",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 97458829,
+            "range": "± 1793798",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 96054332,
+            "range": "± 1841472",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 146352909,
+            "range": "± 2422480",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 629955879,
+            "range": "± 12323562",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 144083026,
+            "range": "± 2505539",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147874527,
+            "range": "± 939742",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 161157449,
+            "range": "± 1430746",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 202602238,
+            "range": "± 1904977",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 363191056,
+            "range": "± 8085236",
             "unit": "ns/iter"
           }
         ]
