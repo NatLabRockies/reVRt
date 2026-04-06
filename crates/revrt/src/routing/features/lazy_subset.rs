@@ -39,8 +39,7 @@ use crate::error::{Error, Result};
 /// Marker trait for element types that [`AsyncLazySubset`] can store.
 ///
 /// Implementors must provide a *sentinel* value that represents
-/// out-of-bounds or missing data.  For IEEE floats this is `NaN`; for
-/// integer types a domain-specific choice is made (see implementations).
+/// out-of-bounds or missing data. For IEEE floats this is `NaN`.
 pub(crate) trait AsyncLazyElement: ElementOwned + Clone + Send + Sync + 'static {
     /// Value used to fill grid points that fall outside the source array.
     fn nan_value() -> Self;
@@ -69,13 +68,13 @@ impl AsyncLazyElement for f64 {
 ///
 /// The subset is fixed at construction time (via an [`ArraySubset`]) so that
 /// every variable returned by [`get`](Self::get) covers the same spatial
-/// domain.  Data is loaded lazily on the first access and cached for the
+/// domain. Data is loaded lazily on the first access and cached for the
 /// lifetime of this struct.
 ///
 /// # Concurrency
 ///
 /// The internal cache is protected by a [`tokio::sync::RwLock`], so
-/// multiple tasks may call [`get`](Self::get) concurrently.  Only the
+/// multiple tasks may call [`get`](Self::get) concurrently. Only the
 /// first caller for a given variable will trigger I/O; later callers
 /// either wait for the write lock to be released or read directly from
 /// the cache.
@@ -115,9 +114,10 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     /// the first call to [`get`](Self::get).
     ///
     /// # Arguments
+    ///
     /// * `source` – Async readable Zarr storage (typically obtained from
     ///   [`Features::storage`](super::Features::storage)).
-    /// * `subset` – The array region to load.  May extend beyond the source
+    /// * `subset` – The array region to load. May extend beyond the source
     ///   array boundaries; out-of-bounds cells will be filled with
     ///   [`AsyncLazyElement::nan_value`].
     #[allow(dead_code)]
@@ -139,13 +139,14 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     /// Retrieve (or load) the data for `varname` within this subset.
     ///
     /// On the first call for a given variable the data is fetched from the
-    /// underlying Zarr store.  Subsequent calls return a clone from the
+    /// underlying Zarr store. Subsequent calls return a clone from the
     /// cache without any I/O.
     ///
     /// If the subset extends beyond the source array's shape, the
     /// out-of-bounds cells are filled with [`AsyncLazyElement::nan_value`].
     ///
     /// # Errors
+    ///
     /// * [`Error::VariableNotFound`] – the variable does not exist in the
     ///   store.
     /// * [`Error::IO`] – an I/O error occurred while reading the data.
