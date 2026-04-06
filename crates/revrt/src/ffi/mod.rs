@@ -49,6 +49,7 @@ impl From<Error> for PyErr {
     fn from(err: Error) -> PyErr {
         match err {
             Error::IO(msg) => PyIOError::new_err(msg),
+            Error::VariableNotFound(_) => todo!(),
             Error::ZarrsArrayCreate(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsArray(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsStorage(e) => PyIOError::new_err(e.to_string()),

@@ -17,6 +17,10 @@ pub enum Error {
     #[error(transparent)]
     ZarrsStorage(#[from] zarrs::storage::StorageError),
 
+    #[error("Variable not found: '{0}'")]
+    /// The requested variable does not exist.
+    VariableNotFound(String),
+
     // #[error("All route end points are invalid: {0}")]
     // InvalidRouteEnd(String),
 

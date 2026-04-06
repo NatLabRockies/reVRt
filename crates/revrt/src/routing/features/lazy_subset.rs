@@ -174,8 +174,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
 
         trace!(
             "Loading variable \"{}\" for subset {:?}",
-            varname,
-            self.subset
+            varname, self.subset
         );
 
         let data = self.load_variable(varname).await?;
@@ -198,8 +197,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     ) -> Result<ArrayD<T>> {
         trace!(
             "Retrieving in-bounds subset {:?} for \"{}\"",
-            subset,
-            varname
+            subset, varname
         );
         array
             .async_retrieve_array_subset_ndarray::<T>(subset)
@@ -273,9 +271,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
         // a sentinel-filled output array.
         trace!(
             "Padding needed for \"{}\": clipped {:?} vs requested {:?}",
-            varname,
-            clipped_shape,
-            subset_shape
+            varname, clipped_shape, subset_shape
         );
 
         let clipped_subset =
