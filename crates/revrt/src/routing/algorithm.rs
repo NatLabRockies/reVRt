@@ -88,7 +88,7 @@ impl Algorithm {
         } else {
             debug!(
                 "Long-range Dijkstra per-worker memory budget set to {}MB",
-                per_worker_memory_budget_bytes / (1024 * 1024 * 1024)
+                per_worker_memory_budget_bytes / (1024 * 1024)
             );
             Self {
                 algorithm_type: AlgorithmType::LongRangeDijkstra,
