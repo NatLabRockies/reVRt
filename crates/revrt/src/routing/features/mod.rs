@@ -6,8 +6,8 @@
 //! multiple routes to move concurrently while minimizing the impact
 //! of waiting on reading data.
 //!
-//! We currently only support Zarr store, but it might have use to
-//! expand for other storage types in the future.
+//! We currently only support Zarr store, but we might expand for other
+//! storage types in the future.
 //!
 //! We also provide the Lazy Subset resource to minimize redundant
 //! I/O. See the module documentation for more details.
@@ -54,7 +54,7 @@ impl Features {
     /// Creates an AsyncLazySubset of Features
     ///
     /// Intended to support efficient access of [`Features`] such
-    /// as when calculating cost functions.
+    /// as for calculating cost functions based on multiple variabels.
     #[allow(dead_code)]
     pub(super) async fn lazy_subset(&self, subset: ArraySubset) -> AsyncLazySubset<f32> {
         AsyncLazySubset::<f32>::new(Arc::clone(&self.storage), subset)
