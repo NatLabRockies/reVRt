@@ -256,7 +256,7 @@ NLR-reVRt = { path = ".", editable = true }
 [tool.pixi.dependencies]
 # system
 python = ">=3.11"
-rust = ">=1.93.1,<1.94"
+rust = ">=1.94.0,<1.95"
 # package
 affine = ">=2.4.0,<3"
 dask = ">=2025.4.1,<2026"
@@ -290,7 +290,7 @@ pip = ">=25.1.1,<26"
 pipreqs = ">=0.4.13,<0.5"
 ruff = ">=0.15.2,<0.16"
 ruff-lsp = ">=0.0.62,<0.0.63"
-rust-src = ">=1.92.0,<2"
+rust-src = ">=1.94.0,<1.95"
 maturin = ">=1.12.3,<2"
 
 [tool.pixi.feature.test.dependencies]
