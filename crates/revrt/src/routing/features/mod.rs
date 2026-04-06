@@ -15,6 +15,8 @@
 #[cfg(test)]
 mod samples;
 
+mod lazy_subset;
+
 use std::sync::Arc;
 
 use object_store::local::LocalFileSystem;
