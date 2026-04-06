@@ -134,7 +134,7 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     When the algorithm reaches any of these points, the routing
 ///     is terminated and the final path + cost is returned.
 /// mem_limit_bytes : int, default=250_000_000
-///     Memory limit to use for routing computation, in bytes.
+///     Overall memory limit to use for routing computations, in bytes.
 ///     By default, `250,000,000` (250MB).
 /// algorithm : str, default="long_range"
 ///     Routing algorithm implementation to use. Supported values are
@@ -203,7 +203,7 @@ fn find_paths(
 ///     points in each of the path definition tuples (assuming a valid path
 ///     exists).
 /// mem_limit_bytes : int, default=250_000_000
-///     Cache size to use for computation, in bytes.
+///     Overall memory limit to use for routing computations, in bytes.
 ///     By default, `250,000,000` (250MB).
 /// algorithm : str, default="long_range"
 ///     Routing algorithm implementation to use. Supported values are
