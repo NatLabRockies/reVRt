@@ -8,7 +8,16 @@
 //!
 //! If the requested [`ArraySubset`] extends beyond the source array's shape,
 //! out-of-bounds grid points are filled with a type-specific sentinel:
-//! `NaN` for floating-point types and [`i32::MIN`] for `i32`.
+//! `NaN` for floating-point types.
+//!
+//! We only suport lazy subsets of f32 and f64. An initial prototype included
+//! integer types, but that was dropped and there is no intention to bring
+//! it back. For the pathfidning algoritythms we need a high ceiling to allow
+//! long distances, and some precision to disntiguish between two neigbor grid
+//! points, so a float type is the correct choice here. Note that the input
+//! features can be of any numeric type, and the lazy subset is the point where
+//! we normalize to a single data type so all variables can be operated together
+//! and reduce to a single conversion calculation.
 
 use std::collections::HashMap;
 use std::fmt;
@@ -48,16 +57,6 @@ impl AsyncLazyElement for f64 {
     #[inline]
     fn nan_value() -> Self {
         f64::NAN
-    }
-}
-
-impl AsyncLazyElement for i32 {
-    /// `i32` has no NaN representation; [`i32::MIN`] is used as a sentinel
-    /// for out-of-bounds cells, consistent with common geospatial no-data
-    /// conventions.
-    #[inline]
-    fn nan_value() -> Self {
-        i32::MIN
     }
 }
 
@@ -414,37 +413,6 @@ mod tests {
                     "out-of-bounds cell [{i},{j}] should be NaN, got {}",
                     data[[i, j]]
                 );
-            }
-        }
-    }
-
-    /// i32 sentinel for out-of-bounds cells is i32::MIN.
-    #[tokio::test]
-    async fn get_pads_out_of_bounds_with_sentinel_i32() {
-        use super::super::samples::FeatureDataType;
-
-        let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(2, 2)
-            .chunks(2, 2)
-            .layer(LayerConfig::constant("idx", 42.0).with_dtype(FeatureDataType::Int32))
-            .build()
-            .unwrap();
-
-        // Request 4×4 from a 2×2 array.
-        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
-        let lazy = AsyncLazySubset::<i32>::new(Arc::clone(&storage), subset);
-
-        let data = lazy.get("idx").await.unwrap();
-        assert_eq!(data.shape(), &[4, 4]);
-
-        for i in 0..2 {
-            for j in 0..2 {
-                assert_eq!(data[[i, j]], 42, "in-bounds [{i},{j}]");
-            }
-        }
-        for i in 2..4 {
-            for j in 0..4 {
-                assert_eq!(data[[i, j]], i32::MIN, "out-of-bounds [{i},{j}]");
             }
         }
     }
