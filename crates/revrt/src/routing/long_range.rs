@@ -32,6 +32,10 @@ where
 
     while let Some(node) = state.pop_next_node() {
         if success(&node.array_index) {
+            debug!(
+                "Goal node found terminating at index {:?}",
+                &node.array_index
+            );
             return state
                 .finalize_route(node)
                 .map(|(route, cost)| (route, C::from(cost)));
