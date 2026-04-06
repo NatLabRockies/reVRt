@@ -21,10 +21,12 @@ use std::sync::Arc;
 
 use object_store::local::LocalFileSystem;
 use tracing::debug;
+use zarrs::array_subset::ArraySubset;
 use zarrs::storage::AsyncReadableListableStorage;
 use zarrs_object_store::AsyncObjectStore;
 
 use crate::error::Result;
+use lazy_subset::AsyncLazySubset;
 
 /// Input features used by the cost function.
 ///
@@ -47,6 +49,14 @@ impl Features {
         let storage: AsyncReadableListableStorage = Arc::new(AsyncObjectStore::new(store));
 
         Ok(Self { storage })
+    }
+
+    /// Creates an AsyncLazySubset of Features
+    ///
+    /// Intended to support efficient access of [`Features`] such
+    /// as when calculating cost functions.
+    pub(super) async fn lazy_subset(&self, subset: ArraySubset) -> AsyncLazySubset<f32> {
+        AsyncLazySubset::<f32>::new(Arc::clone(&self.storage), subset)
     }
 }
 
