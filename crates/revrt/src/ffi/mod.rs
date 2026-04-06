@@ -54,6 +54,9 @@ impl From<Error> for PyErr {
             Error::ZarrsStorage(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsGroupCreate(e) => PyIOError::new_err(e.to_string()),
             Error::Undefined(msg) => revrtRustError::new_err(msg),
+            invalid_dataset_shape @ Error::InvalidDatasetShape { .. } => {
+                PyValueError::new_err(invalid_dataset_shape.to_string())
+            }
             invalid_algorithm @ Error::InvalidAlgorithm { .. } => {
                 PyValueError::new_err(invalid_algorithm.to_string())
             }
