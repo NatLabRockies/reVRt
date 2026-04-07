@@ -84,6 +84,13 @@ impl AsyncLazyElement for f64 {
 /// first caller for a given variable will trigger I/O; later callers
 /// either wait for the write lock to be released or read directly from
 /// the cache.
+///
+/// # Notes
+///
+/// - Consider using Arc<ArrayD<T>> in `data` to avoid cloning the full array
+///   on every call to `get()`. This will be mostly used by the cost function
+///   and assuming that most of the variables are used only once, the impact
+///   of cloning should be negligible.
 pub(crate) struct AsyncLazySubset<T: AsyncLazyElement> {
     /// Async readable storage backing the feature layers.
     source: AsyncReadableListableStorage,
