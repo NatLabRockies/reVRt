@@ -54,6 +54,7 @@ impl From<Error> for PyErr {
             Error::ZarrsArray(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsStorage(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsGroupCreate(e) => PyIOError::new_err(e.to_string()),
+            Error::UnsupportedDataType(_, _) => todo!(),
             Error::Undefined(msg) => revrtRustError::new_err(msg),
         }
     }

@@ -21,6 +21,11 @@ pub enum Error {
     /// The requested variable does not exist.
     VariableNotFound(String),
 
+    /// Tried to read data, such as input features, with unsupported
+    /// data type.
+    #[error("Unsupported data type '{0}' for variable '{1}'")]
+    UnsupportedDataType(String, String),
+
     // #[error("All route end points are invalid: {0}")]
     // InvalidRouteEnd(String),
 
