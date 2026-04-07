@@ -87,7 +87,9 @@ impl Features {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
+    /// use zarrs::array_subset::ArraySubset;
+    ///
     /// let features = Features::open("path/to/zarr").unwrap();
     /// let region = ArraySubset::new_with_start_shape(vec![0, 0], vec![8, 8]).unwrap();
     ///
