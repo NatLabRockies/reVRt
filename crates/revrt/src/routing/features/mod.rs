@@ -70,7 +70,7 @@ impl Features {
     /// call to [`AsyncLazySubset::get`].
     ///
     /// Intended to support efficient access of [`Features`] such
-    /// as for calculating cost functions based on multiple variabels.
+    /// as for calculating cost functions based on multiple variables.
     ///
     /// # Arguments
     ///
