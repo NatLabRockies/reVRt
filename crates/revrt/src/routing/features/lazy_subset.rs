@@ -10,7 +10,7 @@
 //! out-of-bounds grid points are filled with a type-specific sentinel:
 //! `NaN` for floating-point types.
 //!
-//! We only suport lazy subsets of f32 and f64. An initial prototype included
+//! We only support lazy subsets of f32 and f64. An initial prototype included
 //! integer types, but that was dropped and there is no intention to bring
 //! it back. For the pathfidning algoritythms we need a high ceiling to allow
 //! long distances, and some precision to disntiguish between two neigbor grid
