@@ -26,7 +26,7 @@ use std::sync::Arc;
 use ndarray::{ArrayD, IxDyn, SliceInfoElem};
 use tokio::sync::RwLock;
 use tracing::trace;
-use zarrs::array::{Array, ElementOwned};
+use zarrs::array::{Array, DataType, ElementOwned};
 use zarrs::array_subset::ArraySubset;
 use zarrs::storage::{AsyncReadableListableStorage, AsyncReadableListableStorageTraits};
 
@@ -196,12 +196,30 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
         Ok(data)
     }
 
-    /// Retrieve a variable's data for a subset that is known to lie entirely
-    /// within the source array boundaries.
+    /// Read a variable's data from the Zarr store and convert it to the
+    /// subset's element type `T`.
+    ///
+    /// The on-disk data type is inspected at runtime and the raw values are
+    /// read as their native type, then converted to `T` via `f64` as a
+    /// lossless intermediary. This allows a single `AsyncLazySubset<f32>`
+    /// (or `<f64>`) to transparently consume variables stored as any of the
+    /// supported numeric types: f32, f64, i16, i32, i64, u8, u16, u32.
     ///
     /// **Precondition**: `subset` must not extend beyond the array's shape.
-    /// Violating this will surface a Zarr-level error, not a silent
-    /// corruption.
+    /// Violating this will surface a Zarr-level error, not silent corruption.
+    ///
+    /// # Arguments
+    ///
+    /// * `array`: An opened Zarr array pointing to the variable to read.
+    /// * `varname`: The variable name, used only for error messages.
+    /// * `subset`: The spatial region to retrieve, expressed as an
+    ///   [`ArraySubset`] that must lie within the array's bounds.
+    ///
+    /// # Errors
+    ///
+    /// * [`Error::IO`]: an I/O error occurred while reading the data.
+    /// * [`Error::UnsupportedDataType`]: the on-disk type is not one of the
+    ///   supported numeric types (e.g. complex, string, bool).
     async fn retrieve_subset<S: AsyncReadableListableStorageTraits + 'static + ?Sized>(
         &self,
         array: &Array<S>,
@@ -209,18 +227,41 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
         subset: &ArraySubset,
     ) -> Result<ArrayD<T>> {
         trace!(
-            "Retrieving in-bounds subset {:?} for \"{}\"",
-            subset, varname
+            "Retrieving in-bounds subset {:?} for \"{}\" (on-disk type: {:?})",
+            subset,
+            varname,
+            array.data_type()
         );
-        array
-            .async_retrieve_array_subset_ndarray::<T>(subset)
-            .await
-            .map_err(|err| {
-                Error::IO(std::io::Error::other(format!(
-                    "Failed to retrieve subset for variable '{}': {}",
-                    varname, err
-                )))
-            })
+
+        macro_rules! read_and_convert {
+            ($native:ty) => {{
+                let native_data = array
+                    .async_retrieve_array_subset_ndarray::<$native>(subset)
+                    .await
+                    .map_err(|err| {
+                        Error::IO(std::io::Error::other(format!(
+                            "Failed to retrieve subset for variable '{}': {}",
+                            varname, err
+                        )))
+                    })?;
+                Ok(native_data.mapv(|v| T::from_f64(v as f64)))
+            }};
+        }
+
+        match array.data_type() {
+            DataType::Float32 => read_and_convert!(f32),
+            DataType::Float64 => read_and_convert!(f64),
+            DataType::Int16 => read_and_convert!(i16),
+            DataType::Int32 => read_and_convert!(i32),
+            DataType::Int64 => read_and_convert!(i64),
+            DataType::UInt8 => read_and_convert!(u8),
+            DataType::UInt16 => read_and_convert!(u16),
+            DataType::UInt32 => read_and_convert!(u32),
+            other => Err(Error::UnsupportedDataType(
+                format!("{:?}", other),
+                varname.to_string(),
+            )),
+        }
     }
 
     /// Load a variable for this view's subset, padding with
@@ -553,6 +594,40 @@ mod tests {
         let first = &results[0];
         for result in &results[1..] {
             assert_eq!(result, first);
+        }
+    }
+
+    /// Validates that variables stored with different Zarr data types (f32, f64,
+    /// i16, i32, u8, u32) are all converted to the subset's element type (f32)
+    /// when accessed through `AsyncLazySubset::get`.
+    #[tokio::test]
+    async fn get_converts_mixed_dtypes_to_common_type() {
+        use super::super::samples::FeatureDataType;
+
+        let (_tmp, storage) = FeaturesTestBuilder::new()
+            .dimensions(2, 3)
+            .chunks(2, 3)
+            .layer(LayerConfig::sequential("from_f32"))
+            .layer(LayerConfig::sequential("from_f64").with_dtype(FeatureDataType::Float64))
+            .layer(LayerConfig::sequential("from_i16").with_dtype(FeatureDataType::Int16))
+            .layer(LayerConfig::sequential("from_i32").with_dtype(FeatureDataType::Int32))
+            .layer(LayerConfig::sequential("from_u8").with_dtype(FeatureDataType::UInt8))
+            .layer(LayerConfig::sequential("from_u32").with_dtype(FeatureDataType::UInt32))
+            .build()
+            .unwrap();
+
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![2, 3]).unwrap();
+        let lazy = AsyncLazySubset::<f32>::new(Arc::clone(&storage), subset);
+
+        let expected: Vec<f32> = (1..=6).map(|x| x as f32).collect();
+
+        for varname in [
+            "from_f32", "from_f64", "from_i16", "from_i32", "from_u8", "from_u32",
+        ] {
+            let data = lazy.get(varname).await.unwrap();
+            assert_eq!(data.shape(), &[2, 3], "wrong shape for {varname}");
+            let flat: Vec<f32> = data.iter().copied().collect();
+            assert_eq!(flat, expected, "wrong values for {varname}");
         }
     }
 }
