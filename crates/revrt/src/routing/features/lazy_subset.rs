@@ -173,6 +173,11 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     /// * [`Error::VariableNotFound`] – the variable does not exist in the
     ///   store.
     /// * [`Error::IO`] – an I/O error occurred while reading the data.
+    ///
+    /// # Notes
+    ///
+    /// - Consider split the behavior into a strict and a flexible one padding
+    ///   NaNs beyond the bounds, such as `get()` + `get_padded()`.
     #[allow(dead_code)]
     pub(crate) async fn get(&self, varname: &str) -> Result<ArrayD<T>> {
         trace!("AsyncLazySubset::get(\"{}\")", varname);
