@@ -32,10 +32,6 @@ use zarrs::storage::{AsyncReadableListableStorage, AsyncReadableListableStorageT
 
 use crate::error::{Error, Result};
 
-// ---------------------------------------------------------------------------
-// Element trait
-// ---------------------------------------------------------------------------
-
 /// Marker trait for element types that [`AsyncLazySubset`] can store.
 ///
 /// Implementors must provide a *sentinel* value that represents
