@@ -198,7 +198,7 @@ mod tests {
             error,
             Error::InvalidAlgorithm {
                 value,
-                allowed,
+                ..
             } if value == invalid_value
         ));
     }
