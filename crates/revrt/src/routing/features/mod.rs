@@ -21,10 +21,9 @@
 //! - I believe that there is no restriction from Zarr conventions that
 //!   variables in the store can have different chunk shapes.
 
+mod lazy_subset;
 #[cfg(test)]
 mod samples;
-
-mod lazy_subset;
 
 use std::sync::Arc;
 
