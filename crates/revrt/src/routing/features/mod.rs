@@ -59,10 +59,45 @@ impl Features {
         Ok(Self { storage })
     }
 
-    /// Creates an AsyncLazySubset of Features
+    /// Creates an `AsyncLazySubset` over the requested region
+    ///
+    /// The returned subset provides cached, async access to any variable within
+    /// the specified region. Variables are loaded lazily on first access and
+    /// converted to the requested element type `T` (f32 or f64) regardless of
+    /// their on-disk data type.
+    ///
+    /// No I/O is performed at construction time; data is fetched on the first
+    /// call to [`AsyncLazySubset::get`].
     ///
     /// Intended to support efficient access of [`Features`] such
     /// as for calculating cost functions based on multiple variabels.
+    ///
+    /// # Arguments
+    ///
+    /// * `subset` – The rectangular region to expose, expressed as an
+    ///   [`ArraySubset`]. May extend beyond the source array boundaries;
+    ///   out-of-bounds cells will be filled with `NaN`.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T` – The working element type for the subset. Must implement
+    ///   [`AsyncLazyElement`], which is satisfied by `f32` and `f64`.
+    ///   All on-disk numeric types are converted to `T` via `f64` as
+    ///   a lossless intermediary.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// let features = Features::open("path/to/zarr").unwrap();
+    /// let region = ArraySubset::new_with_start_shape(vec![0, 0], vec![8, 8]).unwrap();
+    ///
+    /// // All variables returned as f32, regardless of on-disk type
+    /// let subset: AsyncLazySubset<f32> = features.lazy_subset(region).await;
+    /// let elevation = subset.get("elevation").await.unwrap();
+    ///
+    /// // Or request f64 for higher precision
+    /// let subset = features.lazy_subset::<f64>(region).await;
+    /// ```
     #[allow(dead_code)]
     pub(super) async fn lazy_subset<T: AsyncLazyElement>(
         &self,
