@@ -70,11 +70,10 @@ impl Features {
 
 #[cfg(test)]
 mod test {
-    use std::sync::Arc;
     use zarrs::array_subset::ArraySubset;
 
+    use super::Features;
     use super::samples::{FeaturesTestBuilder, LayerConfig};
-    use super::*;
 
     /// Verify that `Features::lazy_subset()` produces an `AsyncLazySubset`
     /// that correctly loads data from the underlying store. Tests both a
