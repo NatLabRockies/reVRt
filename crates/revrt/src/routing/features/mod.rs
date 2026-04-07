@@ -30,7 +30,7 @@ use zarrs::storage::AsyncReadableListableStorage;
 use zarrs_object_store::AsyncObjectStore;
 
 use crate::error::Result;
-use lazy_subset::AsyncLazySubset;
+use lazy_subset::{AsyncLazyElement, AsyncLazySubset};
 
 /// Input features used by the cost function.
 ///
@@ -60,8 +60,11 @@ impl Features {
     /// Intended to support efficient access of [`Features`] such
     /// as for calculating cost functions based on multiple variabels.
     #[allow(dead_code)]
-    pub(super) async fn lazy_subset(&self, subset: ArraySubset) -> AsyncLazySubset<f32> {
-        AsyncLazySubset::<f32>::new(Arc::clone(&self.storage), subset)
+    pub(super) async fn lazy_subset<T: AsyncLazyElement>(
+        &self,
+        subset: ArraySubset,
+    ) -> AsyncLazySubset<T> {
+        AsyncLazySubset::<T>::new(Arc::clone(&self.storage), subset)
     }
 }
 
@@ -89,7 +92,7 @@ mod test {
 
         let features = Features::open(tmp.path()).unwrap();
         let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
-        let lazy = features.lazy_subset(subset).await;
+        let lazy = features.lazy_subset::<f32>(subset).await;
 
         let a = lazy.get("A").await.unwrap();
         assert_eq!(a.shape(), &[4, 4]);
@@ -117,7 +120,7 @@ mod test {
 
         let features = Features::open(tmp.path()).unwrap();
         let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![6, 6]).unwrap();
-        let lazy = features.lazy_subset(subset).await;
+        let lazy = features.lazy_subset::<f32>(subset).await;
 
         let data = lazy.get("A").await.unwrap();
         assert_eq!(data.shape(), &[6, 6]);
