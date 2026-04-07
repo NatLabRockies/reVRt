@@ -12,9 +12,14 @@
 //! We also provide the Lazy Subset resource to minimize redundant
 //! I/O. See the module documentation for more details.
 //!
-//! Notes: In the future, migrate lazy_subset to return only valid
-//! arrays and error if requested out of bounds. Then add a support
-//! function that allows out of bounds and pad with NaNs if needed.
+//! Some assumptions to keep in mind:
+//! - AsyncLazySubset must be shareable with concurrent tasks.
+//! - Currently we support a single storage, but we might expand in the future
+//!   to allow combining multiple stores.
+//! - We might have more variables than needed in a store for a particular
+//!   case. So the lazy load on demand can reduce significantly I/O.
+//! - I believe that there is no restriction from Zarr conventions that
+//!   variables in the store can have different chunk shapes.
 
 #[cfg(test)]
 mod samples;
