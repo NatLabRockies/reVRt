@@ -6,6 +6,9 @@ pub enum Error {
     IO(#[from] std::io::Error),
 
     #[error(transparent)]
+    ObjectStore(#[from] object_store::Error),
+
+    #[error(transparent)]
     ZarrsArrayCreate(#[from] zarrs::array::ArrayCreateError),
 
     #[error(transparent)]

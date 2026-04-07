@@ -53,7 +53,7 @@ impl Features {
     pub(super) fn open<P: AsRef<std::path::Path>>(path: P) -> Result<Self> {
         debug!("Opening features at {:?}", path.as_ref());
 
-        let store = LocalFileSystem::new_with_prefix(path).unwrap();
+        let store = LocalFileSystem::new_with_prefix(path)?;
         let storage: AsyncReadableListableStorage = Arc::new(AsyncObjectStore::new(store));
 
         Ok(Self { storage })
