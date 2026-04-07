@@ -67,6 +67,9 @@ impl Features {
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+    use zarrs::array_subset::ArraySubset;
+
     use super::samples::{FeaturesTestBuilder, LayerConfig};
     use super::*;
 
@@ -120,5 +123,75 @@ mod test {
         assert_eq!(data.shape(), &[6, 6]);
         assert_eq!(data[[0, 0]], 1.0);
         assert!(data[[5, 5]].is_nan());
+    }
+
+    /// Validates that an `AsyncLazySubset` obtained from `Features::lazy_subset()`
+    /// can be safely shared across multiple concurrent tokio tasks.
+    ///
+    /// Spawns 8 tasks that simultaneously load two different variables ("A" and "B")
+    /// from the same `AsyncLazySubset` instance, verifying that every task receives
+    /// the correct, identical result for its variable regardless of scheduling order.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn features_lazy_subset_concurrent_access() {
+        use super::samples::{FeaturesTestBuilder, LayerConfig};
+        use std::sync::Arc;
+        use zarrs::array_subset::ArraySubset;
+
+        let (_tmp, _storage) = FeaturesTestBuilder::new()
+            .dimensions(4, 4)
+            .chunks(2, 2)
+            .layer(LayerConfig::constant("A", 5.0))
+            .layer(LayerConfig::sequential("B"))
+            .build()
+            .unwrap();
+
+        let features = Features::open(_tmp.path()).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let lazy = Arc::new(features.lazy_subset(subset).await);
+
+        let handles: Vec<_> = (0..8)
+            .map(|i| {
+                let lazy = Arc::clone(&lazy);
+                let var = if i % 2 == 0 { "A" } else { "B" };
+                let var_owned = var.to_string();
+                tokio::spawn(async move {
+                    let data = lazy.get(&var_owned).await;
+                    (var_owned, data)
+                })
+            })
+            .collect();
+
+        let mut a_results = vec![];
+        let mut b_results = vec![];
+        for h in handles {
+            let (var, data) = h.await.expect("task panicked");
+            let data = data.unwrap();
+            match var.as_str() {
+                "A" => a_results.push(data),
+                "B" => b_results.push(data),
+                _ => panic!("unexpected variable {var}"),
+            }
+        }
+
+        assert_eq!(a_results.len(), 4);
+        assert_eq!(b_results.len(), 4);
+
+        // All A results should be constant 5.0
+        for r in &a_results {
+            assert!(r.iter().all(|&v| v == 5.0));
+        }
+        for r in &a_results[1..] {
+            assert_eq!(r, &a_results[0]);
+        }
+
+        // All B results should be sequential 1..=16
+        let expected_b: Vec<f32> = (1..=16).map(|x| x as f32).collect();
+        for r in &b_results {
+            let flat: Vec<f32> = r.iter().copied().collect();
+            assert_eq!(flat, expected_b);
+        }
+        for r in &b_results[1..] {
+            assert_eq!(r, &b_results[0]);
+        }
     }
 }
