@@ -106,9 +106,19 @@ impl<T: AsyncLazyElement> fmt::Display for AsyncLazySubset<T> {
 
 impl<T: AsyncLazyElement> fmt::Debug for AsyncLazySubset<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let cached_vars = match self.data.try_read() {
+            Ok(cache) => {
+                let mut keys: Vec<&str> = cache.keys().map(|k| k.as_str()).collect();
+                keys.sort();
+                format!("{:?}", keys)
+            }
+            Err(_) => "<locked>".to_string(),
+        };
+
         f.debug_struct("AsyncLazySubset")
             .field("subset", &self.subset)
             .field("element_type", &std::any::type_name::<T>())
+            .field("cached_variables", &cached_vars)
             .finish()
     }
 }
