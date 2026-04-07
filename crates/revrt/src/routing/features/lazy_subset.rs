@@ -43,6 +43,8 @@ use crate::error::{Error, Result};
 pub(crate) trait AsyncLazyElement: ElementOwned + Clone + Send + Sync + 'static {
     /// Value used to fill grid points that fall outside the source array.
     fn nan_value() -> Self;
+    /// Convert from f64 (used as the universal intermediary for type conversion).
+    fn from_f64(v: f64) -> Self;
 }
 
 impl AsyncLazyElement for f32 {
@@ -50,12 +52,20 @@ impl AsyncLazyElement for f32 {
     fn nan_value() -> Self {
         f32::NAN
     }
+    #[inline]
+    fn from_f64(v: f64) -> Self {
+        v as f32
+    }
 }
 
 impl AsyncLazyElement for f64 {
     #[inline]
     fn nan_value() -> Self {
         f64::NAN
+    }
+    #[inline]
+    fn from_f64(v: f64) -> Self {
+        v
     }
 }
 
