@@ -25,7 +25,7 @@ use std::sync::Arc;
 
 use ndarray::{ArrayD, IxDyn, SliceInfoElem};
 use tokio::sync::RwLock;
-use tracing::trace;
+use tracing::{error, trace};
 use zarrs::array::{Array, DataType, ElementOwned};
 use zarrs::array_subset::ArraySubset;
 use zarrs::storage::{AsyncReadableListableStorage, AsyncReadableListableStorageTraits};
@@ -291,7 +291,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     async fn load_variable(&self, varname: &str) -> Result<ArrayD<T>> {
         let array = Array::async_open(self.source.clone(), &format!("/{varname}"))
             .await
-            .map_err(|_err| Error::VariableNotFound(varname.to_string()))?;
+            .inspect_err(|err| error!("Failed to open variable '{}': {}", varname, err))?;
 
         let source_shape = array.shape().to_vec();
         let ndim = source_shape.len();
@@ -437,13 +437,8 @@ mod tests {
         let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
         let lazy = AsyncLazySubset::<f32>::new(Arc::clone(&storage), subset);
 
-        let err = lazy.get("NONEXISTENT").await;
-        assert!(err.is_err());
-        let msg = format!("{}", err.unwrap_err());
-        assert!(
-            msg.contains("NONEXISTENT"),
-            "Error should mention the missing variable name, got: {msg}"
-        );
+        let result = lazy.get("NONEXISTENT").await;
+        assert!(result.is_err(), "Expected an error for missing variable");
     }
 
     /// Subset that extends beyond the source array is padded with NaN.
