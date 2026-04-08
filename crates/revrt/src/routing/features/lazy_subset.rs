@@ -38,16 +38,14 @@ use crate::error::{Error, Result};
 /// out-of-bounds or missing data. For IEEE floats this is `NaN`.
 pub(crate) trait AsyncLazyElement: ElementOwned + Clone + Send + Sync + 'static {
     /// Value used to fill grid points that fall outside the source array.
-    fn nan_value() -> Self;
+    const NAN_VALUE: Self;
     /// Convert from f64 (used as the universal intermediary for type conversion).
     fn from_f64(v: f64) -> Self;
 }
 
 impl AsyncLazyElement for f32 {
-    #[inline]
-    fn nan_value() -> Self {
-        f32::NAN
-    }
+    const NAN_VALUE: f32 = f32::NAN;
+
     #[inline]
     fn from_f64(v: f64) -> Self {
         v as f32
@@ -55,10 +53,8 @@ impl AsyncLazyElement for f32 {
 }
 
 impl AsyncLazyElement for f64 {
-    #[inline]
-    fn nan_value() -> Self {
-        f64::NAN
-    }
+    const NAN_VALUE: f64 = f64::NAN;
+
     #[inline]
     fn from_f64(v: f64) -> Self {
         v
@@ -142,7 +138,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     ///   [`Features::storage`](super::Features::storage)).
     /// * `subset` – The array region to load. May extend beyond the source
     ///   array boundaries; out-of-bounds cells will be filled with
-    ///   [`AsyncLazyElement::nan_value`].
+    ///   [`AsyncLazyElement::NAN_VALUE`].
     #[allow(dead_code)]
     pub(crate) fn new(source: AsyncReadableListableStorage, subset: ArraySubset) -> Self {
         trace!("Creating AsyncLazySubset for subset: {:?}", subset);
@@ -166,7 +162,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     /// cache without any I/O.
     ///
     /// If the subset extends beyond the source array's shape, the
-    /// out-of-bounds cells are filled with [`AsyncLazyElement::nan_value`].
+    /// out-of-bounds cells are filled with [`AsyncLazyElement::NAN_VALUE`].
     ///
     /// # Errors
     ///
@@ -289,7 +285,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     }
 
     /// Load a variable for this view's subset, padding with
-    /// [`AsyncLazyElement::nan_value`] where the subset exceeds the source
+    /// [`AsyncLazyElement::NAN_VALUE`] where the subset exceeds the source
     /// array boundaries.
     ///
     /// Delegates the actual I/O to [`retrieve_subset`](Self::retrieve_subset),
@@ -334,7 +330,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
                 "Subset for \"{}\" is fully outside source bounds; returning all-NaN",
                 varname
             );
-            return Ok(ArrayD::<T>::from_elem(IxDyn(&out_shape), T::nan_value()));
+            return Ok(ArrayD::<T>::from_elem(IxDyn(&out_shape), T::NAN_VALUE));
         }
 
         // Fast path: the requested subset fits entirely inside the source.
@@ -368,7 +364,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
 
         // Build the output, pre-filled with the sentinel.
         let out_shape: Vec<usize> = subset_shape.iter().map(|&d| d as usize).collect();
-        let mut output = ArrayD::<T>::from_elem(IxDyn(&out_shape), T::nan_value());
+        let mut output = ArrayD::<T>::from_elem(IxDyn(&out_shape), T::NAN_VALUE);
 
         // Place loaded data into the top-left corner of the output
         // (offset is always [0, …, 0] since ArraySubset start is u64).
