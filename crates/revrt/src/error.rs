@@ -20,10 +20,6 @@ pub enum Error {
     #[error(transparent)]
     ZarrsStorage(#[from] zarrs::storage::StorageError),
 
-    #[error("Variable not found: '{0}'")]
-    /// The requested variable does not exist.
-    VariableNotFound(String),
-
     /// Tried to read data, such as input features, with unsupported
     /// data type.
     #[error("Unsupported data type '{0}' for variable '{1}'")]
