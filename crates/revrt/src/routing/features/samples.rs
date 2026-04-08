@@ -276,8 +276,10 @@ impl FeaturesTestBuilder {
 
         let flat = self.generate_flat(&config.fill)?;
         let shape = (self.ni as usize, self.nj as usize);
-        let subset =
-            ArraySubset::new_with_ranges(&[0..(self.ni / self.ci), 0..(self.nj / self.cj)]);
+        let subset = ArraySubset::new_with_ranges(&[
+            0..self.ni.div_ceil(self.ci),
+            0..self.nj.div_ceil(self.cj),
+        ]);
 
         macro_rules! store_as {
             ($T:ty) => {{
