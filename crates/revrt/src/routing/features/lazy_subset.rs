@@ -218,10 +218,16 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
     /// subset's element type `T`.
     ///
     /// The on-disk data type is inspected at runtime and the raw values are
-    /// read as their native type, then converted to `T` via `f64` as a
-    /// lossless intermediary. This allows a single `AsyncLazySubset<f32>`
-    /// (or `<f64>`) to transparently consume variables stored as any of the
-    /// supported numeric types: f32, f64, i16, i32, i64, u8, u16, u32.
+    /// read as their native type, then converted to `T` via `f64` as an
+    /// intermediary. This allows a single `AsyncLazySubset<f32>` (or `<f64>`)
+    /// to transparently consume variables stored as any of the supported
+    /// numeric types: f32, f64, i16, i32, i64, u8, u16, u32.
+    ///
+    /// Using `f64` as the intermediary is exact for all integer types up to
+    /// 53 bits of magnitude (i.e. i16, i32, u8, u16, u32). For i64 and u64,
+    /// values exceeding 2^53 may lose precision during the conversion.
+    /// The final `f64 → f32` step (when `T` is f32) further truncates to
+    /// 23 bits of mantissa, so large i32 or u32 values may also round.
     ///
     /// **Precondition**: `subset` must not extend beyond the array's shape.
     /// Violating this will surface a Zarr-level error, not silent corruption.
