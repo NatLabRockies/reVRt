@@ -33,8 +33,8 @@ classifiers=[
 ]
 dependencies = [
   "affine>=2.4.0,<3",
-  "dask>=2025.4.1,<2026",
-  "distributed>=2025.4.1,<2026",
+  "dask>=2026.3.0,<2027",
+  "distributed>=2026.3.0,<2027",
   "fiona>=1.10.1,<2",
   "geopandas>=1.0.1,<2",
   "numpy>=2.2.4,<3",
@@ -259,8 +259,8 @@ python = ">=3.11"
 rust = ">=1.94.0,<1.95"
 # package
 affine = ">=2.4.0,<3"
-dask = ">=2025.4.1,<2026"
-distributed = ">=2025.4.1,<2026"
+dask = ">=2026.3.0,<2027"
+distributed = ">=2026.3.0,<2027"
 fiona = ">=1.10.1,<2"
 geopandas = ">=1.0.1,<2"
 numpy = ">=2.2.4,<3"
