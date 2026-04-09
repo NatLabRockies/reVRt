@@ -128,7 +128,7 @@ impl Dataset {
         if shape.len() < 3 {
             return Err(Error::InvalidDatasetShape {
                 variable: varname.to_string(),
-                expected_rank: 3,
+                min_rank: 3,
                 shape: shape.to_vec(),
             });
         }
@@ -550,7 +550,7 @@ mod tests {
             error,
             Error::InvalidDatasetShape {
                 variable,
-                expected_rank: 3,
+                min_rank: 3,
                 shape,
             } if variable == "A" && shape == vec![3, 4]
         ));

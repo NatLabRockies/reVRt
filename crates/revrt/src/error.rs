@@ -40,11 +40,11 @@ pub enum Error {
     },
 
     #[error(
-        "Invalid dataset shape for variable {variable:?}: expected at least {expected_rank} dimensions but found shape {shape:?}"
+        "Invalid dataset shape for variable {variable:?}: expected at least {min_rank} dimensions but found shape {shape:?}"
     )]
     InvalidDatasetShape {
         variable: String,
-        expected_rank: usize,
+        min_rank: usize,
         shape: Vec<u64>,
     },
 
