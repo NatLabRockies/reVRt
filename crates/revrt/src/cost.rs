@@ -320,7 +320,15 @@ mod test {
     use zarrs::storage::ReadableListableStorage;
 
     fn make_features_for_costs_tests() -> (tempfile::TempDir, LazySubset<f32>) {
-        let tmp = samples::multi_variable_zarr();
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 8, 8)
+            .chunks(1, 4, 4)
+            .layer(samples::LayerConfig::random("A", 0.0, 1.0))
+            .layer(samples::LayerConfig::random("B", 0.0, 1.0))
+            .layer(samples::LayerConfig::random("C", 0.0, 1.0))
+            .layer(samples::LayerConfig::random("cost", 0.0, 1.0))
+            .build()
+            .expect("Failed to create multi-variable zarr");
         let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
         (tmp, make_lazy_subset_for_tests(store, subset))

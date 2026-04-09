@@ -109,7 +109,8 @@ mod tests {
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
     fn minimalist(algorithm: &str) {
-        let store_path = dataset::samples::multi_variable_zarr();
+        let store_path =
+            dataset::samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = cost::sample::cost_function();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: 2, j: 3 }];
@@ -140,7 +141,7 @@ mod tests {
         expected_cost: f32,
         algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.0);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -163,7 +164,7 @@ mod tests {
         expected_cost: f32,
         algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.0);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -196,7 +197,7 @@ mod tests {
         cost_array_fill: f32,
         algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(cost_array_fill);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, cost_array_fill);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -224,7 +225,7 @@ mod tests {
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
     fn routing_many_to_many(algorithm: &str) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -257,7 +258,7 @@ mod tests {
     #[test_case("dijkstra"; "dijkstra")]
     #[test_case("long-range-dijkstra"; "long-range")]
     fn routing_many_to_one(algorithm: &str) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -277,57 +278,22 @@ mod tests {
     #[test_case("dijkstra"; "dijkstra")]
     #[test_case("long-range-dijkstra"; "long-range")]
     fn test_routing_along_boundary(algorithm: &str) {
-        use ndarray::Array3;
-
-        let (ni, nj) = (4, 4);
-        let (ci, cj) = (2, 2);
-
-        let store_path = tempfile::TempDir::new().unwrap();
-
-        let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
-            zarrs::filesystem::FilesystemStore::new(store_path.path())
-                .expect("could not open filesystem store"),
-        );
-
-        zarrs::group::GroupBuilder::new()
-            .build(store.clone(), "/")
-            .unwrap()
-            .store_metadata()
-            .unwrap();
-
-        let array = zarrs::array::ArrayBuilder::new(
-            vec![1, ni, nj], // array shape
-            vec![1, ci, cj], // regular chunk shape
-            zarrs::array::DataType::Float32,
-            zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
-        )
-        .dimension_names(["band", "y", "x"].into())
-        .build(store.clone(), "/cost")
-        .unwrap();
-
-        // Write array metadata to store
-        array.store_metadata().unwrap();
+        use dataset::samples;
 
         #[rustfmt::skip]
         let a = vec![1., 50.,  1., 1.,
                      1., 50., 50., 1.,
                      1., 50., 50., 1.,
                      1.,  1.,  1., 1.];
-
-        let data: Array3<f32> =
-            ndarray::Array::from_shape_vec((1, ni.try_into().unwrap(), nj.try_into().unwrap()), a)
-                .unwrap();
-
-        array
-            .store_chunks_ndarray(
-                &zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    0..(ni / ci),
-                    0..(nj / cj),
-                ]),
-                data,
-            )
-            .unwrap();
+        let store_path = samples::ZarrTestBuilder::new()
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::new(
+                "cost",
+                samples::FillStrategy::Values(a),
+            ))
+            .build()
+            .expect("failed to build zarr test dataset");
 
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();

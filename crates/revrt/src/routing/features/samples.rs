@@ -390,7 +390,7 @@ pub(crate) fn single_ones_layer(
 
 /// Classic three-layer setup (`A`, `B`, `C`) filled with sequential values.
 ///
-/// Mirrors the spirit of `multi_variable_zarr` from the dataset samples,
+/// Mirrors the spirit of `multi_variable_random` from the dataset samples,
 /// but uses predictable deterministic values.
 pub(crate) fn multi_variable_sequential(
     ni: u64,

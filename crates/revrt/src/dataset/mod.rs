@@ -468,7 +468,7 @@ mod tests {
 
     #[test]
     fn test_simple_cost_function_get_3x3() {
-        let tmp = samples::multi_variable_zarr();
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
         let dataset =
@@ -518,6 +518,8 @@ mod tests {
 
     #[test]
     fn test_open_rejects_representative_variable_with_too_few_dimensions() {
+        // Cannot use `ZarrTestBuilder` here because we need to purposely
+        // build an incorrectly formatted dataset
         let tmp_path = tempfile::TempDir::new().unwrap();
         let store: ReadableWritableListableStorage =
             Arc::new(FilesystemStore::new(tmp_path.path()).unwrap());
@@ -558,7 +560,7 @@ mod tests {
 
     #[test]
     fn test_simple_invariant_cost_function_get_3x3() {
-        let tmp = samples::multi_variable_zarr();
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = CostFunction::from_json(
             r#"{"cost_layers": [{"layer_name": "A", "is_invariant": true}]}"#,
         )
@@ -588,7 +590,7 @@ mod tests {
 
     #[test]
     fn test_sample_cost_function_get_3x3() {
-        let tmp = samples::multi_variable_zarr();
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = crate::cost::sample::cost_function();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
@@ -672,7 +674,7 @@ mod tests {
 
     #[test]
     fn test_get_3x3_single_item_array() {
-        let tmp = samples::cost_as_index_zarr((1, 1), (1, 1));
+        let tmp = samples::cost_as_index_zarr(1, 1, 1, 1, 1, 1);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
@@ -695,7 +697,7 @@ mod tests {
     #[test_case((1, 0), vec![(0, 1, 1.5 * SQRT_2), (1, 1, 2.5)] ; "bottom left corner")]
     #[test_case((1, 1), vec![(0, 1, 2.), (1, 0, 2.5)] ; "bottom right corner")]
     fn test_get_3x3_two_by_two_array((si, sj): (u64, u64), expected_output: Vec<(u64, u64, f32)>) {
-        let tmp = samples::cost_as_index_zarr((2, 2), (2, 2));
+        let tmp = samples::cost_as_index_zarr(1, 2, 2, 1, 2, 2);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
@@ -732,7 +734,7 @@ mod tests {
         (si, sj): (u64, u64),
         expected_output: Vec<(u64, u64, f32)>,
     ) {
-        let tmp = samples::cost_as_index_zarr((3, 3), (3, 3));
+        let tmp = samples::cost_as_index_zarr(1, 3, 3, 1, 3, 3);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
@@ -772,7 +774,7 @@ mod tests {
         (si, sj): (u64, u64),
         expected_output: Vec<(u64, u64, f32)>,
     ) {
-        let tmp = samples::cost_as_index_zarr((4, 4), (2, 2));
+        let tmp = samples::cost_as_index_zarr(1, 4, 4, 1, 2, 2);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
@@ -811,7 +813,14 @@ mod tests {
         }
         "#;
 
-        let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0.2_f32, 10.0_f32);
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::constant("B", 0.2_f32))
+            .layer(samples::LayerConfig::constant("C", 10.0_f32))
+            .build()
+            .expect("Error creating test zarr");
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
@@ -885,7 +894,14 @@ mod tests {
     #[test_case(r#"{"cost_layers": [{"layer_name": "B"}], "ignore_invalid_costs": true}"# ; "zero layer")]
     #[test_case(r#"{"cost_layers": [{"layer_name": "C"}], "ignore_invalid_costs": true}"# ; "negative layer")]
     fn test_get_3x3_with_hard_barriered_layers(json: &str) {
-        let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0_f32, -1_f32);
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::constant("B", 0_f32))
+            .layer(samples::LayerConfig::constant("C", -1_f32))
+            .build()
+            .expect("Error creating test zarr");
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
@@ -900,7 +916,14 @@ mod tests {
     #[test_case(r#"{"cost_layers": [{"layer_name": "B"}], "ignore_invalid_costs": false}"# ; "zero layer")]
     #[test_case(r#"{"cost_layers": [{"layer_name": "C"}], "ignore_invalid_costs": false}"# ; "negative layer")]
     fn test_get_3x3_with_soft_barrier_layers(json: &str) {
-        let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0_f32, -1_f32);
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::constant("B", 0_f32))
+            .layer(samples::LayerConfig::constant("C", -1_f32))
+            .build()
+            .expect("Error creating test zarr");
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
