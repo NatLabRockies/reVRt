@@ -30,8 +30,8 @@ pub(crate) enum FillStrategy {
     Sequential(u64),
     /// Fill with random values in range [min, max]
     Random(f32, f32),
-    /// Fill with custom function: (row, col) -> value
-    Custom(fn(u64, u64) -> f32),
+    /// Fill with custom function: (band, row, col) -> value
+    Custom(fn(u64, u64, u64) -> f32),
     /// Fill with provided vector
     Values(Vec<f32>),
 }
@@ -72,7 +72,7 @@ impl LayerConfig {
     }
 
     /// Create a custom-filled layer
-    pub(crate) fn custom(name: impl Into<String>, fill_fn: fn(u64, u64) -> f32) -> Self {
+    pub(crate) fn custom(name: impl Into<String>, fill_fn: fn(u64, u64, u64) -> f32) -> Self {
         Self::new(name, FillStrategy::Custom(fill_fn))
     }
 
@@ -94,8 +94,8 @@ impl LayerConfig {
 /// use dataset::samples::{ZarrTestBuilder, LayerConfig, FillStrategy};
 ///
 /// let store = ZarrTestBuilder::new()
-///     .dimensions(8, 8)
-///     .chunks(4, 4)
+///     .dimensions(1, 8, 8)
+///     .chunks(1, 4, 4)
 ///     .layer(LayerConfig::ones("A"))
 ///     .layer(LayerConfig::sequential("B"))
 ///     .layer(LayerConfig::constant("C", 5.0))
@@ -146,7 +146,7 @@ impl ZarrTestBuilder {
         }
     }
 
-    /// Set array dimensions (rows, columns)
+    /// Set array dimensions (bands, rows, columns)
     pub(crate) fn dimensions(mut self, nb: u64, ni: u64, nj: u64) -> Self {
         self.nb = nb;
         self.ni = ni;
@@ -154,7 +154,7 @@ impl ZarrTestBuilder {
         self
     }
 
-    /// Set chunk dimensions (rows, columns)
+    /// Set chunk dimensions (bands, rows, columns)
     pub(crate) fn chunks(mut self, cb: u64, ci: u64, cj: u64) -> Self {
         self.cb = cb;
         self.ci = ci;
@@ -234,7 +234,7 @@ impl ZarrTestBuilder {
 
         // Write data
         let subset = ArraySubset::new_with_ranges(&[
-            0..self.nb,
+            0..(self.nb / self.cb),
             0..(self.ni / self.ci),
             0..(self.nj / self.cj),
         ]);
@@ -249,7 +249,7 @@ impl ZarrTestBuilder {
         &self,
         fill: &FillStrategy,
     ) -> Result<Array3<f32>, Box<dyn std::error::Error>> {
-        let size = (self.ni * self.nj) as usize;
+        let size = (self.nb * self.ni * self.nj) as usize;
         let values = match fill {
             FillStrategy::Constant(val) => vec![*val; size],
 
@@ -264,9 +264,11 @@ impl ZarrTestBuilder {
 
             FillStrategy::Custom(func) => {
                 let mut values = Vec::with_capacity(size);
-                for i in 0..self.ni {
-                    for j in 0..self.nj {
-                        values.push(func(i, j));
+                for b in 0..self.nb {
+                    for i in 0..self.ni {
+                        for j in 0..self.nj {
+                            values.push(func(b, i, j));
+                        }
                     }
                 }
                 values
@@ -314,7 +316,7 @@ pub(crate) fn uniform_ones_cost_zarr(
         .expect("Failed to create uniform cost zarr")
 }
 
-/// Quick builder for uniform cost surfaces (custom cost)
+/// Quick builder for indexed/sequential cost surfaces (custom cost)
 pub(crate) fn cost_as_index_zarr(nb: u64, ni: u64, nj: u64, cb: u64, ci: u64, cj: u64) -> TempDir {
     ZarrTestBuilder::new()
         .shape(nb, ni, nj, cb, ci, cj)
@@ -460,7 +462,9 @@ mod tests {
         let sample = ZarrTestBuilder::new()
             .dimensions(1, 4, 4)
             .chunks(1, 2, 2)
-            .layer(LayerConfig::custom("custom", |i, j| (i * 10 + j) as f32))
+            .layer(LayerConfig::custom("custom", |b, i, j| {
+                (b * 100 + i * 10 + j) as f32
+            }))
             .build()
             .unwrap();
 
