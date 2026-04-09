@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775707845735,
+  "lastUpdate": 1775712322843,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -7559,6 +7559,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 363105613,
             "range": "± 5429328",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "89b6c7221afb7cb7169c20bad346db603f8300a5",
+          "message": "Spill finalized nodes to disk (#236)\n\n* testing\n\n* Use bounded for par routing\n\n* Update cost module\n\n* Add swap\n\n* Add utilities\n\n* Import module\n\n* Update mod\n\n* Add `MemoryBoundedSearchState` with spillable processed nodes\n\n* Update algo\n\n* Add long range\n\n* Add budgeting struct\n\n* Add module\n\n* Rename module\n\n* Delete unused module\n\n* Minor docs\n\n* Rename\n\n* Some cleanup\n\n* Add debug\n\n* Compute capacity base don memory budget\n\n* Set a per-worker memory budget\n\n* Rename parameter and split memory appropriately\n\n* formatting\n\n* Rename\n\n* Add new error\n\n* Add new error to Python\n\n* Add new input parameter\n\n* Add from str\n\n* Add back in \"dijkstra\" initialization\n\n* Add \"from selection\"\n\n* Tests and imports\n\n* Bubble-up algorithm parameter\n\n* Fix calls\n\n* Update tests\n\n* Remove unused const\n\n* Update docstrings\n\n* Pass new option down\n\n* Pass algo to Rust\n\n* Tests\n\n* Add new error\n\n* Use new error\n\n* Add back in accidentally deleted code\n\n* Fix log message\n\n* Fix docstrings\n\n* Fix typo\n\n* Fix docstring\n\n* Add log\n\n* Add logging\n\n* Lower ratio\n\n* Rename variable\n\n* Remove verbose logging\n\n* Add logger statement\n\n* Fix benchmark code\n\n* Fix linter\n\n* Update confusing var name\n\n* Rename algorithm\n\n* FInish renaming algorithm",
+          "timestamp": "2026-04-08T23:01:49-06:00",
+          "tree_id": "0be1c461c805848682b592252520b6212410f13e",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/89b6c7221afb7cb7169c20bad346db603f8300a5"
+        },
+        "date": 1775712321752,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 76815121,
+            "range": "± 1143166",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 81250246,
+            "range": "± 1019119",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 104008868,
+            "range": "± 2044693",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 153264988,
+            "range": "± 2845173",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 649161526,
+            "range": "± 12307044",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 143614994,
+            "range": "± 2477234",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 148484177,
+            "range": "± 743676",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 162122881,
+            "range": "± 1081043",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 208540329,
+            "range": "± 2516665",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 381574160,
+            "range": "± 3425948",
             "unit": "ns/iter"
           }
         ]
