@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn sample() {
-        let path = samples::multi_variable_zarr();
+        let path = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let store: ReadableListableStorage =
             Arc::new(zarrs::filesystem::FilesystemStore::new(&path).unwrap());
 
