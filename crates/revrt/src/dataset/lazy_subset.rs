@@ -392,7 +392,7 @@ mod tests_async {
         let tmp = ZarrTestBuilder::new()
             .dimensions(1, 4, 4)
             .chunks(1, 2, 2)
-            .layer(LayerConfig::sequential("A"))
+            .layer(LayerConfig::sequential("A", 1))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());
@@ -443,7 +443,7 @@ mod tests_async {
         let tmp = ZarrTestBuilder::new()
             .dimensions(1, 4, 4)
             .chunks(1, 2, 2)
-            .layer(LayerConfig::sequential("A"))
+            .layer(LayerConfig::sequential("A", 1))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());
@@ -504,7 +504,7 @@ mod tests_async {
         let tmp = ZarrTestBuilder::new()
             .dimensions(1, 4, 4)
             .chunks(1, 2, 2)
-            .layer(LayerConfig::sequential("A"))
+            .layer(LayerConfig::sequential("A", 1))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());

@@ -811,7 +811,14 @@ mod tests {
         }
         "#;
 
-        let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0.2_f32, 10.0_f32);
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::constant("B", 0.2_f32))
+            .layer(samples::LayerConfig::constant("C", 10.0_f32))
+            .build()
+            .expect("Error creating test zarr");
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
@@ -885,7 +892,14 @@ mod tests {
     #[test_case(r#"{"cost_layers": [{"layer_name": "B"}], "ignore_invalid_costs": true}"# ; "zero layer")]
     #[test_case(r#"{"cost_layers": [{"layer_name": "C"}], "ignore_invalid_costs": true}"# ; "negative layer")]
     fn test_get_3x3_with_hard_barriered_layers(json: &str) {
-        let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0_f32, -1_f32);
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::constant("B", 0_f32))
+            .layer(samples::LayerConfig::constant("C", -1_f32))
+            .build()
+            .expect("Error creating test zarr");
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
@@ -900,7 +914,14 @@ mod tests {
     #[test_case(r#"{"cost_layers": [{"layer_name": "B"}], "ignore_invalid_costs": false}"# ; "zero layer")]
     #[test_case(r#"{"cost_layers": [{"layer_name": "C"}], "ignore_invalid_costs": false}"# ; "negative layer")]
     fn test_get_3x3_with_soft_barrier_layers(json: &str) {
-        let tmp = samples::specific_layers_zarr((3, 3), (3, 3), 0_f32, -1_f32);
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::constant("B", 0_f32))
+            .layer(samples::LayerConfig::constant("C", -1_f32))
+            .build()
+            .expect("Error creating test zarr");
         let cost_function = CostFunction::from_json(json).unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");

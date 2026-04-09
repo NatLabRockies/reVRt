@@ -26,8 +26,8 @@ use zarrs_object_store::AsyncObjectStore;
 pub(crate) enum FillStrategy {
     /// Fill with constant value
     Constant(f32),
-    /// Fill with sequential values starting from 1
-    Sequential,
+    /// Fill with sequential values starting from the input value
+    Sequential(u64),
     /// Fill with random values in range [min, max]
     Random(f32, f32),
     /// Fill with custom function: (row, col) -> value
@@ -62,8 +62,8 @@ impl LayerConfig {
     }
 
     /// Create a sequentially-filled layer
-    pub(crate) fn sequential(name: impl Into<String>) -> Self {
-        Self::new(name, FillStrategy::Sequential)
+    pub(crate) fn sequential(name: impl Into<String>, start: u64) -> Self {
+        Self::new(name, FillStrategy::Sequential(start))
     }
 
     /// Create a randomly-filled layer
@@ -253,7 +253,9 @@ impl ZarrTestBuilder {
         let values = match fill {
             FillStrategy::Constant(val) => vec![*val; size],
 
-            FillStrategy::Sequential => (0..size).map(|x| x as f32).collect(),
+            FillStrategy::Sequential(offset) => ((0 + offset)..(size as u64 + offset))
+                .map(|x| x as f32)
+                .collect(),
 
             FillStrategy::Random(min, max) => {
                 let mut rng = rand::rng();
@@ -316,7 +318,7 @@ pub(crate) fn uniform_ones_cost_zarr(
 pub(crate) fn cost_as_index_zarr(nb: u64, ni: u64, nj: u64, cb: u64, ci: u64, cj: u64) -> TempDir {
     ZarrTestBuilder::new()
         .shape(nb, ni, nj, cb, ci, cj)
-        .layer(LayerConfig::sequential("cost"))
+        .layer(LayerConfig::sequential("cost", 0))
         .build()
         .expect("Failed to create uniform cost zarr")
 }
@@ -379,12 +381,13 @@ pub(crate) fn sequential_layers(
     cb: u64,
     ci: u64,
     cj: u64,
+    start: u64,
     layers: &[&str],
 ) -> TempDir {
     let mut builder = ZarrTestBuilder::new().shape(nb, ni, nj, cb, ci, cj);
 
     for &layer_name in layers {
-        builder = builder.layer(LayerConfig::sequential(layer_name));
+        builder = builder.layer(LayerConfig::sequential(layer_name, start));
     }
 
     builder.build().expect("Failed to create sequential zarr")
@@ -416,84 +419,9 @@ pub(crate) fn preset_large() -> ZarrTestBuilder {
 /// Preset: Standard cost surface setup (A, B, C layers)
 pub(crate) fn preset_cost_surface() -> ZarrTestBuilder {
     ZarrTestBuilder::new()
-        .layer(LayerConfig::sequential("A"))
+        .layer(LayerConfig::sequential("A", 1))
         .layer(LayerConfig::constant("B", 2.0))
         .layer(LayerConfig::ones("C"))
-}
-
-// ============================================================================
-// Old approach. This will be eventually deprecated
-// ============================================================================
-
-// // //! Dataset samples for tests and demonstrations
-
-/// Create a zarr store with specific layers for testing
-///
-/// The specific layers that are added are cost (values are index 1-9),
-/// friction (via user-specified values), and length-invariant layers
-/// (via user-specified values). The layer mapping is as follows:
-/// /A: cost layer
-/// /B: friction layer
-/// /C: length-invariant layer
-pub(crate) fn specific_layers_zarr(
-    (ni, nj): (u64, u64),
-    (ci, cj): (u64, u64),
-    friction_layer_weight: f32,
-    invariant_layer_cost: f32,
-) -> TempDir {
-    let tmp_path = TempDir::new().unwrap();
-
-    let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
-        zarrs::filesystem::FilesystemStore::new(tmp_path.path())
-            .expect("could not open filesystem store"),
-    );
-
-    zarrs::group::GroupBuilder::new()
-        .build(store.clone(), "/")
-        .unwrap()
-        .store_metadata()
-        .unwrap();
-
-    // A: 1..=9
-    let a_vals: Vec<f32> = (1..=(ni * nj)).map(|x| x as f32).collect();
-    let a_data: Array3<f32> =
-        ndarray::Array::from_shape_vec((1, ni.try_into().unwrap(), nj.try_into().unwrap()), a_vals)
-            .unwrap();
-
-    // B: friction weights, make uniform so center and neighbors share same friction
-    let b_vals: Vec<f32> = vec![friction_layer_weight; ni as usize * nj as usize];
-    let b_data: Array3<f32> =
-        ndarray::Array::from_shape_vec((1, ni.try_into().unwrap(), nj.try_into().unwrap()), b_vals)
-            .unwrap();
-
-    // C: invariant layer, constant value 10.0
-    let c_vals: Vec<f32> = vec![invariant_layer_cost; ni as usize * nj as usize];
-    let c_data: Array3<f32> =
-        ndarray::Array::from_shape_vec((1, ni.try_into().unwrap(), nj.try_into().unwrap()), c_vals)
-            .unwrap();
-
-    for (path, data) in [("/A", a_data), ("/B", b_data), ("/C", c_data)] {
-        let array = zarrs::array::ArrayBuilder::new(
-            vec![1, ni, nj], // array shape
-            vec![1, ci, cj], // regular chunk shape
-            zarrs::array::DataType::Float32,
-            zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
-        )
-        .dimension_names(["band", "y", "x"].into())
-        .build(store.clone(), path)
-        .unwrap();
-
-        array.store_metadata().unwrap();
-
-        array
-            .store_chunks_ndarray(
-                &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, 0..1, 0..1]),
-                data,
-            )
-            .unwrap();
-    }
-
-    tmp_path
 }
 
 /// Wrap any on-disk sample path in an `AsyncReadableListableStorage`.
@@ -532,7 +460,7 @@ mod tests {
             .dimensions(1, 8, 8)
             .chunks(1, 4, 4)
             .layer(LayerConfig::ones("A"))
-            .layer(LayerConfig::sequential("B"))
+            .layer(LayerConfig::sequential("B", 1))
             .layer(LayerConfig::constant("C", 5.0))
             .build()
             .unwrap();
