@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775687311402,
+  "lastUpdate": 1775694335957,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -7391,6 +7391,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 369999547,
             "range": "± 6210639",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "14054f3ea666bb92682fef13f5eb6a92e2d99e2a",
+          "message": "Features: Split from Dataset (#222)\n\n* refact: features as a directory module\n\n* feat: Samples for Features\n\n* refact: Features::open()\n\nSince Features is read-only, open() is makes more sense than new().\n\n* style:\n\n* cfg: Allow unused FeatureDataType for now\n\n* cfg: Allow testing with approx 3.14\n\n* style: Avoid known constant\n\nWe want a trucated float, so let's avoid knwon constants to avoid\nwarnings.\n\n* cfg: Keeping `zeros()` for now\n\nI might want to remove it later if I indeed don't use it.\n\n* cfg: Updating random trait on latest Rust\n\n* doc: Module features\n\n* feat: AsyncLazySubset prototype\n\n* feat: Expose AsyncLazySubset from Features\n\n* test: Features.lazy_subset()\n\n* test, clean: Removing legacy test\n\nIt's not useful anymore with the specific subset ones.\n\n* feat: Error type - VariableNotFound\n\n* refact: Removing support to i32\n\nThere is no real benefit on having lazy subsets of i32.\n\n* cfg: Allowing dead_code while under development\n\n* doc: Improving text\n\n* doc: Guidance for future development\n\n* doc: Improving docs and fixing typos\n\n* test: features_lazy_subset_concurrent_access()\n\nValidate concurrent multiple access to lazy_subset from Features.\n\n* refact: Building AsyncLazySubset types f32 or f64\n\n* clean:\n\n* feat: Introducing new error UnsupportedDataType\n\n* feat: Extending AsyncLazyElement with `from_f64`\n\n* feat: Read multiple data types and normlize subset data type\n\n* clean:\n\n* feat: Extending Debug for AsyncLazySubset to list cached variables\n\n* doc: Ideas for the future\n\nWe might benefit from using Arc of data to avoid cloning full arrays on\nevery get().\n\n* doc: Design ideas for the future\n\n* doc: Design considerations\n\n* style:\n\n* doc: Improving documentation for Features.lazy_subset()\n\n* doc, fix: Ignoring example\n\nIt would defeat the purpose of a simple example on how to use if we have\nto satisfy all the requirements to actually run it.\n\n* feat: Exposing object_store errrors (transparent)\n\n* typo:\n\n* typo:\n\n* refact: Transmit the original error when missing a variable\n\n* clean: Don't need anymore VariableNotFound\n\n* doc, fix: Correcting documentation of `retireve_subset()`\n\n* fix: Avoid range from zero to zero\n\n* refact: Using a constant instead of `nan_value()`\n\nAs suggested by @ppinchuk.",
+          "timestamp": "2026-04-08T18:12:52-06:00",
+          "tree_id": "61df183187eedf2f256b6248fbd10d6cba2cea20",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/14054f3ea666bb92682fef13f5eb6a92e2d99e2a"
+        },
+        "date": 1775694335336,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 69079884,
+            "range": "± 1321519",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 57829930,
+            "range": "± 1327343",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 92777965,
+            "range": "± 2724325",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 141783039,
+            "range": "± 2557786",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 607889792,
+            "range": "± 15909858",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 152776503,
+            "range": "± 1247950",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 158247880,
+            "range": "± 2212269",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 170805978,
+            "range": "± 1459439",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 212261395,
+            "range": "± 4892191",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 361115422,
+            "range": "± 3794736",
             "unit": "ns/iter"
           }
         ]
