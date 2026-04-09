@@ -49,10 +49,12 @@ impl From<Error> for PyErr {
     fn from(err: Error) -> PyErr {
         match err {
             Error::IO(msg) => PyIOError::new_err(msg),
+            Error::ObjectStore(_) => todo!(),
             Error::ZarrsArrayCreate(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsArray(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsStorage(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsGroupCreate(e) => PyIOError::new_err(e.to_string()),
+            Error::UnsupportedDataType(_, _) => todo!(),
             Error::Undefined(msg) => revrtRustError::new_err(msg),
             invalid_dataset_shape @ Error::InvalidDatasetShape { .. } => {
                 PyValueError::new_err(invalid_dataset_shape.to_string())
