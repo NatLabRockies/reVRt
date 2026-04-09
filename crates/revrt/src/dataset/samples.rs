@@ -620,7 +620,7 @@ pub(crate) fn specific_layers_zarr(
 ///
 /// # Example
 /// ```rust
-/// let tmp = samples::multi_variable_zarr();
+/// let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
 /// let source = samples::async_storage_for(tmp.path());
 /// ```
 #[cfg(test)]
