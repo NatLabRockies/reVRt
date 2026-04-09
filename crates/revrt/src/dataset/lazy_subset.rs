@@ -370,18 +370,18 @@ mod tests_async {
     #[tokio::test]
     async fn get_returns_correct_shape_and_values() {
         let tmp = ZarrTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
             .layer(LayerConfig::constant("A", 3.0))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());
 
-        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 4, 4]).unwrap();
         let lazy = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset);
 
         let data = lazy.get("A").await.unwrap();
-        assert_eq!(data.shape(), &[4, 4]);
+        assert_eq!(data.shape(), &[1, 4, 4]);
         assert!(data.iter().all(|&v| v == 3.0));
     }
 
@@ -390,14 +390,14 @@ mod tests_async {
     #[tokio::test]
     async fn get_same_variable_twice_is_identical() {
         let tmp = ZarrTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());
 
-        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 4, 4]).unwrap();
         let lazy = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset);
 
         let first = lazy.get("A").await.unwrap();
@@ -418,15 +418,15 @@ mod tests_async {
     #[tokio::test]
     async fn two_instances_shared_source_join() {
         let tmp = ZarrTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
             .layer(LayerConfig::constant("A", 1.0))
             .layer(LayerConfig::constant("B", 2.0))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());
 
-        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 4, 4]).unwrap();
         let lazy_a = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset.clone());
         let lazy_b = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset);
 
@@ -441,14 +441,14 @@ mod tests_async {
     #[tokio::test]
     async fn two_instances_same_layer_join_are_identical() {
         let tmp = ZarrTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());
 
-        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 4, 4]).unwrap();
         let lazy_a = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset.clone());
         let lazy_b = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset);
 
@@ -470,14 +470,14 @@ mod tests_async {
     #[tokio::test(flavor = "multi_thread")]
     async fn many_instances_parallel_spawn_shared_source() {
         let tmp = ZarrTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
             .layer(LayerConfig::constant("A", 5.0))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());
 
-        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 4, 4]).unwrap();
 
         let handles: Vec<_> = (0..4)
             .map(|_| {
@@ -491,7 +491,7 @@ mod tests_async {
 
         for handle in handles {
             let data = handle.await.expect("task panicked").unwrap();
-            assert_eq!(data.shape(), &[4, 4]);
+            assert_eq!(data.shape(), &[1, 4, 4]);
             assert!(data.iter().all(|&v| v == 5.0));
         }
     }
@@ -502,14 +502,14 @@ mod tests_async {
     #[tokio::test(flavor = "multi_thread")]
     async fn parallel_results_match_sequential_reference() {
         let tmp = ZarrTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
         let source = samples::async_storage_for(tmp.path());
 
-        let subset = ArraySubset::new_with_start_shape(vec![0, 0], vec![4, 4]).unwrap();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 4, 4]).unwrap();
 
         // Sequential reference.
         let reference = AsyncLazySubset::<f32>::new(Arc::clone(&source), subset.clone())
