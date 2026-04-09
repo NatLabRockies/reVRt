@@ -518,6 +518,8 @@ mod tests {
 
     #[test]
     fn test_open_rejects_representative_variable_with_too_few_dimensions() {
+        // Cannot use `ZarrTestBuilder` here because we need to purposely
+        // build an incorrectly formatted dataset
         let tmp_path = tempfile::TempDir::new().unwrap();
         let store: ReadableWritableListableStorage =
             Arc::new(FilesystemStore::new(tmp_path.path()).unwrap());
