@@ -1,13 +1,15 @@
 use revrt::resolve;
 use std::path::PathBuf;
+use test_case::test_case;
 
 const TEST_DATA: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../tests/data/utilities/transmission_layers.zarr"
 );
 
-#[test]
-fn basic_routing_in_data() {
+#[test_case("dijkstra"; "dijkstra")]
+#[test_case("long-range-dijkstra"; "long-range")]
+fn basic_routing_in_data(algorithm: &str) {
     let layers_path = PathBuf::from(TEST_DATA);
     let start = &revrt::ArrayIndex::new(10, 10);
     let end = vec![revrt::ArrayIndex::new(20, 20)];
@@ -15,6 +17,7 @@ fn basic_routing_in_data() {
         layers_path.to_str().expect("test data path is valid UTF-8"),
         r#"{"cost_layers": [{"layer_name": "tie_line_costs_102MW"}]}"#,
         250_000_000,
+        algorithm,
         std::slice::from_ref(start),
         end,
     )
@@ -25,8 +28,9 @@ fn basic_routing_in_data() {
     assert!(result[0].total_cost() > &0.);
 }
 
-#[test]
-fn basic_routing_in_data_with_friction() {
+#[test_case("dijkstra"; "dijkstra")]
+#[test_case("long-range-dijkstra"; "long-range")]
+fn basic_routing_in_data_with_friction(algorithm: &str) {
     let layers_path = PathBuf::from(TEST_DATA);
     let start = &revrt::ArrayIndex::new(10, 10);
     let end = vec![revrt::ArrayIndex::new(20, 20)];
@@ -39,6 +43,7 @@ fn basic_routing_in_data_with_friction() {
             ]
         }"#,
         250_000_000,
+        algorithm,
         std::slice::from_ref(start),
         end,
     )

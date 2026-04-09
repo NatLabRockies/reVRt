@@ -113,6 +113,140 @@ def test_route_finder_basic_single_route(tmp_path):
     assert np.isclose(test_cost, costs[(2, 6)])
 
 
+def test_find_paths_supports_explicit_algorithm(tmp_path):
+    """find_paths accepts explicit routing algorithm selection"""
+
+    da = xr.DataArray(
+        np.array(
+            [
+                [
+                    [7, 7, 8, 0, 9, 9, 9, 0],
+                    [8, 1, 2, 2, 9, 9, 9, 0],
+                    [9, 1, 3, 3, 9, 1, 2, 3],
+                    [9, 1, 2, 1, 9, 1, 9, 0],
+                    [9, 9, 9, 1, 9, 1, 9, 0],
+                    [9, 9, 9, 1, 1, 1, 9, 0],
+                    [9, 9, 9, 9, 9, 9, 9, 0],
+                ]
+            ],
+            dtype=np.float32,
+        ),
+        dims=("band", "y", "x"),
+    )
+
+    test_cost_fp = tmp_path / "test.zarr"
+    ds = xr.Dataset({"test_costs": da})
+    ds["test_costs"].encoding = {
+        "fill_value": 1_000.0,
+        "_FillValue": 1_000.0,
+    }
+    ds.chunk({"x": 4, "y": 3}).to_zarr(
+        test_cost_fp, mode="w", zarr_format=3, consolidated=False
+    )
+
+    cost_definition = {
+        "cost_layers": [{"layer_name": "test_costs"}],
+        "ignore_invalid_costs": True,
+    }
+    results = find_paths(
+        zarr_fp=test_cost_fp,
+        cost_function=json.dumps(cost_definition),
+        start=[(1, 1)],
+        end=[(2, 6)],
+        algorithm="dijkstra",
+    )
+
+    assert len(results) == 1
+    path, cost = results[0]
+    assert path[0] == (1, 1)
+    assert path[-1] == (2, 6)
+    assert cost > 0
+
+
+def test_route_finder_supports_explicit_algorithm(tmp_path):
+    """RouteFinder accepts explicit routing algorithm selection"""
+
+    da = xr.DataArray(
+        np.array(
+            [
+                [
+                    [7, 7, 8, 0, 9, 9, 9, 0],
+                    [8, 1, 2, 2, 9, 9, 9, 0],
+                    [9, 1, 3, 3, 9, 1, 2, 3],
+                    [9, 1, 2, 1, 9, 1, 9, 0],
+                    [9, 9, 9, 1, 9, 1, 9, 0],
+                    [9, 9, 9, 1, 1, 1, 9, 0],
+                    [9, 9, 9, 9, 9, 9, 9, 0],
+                ]
+            ],
+            dtype=np.float32,
+        ),
+        dims=("band", "y", "x"),
+    )
+
+    test_cost_fp = tmp_path / "test.zarr"
+    ds = xr.Dataset({"test_costs": da})
+    ds["test_costs"].encoding = {
+        "fill_value": 1_000.0,
+        "_FillValue": 1_000.0,
+    }
+    ds.chunk({"x": 4, "y": 3}).to_zarr(
+        test_cost_fp, mode="w", zarr_format=3, consolidated=False
+    )
+
+    cost_definition = {"cost_layers": [{"layer_name": "test_costs"}]}
+    results = list(
+        RouteFinder(
+            zarr_fp=test_cost_fp,
+            cost_function=json.dumps(cost_definition),
+            route_definitions=[(2, [(1, 1)], [(2, 6)])],
+            algorithm="dijkstra",
+        )
+    )
+
+    assert len(results) == 1
+    route_id, solutions = results[0]
+    assert route_id == 2
+    assert len(solutions) == 1
+    path, cost = solutions[0]
+    assert path[0] == (1, 1)
+    assert path[-1] == (2, 6)
+    assert cost > 0
+
+
+def test_find_paths_rejects_invalid_algorithm(tmp_path):
+    """find_paths rejects unsupported routing algorithms"""
+
+    da = xr.DataArray(
+        np.array([[[1, 1], [1, 1]]], dtype=np.float32),
+        dims=("band", "y", "x"),
+    )
+
+    test_cost_fp = tmp_path / "test.zarr"
+    ds = xr.Dataset({"test_costs": da})
+    ds["test_costs"].encoding = {
+        "fill_value": 1_000.0,
+        "_FillValue": 1_000.0,
+    }
+    ds.chunk({"x": 2, "y": 2}).to_zarr(
+        test_cost_fp, mode="w", zarr_format=3, consolidated=False
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r'Unsupported routing algorithm "DNE". Supported values: ',
+    ):
+        find_paths(
+            zarr_fp=test_cost_fp,
+            cost_function=json.dumps(
+                {"cost_layers": [{"layer_name": "test_costs"}]}
+            ),
+            start=[(0, 0)],
+            end=[(1, 1)],
+            algorithm="DNE",
+        )
+
+
 @pytest.mark.parametrize(
     "in_path, out_path",
     [
