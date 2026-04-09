@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use ndarray::{Array2, Array3};
+use ndarray::Array3;
 #[cfg(test)]
 use object_store::local::LocalFileSystem;
 use rand::RngExt;
@@ -103,10 +103,14 @@ impl LayerConfig {
 ///     .unwrap();
 /// ```
 pub(crate) struct ZarrTestBuilder {
+    /// Number of bands
+    nb: u64,
     /// Number of rows
     ni: u64,
     /// Number of columns
     nj: u64,
+    /// Chunk bands
+    cb: u64,
     /// Chunk rows
     ci: u64,
     /// Chunk columns
@@ -130,8 +134,10 @@ impl ZarrTestBuilder {
     /// Create a new builder with default settings
     pub(crate) fn new() -> Self {
         Self {
+            nb: 1,
             ni: 8,
             nj: 8,
+            cb: 1,
             ci: 4,
             cj: 4,
             layers: Vec::new(),
@@ -141,23 +147,27 @@ impl ZarrTestBuilder {
     }
 
     /// Set array dimensions (rows, columns)
-    pub(crate) fn dimensions(mut self, ni: u64, nj: u64) -> Self {
+    pub(crate) fn dimensions(mut self, nb: u64, ni: u64, nj: u64) -> Self {
+        self.nb = nb;
         self.ni = ni;
         self.nj = nj;
         self
     }
 
     /// Set chunk dimensions (rows, columns)
-    pub(crate) fn chunks(mut self, ci: u64, cj: u64) -> Self {
+    pub(crate) fn chunks(mut self, cb: u64, ci: u64, cj: u64) -> Self {
+        self.cb = cb;
         self.ci = ci;
         self.cj = cj;
         self
     }
 
     /// Set both array and chunk dimensions
-    pub(crate) fn shape(mut self, ni: u64, nj: u64, ci: u64, cj: u64) -> Self {
+    pub(crate) fn shape(mut self, nb: u64, ni: u64, nj: u64, cb: u64, ci: u64, cj: u64) -> Self {
+        self.nb = nb;
         self.ni = ni;
         self.nj = nj;
+        self.cb = cb;
         self.ci = ci;
         self.cj = cj;
         self
@@ -209,12 +219,12 @@ impl ZarrTestBuilder {
     ) -> Result<(), Box<dyn std::error::Error>> {
         // Create array
         let array = ArrayBuilder::new(
-            vec![self.ni, self.nj],
-            vec![self.ci, self.cj],
+            vec![self.nb, self.ni, self.nj],
+            vec![self.cb, self.ci, self.cj],
             self.dtype.clone(),
             self.fill_value.clone(),
         )
-        .dimension_names(["y", "x"].into())
+        .dimension_names(["band", "y", "x"].into())
         .build(store.clone(), &format!("/{}", config.name))?;
 
         array.store_metadata()?;
@@ -223,8 +233,11 @@ impl ZarrTestBuilder {
         let data = self.generate_data(&config.fill)?;
 
         // Write data
-        let subset =
-            ArraySubset::new_with_ranges(&[0..(self.ni / self.ci), 0..(self.nj / self.cj)]);
+        let subset = ArraySubset::new_with_ranges(&[
+            0..self.nb,
+            0..(self.ni / self.ci),
+            0..(self.nj / self.cj),
+        ]);
 
         array.store_chunks_ndarray(&subset, data)?;
 
@@ -235,7 +248,7 @@ impl ZarrTestBuilder {
     fn generate_data(
         &self,
         fill: &FillStrategy,
-    ) -> Result<Array2<f32>, Box<dyn std::error::Error>> {
+    ) -> Result<Array3<f32>, Box<dyn std::error::Error>> {
         let size = (self.ni * self.nj) as usize;
         let values = match fill {
             FillStrategy::Constant(val) => vec![*val; size],
@@ -270,7 +283,10 @@ impl ZarrTestBuilder {
             }
         };
 
-        let data = Array2::from_shape_vec((self.ni as usize, self.nj as usize), values)?;
+        let data = Array3::from_shape_vec(
+            (self.nb as usize, self.ni as usize, self.nj as usize),
+            values,
+        )?;
 
         Ok(data)
     }
@@ -281,18 +297,18 @@ impl ZarrTestBuilder {
 // ============================================================================
 
 /// Quick builder for uniform cost surfaces (all ones)
-pub(crate) fn uniform_cost_zarr(ni: u64, nj: u64, ci: u64, cj: u64) -> TempDir {
+pub(crate) fn uniform_cost_zarr(nb: u64, ni: u64, nj: u64, cb: u64, ci: u64, cj: u64) -> TempDir {
     ZarrTestBuilder::new()
-        .shape(ni, nj, ci, cj)
+        .shape(nb, ni, nj, cb, ci, cj)
         .layer(LayerConfig::ones("cost"))
         .build()
         .expect("Failed to create uniform cost zarr")
 }
 
 /// Quick builder for three-layer test (A, B, C with ones)
-pub(crate) fn three_layer_ones(ni: u64, nj: u64, ci: u64, cj: u64) -> TempDir {
+pub(crate) fn three_layer_ones(nb: u64, ni: u64, nj: u64, cb: u64, ci: u64, cj: u64) -> TempDir {
     ZarrTestBuilder::new()
-        .shape(ni, nj, ci, cj)
+        .shape(nb, ni, nj, cb, ci, cj)
         .layer(LayerConfig::ones("A"))
         .layer(LayerConfig::ones("B"))
         .layer(LayerConfig::ones("C"))
@@ -301,15 +317,16 @@ pub(crate) fn three_layer_ones(ni: u64, nj: u64, ci: u64, cj: u64) -> TempDir {
 }
 
 /// Quick builder for multi-variable random data
-#[allow(dead_code)]
 pub(crate) fn multi_variable_random(
+    nb: u64,
     ni: u64,
     nj: u64,
+    cb: u64,
     ci: u64,
     cj: u64,
     layers: &[&str],
 ) -> TempDir {
-    let mut builder = ZarrTestBuilder::new().shape(ni, nj, ci, cj);
+    let mut builder = ZarrTestBuilder::new().shape(nb, ni, nj, cb, ci, cj);
 
     for &layer_name in layers {
         builder = builder.layer(LayerConfig::random(layer_name, 0.0, 1.0));
@@ -322,8 +339,16 @@ pub(crate) fn multi_variable_random(
 
 /// Quick builder for sequential data
 #[allow(dead_code)]
-pub(crate) fn sequential_layers(ni: u64, nj: u64, ci: u64, cj: u64, layers: &[&str]) -> TempDir {
-    let mut builder = ZarrTestBuilder::new().shape(ni, nj, ci, cj);
+pub(crate) fn sequential_layers(
+    nb: u64,
+    ni: u64,
+    nj: u64,
+    cb: u64,
+    ci: u64,
+    cj: u64,
+    layers: &[&str],
+) -> TempDir {
+    let mut builder = ZarrTestBuilder::new().shape(nb, ni, nj, cb, ci, cj);
 
     for &layer_name in layers {
         builder = builder.layer(LayerConfig::sequential(layer_name));
@@ -338,19 +363,21 @@ pub(crate) fn sequential_layers(ni: u64, nj: u64, ci: u64, cj: u64, layers: &[&s
 
 /// Preset: Simple 4x4 grid for quick unit tests
 pub(crate) fn preset_small() -> ZarrTestBuilder {
-    ZarrTestBuilder::new().dimensions(4, 4).chunks(2, 2)
+    ZarrTestBuilder::new().dimensions(1, 4, 4).chunks(1, 2, 2)
 }
 
 /// Preset: Medium 16x16 grid for integration tests
 #[allow(dead_code)]
 pub(crate) fn preset_medium() -> ZarrTestBuilder {
-    ZarrTestBuilder::new().dimensions(16, 16).chunks(4, 4)
+    ZarrTestBuilder::new().dimensions(1, 16, 16).chunks(1, 4, 4)
 }
 
 /// Preset: Large 128x128 grid for performance tests
 #[allow(dead_code)]
 pub(crate) fn preset_large() -> ZarrTestBuilder {
-    ZarrTestBuilder::new().dimensions(128, 128).chunks(32, 32)
+    ZarrTestBuilder::new()
+        .dimensions(1, 128, 128)
+        .chunks(1, 32, 32)
 }
 
 /// Preset: Standard cost surface setup (A, B, C layers)
@@ -610,8 +637,8 @@ mod tests {
     #[test]
     fn test_builder_basic() {
         let sample = ZarrTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
             .layer(LayerConfig::ones("test"))
             .build()
             .unwrap();
@@ -622,8 +649,8 @@ mod tests {
     #[test]
     fn test_builder_multiple_layers() {
         let sample = ZarrTestBuilder::new()
-            .dimensions(8, 8)
-            .chunks(4, 4)
+            .dimensions(1, 8, 8)
+            .chunks(1, 4, 4)
             .layer(LayerConfig::ones("A"))
             .layer(LayerConfig::sequential("B"))
             .layer(LayerConfig::constant("C", 5.0))
@@ -644,8 +671,8 @@ mod tests {
     #[test]
     fn test_custom_fill() {
         let sample = ZarrTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
             .layer(LayerConfig::custom("custom", |i, j| (i * 10 + j) as f32))
             .build()
             .unwrap();
@@ -655,7 +682,7 @@ mod tests {
 
     #[test]
     fn test_uniform_cost_helper() {
-        let sample = uniform_cost_zarr(4, 4, 2, 2);
+        let sample = uniform_cost_zarr(1, 4, 4, 1, 2, 2);
         let path = sample.path();
         assert!(path.exists());
 
@@ -666,7 +693,7 @@ mod tests {
 
     #[test]
     fn test_three_layer_ones_helper() {
-        let sample = three_layer_ones(4, 4, 2, 2);
+        let sample = three_layer_ones(1, 4, 4, 1, 2, 2);
         let path = sample.path();
         assert!(path.exists());
 
@@ -690,8 +717,8 @@ mod tests {
     #[test]
     fn test_preset_cost_surface() {
         let sample = preset_cost_surface()
-            .dimensions(8, 8)
-            .chunks(4, 4)
+            .dimensions(1, 8, 8)
+            .chunks(1, 4, 4)
             .build()
             .unwrap();
         let path = sample.path();
