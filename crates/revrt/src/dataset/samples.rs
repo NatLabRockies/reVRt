@@ -253,7 +253,7 @@ impl ZarrTestBuilder {
         let values = match fill {
             FillStrategy::Constant(val) => vec![*val; size],
 
-            FillStrategy::Sequential => (1..=size).map(|x| x as f32).collect(),
+            FillStrategy::Sequential => (0..size).map(|x| x as f32).collect(),
 
             FillStrategy::Random(min, max) => {
                 let mut rng = rand::rng();
@@ -308,6 +308,15 @@ pub(crate) fn uniform_ones_cost_zarr(
     ZarrTestBuilder::new()
         .shape(nb, ni, nj, cb, ci, cj)
         .layer(LayerConfig::ones("cost"))
+        .build()
+        .expect("Failed to create uniform cost zarr")
+}
+
+/// Quick builder for uniform cost surfaces (custom cost)
+pub(crate) fn cost_as_index_zarr(nb: u64, ni: u64, nj: u64, cb: u64, ci: u64, cj: u64) -> TempDir {
+    ZarrTestBuilder::new()
+        .shape(nb, ni, nj, cb, ci, cj)
+        .layer(LayerConfig::sequential("cost"))
         .build()
         .expect("Failed to create uniform cost zarr")
 }
@@ -416,50 +425,7 @@ pub(crate) fn preset_cost_surface() -> ZarrTestBuilder {
 // Old approach. This will be eventually deprecated
 // ============================================================================
 
-// //! Dataset samples for tests and demonstrations
-
-/// Create a zarr store with a cost layer comprised of cell indices
-pub(crate) fn cost_as_index_zarr((ni, nj): (u64, u64), (ci, cj): (u64, u64)) -> TempDir {
-    let tmp_path = TempDir::new().unwrap();
-
-    let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
-        zarrs::filesystem::FilesystemStore::new(tmp_path.path())
-            .expect("could not open filesystem store"),
-    );
-
-    zarrs::group::GroupBuilder::new()
-        .build(store.clone(), "/")
-        .unwrap()
-        .store_metadata()
-        .unwrap();
-
-    let array = zarrs::array::ArrayBuilder::new(
-        vec![1, ni, nj], // array shape
-        vec![1, ci, cj], // regular chunk shape
-        zarrs::array::DataType::Float32,
-        zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
-    )
-    .dimension_names(["band", "y", "x"].into())
-    .build(store.clone(), "/cost")
-    .unwrap();
-
-    // Write array metadata to store
-    array.store_metadata().unwrap();
-
-    let a: Vec<f32> = (0..ni * nj).map(|x| x as f32).collect();
-    let data: Array3<f32> =
-        ndarray::Array::from_shape_vec((1, ni.try_into().unwrap(), nj.try_into().unwrap()), a)
-            .unwrap();
-
-    array
-        .store_chunks_ndarray(
-            &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, 0..(ni / ci), 0..(nj / cj)]),
-            data,
-        )
-        .unwrap();
-
-    tmp_path
-}
+// // //! Dataset samples for tests and demonstrations
 
 /// Create a zarr store with specific layers for testing
 ///

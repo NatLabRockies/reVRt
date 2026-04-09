@@ -672,7 +672,7 @@ mod tests {
 
     #[test]
     fn test_get_3x3_single_item_array() {
-        let tmp = samples::cost_as_index_zarr((1, 1), (1, 1));
+        let tmp = samples::cost_as_index_zarr(1, 1, 1, 1, 1, 1);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
@@ -695,7 +695,7 @@ mod tests {
     #[test_case((1, 0), vec![(0, 1, 1.5 * SQRT_2), (1, 1, 2.5)] ; "bottom left corner")]
     #[test_case((1, 1), vec![(0, 1, 2.), (1, 0, 2.5)] ; "bottom right corner")]
     fn test_get_3x3_two_by_two_array((si, sj): (u64, u64), expected_output: Vec<(u64, u64, f32)>) {
-        let tmp = samples::cost_as_index_zarr((2, 2), (2, 2));
+        let tmp = samples::cost_as_index_zarr(1, 2, 2, 1, 2, 2);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
@@ -732,7 +732,7 @@ mod tests {
         (si, sj): (u64, u64),
         expected_output: Vec<(u64, u64, f32)>,
     ) {
-        let tmp = samples::cost_as_index_zarr((3, 3), (3, 3));
+        let tmp = samples::cost_as_index_zarr(1, 3, 3, 1, 3, 3);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
@@ -772,7 +772,7 @@ mod tests {
         (si, sj): (u64, u64),
         expected_output: Vec<(u64, u64, f32)>,
     ) {
-        let tmp = samples::cost_as_index_zarr((4, 4), (2, 2));
+        let tmp = samples::cost_as_index_zarr(1, 4, 4, 1, 2, 2);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let dataset =
