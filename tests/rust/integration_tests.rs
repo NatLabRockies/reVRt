@@ -8,7 +8,7 @@ const TEST_DATA: &str = concat!(
 );
 
 #[test_case("dijkstra"; "dijkstra")]
-#[test_case("long-range"; "long-range")]
+#[test_case("long-range-dijkstra"; "long-range")]
 fn basic_routing_in_data(algorithm: &str) {
     let layers_path = PathBuf::from(TEST_DATA);
     let start = &revrt::ArrayIndex::new(10, 10);
@@ -29,7 +29,7 @@ fn basic_routing_in_data(algorithm: &str) {
 }
 
 #[test_case("dijkstra"; "dijkstra")]
-#[test_case("long-range"; "long-range")]
+#[test_case("long-range-dijkstra"; "long-range")]
 fn basic_routing_in_data_with_friction(algorithm: &str) {
     let layers_path = PathBuf::from(TEST_DATA);
     let start = &revrt::ArrayIndex::new(10, 10);

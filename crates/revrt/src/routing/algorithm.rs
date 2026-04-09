@@ -180,7 +180,7 @@ mod tests {
             AlgorithmType::Dijkstra
         );
         assert_eq!(
-            AlgorithmType::from_str(" LONG-RANGE ").unwrap(),
+            AlgorithmType::from_str(" LONG-RANGE-DIJKSTRA ").unwrap(),
             AlgorithmType::LongRangeDijkstra
         );
     }

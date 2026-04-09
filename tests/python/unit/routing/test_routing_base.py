@@ -210,11 +210,11 @@ def test_routing_scenario_normalizes_algorithm(sample_layered_data):
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
-        algorithm="long-range",
+        algorithm="long-range-dijkstra",
     )
 
     # assert scenario.algorithm is RoutingAlgorithm.LONG_RANGE
-    assert "algorithm: long-range" in repr(scenario)
+    assert "algorithm: long-range-dijkstra" in repr(scenario)
 
 
 def test_routing_scenario_rejects_invalid_algorithm(sample_layered_data):

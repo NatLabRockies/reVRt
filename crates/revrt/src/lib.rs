@@ -105,7 +105,7 @@ mod tests {
     }
 
     #[test_case("dijkstra"; "dijkstra")]
-    #[test_case("long-range"; "long-range")]
+    #[test_case("long-range-dijkstra"; "long-range")]
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
     fn minimalist(algorithm: &str) {
@@ -128,11 +128,11 @@ mod tests {
     #[test_case((1, 1), (2, 1), 2, 1., "dijkstra"; "step one cell down dijkstra")]
     #[test_case((1, 1), (2, 2), 2, 1.4142, "dijkstra"; "step one cell diagonally dijkstra")]
     #[test_case((1, 1), (2, 3), 3, 2.4142, "dijkstra"; "step diagonally and across dijkstra")]
-    #[test_case((1, 1), (1, 1), 1, 0., "long-range"; "no movement long-range")]
-    #[test_case((1, 1), (1, 2), 2, 1., "long-range"; "step one cell to the side long-range")]
-    #[test_case((1, 1), (2, 1), 2, 1., "long-range"; "step one cell down long-range")]
-    #[test_case((1, 1), (2, 2), 2, 1.4142, "long-range"; "step one cell diagonally long-range")]
-    #[test_case((1, 1), (2, 3), 3, 2.4142, "long-range"; "step diagonally and across long-range")]
+    #[test_case((1, 1), (1, 1), 1, 0., "long-range-dijkstra"; "no movement long-range")]
+    #[test_case((1, 1), (1, 2), 2, 1., "long-range-dijkstra"; "step one cell to the side long-range")]
+    #[test_case((1, 1), (2, 1), 2, 1., "long-range-dijkstra"; "step one cell down long-range")]
+    #[test_case((1, 1), (2, 2), 2, 1.4142, "long-range-dijkstra"; "step one cell diagonally long-range")]
+    #[test_case((1, 1), (2, 3), 3, 2.4142, "long-range-dijkstra"; "step diagonally and across long-range")]
     fn basic_routing_point_to_point(
         (si, sj): (u64, u64),
         (ei, ej): (u64, u64),
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "dijkstra"; "different cost endpoints dijkstra")]
-    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "long-range"; "different cost endpoints long-range")]
+    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "long-range-dijkstra"; "different cost endpoints long-range")]
     fn basic_routing_one_point_to_many(
         (si, sj): (u64, u64),
         endpoints: Vec<(u64, u64)>,
@@ -187,9 +187,9 @@ mod tests {
     #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "dijkstra"; "horizontal and vertical dijkstra")]
     #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "dijkstra"; "horizontal dijkstra")]
     #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "dijkstra"; "vertical dijkstra")]
-    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "long-range"; "horizontal and vertical long-range")]
-    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "long-range"; "horizontal long-range")]
-    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "long-range"; "vertical long-range")]
+    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "long-range-dijkstra"; "horizontal and vertical long-range")]
+    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "long-range-dijkstra"; "horizontal long-range")]
+    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "long-range-dijkstra"; "vertical long-range")]
     fn routing_one_point_to_many_same_cost_and_length(
         (si, sj): (u64, u64),
         endpoints: Vec<(u64, u64)>,
@@ -220,7 +220,7 @@ mod tests {
     }
 
     #[test_case("dijkstra"; "dijkstra")]
-    #[test_case("long-range"; "long-range")]
+    #[test_case("long-range-dijkstra"; "long-range")]
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
     fn routing_many_to_many(algorithm: &str) {
@@ -255,7 +255,7 @@ mod tests {
     }
 
     #[test_case("dijkstra"; "dijkstra")]
-    #[test_case("long-range"; "long-range")]
+    #[test_case("long-range-dijkstra"; "long-range")]
     fn routing_many_to_one(algorithm: &str) {
         let store_path = dataset::samples::constant_value_cost_zarr(1.);
         let cost_function =
@@ -275,7 +275,7 @@ mod tests {
     }
 
     #[test_case("dijkstra"; "dijkstra")]
-    #[test_case("long-range"; "long-range")]
+    #[test_case("long-range-dijkstra"; "long-range")]
     fn test_routing_along_boundary(algorithm: &str) {
         use ndarray::Array3;
 
