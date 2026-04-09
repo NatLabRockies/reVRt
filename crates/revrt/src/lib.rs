@@ -109,7 +109,8 @@ mod tests {
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
     fn minimalist(algorithm: &str) {
-        let store_path = dataset::samples::multi_variable_zarr();
+        let store_path =
+            dataset::samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = cost::sample::cost_function();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: 2, j: 3 }];

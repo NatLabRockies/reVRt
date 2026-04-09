@@ -468,7 +468,7 @@ mod tests {
 
     #[test]
     fn test_simple_cost_function_get_3x3() {
-        let tmp = samples::multi_variable_zarr();
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
         let dataset =
@@ -558,7 +558,7 @@ mod tests {
 
     #[test]
     fn test_simple_invariant_cost_function_get_3x3() {
-        let tmp = samples::multi_variable_zarr();
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = CostFunction::from_json(
             r#"{"cost_layers": [{"layer_name": "A", "is_invariant": true}]}"#,
         )
@@ -588,7 +588,7 @@ mod tests {
 
     #[test]
     fn test_sample_cost_function_get_3x3() {
-        let tmp = samples::multi_variable_zarr();
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = crate::cost::sample::cost_function();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
