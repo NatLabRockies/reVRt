@@ -4,7 +4,7 @@ mod simplify_path;
 use std::path::PathBuf;
 use std::sync::mpsc;
 
-use pyo3::exceptions::{PyException, PyIOError, PyValueError};
+use pyo3::exceptions::{PyException, PyIOError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 
 use crate::error::{Error, Result};
@@ -49,12 +49,16 @@ impl From<Error> for PyErr {
     fn from(err: Error) -> PyErr {
         match err {
             Error::IO(msg) => PyIOError::new_err(msg),
-            Error::ObjectStore(_) => todo!(),
+            object_store_error @ Error::ObjectStore(_) => {
+                PyIOError::new_err(object_store_error.to_string())
+            }
             Error::ZarrsArrayCreate(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsArray(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsStorage(e) => PyIOError::new_err(e.to_string()),
             Error::ZarrsGroupCreate(e) => PyIOError::new_err(e.to_string()),
-            Error::UnsupportedDataType(_, _) => todo!(),
+            invalid_data_type @ Error::UnsupportedDataType(_, _) => {
+                PyTypeError::new_err(invalid_data_type.to_string())
+            }
             Error::Undefined(msg) => revrtRustError::new_err(msg),
             invalid_dataset_shape @ Error::InvalidDatasetShape { .. } => {
                 PyValueError::new_err(invalid_dataset_shape.to_string())
