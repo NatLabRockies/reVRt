@@ -198,7 +198,7 @@ def run_lcp(
     tracked_layers=None,
     ignore_invalid_costs=True,
     user_mem_limit_gb=4,
-    algorithm="long_range",
+    algorithm="long_range_dijkstra",
 ):
     """[NOT PUBLIC API] Run LCP routing and save to output file"""
 

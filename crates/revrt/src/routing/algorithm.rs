@@ -35,10 +35,10 @@ impl FromStr for AlgorithmType {
     fn from_str(value: &str) -> Result<Self> {
         match value.trim().to_ascii_lowercase().replace('-', "_").as_str() {
             "dijkstra" => Ok(Self::Dijkstra),
-            "long_range" | "long_range_dijkstra" => Ok(Self::LongRangeDijkstra),
+            "long_range_dijkstra" => Ok(Self::LongRangeDijkstra),
             _ => Err(Error::InvalidAlgorithm {
                 value: value.to_string(),
-                allowed: &["dijkstra", "long_range"],
+                allowed: &["dijkstra", "long_range_dijkstra"],
             }),
         }
     }
@@ -166,10 +166,6 @@ mod tests {
         assert_eq!(
             AlgorithmType::from_str("dijkstra").unwrap(),
             AlgorithmType::Dijkstra
-        );
-        assert_eq!(
-            AlgorithmType::from_str("long_range").unwrap(),
-            AlgorithmType::LongRangeDijkstra
         );
         assert_eq!(
             AlgorithmType::from_str("long_range_dijkstra").unwrap(),

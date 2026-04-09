@@ -138,13 +138,14 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// mem_limit_bytes : int, default=250_000_000
 ///     Overall memory limit to use for routing computations, in bytes.
 ///     By default, `250,000,000` (250MB).
-/// algorithm : str, default="long_range"
+/// algorithm : str, default="long_range_dijkstra"
 ///     Routing algorithm implementation to use. Supported values are
-///     ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a faster
-///     implementation but does not respect the `mem_limit_bytes` input.
-///     Prefer the default ``"long_range"`` option unless you know for a
-///     fact that your route computations will not need much memory and
-///     speed is very important to you. By default, ``"long_range"``.
+///     ``"long_range_dijkstra"`` and ``"dijkstra"``. ``"dijkstra"`` is
+///     a faster implementation but does not respect the `mem_limit_bytes`
+///     input. Prefer the default ``"long_range_dijkstra"`` option unless
+///     you know for a fact that your route computations will not need
+///     much memory and speed is very important to you.
+///     By default, ``"long_range_dijkstra"``.
 ///
 /// Returns
 /// -------
@@ -154,7 +155,7 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     route goes through and the second element is the final
 ///     route cost.
 #[pyfunction]
-#[pyo3(signature = (zarr_fp, cost_function, start, end, mem_limit_bytes=250_000_000, algorithm="long_range"))]
+#[pyo3(signature = (zarr_fp, cost_function, start, end, mem_limit_bytes=250_000_000, algorithm="long_range_dijkstra"))]
 #[allow(clippy::type_complexity)]
 fn find_paths(
     zarr_fp: PathBuf,
@@ -207,13 +208,14 @@ fn find_paths(
 /// mem_limit_bytes : int, default=250_000_000
 ///     Overall memory limit to use for routing computations, in bytes.
 ///     By default, `250,000,000` (250MB).
-/// algorithm : str, default="long_range"
+/// algorithm : str, default="long_range_dijkstra"
 ///     Routing algorithm implementation to use. Supported values are
-///     ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a faster
-///     implementation but does not respect the `mem_limit_bytes` input.
-///     Prefer the default ``"long_range"`` option unless you know for a
-///     fact that your route computations will not need much memory and
-///     speed is very important to you. By default, ``"long_range"``.
+///     ``"long_range_dijkstra"`` and ``"dijkstra"``. ``"dijkstra"`` is
+///     a faster implementation but does not respect the `mem_limit_bytes`
+///     input. Prefer the default ``"long_range_dijkstra"`` option unless
+///     you know for a fact that your route computations will not need
+///     much memory and speed is very important to you.
+///     By default, ``"long_range_dijkstra"``.
 /// log_level : int, optional
 ///     Logging level for Rust tracing emitted to stderr. Roughly follows the
 ///     Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,
@@ -246,7 +248,7 @@ struct RouteFinder {
 #[pymethods]
 impl RouteFinder {
     #[new]
-    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, mem_limit_bytes=250_000_000, algorithm="long_range", log_level=None))]
+    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, mem_limit_bytes=250_000_000, algorithm="long_range_dijkstra", log_level=None))]
     fn new(
         zarr_fp: PathBuf,
         cost_function: String,

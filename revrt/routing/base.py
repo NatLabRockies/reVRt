@@ -42,7 +42,7 @@ class RoutingScenario:
         cost_multiplier_layer=None,
         cost_multiplier_scalar=1,
         ignore_invalid_costs=True,
-        algorithm="long_range",
+        algorithm="long_range_dijkstra",
     ):
         """
 
@@ -65,14 +65,15 @@ class RoutingScenario:
             Scalar multiplier applied to the final cost surface.
         ignore_invalid_costs : bool, optional
             Flag indicating whether non-positive costs block traversal.
-        algorithm : str, default="long_range"
+        algorithm : str, default="long_range_dijkstra"
             Routing algorithm implementation to use. Supported values
-            are ``"long_range"`` and ``"dijkstra"``. ``"dijkstra"`` is a
-            faster implementation but does not respect the memory limit.
-            Prefer the default ``"long_range"`` option unless you know
-            for a fact that your route computations will not need much
-            memory and speed is very important to you.
-            By default, ``"long_range"``.
+            are ``"long_range_dijkstra"`` and ``"dijkstra"``.
+            ``"dijkstra"`` is a faster implementation but does not
+            respect the memory limit. Prefer the default
+            ``"long_range_dijkstra"`` option unless you know for a fact
+            that your route computations will not need much memory and
+            speed is very important to you.
+            By default, ``"long_range_dijkstra"``.
         """
         self.cost_fpath = cost_fpath
         self.cost_layers = cost_layers
