@@ -312,6 +312,23 @@ pub(crate) fn uniform_ones_cost_zarr(
         .expect("Failed to create uniform cost zarr")
 }
 
+/// Quick builder for uniform cost surfaces (custom cost)
+pub(crate) fn uniform_cost_zarr(
+    nb: u64,
+    ni: u64,
+    nj: u64,
+    cb: u64,
+    ci: u64,
+    cj: u64,
+    cost_value: f32,
+) -> TempDir {
+    ZarrTestBuilder::new()
+        .shape(nb, ni, nj, cb, ci, cj)
+        .layer(LayerConfig::constant("cost", cost_value))
+        .build()
+        .expect("Failed to create uniform cost zarr")
+}
+
 /// Quick builder for three-layer test (A, B, C with ones)
 pub(crate) fn three_layer_ones(nb: u64, ni: u64, nj: u64, cb: u64, ci: u64, cj: u64) -> TempDir {
     ZarrTestBuilder::new()
@@ -400,51 +417,6 @@ pub(crate) fn preset_cost_surface() -> ZarrTestBuilder {
 // ============================================================================
 
 // //! Dataset samples for tests and demonstrations
-
-/// Create a zarr store with a cost layer comprised of a single value
-pub(crate) fn constant_value_cost_zarr(cost_value: f32) -> TempDir {
-    let (ni, nj) = (8, 8);
-    let (ci, cj) = (4, 4);
-
-    let tmp_path = TempDir::new().unwrap();
-
-    let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
-        zarrs::filesystem::FilesystemStore::new(tmp_path.path())
-            .expect("could not open filesystem store"),
-    );
-
-    zarrs::group::GroupBuilder::new()
-        .build(store.clone(), "/")
-        .unwrap()
-        .store_metadata()
-        .unwrap();
-
-    let array = zarrs::array::ArrayBuilder::new(
-        vec![1, ni, nj], // array shape
-        vec![1, ci, cj], // regular chunk shape
-        zarrs::array::DataType::Float32,
-        zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
-    )
-    .dimension_names(["band", "y", "x"].into())
-    .build(store.clone(), "/cost")
-    .unwrap();
-
-    // Write array metadata to store
-    array.store_metadata().unwrap();
-
-    let (uni, unj): (usize, usize) = (ni.try_into().unwrap(), nj.try_into().unwrap());
-    let data: Array3<f32> =
-        ndarray::Array::from_shape_vec((1, uni, unj), vec![cost_value; uni * unj]).unwrap();
-
-    array
-        .store_chunks_ndarray(
-            &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, 0..(ni / ci), 0..(nj / cj)]),
-            data,
-        )
-        .unwrap();
-
-    tmp_path
-}
 
 /// Create a zarr store with a cost layer comprised of cell indices
 pub(crate) fn cost_as_index_zarr((ni, nj): (u64, u64), (ci, cj): (u64, u64)) -> TempDir {

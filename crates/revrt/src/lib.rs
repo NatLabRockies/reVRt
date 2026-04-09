@@ -141,7 +141,7 @@ mod tests {
         expected_cost: f32,
         algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.0);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -164,7 +164,7 @@ mod tests {
         expected_cost: f32,
         algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.0);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -197,7 +197,7 @@ mod tests {
         cost_array_fill: f32,
         algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(cost_array_fill);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, cost_array_fill);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -225,7 +225,7 @@ mod tests {
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
     fn routing_many_to_many(algorithm: &str) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
@@ -258,7 +258,7 @@ mod tests {
     #[test_case("dijkstra"; "dijkstra")]
     #[test_case("long-range-dijkstra"; "long-range")]
     fn routing_many_to_one(algorithm: &str) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
