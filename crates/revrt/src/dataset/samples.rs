@@ -297,7 +297,14 @@ impl ZarrTestBuilder {
 // ============================================================================
 
 /// Quick builder for uniform cost surfaces (all ones)
-pub(crate) fn uniform_cost_zarr(nb: u64, ni: u64, nj: u64, cb: u64, ci: u64, cj: u64) -> TempDir {
+pub(crate) fn uniform_ones_cost_zarr(
+    nb: u64,
+    ni: u64,
+    nj: u64,
+    cb: u64,
+    ci: u64,
+    cj: u64,
+) -> TempDir {
     ZarrTestBuilder::new()
         .shape(nb, ni, nj, cb, ci, cj)
         .layer(LayerConfig::ones("cost"))
@@ -617,7 +624,7 @@ mod tests {
 
     #[test]
     fn test_uniform_cost_helper() {
-        let sample = uniform_cost_zarr(1, 4, 4, 1, 2, 2);
+        let sample = uniform_ones_cost_zarr(1, 4, 4, 1, 2, 2);
         let path = sample.path();
         assert!(path.exists());
 
