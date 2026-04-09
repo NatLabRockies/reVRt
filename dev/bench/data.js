@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775752800180,
+  "lastUpdate": 1775763359471,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -7727,6 +7727,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 360201286,
             "range": "± 6940625",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a919e13df5a9409d122e37e3f41a8403ddea1e5c",
+          "message": "Move to `ZarrTestBuilder` (#243)\n\n* Add band dimension\n\n* Update docstring\n\n* Use `multi_variable_random`\n\n* Fix tests\n\n* Use `multi_variable_random`\n\n* Deprecate unused code\n\n* Rename function\n\n* Deprecate `constant_value_cost_zarr`\n\n* Deprecate sequential func helper\n\n* Deprecate specific layers function\n\n* Linter fix\n\n* Add comment\n\n* Use `ZarrTestBuilder`\n\n* PR review fixes",
+          "timestamp": "2026-04-09T13:21:20-06:00",
+          "tree_id": "9fe5617cc91d4e8ca9766c1fb7080432252b8ed6",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/a919e13df5a9409d122e37e3f41a8403ddea1e5c"
+        },
+        "date": 1775763358828,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 71780648,
+            "range": "± 1149019",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 77667596,
+            "range": "± 1427025",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 100603647,
+            "range": "± 18436953",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 147897206,
+            "range": "± 2737388",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 603933806,
+            "range": "± 12249529",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 132295250,
+            "range": "± 3014214",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 137100435,
+            "range": "± 689154",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 150412010,
+            "range": "± 1294461",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 194748233,
+            "range": "± 1875762",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 357578462,
+            "range": "± 4254058",
             "unit": "ns/iter"
           }
         ]
