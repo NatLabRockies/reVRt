@@ -6,6 +6,9 @@ pub enum Error {
     IO(#[from] std::io::Error),
 
     #[error(transparent)]
+    ObjectStore(#[from] object_store::Error),
+
+    #[error(transparent)]
     ZarrsArrayCreate(#[from] zarrs::array::ArrayCreateError),
 
     #[error(transparent)]
@@ -16,6 +19,11 @@ pub enum Error {
 
     #[error(transparent)]
     ZarrsStorage(#[from] zarrs::storage::StorageError),
+
+    /// Tried to read data, such as input features, with unsupported
+    /// data type.
+    #[error("Unsupported data type '{0}' for variable '{1}'")]
+    UnsupportedDataType(String, String),
 
     // #[error("All route end points are invalid: {0}")]
     // InvalidRouteEnd(String),
