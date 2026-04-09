@@ -253,7 +253,7 @@ impl ZarrTestBuilder {
         let values = match fill {
             FillStrategy::Constant(val) => vec![*val; size],
 
-            FillStrategy::Sequential(offset) => ((0 + offset)..(size as u64 + offset))
+            FillStrategy::Sequential(offset) => (*offset..(size as u64 + offset))
                 .map(|x| x as f32)
                 .collect(),
 
@@ -370,27 +370,6 @@ pub(crate) fn multi_variable_random(
     builder
         .build()
         .expect("Failed to create multi-variable zarr")
-}
-
-/// Quick builder for sequential data
-#[allow(dead_code)]
-pub(crate) fn sequential_layers(
-    nb: u64,
-    ni: u64,
-    nj: u64,
-    cb: u64,
-    ci: u64,
-    cj: u64,
-    start: u64,
-    layers: &[&str],
-) -> TempDir {
-    let mut builder = ZarrTestBuilder::new().shape(nb, ni, nj, cb, ci, cj);
-
-    for &layer_name in layers {
-        builder = builder.layer(LayerConfig::sequential(layer_name, start));
-    }
-
-    builder.build().expect("Failed to create sequential zarr")
 }
 
 // ============================================================================
