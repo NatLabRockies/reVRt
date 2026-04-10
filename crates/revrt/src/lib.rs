@@ -2,16 +2,19 @@
 //!
 //!
 
+mod benchmark;
 mod cost;
 mod dataset;
 mod error;
 #[allow(non_camel_case_types)]
 mod ffi;
+mod network;
 mod routing;
 mod solution;
 
 use std::sync::mpsc;
 
+pub use benchmark::bench_minimalist;
 use cost::CostFunction;
 use error::Result;
 use routing::{ParRouting, RouteDefinition, Routing};
@@ -41,6 +44,7 @@ impl From<ArrayIndex> for (u64, u64) {
 pub fn resolve<P: AsRef<std::path::Path>>(
     store_path: P,
     cost_function: &str,
+    algorithm: &str,
     start: &[ArrayIndex],
     end: Vec<ArrayIndex>,
     swap_fp: Option<std::path::PathBuf>,
@@ -48,7 +52,13 @@ pub fn resolve<P: AsRef<std::path::Path>>(
 ) -> Result<RevrtRoutingSolutions> {
     let cost_function = CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let mut simulation: Routing = Routing::new(store_path, cost_function, cache_size, swap_fp)?;
+    let mut simulation: Routing = Routing::new(
+        store_path,
+        cost_function,
+        swap_fp,
+        mem_limit_bytes,
+        algorithm,
+    )?;
     let result = simulation.compute(start, end).collect();
     Ok(result)
 }
@@ -59,8 +69,9 @@ pub(crate) fn resolve_generator<P, I>(
     cost_function: &str,
     route_definitions: I,
     tx: mpsc::Sender<(u32, RevrtRoutingSolutions)>,
-    cache_size: u64,
     swap_fp: Option<std::path::PathBuf>,
+    mem_limit_bytes: u64,
+    algorithm: &str,
 ) -> Result<()>
 where
     P: AsRef<std::path::Path>,
@@ -69,37 +80,15 @@ where
 {
     let cost_function = crate::cost::CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let simulation = ParRouting::new(store_path, cost_function, cache_size, swap_fp)?;
+    let simulation = ParRouting::new(
+        store_path,
+        cost_function,
+        mem_limit_bytes,
+        swap_fp,
+        algorithm,
+    )?;
     simulation.lazy_scout(route_definitions, tx);
     Ok(())
-}
-
-#[inline]
-/// A public interface to run benchmarks
-///
-/// This function is intended for use during development only. It will
-/// eventually be replaced by a builder, thus more flexible and usable
-/// for other purposes.
-pub fn bench_minimalist(
-    features_path: std::path::PathBuf,
-    start: Vec<ArrayIndex>,
-    end: Vec<ArrayIndex>,
-) {
-    // temporary solution for a cost function until we have a builder
-    let cost_json = r#"{
-        "cost_layers": [
-            {"layer_name": "A"},
-            {"layer_name": "B", "multiplier_scalar": 100},
-            {"layer_name": "A", "multiplier_layer": "B"},
-            {"layer_name": "C", "multiplier_layer": "A", "multiplier_scalar": 2}
-        ]
-    }"#
-    .to_string();
-    let cost_function = CostFunction::from_json(&cost_json).unwrap();
-
-    let mut simulation: Routing = Routing::new(&features_path, cost_function, 1_000, None).unwrap();
-    let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
-    assert!(!solutions.is_empty(), "No solutions found");
 }
 
 #[cfg(test)]
@@ -128,13 +117,16 @@ mod tests {
         assert!(!vec_of_indices.contains(&ArrayIndex { i: 8, j: 9 }));
     }
 
-    #[test]
+    #[test_case("dijkstra"; "dijkstra")]
+    #[test_case("long-range-dijkstra"; "long-range")]
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
-    fn minimalist() {
-        let store_path = dataset::samples::multi_variable_zarr();
+    fn minimalist(algorithm: &str) {
+        let store_path =
+            dataset::samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = cost::sample::cost_function();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, None).unwrap();
+        let mut simulation =
+            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: 2, j: 3 }];
         let end = vec![ArrayIndex { i: 6, j: 6 }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -146,21 +138,28 @@ mod tests {
 
     // Due to truncation solution to handle f32 costs.
     #[allow(clippy::approx_constant)]
-    #[test_case((1, 1), (1, 1), 1, 0.; "no movement")]
-    #[test_case((1, 1), (1, 2), 2, 1.; "step one cell to the side")]
-    #[test_case((1, 1), (2, 1), 2, 1.; "step one cell down")]
-    #[test_case((1, 1), (2, 2), 2, 1.4142; "step one cell diagonally")]
-    #[test_case((1, 1), (2, 3), 3, 2.4142; "step diagonally and across")]
+    #[test_case((1, 1), (1, 1), 1, 0., "dijkstra"; "no movement dijkstra")]
+    #[test_case((1, 1), (1, 2), 2, 1., "dijkstra"; "step one cell to the side dijkstra")]
+    #[test_case((1, 1), (2, 1), 2, 1., "dijkstra"; "step one cell down dijkstra")]
+    #[test_case((1, 1), (2, 2), 2, 1.4142, "dijkstra"; "step one cell diagonally dijkstra")]
+    #[test_case((1, 1), (2, 3), 3, 2.4142, "dijkstra"; "step diagonally and across dijkstra")]
+    #[test_case((1, 1), (1, 1), 1, 0., "long-range-dijkstra"; "no movement long-range")]
+    #[test_case((1, 1), (1, 2), 2, 1., "long-range-dijkstra"; "step one cell to the side long-range")]
+    #[test_case((1, 1), (2, 1), 2, 1., "long-range-dijkstra"; "step one cell down long-range")]
+    #[test_case((1, 1), (2, 2), 2, 1.4142, "long-range-dijkstra"; "step one cell diagonally long-range")]
+    #[test_case((1, 1), (2, 3), 3, 2.4142, "long-range-dijkstra"; "step diagonally and across long-range")]
     fn basic_routing_point_to_point(
         (si, sj): (u64, u64),
         (ei, ej): (u64, u64),
         expected_num_steps: usize,
         expected_cost: f32,
+        algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.0);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, None).unwrap();
+        let mut simulation =
+            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = vec![ArrayIndex { i: ei, j: ej }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -170,18 +169,21 @@ mod tests {
         assert_eq!(solutions[0].total_cost(), &expected_cost);
     }
 
-    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2.; "different cost endpoints")]
+    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "dijkstra"; "different cost endpoints dijkstra")]
+    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "long-range-dijkstra"; "different cost endpoints long-range")]
     fn basic_routing_one_point_to_many(
         (si, sj): (u64, u64),
         endpoints: Vec<(u64, u64)>,
         expected_endpoint: (u64, u64),
         expected_num_steps: usize,
         expected_cost: f32,
+        algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.0);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, None).unwrap();
+        let mut simulation =
+            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = endpoints
             .clone()
@@ -199,18 +201,23 @@ mod tests {
         assert_eq!((ei, ej), expected_endpoint);
     }
 
-    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1.; "horizontal and vertical")]
-    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1.; "horizontal")]
-    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1.; "vertical")]
+    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "dijkstra"; "horizontal and vertical dijkstra")]
+    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "dijkstra"; "horizontal dijkstra")]
+    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "dijkstra"; "vertical dijkstra")]
+    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "long-range-dijkstra"; "horizontal and vertical long-range")]
+    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "long-range-dijkstra"; "horizontal long-range")]
+    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "long-range-dijkstra"; "vertical long-range")]
     fn routing_one_point_to_many_same_cost_and_length(
         (si, sj): (u64, u64),
         endpoints: Vec<(u64, u64)>,
         cost_array_fill: f32,
+        algorithm: &str,
     ) {
-        let store_path = dataset::samples::constant_value_cost_zarr(cost_array_fill);
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, cost_array_fill);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, None).unwrap();
+        let mut simulation =
+            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = endpoints
             .clone()
@@ -230,14 +237,16 @@ mod tests {
         assert!(endpoints.contains(&(ei, ej)));
     }
 
-    #[test]
+    #[test_case("dijkstra"; "dijkstra")]
+    #[test_case("long-range-dijkstra"; "long-range")]
     #[allow(clippy::approx_constant)]
     // Due to truncation solution to handle f32 costs.
-    fn routing_many_to_many() {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.);
+    fn routing_many_to_many(algorithm: &str) {
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, None).unwrap();
+        let mut simulation =
+            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
         let start = vec![
             ArrayIndex { i: 1, j: 1 },
             ArrayIndex { i: 3, j: 3 },
@@ -264,12 +273,14 @@ mod tests {
         }
     }
 
-    #[test]
-    fn routing_many_to_one() {
-        let store_path = dataset::samples::constant_value_cost_zarr(1.);
+    #[test_case("dijkstra"; "dijkstra")]
+    #[test_case("long-range-dijkstra"; "long-range")]
+    fn routing_many_to_one(algorithm: &str) {
+        let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, None).unwrap();
+        let mut simulation =
+            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: 1, j: 1 }, ArrayIndex { i: 5, j: 5 }];
         let end = vec![ArrayIndex { i: 3, j: 3 }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -283,63 +294,30 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_routing_along_boundary() {
-        use ndarray::Array3;
-
-        let (ni, nj) = (4, 4);
-        let (ci, cj) = (2, 2);
-
-        let store_path = tempfile::TempDir::new().unwrap();
-
-        let store: zarrs::storage::ReadableWritableListableStorage = std::sync::Arc::new(
-            zarrs::filesystem::FilesystemStore::new(store_path.path())
-                .expect("could not open filesystem store"),
-        );
-
-        zarrs::group::GroupBuilder::new()
-            .build(store.clone(), "/")
-            .unwrap()
-            .store_metadata()
-            .unwrap();
-
-        let array = zarrs::array::ArrayBuilder::new(
-            vec![1, ni, nj], // array shape
-            vec![1, ci, cj], // regular chunk shape
-            zarrs::array::DataType::Float32,
-            zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
-        )
-        .dimension_names(["band", "y", "x"].into())
-        .build(store.clone(), "/cost")
-        .unwrap();
-
-        // Write array metadata to store
-        array.store_metadata().unwrap();
+    #[test_case("dijkstra"; "dijkstra")]
+    #[test_case("long-range-dijkstra"; "long-range")]
+    fn test_routing_along_boundary(algorithm: &str) {
+        use dataset::samples;
 
         #[rustfmt::skip]
         let a = vec![1., 50.,  1., 1.,
                      1., 50., 50., 1.,
                      1., 50., 50., 1.,
                      1.,  1.,  1., 1.];
-
-        let data: Array3<f32> =
-            ndarray::Array::from_shape_vec((1, ni.try_into().unwrap(), nj.try_into().unwrap()), a)
-                .unwrap();
-
-        array
-            .store_chunks_ndarray(
-                &zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    0..(ni / ci),
-                    0..(nj / cj),
-                ]),
-                data,
-            )
-            .unwrap();
+        let store_path = samples::ZarrTestBuilder::new()
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::new(
+                "cost",
+                samples::FillStrategy::Values(a),
+            ))
+            .build()
+            .expect("failed to build zarr test dataset");
 
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation = Routing::new(&store_path, cost_function, 1_000, None).unwrap();
+        let mut simulation =
+            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
 
         let start = vec![ArrayIndex { i: 0, j: 0 }];
         let end = vec![ArrayIndex { i: 0, j: 2 }];

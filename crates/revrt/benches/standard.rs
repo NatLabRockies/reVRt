@@ -12,7 +12,7 @@
 //! - Random cost: Would that create too much noise for statistics?
 //! - Too many layers: How well we parallelize between layers.
 //! - Too many paths in the same area: How well we parallelize
-//!    between paths (re-using cost cache).
+//!   between paths (re-using cost cache).
 //! - Single chunk with reasonable size: How well we parallelize
 //!   calculating the cost.
 

@@ -64,6 +64,7 @@ fn main() {
     let result = resolve(
         cli.dataset,
         &cli.cost_function,
+        "dijkstra",
         &[start],
         end,
         None,

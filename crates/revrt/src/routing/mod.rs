@@ -2,9 +2,11 @@
 
 mod algorithm;
 mod features;
+mod long_range;
 mod scenario;
 
 use std::collections::HashSet;
+use std::str::FromStr;
 use std::sync::{Arc, mpsc};
 
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -12,8 +14,13 @@ use tracing::debug;
 
 use crate::{ArrayIndex, RevrtRoutingSolutions, Solution, error::Result};
 use algorithm::Algorithm;
+use algorithm::AlgorithmType;
 use features::Features;
 use scenario::Scenario;
+
+// Percent of the total memory allocation given to the Zarr cache.
+// Rest of memory is allocated to the routing algorithm's rayon workers
+const CACHE_BUDGET_PERCENT: u64 = 25;
 
 pub(super) struct Routing {
     scenario: Scenario,
@@ -27,6 +34,7 @@ impl Routing {
         end: Vec<ArrayIndex>,
     ) -> impl Iterator<Item = Solution<ArrayIndex, f32>> {
         debug!("Starting compute with {} start points", start.len());
+        let grid_shape = self.scenario.grid_shape();
 
         let solution: Vec<Solution<ArrayIndex, f32>> = start
             .into_par_iter()
@@ -36,6 +44,7 @@ impl Routing {
                     |p| self.scenario.successors(p),
                     None::<fn(&ArrayIndex) -> u64>,
                     |p| end.contains(p),
+                    grid_shape,
                 )
             })
             .collect();
@@ -48,10 +57,17 @@ impl Routing {
         cost_function: crate::cost::CostFunction,
         cache_size: u64,
         swap_fp: Option<std::path::PathBuf>,
+        mem_limit_bytes: u64,
+        algorithm: &str,
     ) -> Result<Self> {
+        let algorithm = AlgorithmType::from_str(algorithm)?;
+        let cache_size = cache_budget_bytes(mem_limit_bytes);
+        let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
         let scenario = Scenario::new(store_path, cost_function, cache_size, swap_fp)?;
-
-        let algorithm = Algorithm::new();
+        let algorithm = Algorithm::from_selection(
+            algorithm,
+            per_rayon_worker_memory_budget(rayon_worker_total_budget_bytes),
+        );
 
         Ok(Self {
             scenario,
@@ -76,12 +92,21 @@ impl ParRouting {
         store_path: P,
         cost_function: crate::cost::CostFunction,
         cache_size: u64,
+        mem_limit_bytes: u64,
         swap_fp: Option<std::path::PathBuf>,
+        algorithm: &str,
     ) -> Result<Self> {
+        // let scenario = Scenario::new(store_path, cost_function, cache_size, swap_fp)?;
+        let algorithm = AlgorithmType::from_str(algorithm)?;
+        let cache_size = cache_budget_bytes(mem_limit_bytes);
+        let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
         let scenario = Scenario::new(store_path, cost_function, cache_size, swap_fp)?;
         Ok(Self {
             scenario: Arc::new(scenario),
-            algorithm: Arc::new(Algorithm::new()),
+            algorithm: Arc::new(Algorithm::from_selection(
+                algorithm,
+                per_rayon_worker_memory_budget(rayon_worker_total_budget_bytes),
+            )),
         })
     }
     pub(super) fn lazy_scout<I>(
@@ -104,6 +129,7 @@ impl ParRouting {
                      end_inds,
                  }| {
                     debug!("Computing routes between {start_inds:?} and {end_inds:?}");
+                    let grid_shape = scenario.grid_shape();
                     // if end_inds.last() == Some(&ArrayIndex { i: 2, j: 6 }) {
                     //     use std::thread;
                     //     use std::time::Duration;
@@ -129,6 +155,7 @@ impl ParRouting {
                                 |p| scenario.successors(p),
                                 None::<fn(&ArrayIndex) -> u64>,
                                 |p| end_inds.contains(p),
+                                grid_shape,
                             )
                             // pathfinding::prelude::dijkstra(
                             //     &s,
@@ -139,7 +166,7 @@ impl ParRouting {
                         // .map(|(route, total_cost)| Solution::new(route, unscaled_cost(total_cost)))
                         .collect();
                     let num_routes = routes.len();
-                    debug!("Finished computing {num_routes} to {end_inds:?}");
+                    debug!("Finished computing {num_routes} route(s) to {end_inds:?}");
                     sender.send((route_id, routes))
                 },
             );
@@ -155,4 +182,22 @@ fn cost_as_u64(cost: f32) -> u64 {
 
 fn unscaled_cost(cost: u64) -> f32 {
     (cost as f32) / PRECISION_SCALAR
+}
+
+fn cache_budget_bytes(mem_limit_bytes: u64) -> u64 {
+    mem_limit_bytes * CACHE_BUDGET_PERCENT / 100
+}
+
+fn per_rayon_worker_memory_budget(total_budget_bytes: u64) -> u64 {
+    // Routing uses Rayon global-pool APIs, so this reflects the worker count
+    // that will execute the searches, even at initialization
+    let worker_count = rayon::current_num_threads().max(1) as u64;
+    let per_worker_budget = total_budget_bytes / worker_count;
+
+    debug!(
+        "Splitting {} bytes across {} Rayon workers ({} bytes per worker)",
+        total_budget_bytes, worker_count, per_worker_budget
+    );
+
+    per_worker_budget
 }

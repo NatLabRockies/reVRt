@@ -218,18 +218,21 @@ def test_route_results_passes_routing_layer_out_fp(
         def __iter__(self):
             return iter([])
 
-    monkeypatch.setattr("revrt.routing.base.RouteFinder", FakeRouteFinder)
-
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm="long-range-dijkstra",
     )
+
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
             ([(1, 1)], [(2, 6)]),
         ],
     )
+
+    monkeypatch.setattr("revrt.routing.base.RouteFinder", FakeRouteFinder)
+
     routing_layer_out_fp = tmp_path / "routing_layer.zarr"
     list(
         route_computer._route_results(
@@ -237,6 +240,69 @@ def test_route_results_passes_routing_layer_out_fp(
         )
     )
     assert recorded_kwargs["routing_layer_out_fp"] == routing_layer_out_fp
+
+
+def test_routing_scenario_normalizes_algorithm(sample_layered_data):
+    """RoutingScenario normalizes supported algorithm aliases"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        algorithm="long-range-dijkstra",
+    )
+
+    # assert scenario.algorithm is RoutingAlgorithm.LONG_RANGE
+    assert "algorithm: long-range-dijkstra" in repr(scenario)
+
+
+def test_routing_scenario_rejects_invalid_algorithm(sample_layered_data):
+    """RoutingScenario raises on unsupported algorithm names"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        algorithm="bellman_ford",
+    )
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 1)], [(2, 6)]),
+        ],
+    )
+    with pytest.raises(ValueError, match="Unsupported routing algorithm"):
+        list(route_computer._route_results())
+
+
+def test_batch_route_processor_forwards_algorithm(
+    sample_layered_data, monkeypatch
+):
+    """BatchRouteProcessor passes the selected algorithm to Rust"""
+
+    captured = {}
+
+    class FakeRouteFinder:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        def __iter__(self):
+            return iter(())
+
+    monkeypatch.setattr("revrt.routing.base.RouteFinder", FakeRouteFinder)
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        algorithm="dijkstra",
+    )
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 1)], [(2, 6)]),
+        ],
+    )
+
+    assert list(route_computer._route_results()) == []
+    assert captured["algorithm"] == "dijkstra"
 
 
 def test_basic_single_route_layered_file(sample_layered_data, tmp_path):

@@ -28,8 +28,11 @@ _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL = 55923.40730136006
 / 1609.344 [meters/mile]
 = 55923.40730136006 [$/pixel]
 """
-_CACHE_MEM_FRACTION = 0.5
-"""Fraction of system memory to use for Zarr caching in Rust"""
+_RUST_MEM_FRACTION = 0.75
+"""Fraction of user-input memory to use for Rust computations
+
+The remaining memory is assumed to be for the Python process.
+"""
 
 
 class RouteToDefinitionConverter(ABC):
@@ -199,6 +202,7 @@ def run_lcp(
     ignore_invalid_costs=True,
     user_mem_limit_gb=4,
     save_routing_layer=False,
+    algorithm="long_range_dijkstra",
 ):
     """[NOT PUBLIC API] Run LCP routing and save to output file"""
 
@@ -220,13 +224,14 @@ def run_lcp(
             cost_multiplier_layer=cost_multiplier_layer,
             cost_multiplier_scalar=cost_multiplier_scalar,
             ignore_invalid_costs=ignore_invalid_costs,
+            algorithm=algorithm,
         )
 
         route_computer = BatchRouteProcessor(
             routing_scenario=scenario,
             route_definitions=route_definitions,
             route_attrs=route_attrs,
-            mem_limit_gb=user_mem_limit_gb * _CACHE_MEM_FRACTION,
+            mem_limit_gb=user_mem_limit_gb * _RUST_MEM_FRACTION,
         )
 
         rl_mover = routing_layer_mover(
