@@ -161,7 +161,7 @@ impl ParRouting {
                         // .map(|(route, total_cost)| Solution::new(route, unscaled_cost(total_cost)))
                         .collect();
                     let num_routes = routes.len();
-                    debug!("Finished computing {num_routes} to {end_inds:?}");
+                    debug!("Finished computing {num_routes} route(s) to {end_inds:?}");
                     sender.send((route_id, routes))
                 },
             );
