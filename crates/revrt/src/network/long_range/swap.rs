@@ -119,10 +119,8 @@ impl SwapStore {
     pub(super) fn flush(&mut self) -> std::io::Result<()> {
         if self.write_buffer.is_empty() {
             return Ok(());
-        } else {
-            // Only log if buffer is non-empty
-            debug!("Flushing {} entries to disk", self.write_buffer.len());
         }
+        debug!("Flushing {} entries to disk", self.write_buffer.len());
 
         let mut buffered_entries = self.write_buffer.drain().collect::<Vec<_>>();
         if buffered_entries.len() > 1 {
