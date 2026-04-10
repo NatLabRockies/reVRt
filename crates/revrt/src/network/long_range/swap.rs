@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::io::{Read, Seek, SeekFrom, Write};
 
 use tempfile::NamedTempFile;
@@ -68,8 +69,8 @@ impl SpillRecord {
 pub(super) struct SwapStore {
     /// Temporary swap file that receives flushed records
     file: NamedTempFile,
-    /// In-memory queue of pending slot writes waiting to be flushed to disk
-    write_buffer: Vec<(u64, SpillRecord)>, // (slot, values)
+    /// Pending slot writes keyed by slot until they are flushed to disk
+    write_buffer: HashMap<u64, SpillRecord>,
     /// Maximum buffered writes before `write_slot` forces a flush
     write_buffer_capacity: usize,
 }
@@ -89,7 +90,7 @@ impl SwapStore {
         );
         Ok(Self {
             file,
-            write_buffer: Vec::with_capacity(write_buffer_capacity),
+            write_buffer: HashMap::with_capacity(write_buffer_capacity),
             write_buffer_capacity,
         })
     }
@@ -106,7 +107,7 @@ impl SwapStore {
     ) -> std::io::Result<()> {
         let slot = u64::try_from(slot).map_err(|_| std::io::Error::other("slot overflow"))?;
         self.write_buffer
-            .push((slot, SpillRecord::from_parts(record.0, record.1)));
+            .insert(slot, SpillRecord::from_parts(record.0, record.1));
 
         if self.write_buffer.len() >= self.write_buffer_capacity {
             self.flush()?;
@@ -122,7 +123,13 @@ impl SwapStore {
             // Only log if buffer is non-empty
             debug!("Flushing {} entries to disk", self.write_buffer.len());
         }
-        for (slot, record) in self.write_buffer.drain(..) {
+
+        let mut buffered_entries = self.write_buffer.drain().collect::<Vec<_>>();
+        if buffered_entries.len() > 1 {
+            buffered_entries.sort_unstable_by_key(|(slot, _)| *slot);
+        }
+
+        for (slot, record) in buffered_entries {
             let offset = Self::slot_offset(slot)?;
             let file = self.file.as_file_mut();
             file.seek(SeekFrom::Start(offset))?;
@@ -132,9 +139,12 @@ impl SwapStore {
     }
 
     pub(super) fn read_slot(&mut self, slot: usize) -> std::io::Result<(u64, Option<usize>)> {
-        self.flush()?;
-
         let slot = u64::try_from(slot).map_err(|_| std::io::Error::other("slot overflow"))?;
+
+        if let Some(record) = self.write_buffer.get(&slot).copied() {
+            return Ok((record.cost, record.parent_slot()));
+        }
+
         let offset = Self::slot_offset(slot)?;
 
         let file = self.file.as_file_mut();
@@ -180,6 +190,32 @@ mod tests {
 
         assert_eq!(restored.0, 11);
         assert_eq!(restored.1, Some(3));
+
+        swap.flush().unwrap();
+        let restored = swap.read_slot(4).unwrap();
+
+        assert_eq!(restored.0, 11);
+        assert_eq!(restored.1, Some(3));
+    }
+
+    #[test]
+    fn swap_store_read_prefers_pending_buffer() {
+        let mut swap = SwapStore::new(8).unwrap();
+
+        swap.write_slot(9, (5, Some(1))).unwrap();
+        swap.flush().unwrap();
+        swap.write_slot(9, (8, Some(7))).unwrap();
+
+        let restored = swap.read_slot(9).unwrap();
+
+        assert_eq!(restored.0, 8);
+        assert_eq!(restored.1, Some(7));
+
+        swap.flush().unwrap();
+        let restored = swap.read_slot(9).unwrap();
+
+        assert_eq!(restored.0, 8);
+        assert_eq!(restored.1, Some(7));
     }
 
     #[test]
