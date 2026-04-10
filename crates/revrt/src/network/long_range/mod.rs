@@ -84,14 +84,6 @@ impl FrontierOnlySearchState {
                 continue;
             }
 
-            let Some(current_best) = self.best_node_costs.get(&index).copied() else {
-                continue;
-            };
-
-            if cost != current_best {
-                continue;
-            }
-
             let array_index = self.grid.index_of(index);
             let parent_slot = self.parents.remove(&index);
             self.best_node_costs.remove(&index);
