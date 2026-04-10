@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775763359471,
+  "lastUpdate": 1775785110617,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -7811,6 +7811,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 357578462,
             "range": "± 4254058",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d90652b0fb08cac8c4200b5a73ec4bef58dc14d5",
+          "message": "Other cleanup (#245)\n\n* Add error types\n\n* Remove outdated docstring\n\n* Remove unneeded checks\n\n* Support f64",
+          "timestamp": "2026-04-09T19:25:53-06:00",
+          "tree_id": "c6edcff0e2651c77fdf7e51f0cd2d881869ca166",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/d90652b0fb08cac8c4200b5a73ec4bef58dc14d5"
+        },
+        "date": 1775785109394,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 73921890,
+            "range": "± 848709",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 71108587,
+            "range": "± 713726",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 104194928,
+            "range": "± 1872675",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 152132442,
+            "range": "± 2102696",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 620200012,
+            "range": "± 7637160",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 142789108,
+            "range": "± 3095372",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147316821,
+            "range": "± 525759",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 160540952,
+            "range": "± 678427",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 204155229,
+            "range": "± 1598072",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 367567820,
+            "range": "± 2967409",
             "unit": "ns/iter"
           }
         ]
