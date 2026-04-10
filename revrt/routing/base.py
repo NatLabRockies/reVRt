@@ -780,6 +780,7 @@ class BatchRouteProcessor:
 
         results_iter = iter(routing_results)
         num_complete = 0
+        ts = time.monotonic()
         while True:
             num_complete += 1
             try:
@@ -807,11 +808,13 @@ class BatchRouteProcessor:
                     attrs = self.route_attrs.get(attrs_key, self.default_attrs)
                     yield indices, optimized_objective, attrs
 
+                time_elapsed = f"{(time.monotonic() - ts) / 60:.4f} minute(s)"
                 logger.info(
-                    "%d/%d (%.2f%%) routes processed",
+                    "%d/%d (%.2f%%) route definitions processed in %s",
                     num_complete,
                     len(self.route_definitions),
                     (num_complete / len(self.route_definitions)) * 100,
+                    time_elapsed,
                 )
             except revrtRustError:  # pragma: no cover
                 logger.exception("Rust error when computing route")
