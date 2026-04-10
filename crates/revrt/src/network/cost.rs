@@ -28,26 +28,27 @@ impl<I> PartialOrd for NodeCost<I, u32> {
         Some(self.cmp(other))
     }
 }
-
 impl<I> PartialOrd for NodeCost<I, u64> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
-
 impl<I> PartialOrd for NodeCost<I, i32> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
-
 impl<I> PartialOrd for NodeCost<I, i64> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
-
 impl<I> PartialOrd for NodeCost<I, f32> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl<I> PartialOrd for NodeCost<I, f64> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
@@ -98,6 +99,14 @@ impl<I> Ord for NodeCost<I, i64> {
     }
 }
 impl<I> Ord for NodeCost<I, f32> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match other.estimated_cost.total_cmp(&self.estimated_cost) {
+            Ordering::Equal => other.cost.total_cmp(&self.cost),
+            ordering => ordering,
+        }
+    }
+}
+impl<I> Ord for NodeCost<I, f64> {
     fn cmp(&self, other: &Self) -> Ordering {
         match other.estimated_cost.total_cmp(&self.estimated_cost) {
             Ordering::Equal => other.cost.total_cmp(&self.cost),
