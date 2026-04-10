@@ -169,7 +169,7 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     route cost.
 #[pyfunction]
 #[pyo3(signature = (zarr_fp, cost_function, start, end, algorithm="long_range_dijkstra", routing_layer_out_fp=None, mem_limit_bytes=250_000_000, log_level=None))]
-#[allow(clippy::type_complexity)]
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn find_paths(
     zarr_fp: PathBuf,
     cost_function: String,

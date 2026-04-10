@@ -94,7 +94,6 @@ impl ParRouting {
         swap_fp: Option<std::path::PathBuf>,
         algorithm: &str,
     ) -> Result<Self> {
-        // let scenario = Scenario::new(store_path, cost_function, cache_size, swap_fp)?;
         let algorithm = AlgorithmType::from_str(algorithm)?;
         let cache_size = cache_budget_bytes(mem_limit_bytes);
         let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
