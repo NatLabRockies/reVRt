@@ -29,7 +29,7 @@ pub fn bench_minimalist(
     let cost_function = CostFunction::from_json(&cost_json).unwrap();
 
     let mut simulation: Routing =
-        Routing::new(&features_path, cost_function, 1_000, "dijkstra").unwrap();
+        Routing::new(&features_path, cost_function, None, 1_000, "dijkstra").unwrap();
 
     let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
     assert!(!solutions.is_empty(), "No solutions found");

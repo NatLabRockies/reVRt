@@ -555,7 +555,7 @@ mod tests {
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
 
-        let error = Dataset::open(tmp_path.path(), cost_function, 1_000)
+        let error = Dataset::open(tmp_path.path(), cost_function, 1_000, None)
             .err()
             .expect("Expected Dataset::open to reject a 2D representative variable");
 

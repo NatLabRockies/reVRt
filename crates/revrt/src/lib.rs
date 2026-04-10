@@ -48,7 +48,7 @@ pub fn resolve<P: AsRef<std::path::Path>>(
     start: &[ArrayIndex],
     end: Vec<ArrayIndex>,
     swap_fp: Option<std::path::PathBuf>,
-    cache_size: u64,
+    mem_limit_bytes: u64,
 ) -> Result<RevrtRoutingSolutions> {
     let cost_function = CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);

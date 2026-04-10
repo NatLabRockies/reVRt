@@ -55,7 +55,6 @@ impl Routing {
     pub(super) fn new<P: AsRef<std::path::Path>>(
         store_path: P,
         cost_function: crate::cost::CostFunction,
-        cache_size: u64,
         swap_fp: Option<std::path::PathBuf>,
         mem_limit_bytes: u64,
         algorithm: &str,
@@ -91,7 +90,6 @@ impl ParRouting {
     pub(super) fn new<P: AsRef<std::path::Path>>(
         store_path: P,
         cost_function: crate::cost::CostFunction,
-        cache_size: u64,
         mem_limit_bytes: u64,
         swap_fp: Option<std::path::PathBuf>,
         algorithm: &str,
