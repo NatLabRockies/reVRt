@@ -20,8 +20,6 @@ struct SpillRecord {
 }
 
 impl SpillRecord {
-    const RECORD_LEN: usize = 8 + 8;
-
     fn from_parts(cost: u64, parent_slot: Option<usize>) -> Self {
         let parent_slot = parent_slot
             .and_then(|slot| u64::try_from(slot).ok())
@@ -38,14 +36,14 @@ impl SpillRecord {
         }
     }
 
-    fn to_bytes(self) -> [u8; Self::RECORD_LEN] {
-        let mut out = [0_u8; Self::RECORD_LEN];
+    fn to_bytes(self) -> [u8; 16] {
+        let mut out = [0_u8; 16];
         out[0..8].copy_from_slice(&self.cost.to_le_bytes());
         out[8..16].copy_from_slice(&self.parent_slot.to_le_bytes());
         out
     }
 
-    fn from_bytes(bytes: [u8; Self::RECORD_LEN]) -> Self {
+    fn from_bytes(bytes: [u8; 16]) -> Self {
         let mut cost = [0_u8; 8];
         let mut parent_slot = [0_u8; 8];
         cost.copy_from_slice(&bytes[0..8]);
@@ -76,6 +74,8 @@ pub(super) struct SwapStore {
 }
 
 impl SwapStore {
+    pub(super) const SPILL_RECORD_BYTES: u64 = std::mem::size_of::<SpillRecord>() as u64;
+
     pub(super) fn new(write_buffer_capacity: usize) -> std::io::Result<Self> {
         let file = tempfile::Builder::new()
             .prefix("revrt-routing-swap-")
@@ -96,7 +96,7 @@ impl SwapStore {
     }
 
     fn slot_offset(slot: u64) -> std::io::Result<u64> {
-        slot.checked_mul(SpillRecord::RECORD_LEN as u64)
+        slot.checked_mul(16)
             .ok_or_else(|| std::io::Error::other("swap slot offset overflow"))
     }
 
@@ -147,7 +147,7 @@ impl SwapStore {
 
         let file = self.file.as_file_mut();
         file.seek(SeekFrom::Start(offset))?;
-        let mut bytes = [0_u8; SpillRecord::RECORD_LEN];
+        let mut bytes = [0_u8; 16];
         file.read_exact(&mut bytes)?;
         let record = SpillRecord::from_bytes(bytes);
         Ok((record.cost, record.parent_slot()))

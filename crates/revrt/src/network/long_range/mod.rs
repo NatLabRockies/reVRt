@@ -10,7 +10,6 @@ use crate::ArrayIndex;
 use swap::SwapStore;
 use utilities::{FinalizedBits, GridIndexer};
 
-const SPILL_BUFFER_ENTRY_BYTES: u64 = 32; // Spill buffer entry is 24 bytes, but we add a buffer for HashMap overhead
 const MAX_PQ_TO_FRONTIER_NODE_RATIO: usize = 2;
 
 #[derive(Clone, Debug)]
@@ -203,7 +202,8 @@ fn compact_pq_set(best_node_costs: &HashMap<usize, u64>) -> BinaryHeap<NodeCost<
 }
 
 fn spill_buffer_capacity(memory_budget_bytes: u64) -> usize {
-    let max_entries = memory_budget_bytes.saturating_sub(1) / SPILL_BUFFER_ENTRY_BYTES;
+    let conservative_record_bytes = SwapStore::SPILL_RECORD_BYTES + 8; // Add 8 bytes for HashMap overhead per entry
+    let max_entries = memory_budget_bytes.saturating_sub(1) / conservative_record_bytes;
     let capped_entries = max_entries.min(usize::MAX as u64);
 
     if capped_entries == 0 {
@@ -236,10 +236,10 @@ mod tests {
     #[test]
     fn spill_buffer_capacity_is_power_of_two_under_budget() {
         assert_eq!(spill_buffer_capacity(24), 0);
-        assert_eq!(spill_buffer_capacity(25), 0);
+        assert_eq!(spill_buffer_capacity(25), 1);
         assert_eq!(spill_buffer_capacity(48), 1);
-        assert_eq!(spill_buffer_capacity(49), 1);
-        assert_eq!(spill_buffer_capacity(1024), 16);
+        assert_eq!(spill_buffer_capacity(49), 2);
+        assert_eq!(spill_buffer_capacity(1024), 32);
     }
 
     #[test]
