@@ -116,11 +116,9 @@ impl SwapStore {
     }
 
     pub(super) fn flush(&mut self) -> std::io::Result<()> {
-        if self.write_buffer.len() > 1 {
-            self.write_buffer.sort_unstable_by_key(|(slot, _)| *slot);
-        }
-        if !self.write_buffer.is_empty() {
-            // Buffer can be empty for repeated `read_slot` calls
+        if self.write_buffer.is_empty() {
+            return Ok(());
+        } else {
             // Only log if buffer is non-empty
             debug!("Flushing {} entries to disk", self.write_buffer.len());
         }
