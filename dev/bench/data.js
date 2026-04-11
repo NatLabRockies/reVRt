@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775785110617,
+  "lastUpdate": 1775867392504,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -7895,6 +7895,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 367567820,
             "range": "± 2967409",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "04a9f414063e0931e7f783e6e1c5addeb64b6255",
+          "message": "Move buffer to HashMap (#246)\n\n* Update logger\n\n* Fix logger statement\n\n* Don't do I/O if buffer is empty\n\n* Use HashMap instead of Vec as spill record buffer\n\n* Conservative increase for spill buffer entry byte estimate\n\n* Reduce logic flow complexity\n\n* Slight update to how memory estimate is computed",
+          "timestamp": "2026-04-10T16:56:20-06:00",
+          "tree_id": "4b575a60998a560e6b201265c541daa4ede01cf3",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/04a9f414063e0931e7f783e6e1c5addeb64b6255"
+        },
+        "date": 1775867391373,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 52443453,
+            "range": "± 848546",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 39880442,
+            "range": "± 469549",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 85152579,
+            "range": "± 1791204",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 122917699,
+            "range": "± 1688185",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 411652033,
+            "range": "± 26462608",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 83683439,
+            "range": "± 527523",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 86927989,
+            "range": "± 2341172",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 95288037,
+            "range": "± 2142151",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 125139461,
+            "range": "± 946400",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 237129641,
+            "range": "± 3627070",
             "unit": "ns/iter"
           }
         ]
