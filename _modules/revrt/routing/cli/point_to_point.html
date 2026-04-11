@@ -847,8 +847,12 @@ window.addEventListener("load", load);
     <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">transmission_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">save_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">save_routing_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">memory_utilization_limit</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+    <span class="n">system_mem_limit_gb</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
     <span class="n">_split_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;long_range_dijkstra&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run least-cost path routing for pairs of points</span>
 
@@ -1051,11 +1055,29 @@ window.addEventListener("load", load);
 <span class="sd">    save_paths : bool, default=False</span>
 <span class="sd">        Save outputs as a GeoPackage with path geometries when ``True``.</span>
 <span class="sd">        Defaults to ``False``.</span>
+<span class="sd">    save_routing_layer : bool, default=False</span>
+<span class="sd">        Save Rust routing layer outputs to ``out_dir/extra_outputs``</span>
+<span class="sd">        when ``True``. Defaults to ``False``.</span>
 <span class="sd">    ignore_invalid_costs : bool, optional</span>
 <span class="sd">        Optional flag to treat any cost values &lt;= 0 as impassable</span>
 <span class="sd">        (i.e. no paths can ever cross this). If ``False``, cost values</span>
 <span class="sd">        of &lt;= 0 are set to a large value to simulate a strong but</span>
 <span class="sd">        permeable &quot;quasi-barrier&quot;. By default, ``False``.</span>
+<span class="sd">    algorithm : str, default=&quot;long_range_dijkstra&quot;</span>
+<span class="sd">        Routing algorithm implementation to use. Supported values are</span>
+<span class="sd">        ``&quot;long_range_dijkstra&quot;`` and ``&quot;dijkstra&quot;``. ``&quot;dijkstra&quot;`` is</span>
+<span class="sd">        a faster implementation but does not respect the memory</span>
+<span class="sd">        utilization limit input. Prefer the default</span>
+<span class="sd">        ``&quot;long_range_dijkstra&quot;`` option unless you know for a fact that</span>
+<span class="sd">        your route computations will not need much memory and speed is</span>
+<span class="sd">        very important to you. By default, ``&quot;long_range_dijkstra&quot;``.</span>
+<span class="sd">    memory_utilization_limit : float, default=0.9</span>
+<span class="sd">        Fraction of `system_mem_limit_gb` to utilize for routing. Should</span>
+<span class="sd">        be a value between 0 and 1. By default, ``0.9``.</span>
+<span class="sd">    system_mem_limit_gb : int or float, default=5</span>
+<span class="sd">        Maximum amount of system memory (in GB) to utilize for routing.</span>
+<span class="sd">        This is used in conjunction with `memory_utilization_limit` to</span>
+<span class="sd">        determine the memory limit for routing. By default, ``5`` GB.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1104,10 +1126,14 @@ window.addEventListener("load", load);
         <span class="n">cost_fpath</span><span class="p">,</span>
         <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
         <span class="n">routes_to_compute</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="p">,</span>
+        <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span>
         <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">cost_multiplier_layer</span><span class="p">,</span>
         <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">cost_multiplier_scalar</span><span class="p">,</span>
         <span class="n">tracked_layers</span><span class="o">=</span><span class="n">tracked_layers</span><span class="p">,</span>
         <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
+        <span class="n">user_mem_limit_gb</span><span class="o">=</span><span class="n">memory_utilization_limit</span> <span class="o">*</span> <span class="n">system_mem_limit_gb</span><span class="p">,</span>
+        <span class="n">save_routing_layer</span><span class="o">=</span><span class="n">save_routing_layer</span><span class="p">,</span>
+        <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">elapsed_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
@@ -1123,6 +1149,7 @@ window.addEventListener("load", load);
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">split_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;_split_params&quot;</span><span class="p">},</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">split_routes</span><span class="p">,</span>
+    <span class="n">skip_doc_params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;system_mem_limit_gb&quot;</span><span class="p">],</span>
 <span class="p">)</span>
 </pre></div>
 
@@ -1165,7 +1192,7 @@ window.addEventListener("load", load);
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

@@ -792,6 +792,7 @@ window.addEventListener("load", load);
         <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;long_range_dijkstra&quot;</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
@@ -814,6 +815,15 @@ window.addEventListener("load", load);
 <span class="sd">            Scalar multiplier applied to the final cost surface.</span>
 <span class="sd">        ignore_invalid_costs : bool, optional</span>
 <span class="sd">            Flag indicating whether non-positive costs block traversal.</span>
+<span class="sd">        algorithm : str, default=&quot;long_range_dijkstra&quot;</span>
+<span class="sd">            Routing algorithm implementation to use. Supported values</span>
+<span class="sd">            are ``&quot;long_range_dijkstra&quot;`` and ``&quot;dijkstra&quot;``.</span>
+<span class="sd">            ``&quot;dijkstra&quot;`` is a faster implementation but does not</span>
+<span class="sd">            respect the memory limit. Prefer the default</span>
+<span class="sd">            ``&quot;long_range_dijkstra&quot;`` option unless you know for a fact</span>
+<span class="sd">            that your route computations will not need much memory and</span>
+<span class="sd">            speed is very important to you.</span>
+<span class="sd">            By default, ``&quot;long_range_dijkstra&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span> <span class="o">=</span> <span class="n">cost_fpath</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_layers</span> <span class="o">=</span> <span class="n">cost_layers</span>
@@ -822,6 +832,7 @@ window.addEventListener("load", load);
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_multiplier_layer</span> <span class="o">=</span> <span class="n">cost_multiplier_layer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_multiplier_scalar</span> <span class="o">=</span> <span class="n">cost_multiplier_scalar</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ignore_invalid_costs</span> <span class="o">=</span> <span class="n">ignore_invalid_costs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
@@ -830,6 +841,7 @@ window.addEventListener("load", load);
             <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- friction_layers: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">friction_layers</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- cost_multiplier_layer: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_multiplier_layer</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- cost_multiplier_scalar: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_multiplier_scalar</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- algorithm: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="RoutingScenario.cost_function_json">
@@ -1382,7 +1394,13 @@ window.addEventListener("load", load);
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchRouteProcessor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to manage batches of route computations&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routing_scenario</span><span class="p">,</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">routing_scenario</span><span class="p">,</span>
+        <span class="n">route_definitions</span><span class="p">,</span>
+        <span class="n">route_attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mem_limit_gb</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Parameters</span>
@@ -1400,10 +1418,14 @@ window.addEventListener("load", load);
 <span class="sd">            integers represents the starting index to additional</span>
 <span class="sd">            attributes to include in the output for that route.</span>
 <span class="sd">            By default, ``None``.</span>
+<span class="sd">        mem_limit_gb : int or float, default=4</span>
+<span class="sd">            Memory limit in gigabytes for routing computations.</span>
+<span class="sd">            By default, ``4``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span> <span class="o">=</span> <span class="n">routing_scenario</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_route_definitions</span> <span class="o">=</span> <span class="n">route_definitions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_route_attrs</span> <span class="o">=</span> <span class="n">route_attrs</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mem_limit_gb</span> <span class="o">=</span> <span class="n">mem_limit_gb</span>
 
 <div class="viewcode-block" id="BatchRouteProcessor.default_attrs">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.default_attrs">[docs]</a>
@@ -1443,7 +1465,7 @@ window.addEventListener("load", load);
 
 <div class="viewcode-block" id="BatchRouteProcessor.process">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.process">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">routing_layer_out_fp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute all routes and save to disk</span>
 
 <span class="sd">        Parameters</span>
@@ -1456,13 +1478,18 @@ window.addEventListener("load", load);
 <span class="sd">        save_paths : bool, default=False</span>
 <span class="sd">            Include shapely geometries in the output when ``True``.</span>
 <span class="sd">            By default, ``False``.</span>
+<span class="sd">        routing_layer_out_fp : path-like, optional</span>
+<span class="sd">            Optional output path for Rust routing-layer cache data.</span>
+<span class="sd">            By default, ``None``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">:</span>
             <span class="k">return</span>
 
         <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_routes</span><span class="p">(</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="o">=</span><span class="n">save_paths</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_routes</span><span class="p">(</span>
+                <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="o">=</span><span class="n">save_paths</span><span class="p">,</span> <span class="n">rl</span><span class="o">=</span><span class="n">routing_layer_out_fp</span>
+            <span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_reset_routing_layers</span><span class="p">()</span>
 
@@ -1474,14 +1501,14 @@ window.addEventListener("load", load);
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="p">,</span> <span class="n">rl</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate route definitions and build result records&quot;&quot;&quot;</span>
 
         <span class="n">out_fp</span> <span class="o">=</span> <span class="n">_validate_out_fp</span><span class="p">(</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="p">)</span>
         <span class="n">writer</span> <span class="o">=</span> <span class="n">IncrementalRouteWriter</span><span class="p">(</span>
             <span class="n">out_fp</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">cost_crs</span>
         <span class="p">)</span>
-        <span class="k">for</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">attrs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_results</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">attrs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_results</span><span class="p">(</span><span class="n">rl</span><span class="p">):</span>
             <span class="n">metrics</span> <span class="o">=</span> <span class="n">RouteMetrics</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="p">,</span>
                 <span class="n">indices</span><span class="p">,</span>
@@ -1492,8 +1519,12 @@ window.addEventListener("load", load);
             <span class="n">route_result</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">route_result</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_route_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_route_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routing_layer_out_fp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generator yielding route results from Rust computations&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Setting memory limit to </span><span class="si">%.2f</span><span class="s2"> GB for Rust computations&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mem_limit_gb</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">route_results</span> <span class="o">=</span> <span class="n">RouteFinder</span><span class="p">(</span>
             <span class="n">zarr_fp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">,</span>
             <span class="n">cost_function</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">cost_function_json</span><span class="p">,</span>
@@ -1501,8 +1532,10 @@ window.addEventListener("load", load);
                 <span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">ep</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">rid</span><span class="p">,</span> <span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">ep</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="p">],</span>
-            <span class="n">cache_size</span><span class="o">=</span><span class="mi">2_000_000_000</span><span class="p">,</span>
+            <span class="n">mem_limit_bytes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mem_limit_gb</span> <span class="o">*</span> <span class="mi">1_000_000_000</span><span class="p">),</span>
+            <span class="n">algorithm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">algorithm</span><span class="p">,</span>
             <span class="n">log_level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;revrt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">level</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">routing_layer_out_fp</span><span class="o">=</span><span class="n">routing_layer_out_fp</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_failed_routes</span><span class="p">(</span><span class="n">route_results</span><span class="p">)</span>
 
@@ -1550,7 +1583,10 @@ window.addEventListener("load", load);
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield only successfully computed routes from Rust results&quot;&quot;&quot;</span>
 
         <span class="n">results_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">routing_results</span><span class="p">)</span>
+        <span class="n">num_complete</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">num_complete</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">route_id</span><span class="p">,</span> <span class="n">solutions</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">results_iter</span><span class="p">)</span>
                 <span class="n">start_points</span><span class="p">,</span> <span class="n">end_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">[</span><span class="n">route_id</span><span class="p">]</span>
@@ -1575,11 +1611,20 @@ window.addEventListener("load", load);
                     <span class="n">attrs_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">route_id</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                     <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attrs_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_attrs</span><span class="p">)</span>
                     <span class="k">yield</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">attrs</span>
+
+                <span class="n">time_elapsed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> minute(s)&quot;</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> (</span><span class="si">%.2f%%</span><span class="s2">) route definitions processed in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">num_complete</span><span class="p">,</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">num_complete</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
+                    <span class="n">time_elapsed</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="k">except</span> <span class="n">revrtRustError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Rust error when computing route&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Routing complete&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Routing complete&quot;</span><span class="p">)</span>
                 <span class="k">break</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_start_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
@@ -1769,7 +1814,7 @@ window.addEventListener("load", load);
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

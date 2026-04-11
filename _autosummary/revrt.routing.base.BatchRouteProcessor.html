@@ -467,6 +467,10 @@
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html">revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter</a></li>
 </ul>
 </details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.utilities.html">revrt.routing.cli.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.utilities.routing_layer_mover.html">revrt.routing.cli.utilities.routing_layer_mover</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -613,7 +617,7 @@
 <h1>revrt.routing.base.BatchRouteProcessor<a class="headerlink" href="#revrt-routing-base-batchrouteprocessor" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.routing.base.BatchRouteProcessor">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BatchRouteProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routing_scenario</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_definitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#BatchRouteProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.BatchRouteProcessor" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BatchRouteProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routing_scenario</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_definitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_limit_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#BatchRouteProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.BatchRouteProcessor" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class to manage batches of route computations</p>
 <dl class="field-list simple">
@@ -629,13 +633,15 @@ first integer represents the route ID and the tuple of
 integers represents the starting index to additional
 attributes to include in the output for that route.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>mem_limit_gb</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">4</span></code>) – Memory limit in gigabytes for routing computations.
+By default, <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.routing.base.BatchRouteProcessor.process" title="revrt.routing.base.BatchRouteProcessor.process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process</span></code></a>(out_fp[, save_paths])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.routing.base.BatchRouteProcessor.process" title="revrt.routing.base.BatchRouteProcessor.process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process</span></code></a>(out_fp[, save_paths, ...])</p></td>
 <td><p>Compute all routes and save to disk</p></td>
 </tr>
 </tbody>
@@ -705,7 +711,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">None</s
 
 <dl class="py method">
 <dt class="sig sig-object py" id="revrt.routing.base.BatchRouteProcessor.process">
-<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#BatchRouteProcessor.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.BatchRouteProcessor.process" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routing_layer_out_fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#BatchRouteProcessor.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.BatchRouteProcessor.process" title="Link to this definition">#</a></dt>
 <dd><p>Compute all routes and save to disk</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -716,6 +722,8 @@ will be created (recommend to pass in a filepath ending in
 to pass in a filepath ending in “.csv”).</p></li>
 <li><p><strong>save_paths</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Include shapely geometries in the output when <code class="docutils literal notranslate"><span class="pre">True</span></code>.
 By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>routing_layer_out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Optional output path for Rust routing-layer cache data.
+By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -808,7 +816,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">False</
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

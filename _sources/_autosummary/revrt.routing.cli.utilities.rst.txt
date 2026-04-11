@@ -1,0 +1,30 @@
+revrt.routing.cli.utilities
+===========================
+
+.. automodule:: revrt.routing.cli.utilities
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      routing_layer_mover
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

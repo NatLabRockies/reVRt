@@ -467,6 +467,10 @@
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html">revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter</a></li>
 </ul>
 </details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.utilities.html">revrt.routing.cli.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.utilities.routing_layer_mover.html">revrt.routing.cli.utilities.routing_layer_mover</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
@@ -621,7 +625,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>crs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://pyproj4.github.io/pyproj/stable/api/crs/crs.html#pyproj.crs.CRS" title="(in pyproj v3.7.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyproj.crs.CRS</span></code></a>) – Coordinate reference system to use for all spatial data.</p></li>
 <li><p><strong>features_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – File path to transmission features to map points to.</p></li>
-<li><p><strong>regions</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> or <a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Regions to use for clipping features around points. Features
+<li><p><strong>regions</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> or <a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Regions to use for clipping features around points. Features
 will not extend beyond these regions, and point will only
 map to features within their own region. This input can be
 paired with the <cite>radius</cite> parameter (e.g. to forbid any
@@ -654,7 +658,7 @@ routed to. By default, <code class="docutils literal notranslate"><span class="p
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>points</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – Points to map to features.</p></li>
+<li><p><strong>points</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – Points to map to features.</p></li>
 <li><p><strong>feature_out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – File path to save clipped features to. This should end in
 ‘.gpkg’ to ensure proper format. If not, the extension will
 be added automatically. This file will contain all features
@@ -676,7 +680,7 @@ clipped features to file. By default, <code class="docutils literal notranslate"
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> – Input points with added column giving mapped feature IDs.</p>
+<dd class="field-even"><p><a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> – Input points with added column giving mapped feature IDs.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -764,7 +768,7 @@ clipped features to file. By default, <code class="docutils literal notranslate"
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

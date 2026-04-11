@@ -20,4 +20,15 @@ revrt.RouteFinder
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RouteFinder.algorithm
+      ~RouteFinder.cost_function
+      ~RouteFinder.mem_limit_bytes
+      ~RouteFinder.route_definitions
+      ~RouteFinder.routing_layer_out_fp
+      ~RouteFinder.zarr_fp
+   
    

@@ -467,6 +467,10 @@
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html">revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter</a></li>
 </ul>
 </details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.utilities.html">revrt.routing.cli.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.utilities.routing_layer_mover.html">revrt.routing.cli.utilities.routing_layer_mover</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -607,7 +611,7 @@
 <h1>revrt.find_paths<a class="headerlink" href="#revrt-find-paths" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="revrt.find_paths">
-<span class="sig-name descname"><span class="pre">find_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zarr_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250000000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#revrt.find_paths" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">find_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zarr_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'long_range_dijkstra'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routing_layer_out_fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_limit_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#revrt.find_paths" title="Link to this definition">#</a></dt>
 <dd><p>Find least-cost paths for one or more starting points.</p>
 <p>This function determined the least cost path for one or more starting
 points to one or more ending points. A unique path is returned for
@@ -632,8 +636,22 @@ points.</p></li>
 the indices in the array for the any allowed final pixel.
 When the algorithm reaches any of these points, the routing
 is terminated and the final path + cost is returned.</p></li>
-<li><p><strong>cache_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">250_000_000</span></code>) – Cache size to use for computation, in bytes.
+<li><p><strong>routing_layer_out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Optional path to a cost zarr file that will be used to store the routing
+cost layers. If not given, the routing layers will be kept in a temporary
+directory and deleted after the routing is done. By default, <cite>None</cite>.</p></li>
+<li><p><strong>log_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Logging level for Rust tracing emitted to stderr. Roughly follows the
+Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,
+30 = WARN, and 40 = ERROR. If None is given, no logging is set up.
+By default, <cite>None</cite>.</p></li>
+<li><p><strong>mem_limit_bytes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">250_000_000</span></code>) – Overall memory limit to use for routing computations, in bytes.
 By default, <cite>250,000,000</cite> (250MB).</p></li>
+<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values are
+<code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is
+a faster implementation but does not respect the <cite>mem_limit_bytes</cite>
+input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless
+you know for a fact that your route computations will not need
+much memory and speed is very important to you.
+By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -723,7 +741,7 @@ route cost.</p>
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

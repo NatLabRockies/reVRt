@@ -758,9 +758,11 @@ window.addEventListener("load", load);
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span>  <span class="c1"># noqa: F401</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.cli.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">routing_layer_mover</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchRouteProcessor</span><span class="p">,</span> <span class="n">RoutingScenario</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtKeyError</span>
 
@@ -773,6 +775,11 @@ window.addEventListener("load", load);
 <span class="sd">* 90 [meters/pixel]</span>
 <span class="sd">/ 1609.344 [meters/mile]</span>
 <span class="sd">= 55923.40730136006 [$/pixel]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">_RUST_MEM_FRACTION</span> <span class="o">=</span> <span class="mf">0.75</span>
+<span class="sd">&quot;&quot;&quot;Fraction of user-input memory to use for Rust computations</span>
+
+<span class="sd">The remaining memory is assumed to be for the Python process.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -941,14 +948,18 @@ window.addEventListener("load", load);
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">run_lcp</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_lcp</span><span class="p">(</span>  <span class="c1"># noqa</span>
     <span class="n">cost_fpath</span><span class="p">,</span>
     <span class="n">out_fp</span><span class="p">,</span>
     <span class="n">routes_to_compute</span><span class="p">,</span>
+    <span class="n">job_name</span><span class="o">=</span><span class="s2">&quot;routes&quot;</span><span class="p">,</span>
     <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">tracked_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">user_mem_limit_gb</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">save_routing_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;long_range_dijkstra&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Run LCP routing and save to output file&quot;&quot;&quot;</span>
 
@@ -970,14 +981,32 @@ window.addEventListener("load", load);
             <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">cost_multiplier_layer</span><span class="p">,</span>
             <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">cost_multiplier_scalar</span><span class="p">,</span>
             <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
+            <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">route_computer</span> <span class="o">=</span> <span class="n">BatchRouteProcessor</span><span class="p">(</span>
             <span class="n">routing_scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
             <span class="n">route_definitions</span><span class="o">=</span><span class="n">route_definitions</span><span class="p">,</span>
             <span class="n">route_attrs</span><span class="o">=</span><span class="n">route_attrs</span><span class="p">,</span>
+            <span class="n">mem_limit_gb</span><span class="o">=</span><span class="n">user_mem_limit_gb</span> <span class="o">*</span> <span class="n">_RUST_MEM_FRACTION</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">route_computer</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="o">=</span><span class="n">save_paths</span><span class="p">)</span>
+
+        <span class="n">rl_mover</span> <span class="o">=</span> <span class="n">routing_layer_mover</span><span class="p">(</span>
+            <span class="n">save</span><span class="o">=</span><span class="n">save_routing_layer</span><span class="p">,</span>
+            <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
+            <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
+            <span class="n">route_attrs</span><span class="o">=</span><span class="n">route_attrs</span><span class="p">,</span>
+            <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span>
+            <span class="n">route_cl</span><span class="o">=</span><span class="n">route_cl</span><span class="p">,</span>
+            <span class="n">route_fl</span><span class="o">=</span><span class="n">route_fl</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">rl_mover</span> <span class="k">as</span> <span class="n">routing_layer_out_fp</span><span class="p">:</span>
+            <span class="n">route_computer</span><span class="o">.</span><span class="n">process</span><span class="p">(</span>
+                <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
+                <span class="n">save_paths</span><span class="o">=</span><span class="n">save_paths</span><span class="p">,</span>
+                <span class="n">routing_layer_out_fp</span><span class="o">=</span><span class="n">routing_layer_out_fp</span><span class="p">,</span>
+            <span class="p">)</span>
 
     <span class="n">time_elapsed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">3600</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> hour(s)&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
@@ -1013,6 +1042,9 @@ window.addEventListener("load", load);
         <span class="n">num_nodes</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">num_nodes</span> <span class="o">=</span> <span class="n">exec_control</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mem_limit_gb</span> <span class="o">:=</span> <span class="n">exec_control</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;memory&quot;</span><span class="p">):</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;system_mem_limit_gb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mem_limit_gb</span><span class="p">)</span>
 
     <span class="n">config</span><span class="p">[</span><span class="s2">&quot;_split_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">num_nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_nodes</span><span class="p">)]</span>
     <span class="k">return</span> <span class="n">config</span>
@@ -1142,7 +1174,7 @@ window.addEventListener("load", load);
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

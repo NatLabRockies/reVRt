@@ -34,4 +34,5 @@ revrt.routing.cli
    finalize
    point_to_feature
    point_to_point
+   utilities
 

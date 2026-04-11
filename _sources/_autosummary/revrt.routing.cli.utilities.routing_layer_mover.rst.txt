@@ -1,0 +1,6 @@
+revrt.routing.cli.utilities.routing\_layer\_mover
+=================================================
+
+.. currentmodule:: revrt.routing.cli.utilities
+
+.. autofunction:: routing_layer_mover

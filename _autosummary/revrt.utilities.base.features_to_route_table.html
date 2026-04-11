@@ -467,6 +467,10 @@
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html">revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter</a></li>
 </ul>
 </details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.utilities.html">revrt.routing.cli.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.utilities.routing_layer_mover.html">revrt.routing.cli.utilities.routing_layer_mover</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -621,10 +625,10 @@ mostly for easy backward-compatibility, since the old routing code
 computed paths between all feature permutations by default.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>features</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – Geopandas DataFrame containing features to route between.</p>
+<dd class="field-odd"><p><strong>features</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – Geopandas DataFrame containing features to route between.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> – Pandas DataFrame with the expected routing columns: <cite>start_lat</cite>,
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> – Pandas DataFrame with the expected routing columns: <cite>start_lat</cite>,
 <cite>start_lon</cite>, <cite>end_lat</cite>, and <cite>end_lon</cite>. Also includes
 <cite>start_index</cite> and <cite>index</cite> columns for convenience. DataFrame
 index name is set to “rid”.</p>
@@ -710,7 +714,7 @@ index name is set to “rid”.</p>
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

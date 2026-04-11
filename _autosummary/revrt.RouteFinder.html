@@ -467,6 +467,10 @@
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter.html">revrt.routing.cli.point_to_point.PointToPointRouteDefinitionConverter</a></li>
 </ul>
 </details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.utilities.html">revrt.routing.cli.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.utilities.routing_layer_mover.html">revrt.routing.cli.utilities.routing_layer_mover</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -607,7 +611,7 @@
 <h1>revrt.RouteFinder<a class="headerlink" href="#revrt-routefinder" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.RouteFinder">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RouteFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zarr_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_definitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#revrt.RouteFinder" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RouteFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zarr_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_definitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'long_range_dijkstra'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routing_layer_out_fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_limit_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#revrt.RouteFinder" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Find least-cost paths for one or more starting points in parallel.</p>
 <dl class="field-list simple">
@@ -629,8 +633,18 @@ the indices in the array for the pixel indicating where routing should
 begin/end. A unique path will be returned for each of the starting
 points in each of the path definition tuples (assuming a valid path
 exists).</p></li>
-<li><p><strong>cache_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">250_000_000</span></code>) – Cache size to use for computation, in bytes.
+<li><p><strong>routing_layer_out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Optional path to a cost zarr file that will be used to store the routing
+cost layers. If not given, the routing layers will be kept in a temporary
+directory and deleted after the routing is done. By default, <cite>None</cite>.</p></li>
+<li><p><strong>mem_limit_bytes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">250_000_000</span></code>) – Overall memory limit to use for routing computations, in bytes.
 By default, <cite>250,000,000</cite> (250MB).</p></li>
+<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values are
+<code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is
+a faster implementation but does not respect the <cite>mem_limit_bytes</cite>
+input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless
+you know for a fact that your route computations will not need
+much memory and speed is very important to you.
+By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p></li>
 <li><p><strong>log_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Logging level for Rust tracing emitted to stderr. Roughly follows the
 Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,
 30 = WARN, and 40 = ERROR. If None is given, no logging is set up.
@@ -657,6 +671,66 @@ so use the route ID input to match results to inputs.</p>
 </tbody>
 </table>
 </div>
+<p class="rubric">Attributes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.RouteFinder.algorithm" title="revrt.RouteFinder.algorithm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">algorithm</span></code></a></p></td>
+<td><p>Algorithm used for routing</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.RouteFinder.cost_function" title="revrt.RouteFinder.cost_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cost_function</span></code></a></p></td>
+<td><p>JSON string representation of the cost function configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.RouteFinder.mem_limit_bytes" title="revrt.RouteFinder.mem_limit_bytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mem_limit_bytes</span></code></a></p></td>
+<td><p>Cache size used during routing, in bytes</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.RouteFinder.route_definitions" title="revrt.RouteFinder.route_definitions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">route_definitions</span></code></a></p></td>
+<td><p>Route definitions as <code class="docutils literal notranslate"><span class="pre">(route_id,</span> <span class="pre">start_points,</span> <span class="pre">end_points)</span></code> tuples</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.RouteFinder.routing_layer_out_fp" title="revrt.RouteFinder.routing_layer_out_fp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">routing_layer_out_fp</span></code></a></p></td>
+<td><p>Optional output path where routing layers are persisted</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.RouteFinder.zarr_fp" title="revrt.RouteFinder.zarr_fp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zarr_fp</span></code></a></p></td>
+<td><p>Path to the Zarr file containing the cost layers</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.RouteFinder.algorithm">
+<span class="sig-name descname"><span class="pre">algorithm</span></span><a class="headerlink" href="#revrt.RouteFinder.algorithm" title="Link to this definition">#</a></dt>
+<dd><p>Algorithm used for routing</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.RouteFinder.cost_function">
+<span class="sig-name descname"><span class="pre">cost_function</span></span><a class="headerlink" href="#revrt.RouteFinder.cost_function" title="Link to this definition">#</a></dt>
+<dd><p>JSON string representation of the cost function configuration</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.RouteFinder.mem_limit_bytes">
+<span class="sig-name descname"><span class="pre">mem_limit_bytes</span></span><a class="headerlink" href="#revrt.RouteFinder.mem_limit_bytes" title="Link to this definition">#</a></dt>
+<dd><p>Cache size used during routing, in bytes</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.RouteFinder.route_definitions">
+<span class="sig-name descname"><span class="pre">route_definitions</span></span><a class="headerlink" href="#revrt.RouteFinder.route_definitions" title="Link to this definition">#</a></dt>
+<dd><p>Route definitions as <code class="docutils literal notranslate"><span class="pre">(route_id,</span> <span class="pre">start_points,</span> <span class="pre">end_points)</span></code> tuples</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.RouteFinder.routing_layer_out_fp">
+<span class="sig-name descname"><span class="pre">routing_layer_out_fp</span></span><a class="headerlink" href="#revrt.RouteFinder.routing_layer_out_fp" title="Link to this definition">#</a></dt>
+<dd><p>Optional output path where routing layers are persisted</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.RouteFinder.zarr_fp">
+<span class="sig-name descname"><span class="pre">zarr_fp</span></span><a class="headerlink" href="#revrt.RouteFinder.zarr_fp" title="Link to this definition">#</a></dt>
+<dd><p>Path to the Zarr file containing the cost layers</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -708,7 +782,15 @@ so use the route ID input to match results to inputs.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.RouteFinder"><code class="docutils literal notranslate"><span class="pre">RouteFinder</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.RouteFinder"><code class="docutils literal notranslate"><span class="pre">RouteFinder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.RouteFinder.algorithm"><code class="docutils literal notranslate"><span class="pre">RouteFinder.algorithm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.RouteFinder.cost_function"><code class="docutils literal notranslate"><span class="pre">RouteFinder.cost_function</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.RouteFinder.mem_limit_bytes"><code class="docutils literal notranslate"><span class="pre">RouteFinder.mem_limit_bytes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.RouteFinder.route_definitions"><code class="docutils literal notranslate"><span class="pre">RouteFinder.route_definitions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.RouteFinder.routing_layer_out_fp"><code class="docutils literal notranslate"><span class="pre">RouteFinder.routing_layer_out_fp</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.RouteFinder.zarr_fp"><code class="docutils literal notranslate"><span class="pre">RouteFinder.zarr_fp</span></code></a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 
@@ -737,7 +819,7 @@ so use the route ID input to match results to inputs.</p>
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

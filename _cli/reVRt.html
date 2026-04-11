@@ -1288,7 +1288,7 @@ which submits all node jobs.</p>
 </dd>
 <dt>reproject_vector<span class="classifier">bool, default=True</span></dt><dd><p>Option to reproject CRS of input land vector file to match CRS of template file. By default, <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </dd>
-<dt>chunks<span class="classifier">str, optional</span></dt><dd><p>Chunk size to use when reading the template file. This will be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to <a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.21.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a> or <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.open_dataset.html#xarray.open_dataset" title="(in xarray v2026.2.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p>
+<dt>chunks<span class="classifier">str, optional</span></dt><dd><p>Chunk size to use when reading the template file. This will be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to <a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a> or <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.open_dataset.html#xarray.open_dataset" title="(in xarray v2026.2.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">xarray.open_dataset()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p>
 </dd>
 </dl>
 <p>Note that you may remove any keys with a <code class="docutils literal notranslate"><span class="pre">null</span></code> value if you do not intend to update them yourself.</p>
@@ -3192,7 +3192,7 @@ over from the vector file of routes.</p></li>
 routes used to map to the ROW widths.
 By default, <code class="docutils literal notranslate"><span class="pre">&quot;voltage&quot;</span></code>.</p></li>
 <li><p>chunks : (OPTIONAL) <code class="docutils literal notranslate"><span class="pre">chunks</span></code> keyword argument to pass
-down to <a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.21.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. Use this to
+down to <a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. Use this to
 control the Dask chunk size. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
 </ul>
 </div></blockquote>
@@ -3203,7 +3203,7 @@ control the Dask chunk size. By default, <code class="docutils literal notransla
 </dd>
 <dt>default_row_width_key<span class="classifier">str, optional</span></dt><dd><p>Default name of column in vector file of routes used to map to the ROW widths. This will be used <em>only if</em> no <cite>row_width_key</cite> is provided in a layer’s stats dictionary. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
-<dt>default_chunks<span class="classifier">tuple or str, optional</span></dt><dd><p>Default <code class="docutils literal notranslate"><span class="pre">chunks</span></code> keyword argument to pass down to <a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.21.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. This will be used <em>only if</em> no <cite>chunks</cite> is provided in a layer’s stats dictionary. Use this to control the Dask chunk size. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which uses <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> as the final chunk input.</p>
+<dt>default_chunks<span class="classifier">tuple or str, optional</span></dt><dd><p>Default <code class="docutils literal notranslate"><span class="pre">chunks</span></code> keyword argument to pass down to <a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. This will be used <em>only if</em> no <cite>chunks</cite> is provided in a layer’s stats dictionary. Use this to control the Dask chunk size. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which uses <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> as the final chunk input.</p>
 </dd>
 <dt>row_widths<span class="classifier">dict or path-like, optional</span></dt><dd><p>A dictionary specifying the row widths in the following format: <code class="docutils literal notranslate"><span class="pre">{&quot;row_width_id&quot;:</span> <span class="pre">row_width_meters}</span></code>. The <code class="docutils literal notranslate"><span class="pre">row_width_id</span></code> is a value used to match each route with a particular ROW width (this is typically a voltage). The value should be found under the <code class="docutils literal notranslate"><span class="pre">row_width_key</span></code> entry of the <code class="docutils literal notranslate"><span class="pre">route_fp</span></code>.</p>
 <div class="admonition important">
@@ -3277,7 +3277,8 @@ in the <cite>cost_layers</cite> parameter.</p>
         <span class="s2">&quot;module&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;sh_script&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;keep_sh&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-        <span class="s2">&quot;num_test_nodes&quot;</span><span class="p">:</span> <span class="n">null</span>
+        <span class="s2">&quot;num_test_nodes&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+        <span class="s2">&quot;memory_utilization_limit&quot;</span><span class="p">:</span> <span class="mf">0.9</span>
     <span class="p">},</span>
     <span class="s2">&quot;log_directory&quot;</span><span class="p">:</span> <span class="s2">&quot;./logs&quot;</span><span class="p">,</span>
     <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
@@ -3291,8 +3292,10 @@ in the <cite>cost_layers</cite> parameter.</p>
     <span class="s2">&quot;cost_multiplier_scalar&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="s2">&quot;transmission_config&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;save_paths&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;save_routing_layer&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
     <span class="s2">&quot;ignore_invalid_costs&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-    <span class="s2">&quot;connection_identifier_column&quot;</span><span class="p">:</span> <span class="s2">&quot;end_feat_id&quot;</span>
+    <span class="s2">&quot;connection_identifier_column&quot;</span><span class="p">:</span> <span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;long_range_dijkstra&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -3309,6 +3312,7 @@ in the <cite>cost_layers</cite> parameter.</p>
   <span class="n">sh_script</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">keep_sh</span><span class="p">:</span> <span class="n">false</span>
   <span class="n">num_test_nodes</span><span class="p">:</span> <span class="n">null</span>
+  <span class="n">memory_utilization_limit</span><span class="p">:</span> <span class="mf">0.9</span>
 <span class="n">log_directory</span><span class="p">:</span> <span class="o">./</span><span class="n">logs</span>
 <span class="n">log_level</span><span class="p">:</span> <span class="n">INFO</span>
 <span class="n">cost_fpath</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
@@ -3321,8 +3325,10 @@ in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">cost_multiplier_scalar</span><span class="p">:</span> <span class="mi">1</span>
 <span class="n">transmission_config</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">save_paths</span><span class="p">:</span> <span class="n">false</span>
+<span class="n">save_routing_layer</span><span class="p">:</span> <span class="n">false</span>
 <span class="n">ignore_invalid_costs</span><span class="p">:</span> <span class="n">false</span>
 <span class="n">connection_identifier_column</span><span class="p">:</span> <span class="n">end_feat_id</span>
+<span class="n">algorithm</span><span class="p">:</span> <span class="n">long_range_dijkstra</span>
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-15-VE9NTA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-15-VE9NTA==" name="VE9NTA==" role="tabpanel" tabindex="0"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">log_directory</span> <span class="o">=</span> <span class="s2">&quot;./logs&quot;</span>
@@ -3333,8 +3339,10 @@ in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">cost_layers</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED]&quot;</span>
 <span class="n">cost_multiplier_scalar</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">save_paths</span> <span class="o">=</span> <span class="n">false</span>
+<span class="n">save_routing_layer</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">ignore_invalid_costs</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">connection_identifier_column</span> <span class="o">=</span> <span class="s2">&quot;end_feat_id&quot;</span>
+<span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;long_range_dijkstra&quot;</span>
 
 <span class="p">[</span><span class="n">execution_control</span><span class="p">]</span>
 <span class="n">option</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
@@ -3342,6 +3350,7 @@ in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">walltime</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span>
 <span class="n">qos</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
 <span class="n">keep_sh</span> <span class="o">=</span> <span class="n">false</span>
+<span class="n">memory_utilization_limit</span> <span class="o">=</span> <span class="mf">0.9</span>
 </pre></div>
 </div>
 </div></div>
@@ -3389,43 +3398,47 @@ memory you would like for your job, otherwise you
 will be limited to the standard node memory size
 (250GB).</p>
 </dd>
-<dt class="field-even">queue<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional; PBS ONLY)
+<dt class="field-even">memory_utilization_limit<span class="colon">:</span></dt>
+<dd class="field-even"><p>(float, default=0.9)
+Fraction of <cite>system_mem_limit_gb</cite> to utilize for routing. Should be a value between 0 and 1. By default, <code class="docutils literal notranslate"><span class="pre">0.9</span></code>.</p>
+</dd>
+<dt class="field-odd">queue<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional; PBS ONLY)
 HPC queue to submit job to. Examples include: ‘debug’,
 ‘short’, ‘batch’, ‘batch-h’, ‘long’, etc.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which uses “test_queue”.</p>
 </dd>
-<dt class="field-odd">feature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">feature<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Additional flags for SLURM job (e.g. “-p debug”).
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not specify any
 additional flags.</p>
 </dd>
-<dt class="field-even">conda_env<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">conda_env<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Name of conda environment to activate. By default,
 <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not load any environments.</p>
 </dd>
-<dt class="field-odd">module<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">module<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Module to load. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not
 load any modules.</p>
 </dd>
-<dt class="field-even">sh_script<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">sh_script<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Extra shell script to run before command call.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not run any
 scripts.</p>
 </dd>
-<dt class="field-odd">keep_sh<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(bool, optional)
+<dt class="field-even">keep_sh<span class="colon">:</span></dt>
+<dd class="field-even"><p>(bool, optional)
 Option to keep the HPC submission script on disk.
 Only has effect if executing on HPC. By default,
 <code class="docutils literal notranslate"><span class="pre">False</span></code>, which purges the submission scripts
 after each job is submitted.</p>
 </dd>
-<dt class="field-even">num_test_nodes<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">num_test_nodes<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Number of nodes to submit before terminating the
 submission process. This can be used to test a
 new submission configuration without submitting
@@ -3615,9 +3628,13 @@ of “million $ per mile” and will be converted to
 </dd>
 <dt>save_paths<span class="classifier">bool, default=False</span></dt><dd><p>Save outputs as a GeoPackage with path geometries when <code class="docutils literal notranslate"><span class="pre">True</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
+<dt>save_routing_layer<span class="classifier">bool, default=False</span></dt><dd><p>Save Rust routing layer outputs to <code class="docutils literal notranslate"><span class="pre">out_dir/extra_outputs</span></code> when <code class="docutils literal notranslate"><span class="pre">True</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
 <dt>ignore_invalid_costs<span class="classifier">bool, optional</span></dt><dd><p>Optional flag to treat any cost values &lt;= 0 as impassable (i.e. no paths can ever cross this). If <code class="docutils literal notranslate"><span class="pre">False</span></code>, cost values of &lt;= 0 are set to a large value to simulate a strong but permeable “quasi-barrier”. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
 <dt>connection_identifier_column<span class="classifier">str, default=”end_feat_id”</span></dt><dd><p>Column in the <cite>features_fpath</cite> data used to uniquely identify each feature. This column is also expected to be in the <cite>route_table</cite> input to map points to features. If a column name is given that does not exist in the data, an error will be raised. By default, <code class="docutils literal notranslate"><span class="pre">&quot;end_feat_id&quot;</span></code>.</p>
+</dd>
+<dt>algorithm<span class="classifier">str, default=”long_range_dijkstra”</span></dt><dd><p>Routing algorithm implementation to use. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation but does not respect the memory utilization limit input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless you know for a fact that your route computations will not need much memory and speed is very important to you. By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p>
 </dd>
 </dl>
 <p>Note that you may remove any keys with a <code class="docutils literal notranslate"><span class="pre">null</span></code> value if you do not intend to update them yourself.</p>
@@ -3657,7 +3674,8 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
         <span class="s2">&quot;module&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;sh_script&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;keep_sh&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-        <span class="s2">&quot;num_test_nodes&quot;</span><span class="p">:</span> <span class="n">null</span>
+        <span class="s2">&quot;num_test_nodes&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+        <span class="s2">&quot;memory_utilization_limit&quot;</span><span class="p">:</span> <span class="mf">0.9</span>
     <span class="p">},</span>
     <span class="s2">&quot;log_directory&quot;</span><span class="p">:</span> <span class="s2">&quot;./logs&quot;</span><span class="p">,</span>
     <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
@@ -3670,7 +3688,9 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
     <span class="s2">&quot;cost_multiplier_scalar&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="s2">&quot;transmission_config&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;save_paths&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-    <span class="s2">&quot;ignore_invalid_costs&quot;</span><span class="p">:</span> <span class="n">false</span>
+    <span class="s2">&quot;save_routing_layer&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;ignore_invalid_costs&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s2">&quot;algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;long_range_dijkstra&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -3687,6 +3707,7 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
   <span class="n">sh_script</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">keep_sh</span><span class="p">:</span> <span class="n">false</span>
   <span class="n">num_test_nodes</span><span class="p">:</span> <span class="n">null</span>
+  <span class="n">memory_utilization_limit</span><span class="p">:</span> <span class="mf">0.9</span>
 <span class="n">log_directory</span><span class="p">:</span> <span class="o">./</span><span class="n">logs</span>
 <span class="n">log_level</span><span class="p">:</span> <span class="n">INFO</span>
 <span class="n">cost_fpath</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
@@ -3698,7 +3719,9 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">cost_multiplier_scalar</span><span class="p">:</span> <span class="mi">1</span>
 <span class="n">transmission_config</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">save_paths</span><span class="p">:</span> <span class="n">false</span>
+<span class="n">save_routing_layer</span><span class="p">:</span> <span class="n">false</span>
 <span class="n">ignore_invalid_costs</span><span class="p">:</span> <span class="n">false</span>
+<span class="n">algorithm</span><span class="p">:</span> <span class="n">long_range_dijkstra</span>
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-16-VE9NTA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-16-VE9NTA==" name="VE9NTA==" role="tabpanel" tabindex="0"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">log_directory</span> <span class="o">=</span> <span class="s2">&quot;./logs&quot;</span>
@@ -3708,7 +3731,9 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">cost_layers</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED]&quot;</span>
 <span class="n">cost_multiplier_scalar</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">save_paths</span> <span class="o">=</span> <span class="n">false</span>
+<span class="n">save_routing_layer</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">ignore_invalid_costs</span> <span class="o">=</span> <span class="n">false</span>
+<span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;long_range_dijkstra&quot;</span>
 
 <span class="p">[</span><span class="n">execution_control</span><span class="p">]</span>
 <span class="n">option</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
@@ -3716,6 +3741,7 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">walltime</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span>
 <span class="n">qos</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
 <span class="n">keep_sh</span> <span class="o">=</span> <span class="n">false</span>
+<span class="n">memory_utilization_limit</span> <span class="o">=</span> <span class="mf">0.9</span>
 </pre></div>
 </div>
 </div></div>
@@ -3763,43 +3789,47 @@ memory you would like for your job, otherwise you
 will be limited to the standard node memory size
 (250GB).</p>
 </dd>
-<dt class="field-even">queue<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional; PBS ONLY)
+<dt class="field-even">memory_utilization_limit<span class="colon">:</span></dt>
+<dd class="field-even"><p>(float, default=0.9)
+Fraction of <cite>system_mem_limit_gb</cite> to utilize for routing. Should be a value between 0 and 1. By default, <code class="docutils literal notranslate"><span class="pre">0.9</span></code>.</p>
+</dd>
+<dt class="field-odd">queue<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional; PBS ONLY)
 HPC queue to submit job to. Examples include: ‘debug’,
 ‘short’, ‘batch’, ‘batch-h’, ‘long’, etc.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which uses “test_queue”.</p>
 </dd>
-<dt class="field-odd">feature<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">feature<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Additional flags for SLURM job (e.g. “-p debug”).
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not specify any
 additional flags.</p>
 </dd>
-<dt class="field-even">conda_env<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">conda_env<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Name of conda environment to activate. By default,
 <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not load any environments.</p>
 </dd>
-<dt class="field-odd">module<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">module<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Module to load. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not
 load any modules.</p>
 </dd>
-<dt class="field-even">sh_script<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">sh_script<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Extra shell script to run before command call.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not run any
 scripts.</p>
 </dd>
-<dt class="field-odd">keep_sh<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(bool, optional)
+<dt class="field-even">keep_sh<span class="colon">:</span></dt>
+<dd class="field-even"><p>(bool, optional)
 Option to keep the HPC submission script on disk.
 Only has effect if executing on HPC. By default,
 <code class="docutils literal notranslate"><span class="pre">False</span></code>, which purges the submission scripts
 after each job is submitted.</p>
 </dd>
-<dt class="field-even">num_test_nodes<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">num_test_nodes<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Number of nodes to submit before terminating the
 submission process. This can be used to test a
 new submission configuration without submitting
@@ -3981,7 +4011,11 @@ of “million $ per mile” and will be converted to
 </dd>
 <dt>save_paths<span class="classifier">bool, default=False</span></dt><dd><p>Save outputs as a GeoPackage with path geometries when <code class="docutils literal notranslate"><span class="pre">True</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
+<dt>save_routing_layer<span class="classifier">bool, default=False</span></dt><dd><p>Save Rust routing layer outputs to <code class="docutils literal notranslate"><span class="pre">out_dir/extra_outputs</span></code> when <code class="docutils literal notranslate"><span class="pre">True</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
 <dt>ignore_invalid_costs<span class="classifier">bool, optional</span></dt><dd><p>Optional flag to treat any cost values &lt;= 0 as impassable (i.e. no paths can ever cross this). If <code class="docutils literal notranslate"><span class="pre">False</span></code>, cost values of &lt;= 0 are set to a large value to simulate a strong but permeable “quasi-barrier”. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt>algorithm<span class="classifier">str, default=”long_range_dijkstra”</span></dt><dd><p>Routing algorithm implementation to use. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation but does not respect the memory utilization limit input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless you know for a fact that your route computations will not need much memory and speed is very important to you. By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p>
 </dd>
 </dl>
 <p>Note that you may remove any keys with a <code class="docutils literal notranslate"><span class="pre">null</span></code> value if you do not intend to update them yourself.</p>
@@ -4562,7 +4596,7 @@ displayed.</p>
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>

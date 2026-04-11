@@ -1029,6 +1029,8 @@ window.addEventListener("load", load);
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.RouteFinder.html#revrt.RouteFinder.algorithm">algorithm (RouteFinder attribute)</a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize.all_touched">all_touched (Rasterize attribute)</a>
 </li>
   </ul></td>
@@ -1203,6 +1205,8 @@ window.addEventListener("load", load);
       <li><a href="glossary.html#term-cost-surface"><strong>cost surface</strong></a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.cost_configs">cost_configs (DryCosts attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.RouteFinder.html#revrt.RouteFinder.cost_function">cost_function (RouteFinder attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.routing.base.RoutingScenario.html#revrt.routing.base.RoutingScenario.cost_function_json">cost_function_json (RoutingScenario property)</a>
 </li>
@@ -1718,6 +1722,8 @@ window.addEventListener("load", load);
 </li>
       <li><a href="_autosummary/revrt.constants.MEDIUM_MULT.html#revrt.constants.MEDIUM_MULT">MEDIUM_MULT (in module revrt.constants)</a>
 </li>
+      <li><a href="_autosummary/revrt.RouteFinder.html#revrt.RouteFinder.mem_limit_bytes">mem_limit_bytes (RouteFinder attribute)</a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.merge_friction_and_barriers">merge_friction_and_barriers (TransmissionLayerCreationConfig attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers">MergeFrictionBarriers (class in revrt.models.cost_layers)</a>
@@ -1827,6 +1833,8 @@ window.addEventListener("load", load);
         <li><a href="_autosummary/revrt.routing.cli.point_to_feature.html#module-revrt.routing.cli.point_to_feature">revrt.routing.cli.point_to_feature</a>
 </li>
         <li><a href="_autosummary/revrt.routing.cli.point_to_point.html#module-revrt.routing.cli.point_to_point">revrt.routing.cli.point_to_point</a>
+</li>
+        <li><a href="_autosummary/revrt.routing.cli.utilities.html#module-revrt.routing.cli.utilities">revrt.routing.cli.utilities</a>
 </li>
         <li><a href="_autosummary/revrt.routing.utilities.html#module-revrt.routing.utilities">revrt.routing.utilities</a>
 </li>
@@ -2251,8 +2259,6 @@ window.addEventListener("load", load);
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-template-configs-arg-COMMANDS">COMMANDS</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     revrt.constants
 
@@ -2267,6 +2273,8 @@ window.addEventListener("load", load);
         <li><a href="_autosummary/revrt.costs.html#module-revrt.costs">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     revrt.costs.base
 
@@ -2401,6 +2409,13 @@ window.addEventListener("load", load);
 </li>
       </ul></li>
       <li>
+    revrt.routing.cli.utilities
+
+      <ul>
+        <li><a href="_autosummary/revrt.routing.cli.utilities.html#module-revrt.routing.cli.utilities">module</a>
+</li>
+      </ul></li>
+      <li>
     revrt.routing.utilities
 
       <ul>
@@ -2528,7 +2543,11 @@ window.addEventListener("load", load);
       <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.route_attrs">route_attrs (BatchRouteProcessor property)</a>
 </li>
       <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.route_definitions">route_definitions (BatchRouteProcessor property)</a>
+
+      <ul>
+        <li><a href="_autosummary/revrt.RouteFinder.html#revrt.RouteFinder.route_definitions">(RouteFinder attribute)</a>
 </li>
+      </ul></li>
       <li><a href="_autosummary/revrt.RouteFinder.html#revrt.RouteFinder">RouteFinder (class in revrt)</a>
 </li>
       <li><a href="_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics">RouteMetrics (class in revrt.routing.base)</a>
@@ -2542,6 +2561,10 @@ window.addEventListener("load", load);
       <li><a href="glossary.html#term-routing-file"><strong>routing file</strong></a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig.routing_file">routing_file (TransmissionLayerCreationConfig attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.utilities.routing_layer_mover.html#revrt.routing.cli.utilities.routing_layer_mover">routing_layer_mover() (in module revrt.routing.cli.utilities)</a>
+</li>
+      <li><a href="_autosummary/revrt.RouteFinder.html#revrt.RouteFinder.routing_layer_out_fp">routing_layer_out_fp (RouteFinder attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.routing.base.BatchRouteProcessor.html#revrt.routing.base.BatchRouteProcessor.routing_layers">routing_layers (BatchRouteProcessor property)</a>
 </li>
@@ -2773,14 +2796,16 @@ window.addEventListener("load", load);
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="glossary.html#term-Zarr"><strong>Zarr</strong></a>
 </li>
+      <li><a href="_autosummary/revrt.RouteFinder.html#revrt.RouteFinder.zarr_fp">zarr_fp (RouteFinder attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.zfill">zfill() (FractionalStat method)</a>
 
       <ul>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.zfill">(Stat method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_autosummary/revrt.spatial_characterization.zonal.ZonalStats.html#revrt.spatial_characterization.zonal.ZonalStats">ZonalStats (class in revrt.spatial_characterization.zonal)</a>
 </li>
   </ul></td>
@@ -2827,7 +2852,7 @@ window.addEventListener("load", load);
 
   <p class="copyright">
     
-      © Copyright 2025, Alliance for Sustainable Energy, LLC.
+      © Copyright 2026, Alliance for Energy Innovation, LLC.
       <br/>
     
   </p>
