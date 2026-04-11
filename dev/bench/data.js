@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775867392504,
+  "lastUpdate": 1775937635693,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -7979,6 +7979,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 237129641,
             "range": "± 3627070",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0e8bd189411d768add215ad953daba0a15e3829c",
+          "message": "Allow users to specify location of temp file (#231)\n\n* Update docs\n\n* Allow users to specify cost fp\n\n* `find_paths` can now also accept a log level\n\n* Update variable name\n\n* Add logging\n\n* Add dimension names\n\n* Add unit test for `routing_layer_out_fp`\n\n* Add integration test for writing to file\n\n* Add `routing_layer_out_fp` input to `process`\n\n* Add routing CLI utilities\n\n* Add missing dependency\n\n* Use `routing_layer_mover` context\n\n* Functions now have a `save_routing_layer` input\n\n* Add test\n\n* Add tests for saved routing layer output\n\n* Update verbosity level\n\n* PR review updates\n\n* Update docs\n\n* Update username handling\n\n* Clarify copilot instructions\n\n* Fix docstring\n\n* Update docs\n\n* Add tests\n\n* Fixes\n\n* Minor fixes\n\n* Add `_with_swap` functions\n\n* bump version\n\n* Add noqa",
+          "timestamp": "2026-04-11T13:48:18-06:00",
+          "tree_id": "82a6b477f8496c7ba0908e6ad62b84590f7b8929",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/0e8bd189411d768add215ad953daba0a15e3829c"
+        },
+        "date": 1775937635023,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 68356690,
+            "range": "± 440449",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 111606464,
+            "range": "± 713008",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 100041075,
+            "range": "± 1537010",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 146904179,
+            "range": "± 1720933",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 595137300,
+            "range": "± 12207180",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 149160821,
+            "range": "± 1368963",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 153620398,
+            "range": "± 527383",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 165542303,
+            "range": "± 700637",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 206969482,
+            "range": "± 832018",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 360990142,
+            "range": "± 2088495",
             "unit": "ns/iter"
           }
         ]
