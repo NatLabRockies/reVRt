@@ -113,7 +113,11 @@ def test_route_finder_basic_single_route(tmp_path):
     assert np.isclose(test_cost, costs[(2, 6)])
 
 
-def test_find_paths_supports_explicit_algorithm(tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_find_paths_supports_explicit_algorithm(tmp_path, algorithm):
     """find_paths accepts explicit routing algorithm selection"""
 
     da = xr.DataArray(
@@ -153,7 +157,7 @@ def test_find_paths_supports_explicit_algorithm(tmp_path):
         cost_function=json.dumps(cost_definition),
         start=[(1, 1)],
         end=[(2, 6)],
-        algorithm="dijkstra",
+        algorithm=algorithm,
     )
 
     assert len(results) == 1
@@ -163,7 +167,11 @@ def test_find_paths_supports_explicit_algorithm(tmp_path):
     assert cost > 0
 
 
-def test_route_finder_supports_explicit_algorithm(tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_route_finder_supports_explicit_algorithm(tmp_path, algorithm):
     """RouteFinder accepts explicit routing algorithm selection"""
 
     da = xr.DataArray(
@@ -200,7 +208,7 @@ def test_route_finder_supports_explicit_algorithm(tmp_path):
             zarr_fp=test_cost_fp,
             cost_function=json.dumps(cost_definition),
             route_definitions=[(2, [(1, 1)], [(2, 6)])],
-            algorithm="dijkstra",
+            algorithm=algorithm,
         )
     )
 
