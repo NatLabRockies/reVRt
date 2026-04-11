@@ -7,7 +7,7 @@ use num_traits::Zero;
 use tracing::debug;
 
 use crate::ArrayIndex;
-use crate::network::long_range::FrontierOnlySearchState;
+use crate::network::long_range::{BidirectionalSearchState, FrontierOnlySearchState};
 
 pub(super) fn long_range_dijkstra<C, FN, IN, FS>(
     start: &ArrayIndex,
@@ -45,6 +45,40 @@ where
     }
 
     None
+}
+
+pub(super) fn bidirectional_long_range_dijkstra<C, FN, IN>(
+    start: &ArrayIndex,
+    goals: &[ArrayIndex],
+    successors: FN,
+    memory_budget_bytes: u64,
+    grid_shape: (u64, u64),
+) -> Option<(Vec<ArrayIndex>, C)>
+where
+    C: Zero + Ord + Copy,
+    FN: FnMut(&ArrayIndex) -> IN,
+    IN: IntoIterator<Item = (ArrayIndex, C)>,
+    u64: From<C>,
+    C: From<u64>,
+{
+    debug!(
+        "Starting bidirectional long-range Dijkstra with memory budget of {} bytes",
+        memory_budget_bytes
+    );
+
+    if goals.is_empty() {
+        return None;
+    }
+
+    if goals.iter().any(|goal| goal == start) {
+        return Some((vec![start.clone()], C::zero()));
+    }
+
+    let mut state = BidirectionalSearchState::new(start, goals, memory_budget_bytes, grid_shape)?;
+
+    state
+        .run(successors)
+        .map(|(route, cost)| (route, C::from(cost)))
 }
 
 #[cfg(test)]
@@ -88,6 +122,49 @@ mod tests {
             |_p: &ArrayIndex| Vec::<(ArrayIndex, u64)>::new(),
             |_p| false,
             1024,
+            (1, 1),
+        );
+
+        assert!(ans.is_none());
+    }
+
+    #[test]
+    fn bidirectional_bounded_finds_shortest_path_to_any_goal() {
+        let start = ArrayIndex::new(0, 0);
+        let goals = vec![ArrayIndex::new(2, 2), ArrayIndex::new(0, 2)];
+
+        let ans = bidirectional_long_range_dijkstra(
+            &start,
+            &goals,
+            |p: &ArrayIndex| {
+                let mut out = Vec::new();
+                if p.i < 2 {
+                    out.push((ArrayIndex::new(p.i + 1, p.j), 1_u64));
+                }
+                if p.j < 2 {
+                    out.push((ArrayIndex::new(p.i, p.j + 1), 1_u64));
+                }
+                out
+            },
+            2 * 1024 * 1024,
+            (3, 3),
+        )
+        .unwrap();
+
+        assert_eq!(ans.1, 2_u64);
+        assert_eq!(ans.0.first(), Some(&start));
+        assert_eq!(ans.0.last(), Some(&ArrayIndex::new(0, 2)));
+    }
+
+    #[test]
+    fn bidirectional_bounded_rejects_missing_goals() {
+        let start = ArrayIndex::new(0, 0);
+
+        let ans = bidirectional_long_range_dijkstra(
+            &start,
+            &[],
+            |_p: &ArrayIndex| Vec::<(ArrayIndex, u64)>::new(),
+            2 * 1024 * 1024,
             (1, 1),
         );
 
