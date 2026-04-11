@@ -1,7 +1,7 @@
 pub(super) mod swap;
 pub(super) mod utilities;
 
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use tracing::debug;
 
@@ -33,6 +33,7 @@ impl FinalizedNode {
 /// written to the swap store for later path reconstruction.
 pub(crate) struct FrontierOnlySearchState {
     grid: GridIndexer,
+    roots: HashSet<usize>,
     // Frontier nodes ordered by estimated total cost.
     pq: BinaryHeap<NodeCost<usize, u64>>,
     // Cheapest known cost for each frontier node still tracked in memory.
@@ -55,11 +56,19 @@ impl FrontierOnlySearchState {
         memory_budget_bytes: u64,
         grid_shape: (u64, u64),
     ) -> Option<Self> {
+        Self::new_many(std::slice::from_ref(start), memory_budget_bytes, grid_shape)
+    }
+
+    pub(crate) fn new_many(
+        starts: &[ArrayIndex],
+        memory_budget_bytes: u64,
+        grid_shape: (u64, u64),
+    ) -> Option<Self> {
         let grid = GridIndexer::new(grid_shape.0, grid_shape.1)?;
-        let start_slot = grid.slot_of(start)?;
 
         let mut state = Self {
             grid,
+            roots: HashSet::new(),
             pq: BinaryHeap::new(),
             best_node_costs: HashMap::new(),
             parents: HashMap::new(),
@@ -68,13 +77,28 @@ impl FrontierOnlySearchState {
             num_nodes_checked: 0,
         };
 
-        state.best_node_costs.insert(start_slot, 0);
-        state.pq.push(NodeCost {
-            index: start_slot,
-            cost: 0,
-            estimated_cost: 0,
-        });
-        Some(state)
+        for start in starts {
+            let Some(start_slot) = state.grid.slot_of(start) else {
+                continue;
+            };
+
+            if !state.roots.insert(start_slot) {
+                continue;
+            }
+
+            state.best_node_costs.insert(start_slot, 0);
+            state.pq.push(NodeCost {
+                index: start_slot,
+                cost: 0,
+                estimated_cost: 0,
+            });
+        }
+
+        if state.roots.is_empty() {
+            None
+        } else {
+            Some(state)
+        }
     }
 
     pub(crate) fn pop_next_node(&mut self) -> Option<FinalizedNode> {
@@ -107,6 +131,66 @@ impl FrontierOnlySearchState {
         Some((route, cost))
     }
 
+    pub(crate) fn has_frontier(&mut self) -> bool {
+        self.peek_next_cost().is_some()
+    }
+
+    pub(crate) fn peek_next_cost(&mut self) -> Option<u64> {
+        while let Some(candidate) = self.pq.peek() {
+            if self.finalized_bits.contains(candidate.index) {
+                self.pq.pop();
+                continue;
+            }
+
+            return Some(candidate.cost);
+        }
+
+        None
+    }
+
+    pub(crate) fn known_cost(&mut self, slot: usize) -> Option<u64> {
+        if let Some(cost) = self.best_node_costs.get(&slot).copied() {
+            return Some(cost);
+        }
+
+        if self.finalized_bits.contains(slot) {
+            return self.swap.read_slot(slot).ok().map(|(cost, _)| cost);
+        }
+
+        None
+    }
+
+    pub(crate) fn reconstruct_known_path_to(
+        &mut self,
+        goal_slot: usize,
+    ) -> Option<Vec<ArrayIndex>> {
+        let mut path = Vec::new();
+        let mut current_slot = Some(goal_slot);
+
+        while let Some(slot) = current_slot {
+            path.push(self.grid.index_of(slot));
+            if self.roots.contains(&slot) {
+                break;
+            }
+
+            if let Some(parent) = self.parents.get(&slot).copied() {
+                current_slot = Some(parent);
+                continue;
+            }
+
+            if self.finalized_bits.contains(slot) {
+                let (_, parent) = self.swap.read_slot(slot).ok()?;
+                current_slot = parent;
+                continue;
+            }
+
+            return None;
+        }
+
+        path.reverse();
+        Some(path)
+    }
+
     pub(crate) fn add_successors<C, IN>(
         &mut self,
         node: &FinalizedNode,
@@ -117,8 +201,27 @@ impl FrontierOnlySearchState {
         C: Copy,
         u64: From<C>,
     {
+        self.add_successors_tracking(node, successors, |_, _| {})
+    }
+
+    pub(crate) fn add_successors_tracking<C, IN, F>(
+        &mut self,
+        node: &FinalizedNode,
+        successors: IN,
+        mut on_update: F,
+    ) -> Option<()>
+    where
+        IN: IntoIterator<Item = (ArrayIndex, C)>,
+        C: Copy,
+        F: FnMut(usize, u64),
+        u64: From<C>,
+    {
         for (neighbor, edge_cost) in successors {
-            self.add_neighbor(node.slot, node.cost, &neighbor, edge_cost);
+            if let Some((slot, cost)) =
+                self.add_neighbor(node.slot, node.cost, &neighbor, edge_cost)
+            {
+                on_update(slot, cost);
+            }
         }
         self.enforce_memory_budget()
     }
@@ -129,16 +232,15 @@ impl FrontierOnlySearchState {
         from_cost: u64,
         neighbor: &ArrayIndex,
         edge_cost: C,
-    ) where
+    ) -> Option<(usize, u64)>
+    where
         C: Copy,
         u64: From<C>,
     {
-        let Some(neighbor_slot) = self.grid.slot_of(neighbor) else {
-            return;
-        };
+        let neighbor_slot = self.grid.slot_of(neighbor)?;
 
         if self.finalized_bits.contains(neighbor_slot) {
-            return;
+            return None;
         }
 
         let next_cost = from_cost.saturating_add(u64::from(edge_cost));
@@ -156,7 +258,10 @@ impl FrontierOnlySearchState {
                 cost: next_cost,
                 estimated_cost: next_cost,
             });
+            return Some((neighbor_slot, next_cost));
         }
+
+        None
     }
 
     pub(crate) fn enforce_memory_budget(&mut self) -> Option<()> {
@@ -176,17 +281,136 @@ impl FrontierOnlySearchState {
     }
 
     fn reconstruct_path_to(&mut self, goal_slot: usize) -> Option<Vec<ArrayIndex>> {
-        let mut path = Vec::new();
-        let mut current_slot = Some(goal_slot);
+        self.reconstruct_known_path_to(goal_slot)
+    }
+}
 
-        while let Some(slot) = current_slot {
-            path.push(self.grid.index_of(slot));
-            let (_, parent) = self.swap.read_slot(slot).ok()?;
-            current_slot = parent;
+#[derive(Debug)]
+pub(crate) struct BidirectionalSearchState {
+    forward: FrontierOnlySearchState,
+    backward: FrontierOnlySearchState,
+    best_path: Option<(usize, u64)>,
+}
+
+impl BidirectionalSearchState {
+    pub(crate) fn new(
+        start: &ArrayIndex,
+        goals: &[ArrayIndex],
+        memory_budget_bytes: u64,
+        grid_shape: (u64, u64),
+    ) -> Option<Self> {
+        let per_direction_budget = (memory_budget_bytes / 2).max(1);
+
+        Some(Self {
+            forward: FrontierOnlySearchState::new(start, per_direction_budget, grid_shape)?,
+            backward: FrontierOnlySearchState::new_many(goals, per_direction_budget, grid_shape)?,
+            best_path: None,
+        })
+    }
+
+    pub(crate) fn run<C, FN, IN>(&mut self, mut successors: FN) -> Option<(Vec<ArrayIndex>, u64)>
+    where
+        FN: FnMut(&ArrayIndex) -> IN,
+        IN: IntoIterator<Item = (ArrayIndex, C)>,
+        C: Copy,
+        u64: From<C>,
+    {
+        while self.forward.has_frontier() && self.backward.has_frontier() {
+            if self.should_terminate() {
+                break;
+            }
+
+            let expand_forward = match (
+                self.forward.peek_next_cost(),
+                self.backward.peek_next_cost(),
+            ) {
+                (Some(forward_cost), Some(backward_cost)) => forward_cost <= backward_cost,
+                _ => break,
+            };
+
+            self.expand_direction(expand_forward, &mut successors)?;
         }
 
-        path.reverse();
-        Some(path)
+        let (meeting_slot, cost) = self.best_path?;
+        let route = self.reconstruct_route(meeting_slot)?;
+        Some((route, cost))
+    }
+
+    fn expand_direction<C, FN, IN>(
+        &mut self,
+        expand_forward: bool,
+        successors: &mut FN,
+    ) -> Option<()>
+    where
+        FN: FnMut(&ArrayIndex) -> IN,
+        IN: IntoIterator<Item = (ArrayIndex, C)>,
+        C: Copy,
+        u64: From<C>,
+    {
+        let mut candidates = Vec::new();
+
+        {
+            let (current, other) = if expand_forward {
+                (&mut self.forward, &mut self.backward)
+            } else {
+                (&mut self.backward, &mut self.forward)
+            };
+
+            let node = match current.pop_next_node() {
+                Some(node) => node,
+                None => return Some(()),
+            };
+
+            if let Some(other_cost) = other.known_cost(node.slot) {
+                candidates.push((node.slot, node.cost.saturating_add(other_cost)));
+            }
+
+            current.add_successors_tracking(
+                &node,
+                successors(&node.array_index),
+                |slot, cost| {
+                    if let Some(other_cost) = other.known_cost(slot) {
+                        candidates.push((slot, cost.saturating_add(other_cost)));
+                    }
+                },
+            )?;
+        }
+
+        for (slot, total_cost) in candidates {
+            self.record_candidate(slot, total_cost);
+        }
+
+        Some(())
+    }
+
+    fn record_candidate(&mut self, slot: usize, total_cost: u64) {
+        match self.best_path {
+            Some((_, best_cost)) if best_cost <= total_cost => {}
+            _ => self.best_path = Some((slot, total_cost)),
+        }
+    }
+
+    fn should_terminate(&mut self) -> bool {
+        let Some((_, best_cost)) = self.best_path else {
+            return false;
+        };
+
+        let Some(forward_cost) = self.forward.peek_next_cost() else {
+            return true;
+        };
+        let Some(backward_cost) = self.backward.peek_next_cost() else {
+            return true;
+        };
+
+        forward_cost.saturating_add(backward_cost) >= best_cost
+    }
+
+    fn reconstruct_route(&mut self, meeting_slot: usize) -> Option<Vec<ArrayIndex>> {
+        let mut forward = self.forward.reconstruct_known_path_to(meeting_slot)?;
+        let mut backward = self.backward.reconstruct_known_path_to(meeting_slot)?;
+        backward.reverse();
+        forward.extend(backward.into_iter().skip(1));
+        Some(forward)
     }
 }
 
@@ -287,5 +511,65 @@ mod tests {
         });
 
         assert!(ans.is_none());
+    }
+
+    #[test]
+    fn multi_source_state_skips_invalid_roots() {
+        let starts = vec![
+            ArrayIndex::new(0, 0),
+            ArrayIndex::new(0, 0),
+            ArrayIndex::new(999, 999),
+        ];
+        let mut state = FrontierOnlySearchState::new_many(&starts, 2_000, (3, 3)).unwrap();
+
+        let node = state.pop_next_node().unwrap();
+
+        assert_eq!(node.array_index, ArrayIndex::new(0, 0));
+        assert!(state.pop_next_node().is_none());
+    }
+
+    #[test]
+    fn reconstruct_known_path_works_for_frontier_nodes() {
+        let start = ArrayIndex::new(0, 0);
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (3, 3)).unwrap();
+        let node = state.pop_next_node().unwrap();
+        state
+            .add_successors(&node, vec![(ArrayIndex::new(0, 1), 1_u64)])
+            .unwrap();
+
+        let slot = state.grid.slot_of(&ArrayIndex::new(0, 1)).unwrap();
+        let path = state.reconstruct_known_path_to(slot).unwrap();
+
+        assert_eq!(path, vec![ArrayIndex::new(0, 0), ArrayIndex::new(0, 1)]);
+    }
+
+    #[test]
+    fn bidirectional_search_merges_forward_and_backward_paths() {
+        let start = ArrayIndex::new(0, 0);
+        let goals = vec![ArrayIndex::new(2, 2)];
+        let mut state = BidirectionalSearchState::new(&start, &goals, 2_000, (3, 3)).unwrap();
+
+        let (route, cost) = state
+            .run(|p| {
+                let mut out = Vec::new();
+                if p.i > 0 {
+                    out.push((ArrayIndex::new(p.i - 1, p.j), 1_u64));
+                }
+                if p.i < 2 {
+                    out.push((ArrayIndex::new(p.i + 1, p.j), 1_u64));
+                }
+                if p.j > 0 {
+                    out.push((ArrayIndex::new(p.i, p.j - 1), 1_u64));
+                }
+                if p.j < 2 {
+                    out.push((ArrayIndex::new(p.i, p.j + 1), 1_u64));
+                }
+                out
+            })
+            .unwrap();
+
+        assert_eq!(cost, 4);
+        assert_eq!(route.first(), Some(&start));
+        assert_eq!(route.last(), Some(&ArrayIndex::new(2, 2)));
     }
 }
