@@ -52,13 +52,16 @@ pub fn resolve<P: AsRef<std::path::Path>>(
 ) -> Result<RevrtRoutingSolutions> {
     let cost_function = CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let mut simulation: Routing = Routing::new(
-        store_path,
-        cost_function,
-        swap_fp,
-        mem_limit_bytes,
-        algorithm,
-    )?;
+    let mut simulation = match swap_fp {
+        Some(swap_fp) => Routing::new_wth_swap(
+            store_path,
+            cost_function,
+            swap_fp,
+            mem_limit_bytes,
+            algorithm,
+        )?,
+        None => Routing::new(store_path, cost_function, mem_limit_bytes, algorithm)?,
+    };
     let result = simulation.compute(start, end).collect();
     Ok(result)
 }
@@ -80,13 +83,16 @@ where
 {
     let cost_function = crate::cost::CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let simulation = ParRouting::new(
-        store_path,
-        cost_function,
-        mem_limit_bytes,
-        swap_fp,
-        algorithm,
-    )?;
+    let simulation = match swap_fp {
+        Some(swap_fp) => ParRouting::new_with_swap(
+            store_path,
+            cost_function,
+            mem_limit_bytes,
+            swap_fp,
+            algorithm,
+        )?,
+        None => ParRouting::new(store_path, cost_function, mem_limit_bytes, algorithm)?,
+    };
     simulation.lazy_scout(route_definitions, tx);
     Ok(())
 }
@@ -125,8 +131,7 @@ mod tests {
         let store_path =
             dataset::samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = cost::sample::cost_function();
-        let mut simulation =
-            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: 2, j: 3 }];
         let end = vec![ArrayIndex { i: 6, j: 6 }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -158,8 +163,7 @@ mod tests {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation =
-            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = vec![ArrayIndex { i: ei, j: ej }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -182,8 +186,7 @@ mod tests {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation =
-            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = endpoints
             .clone()
@@ -216,8 +219,7 @@ mod tests {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, cost_array_fill);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation =
-            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: si, j: sj }];
         let end = endpoints
             .clone()
@@ -245,8 +247,7 @@ mod tests {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation =
-            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![
             ArrayIndex { i: 1, j: 1 },
             ArrayIndex { i: 3, j: 3 },
@@ -279,8 +280,7 @@ mod tests {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation =
-            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex { i: 1, j: 1 }, ArrayIndex { i: 5, j: 5 }];
         let end = vec![ArrayIndex { i: 3, j: 3 }];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
@@ -316,8 +316,7 @@ mod tests {
 
         let cost_function =
             CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
-        let mut simulation =
-            Routing::new(&store_path, cost_function, None, 1_000, algorithm).unwrap();
+        let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
 
         let start = vec![ArrayIndex { i: 0, j: 0 }];
         let end = vec![ArrayIndex { i: 0, j: 2 }];

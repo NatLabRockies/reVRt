@@ -6,6 +6,7 @@ mod long_range;
 mod scenario;
 
 use std::collections::HashSet;
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::{Arc, mpsc};
 
@@ -55,14 +56,35 @@ impl Routing {
     pub(super) fn new<P: AsRef<std::path::Path>>(
         store_path: P,
         cost_function: crate::cost::CostFunction,
-        swap_fp: Option<std::path::PathBuf>,
         mem_limit_bytes: u64,
         algorithm: &str,
     ) -> Result<Self> {
         let algorithm = AlgorithmType::from_str(algorithm)?;
         let cache_size = cache_budget_bytes(mem_limit_bytes);
         let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
-        let scenario = Scenario::new(store_path, cost_function, cache_size, swap_fp)?;
+        let scenario = Scenario::new(store_path, cost_function, cache_size)?;
+        let algorithm = Algorithm::from_selection(
+            algorithm,
+            per_rayon_worker_memory_budget(rayon_worker_total_budget_bytes),
+        );
+
+        Ok(Self {
+            scenario,
+            algorithm,
+        })
+    }
+
+    pub(super) fn new_wth_swap<P: AsRef<std::path::Path>>(
+        store_path: P,
+        cost_function: crate::cost::CostFunction,
+        swap_fp: PathBuf,
+        mem_limit_bytes: u64,
+        algorithm: &str,
+    ) -> Result<Self> {
+        let algorithm = AlgorithmType::from_str(algorithm)?;
+        let cache_size = cache_budget_bytes(mem_limit_bytes);
+        let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
+        let scenario = Scenario::new_with_swap(store_path, cost_function, cache_size, swap_fp)?;
         let algorithm = Algorithm::from_selection(
             algorithm,
             per_rayon_worker_memory_budget(rayon_worker_total_budget_bytes),
@@ -91,13 +113,12 @@ impl ParRouting {
         store_path: P,
         cost_function: crate::cost::CostFunction,
         mem_limit_bytes: u64,
-        swap_fp: Option<std::path::PathBuf>,
         algorithm: &str,
     ) -> Result<Self> {
         let algorithm = AlgorithmType::from_str(algorithm)?;
         let cache_size = cache_budget_bytes(mem_limit_bytes);
         let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
-        let scenario = Scenario::new(store_path, cost_function, cache_size, swap_fp)?;
+        let scenario = Scenario::new(store_path, cost_function, cache_size)?;
         Ok(Self {
             scenario: Arc::new(scenario),
             algorithm: Arc::new(Algorithm::from_selection(
@@ -106,6 +127,27 @@ impl ParRouting {
             )),
         })
     }
+
+    pub(super) fn new_with_swap<P: AsRef<std::path::Path>>(
+        store_path: P,
+        cost_function: crate::cost::CostFunction,
+        mem_limit_bytes: u64,
+        swap_fp: PathBuf,
+        algorithm: &str,
+    ) -> Result<Self> {
+        let algorithm = AlgorithmType::from_str(algorithm)?;
+        let cache_size = cache_budget_bytes(mem_limit_bytes);
+        let rayon_worker_total_budget_bytes = mem_limit_bytes - cache_size;
+        let scenario = Scenario::new_with_swap(store_path, cost_function, cache_size, swap_fp)?;
+        Ok(Self {
+            scenario: Arc::new(scenario),
+            algorithm: Arc::new(Algorithm::from_selection(
+                algorithm,
+                per_rayon_worker_memory_budget(rayon_worker_total_budget_bytes),
+            )),
+        })
+    }
+
     pub(super) fn lazy_scout<I>(
         &self,
         route_definitions: I,
