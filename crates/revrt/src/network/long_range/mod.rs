@@ -154,6 +154,11 @@ impl FrontierOnlySearchState {
         }
 
         if self.finalized_bits.contains(slot) {
+            debug!(
+                "Looking for known cost in swap! Buffer contains slot {}: {}",
+                slot,
+                self.swap.slot_in_buffer(slot)
+            );
             return self.swap.read_slot(slot).ok().map(|(cost, _)| cost);
         }
 
@@ -406,6 +411,7 @@ impl BidirectionalSearchState {
     }
 
     fn reconstruct_route(&mut self, meeting_slot: usize) -> Option<Vec<ArrayIndex>> {
+        debug!("Goal node found at meeting slot {}", meeting_slot);
         let mut forward = self.forward.reconstruct_known_path_to(meeting_slot)?;
         let mut backward = self.backward.reconstruct_known_path_to(meeting_slot)?;
         backward.reverse();
