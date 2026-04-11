@@ -21,6 +21,10 @@ from revrt.routing.cli.base import (
     _get_polarity_multiplier,
     _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL,
 )
+from revrt.routing.cli.utilities import (
+    _create_routing_layer_tmp_dir,
+    _get_scratch_username,
+)
 from revrt.routing.cli.point_to_point import (
     PointToPointRouteDefinitionConverter,
 )
@@ -416,6 +420,48 @@ def test_get_polarity_multiplier_unknown_polarity():
         ),
     ):
         _get_polarity_multiplier(config, "138", "ac")
+
+
+def test_get_scratch_username_prefers_environment(monkeypatch):
+    """_get_scratch_username should prefer USERNAME environment value"""
+
+    for env_name in ("LOGNAME", "USER", "LNAME", "USERNAME"):
+        monkeypatch.delenv(env_name, raising=False)
+
+    monkeypatch.setenv("USERNAME", "runner admin")
+
+    assert _get_scratch_username() == "runner_admin"
+
+
+def test_create_routing_layer_tmp_dir_handles_getpass_failure(
+    tmp_path, monkeypatch
+):
+    """_create_routing_layer_tmp_dir should not fail when getpass fails"""
+
+    for env_name in ("LOGNAME", "USER", "LNAME", "USERNAME"):
+        monkeypatch.delenv(env_name, raising=False)
+
+    def _raise_getuser():
+        msg = "No module named 'pwd'"
+        raise ModuleNotFoundError(msg)
+
+    monkeypatch.setattr(
+        "revrt.routing.cli.utilities.getpass.getuser",
+        _raise_getuser,
+    )
+    monkeypatch.setattr(
+        "revrt.routing.cli.utilities.Path.home",
+        classmethod(lambda _cls: Path("/tmp/fallback-user")),  # noqa: S108
+    )
+    monkeypatch.setattr(
+        "revrt.routing.cli.utilities.tempfile.gettempdir",
+        lambda: str(tmp_path),
+    )
+
+    out_dir = _create_routing_layer_tmp_dir()
+
+    assert out_dir == tmp_path / "scratch" / "fallback-user"
+    assert out_dir.exists()
 
 
 if __name__ == "__main__":

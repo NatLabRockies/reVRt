@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "NLR-reVRt"
-version = "0.3.2"
+version = "0.4.1"
 description = "National Laboratory of the Rockies' (NLR's) Transmission for reV tool"
 readme = "README.rst"
 authors = [
@@ -40,6 +40,7 @@ dependencies = [
   "numpy>=2.2.4,<3",
   "odc-geo>=0.5.0rc1,<0.6",
   "pydantic>=2.11.7,<3",
+  "python-slugify>=8.0.4,<9",
   "NLR-gaps>=0.9.1,<0.10",
   "rasterio>=1.4.3,<2",
   "rioxarray>=0.18.2,<0.19",
@@ -266,6 +267,7 @@ geopandas = ">=1.0.1,<2"
 numpy = ">=2.2.4,<3"
 odc-geo = ">=0.5.0rc1,<0.6"
 pydantic = ">=2.11.7,<3"
+python-slugify = ">=8.0.4,<9"
 rasterio = ">=1.4.3,<2"
 rioxarray = ">=0.18.2,<0.19"
 shapely = ">=2.1.1,<3"

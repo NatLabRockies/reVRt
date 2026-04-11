@@ -122,8 +122,9 @@ that is only used for development (tests, linting, docs, etc.).
   value for a parameter **is** `None`, use the format : `param_name : type, optional`.
 - "Protected" functions and methods (i.e. starting with an underscore)
   should always be documented using **only** one-line summary docstrings.
-- To exclude functions or classes from the public API documentation, start
-  the docstring with the token ``[NOT PUBLIC API]``.
+- To exclude functions or classes **that are not already private** (i.e. do not
+  start with an underscore) from the public API documentation, start the docstring
+  with the token ``[NOT PUBLIC API]``.
 - Maintain intersphinx references where possible (see dev guide for mappings).
 
 ## 7. Coding Guidelines (Rust)

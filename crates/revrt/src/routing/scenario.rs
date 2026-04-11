@@ -12,6 +12,8 @@
 //! with asynchronous I/O we keep the memory footprint low while
 //! sustaining high performance as possible.
 
+use std::path::PathBuf;
+
 use tracing::trace;
 
 use super::{Features, cost_as_u64};
@@ -26,6 +28,29 @@ pub(super) struct Scenario {
 }
 
 impl Scenario {
+    pub(super) fn new_with_swap<P: AsRef<std::path::Path>>(
+        store_path: P,
+        cost_function: crate::cost::CostFunction,
+        cache_size: u64,
+        swap_fp: PathBuf,
+    ) -> Result<Self> {
+        trace!("Opening scenario with: {:?}", store_path.as_ref());
+
+        let features = Features::open(&store_path)?;
+        let dataset = crate::dataset::Dataset::open_with_swap(
+            store_path,
+            cost_function.clone(),
+            cache_size,
+            swap_fp,
+        )?;
+
+        Ok(Self {
+            dataset,
+            features,
+            cost_function,
+        })
+    }
+
     pub(super) fn new<P: AsRef<std::path::Path>>(
         store_path: P,
         cost_function: crate::cost::CostFunction,

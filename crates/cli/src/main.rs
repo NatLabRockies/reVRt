@@ -64,10 +64,11 @@ fn main() {
     let result = resolve(
         cli.dataset,
         &cli.cost_function,
-        250_000_000,
         "dijkstra",
         &[start],
         end,
+        None,
+        250_000_000,
     )
     .unwrap();
     println!("Results: {:?}", result);

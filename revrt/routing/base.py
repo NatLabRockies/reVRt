@@ -669,7 +669,7 @@ class BatchRouteProcessor:
         """RoutingLayerManager: Built routing layers for the scenario"""
         return RoutingLayerManager(self.routing_scenario).build()
 
-    def process(self, out_fp, save_paths=False):
+    def process(self, out_fp, save_paths=False, routing_layer_out_fp=None):
         """Compute all routes and save to disk
 
         Parameters
@@ -682,13 +682,18 @@ class BatchRouteProcessor:
         save_paths : bool, default=False
             Include shapely geometries in the output when ``True``.
             By default, ``False``.
+        routing_layer_out_fp : path-like, optional
+            Optional output path for Rust routing-layer cache data.
+            By default, ``None``.
         """
         if not self.route_definitions:
             return
 
         ts = time.monotonic()
         try:
-            self._compute_routes(out_fp, save_paths=save_paths)
+            self._compute_routes(
+                out_fp, save_paths=save_paths, rl=routing_layer_out_fp
+            )
         finally:
             self._reset_routing_layers()
 
@@ -699,14 +704,14 @@ class BatchRouteProcessor:
             time_elapsed,
         )
 
-    def _compute_routes(self, out_fp, save_paths):
+    def _compute_routes(self, out_fp, save_paths, rl=None):
         """Evaluate route definitions and build result records"""
 
         out_fp = _validate_out_fp(out_fp, save_paths)
         writer = IncrementalRouteWriter(
             out_fp, crs=self.routing_layers.cost_crs
         )
-        for indices, optimized_objective, attrs in self._route_results():
+        for indices, optimized_objective, attrs in self._route_results(rl):
             metrics = RouteMetrics(
                 self.routing_layers,
                 indices,
@@ -717,7 +722,7 @@ class BatchRouteProcessor:
             route_result = metrics.compute()
             writer.save(route_result)
 
-    def _route_results(self):
+    def _route_results(self, routing_layer_out_fp=None):
         """Generator yielding route results from Rust computations"""
         logger.debug(
             "Setting memory limit to %.2f GB for Rust computations",
@@ -733,6 +738,7 @@ class BatchRouteProcessor:
             mem_limit_bytes=int(self.mem_limit_gb * 1_000_000_000),
             algorithm=self.routing_scenario.algorithm,
             log_level=logging.getLogger("revrt").level or None,
+            routing_layer_out_fp=routing_layer_out_fp,
         )
         yield from self._skip_failed_routes(route_results)
 
@@ -781,6 +787,7 @@ class BatchRouteProcessor:
 
         results_iter = iter(routing_results)
         num_complete = 0
+        ts = time.monotonic()
         while True:
             num_complete += 1
             try:
@@ -808,11 +815,13 @@ class BatchRouteProcessor:
                     attrs = self.route_attrs.get(attrs_key, self.default_attrs)
                     yield indices, optimized_objective, attrs
 
+                time_elapsed = f"{(time.monotonic() - ts) / 60:.4f} minute(s)"
                 logger.info(
-                    "%d/%d (%.2f%%) routes processed",
+                    "%d/%d (%.2f%%) route definitions processed in %s",
                     num_complete,
                     len(self.route_definitions),
                     (num_complete / len(self.route_definitions)) * 100,
+                    time_elapsed,
                 )
             except revrtRustError:  # pragma: no cover
                 logger.exception("Rust error when computing route")

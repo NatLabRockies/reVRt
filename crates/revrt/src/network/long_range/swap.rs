@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::io::{Read, Seek, SeekFrom, Write};
 
 use tempfile::NamedTempFile;
@@ -19,8 +20,6 @@ struct SpillRecord {
 }
 
 impl SpillRecord {
-    const RECORD_LEN: usize = 8 + 8;
-
     fn from_parts(cost: u64, parent_slot: Option<usize>) -> Self {
         let parent_slot = parent_slot
             .and_then(|slot| u64::try_from(slot).ok())
@@ -37,14 +36,14 @@ impl SpillRecord {
         }
     }
 
-    fn to_bytes(self) -> [u8; Self::RECORD_LEN] {
-        let mut out = [0_u8; Self::RECORD_LEN];
+    fn to_bytes(self) -> [u8; 16] {
+        let mut out = [0_u8; 16];
         out[0..8].copy_from_slice(&self.cost.to_le_bytes());
         out[8..16].copy_from_slice(&self.parent_slot.to_le_bytes());
         out
     }
 
-    fn from_bytes(bytes: [u8; Self::RECORD_LEN]) -> Self {
+    fn from_bytes(bytes: [u8; 16]) -> Self {
         let mut cost = [0_u8; 8];
         let mut parent_slot = [0_u8; 8];
         cost.copy_from_slice(&bytes[0..8]);
@@ -68,13 +67,15 @@ impl SpillRecord {
 pub(super) struct SwapStore {
     /// Temporary swap file that receives flushed records
     file: NamedTempFile,
-    /// In-memory queue of pending slot writes waiting to be flushed to disk
-    write_buffer: Vec<(u64, SpillRecord)>, // (slot, values)
+    /// Pending slot writes keyed by slot until they are flushed to disk
+    write_buffer: HashMap<u64, SpillRecord>,
     /// Maximum buffered writes before `write_slot` forces a flush
     write_buffer_capacity: usize,
 }
 
 impl SwapStore {
+    pub(super) const SPILL_RECORD_BYTES: u64 = std::mem::size_of::<SpillRecord>() as u64;
+
     pub(super) fn new(write_buffer_capacity: usize) -> std::io::Result<Self> {
         let file = tempfile::Builder::new()
             .prefix("revrt-routing-swap-")
@@ -89,13 +90,13 @@ impl SwapStore {
         );
         Ok(Self {
             file,
-            write_buffer: Vec::with_capacity(write_buffer_capacity),
+            write_buffer: HashMap::with_capacity(write_buffer_capacity),
             write_buffer_capacity,
         })
     }
 
     fn slot_offset(slot: u64) -> std::io::Result<u64> {
-        slot.checked_mul(SpillRecord::RECORD_LEN as u64)
+        slot.checked_mul(16)
             .ok_or_else(|| std::io::Error::other("swap slot offset overflow"))
     }
 
@@ -106,7 +107,7 @@ impl SwapStore {
     ) -> std::io::Result<()> {
         let slot = u64::try_from(slot).map_err(|_| std::io::Error::other("slot overflow"))?;
         self.write_buffer
-            .push((slot, SpillRecord::from_parts(record.0, record.1)));
+            .insert(slot, SpillRecord::from_parts(record.0, record.1));
 
         if self.write_buffer.len() >= self.write_buffer_capacity {
             self.flush()?;
@@ -116,15 +117,17 @@ impl SwapStore {
     }
 
     pub(super) fn flush(&mut self) -> std::io::Result<()> {
-        if self.write_buffer.len() > 1 {
-            self.write_buffer.sort_unstable_by_key(|(slot, _)| *slot);
+        if self.write_buffer.is_empty() {
+            return Ok(());
         }
-        if !self.write_buffer.is_empty() {
-            // Buffer can be empty for repeated `read_slot` calls
-            // Only log if buffer is non-empty
-            debug!("Flushing {} entries to disk", self.write_buffer.len());
+        debug!("Flushing {} entries to disk", self.write_buffer.len());
+
+        let mut buffered_entries = self.write_buffer.drain().collect::<Vec<_>>();
+        if buffered_entries.len() > 1 {
+            buffered_entries.sort_unstable_by_key(|(slot, _)| *slot);
         }
-        for (slot, record) in self.write_buffer.drain(..) {
+
+        for (slot, record) in buffered_entries {
             let offset = Self::slot_offset(slot)?;
             let file = self.file.as_file_mut();
             file.seek(SeekFrom::Start(offset))?;
@@ -134,14 +137,17 @@ impl SwapStore {
     }
 
     pub(super) fn read_slot(&mut self, slot: usize) -> std::io::Result<(u64, Option<usize>)> {
-        self.flush()?;
-
         let slot = u64::try_from(slot).map_err(|_| std::io::Error::other("slot overflow"))?;
+
+        if let Some(record) = self.write_buffer.get(&slot).copied() {
+            return Ok((record.cost, record.parent_slot()));
+        }
+
         let offset = Self::slot_offset(slot)?;
 
         let file = self.file.as_file_mut();
         file.seek(SeekFrom::Start(offset))?;
-        let mut bytes = [0_u8; SpillRecord::RECORD_LEN];
+        let mut bytes = [0_u8; 16];
         file.read_exact(&mut bytes)?;
         let record = SpillRecord::from_bytes(bytes);
         Ok((record.cost, record.parent_slot()))
@@ -182,6 +188,32 @@ mod tests {
 
         assert_eq!(restored.0, 11);
         assert_eq!(restored.1, Some(3));
+
+        swap.flush().unwrap();
+        let restored = swap.read_slot(4).unwrap();
+
+        assert_eq!(restored.0, 11);
+        assert_eq!(restored.1, Some(3));
+    }
+
+    #[test]
+    fn swap_store_read_prefers_pending_buffer() {
+        let mut swap = SwapStore::new(8).unwrap();
+
+        swap.write_slot(9, (5, Some(1))).unwrap();
+        swap.flush().unwrap();
+        swap.write_slot(9, (8, Some(7))).unwrap();
+
+        let restored = swap.read_slot(9).unwrap();
+
+        assert_eq!(restored.0, 8);
+        assert_eq!(restored.1, Some(7));
+
+        swap.flush().unwrap();
+        let restored = swap.read_slot(9).unwrap();
+
+        assert_eq!(restored.0, 8);
+        assert_eq!(restored.1, Some(7));
     }
 
     #[test]

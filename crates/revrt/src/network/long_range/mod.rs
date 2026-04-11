@@ -10,7 +10,6 @@ use crate::ArrayIndex;
 use swap::SwapStore;
 use utilities::{FinalizedBits, GridIndexer};
 
-const SPILL_BUFFER_ENTRY_BYTES: u64 = 24;
 const MAX_PQ_TO_FRONTIER_NODE_RATIO: usize = 2;
 
 #[derive(Clone, Debug)]
@@ -203,7 +202,8 @@ fn compact_pq_set(best_node_costs: &HashMap<usize, u64>) -> BinaryHeap<NodeCost<
 }
 
 fn spill_buffer_capacity(memory_budget_bytes: u64) -> usize {
-    let max_entries = memory_budget_bytes.saturating_sub(1) / SPILL_BUFFER_ENTRY_BYTES;
+    let conservative_record_bytes = SwapStore::SPILL_RECORD_BYTES + 8; // Add 8 bytes for HashMap overhead per entry
+    let max_entries = memory_budget_bytes.saturating_sub(1) / conservative_record_bytes;
     let capped_entries = max_entries.min(usize::MAX as u64);
 
     if capped_entries == 0 {
