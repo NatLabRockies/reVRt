@@ -44,15 +44,24 @@ impl From<ArrayIndex> for (u64, u64) {
 pub fn resolve<P: AsRef<std::path::Path>>(
     store_path: P,
     cost_function: &str,
-    mem_limit_bytes: u64,
     algorithm: &str,
     start: &[ArrayIndex],
     end: Vec<ArrayIndex>,
+    swap_fp: Option<std::path::PathBuf>,
+    mem_limit_bytes: u64,
 ) -> Result<RevrtRoutingSolutions> {
     let cost_function = CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let mut simulation: Routing =
-        Routing::new(store_path, cost_function, mem_limit_bytes, algorithm)?;
+    let mut simulation = match swap_fp {
+        Some(swap_fp) => Routing::new_wth_swap(
+            store_path,
+            cost_function,
+            swap_fp,
+            mem_limit_bytes,
+            algorithm,
+        )?,
+        None => Routing::new(store_path, cost_function, mem_limit_bytes, algorithm)?,
+    };
     let result = simulation.compute(start, end).collect();
     Ok(result)
 }
@@ -63,6 +72,7 @@ pub(crate) fn resolve_generator<P, I>(
     cost_function: &str,
     route_definitions: I,
     tx: mpsc::Sender<(u32, RevrtRoutingSolutions)>,
+    swap_fp: Option<std::path::PathBuf>,
     mem_limit_bytes: u64,
     algorithm: &str,
 ) -> Result<()>
@@ -73,7 +83,16 @@ where
 {
     let cost_function = crate::cost::CostFunction::from_json(cost_function)?;
     tracing::trace!("Cost function: {:?}", cost_function);
-    let simulation = ParRouting::new(store_path, cost_function, mem_limit_bytes, algorithm)?;
+    let simulation = match swap_fp {
+        Some(swap_fp) => ParRouting::new_with_swap(
+            store_path,
+            cost_function,
+            mem_limit_bytes,
+            swap_fp,
+            algorithm,
+        )?,
+        None => ParRouting::new(store_path, cost_function, mem_limit_bytes, algorithm)?,
+    };
     simulation.lazy_scout(route_definitions, tx);
     Ok(())
 }

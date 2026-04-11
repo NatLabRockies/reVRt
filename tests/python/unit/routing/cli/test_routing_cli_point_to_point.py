@@ -233,6 +233,41 @@ def test_compute_lcp_routes_generates_csv(sample_layered_data, tmp_path):
     )
 
 
+def test_compute_lcp_routes_saves_routing_layer(sample_layered_data, tmp_path):
+    """compute_lcp_routes should persist routing layers when requested"""
+
+    routes = _build_route_table(
+        sample_layered_data,
+        rows_cols=[((1, 1), (2, 3))],
+    )
+    route_table_fp = tmp_path / "route_table.csv"
+    routes.to_csv(route_table_fp, index=False)
+
+    out_dir = tmp_path / "routing_outputs"
+    result_fp = compute_lcp_routes(
+        cost_fpath=sample_layered_data,
+        route_table_fpath=route_table_fp,
+        cost_layers=[{"layer_name": "layer_1"}],
+        out_dir=out_dir,
+        job_name="save_layer",
+        save_routing_layer=True,
+        _split_params=(0, 1),
+    )
+
+    assert Path(result_fp).exists()
+
+    extra_outputs = out_dir / "extra_outputs"
+    saved_layers = sorted(extra_outputs.glob("*.zarr"))
+    assert saved_layers
+
+    with xr.open_dataset(
+        saved_layers[0], engine="zarr", consolidated=False
+    ) as ds:
+        assert "cost" in ds
+        assert "latitude" in ds.coords
+        assert "longitude" in ds.coords
+
+
 def test_compute_lcp_routes_returns_none_on_empty_indices(
     sample_layered_data, tmp_path
 ):

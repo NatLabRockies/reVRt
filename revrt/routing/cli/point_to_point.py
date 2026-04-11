@@ -94,6 +94,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     cost_multiplier_scalar=1,
     transmission_config=None,
     save_paths=False,
+    save_routing_layer=False,
     ignore_invalid_costs=False,
     memory_utilization_limit=0.9,
     system_mem_limit_gb=5,
@@ -301,6 +302,9 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     save_paths : bool, default=False
         Save outputs as a GeoPackage with path geometries when ``True``.
         Defaults to ``False``.
+    save_routing_layer : bool, default=False
+        Save Rust routing layer outputs to ``out_dir/extra_outputs``
+        when ``True``. Defaults to ``False``.
     ignore_invalid_costs : bool, optional
         Optional flag to treat any cost values <= 0 as impassable
         (i.e. no paths can ever cross this). If ``False``, cost values
@@ -315,8 +319,8 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         your route computations will not need much memory and speed is
         very important to you. By default, ``"long_range_dijkstra"``.
     memory_utilization_limit : float, default=0.9
-        Fraction of system memory to utilize for routing. Should be a
-        value between 0 and 1. By default, ``0.9``.
+        Fraction of `system_mem_limit_gb` to utilize for routing. Should
+        be a value between 0 and 1. By default, ``0.9``.
     system_mem_limit_gb : int or float, default=5
         Maximum amount of system memory (in GB) to utilize for routing.
         This is used in conjunction with `memory_utilization_limit` to
@@ -369,11 +373,13 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         cost_fpath,
         out_fp=out_fp,
         routes_to_compute=routes_to_compute,
+        job_name=job_name,
         cost_multiplier_layer=cost_multiplier_layer,
         cost_multiplier_scalar=cost_multiplier_scalar,
         tracked_layers=tracked_layers,
         ignore_invalid_costs=ignore_invalid_costs,
         user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
+        save_routing_layer=save_routing_layer,
         algorithm=algorithm,
     )
 

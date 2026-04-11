@@ -19,9 +19,10 @@ mod lazy_subset;
 pub(crate) mod samples;
 
 use std::iter;
+use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
-use tracing::{debug, trace, warn};
+use tracing::{debug, info, trace, warn};
 use zarrs::array::codec::CodecOptions;
 use zarrs::array::{ChunkCache, ChunkCacheDecodedLruSizeLimit, ChunkGrid};
 use zarrs::storage::{
@@ -39,7 +40,7 @@ pub(super) struct Dataset {
     source: ReadableListableStorage,
     // Silly way to keep the tmp path alive
     #[allow(dead_code)]
-    cost_path: tempfile::TempDir,
+    cost_path: Option<tempfile::TempDir>,
     /// Variables used to define cost
     /// Minimalist solution for the cost calculation. In the future
     /// it will be modified to include weights and other types of
@@ -69,19 +70,38 @@ impl Dataset {
         cost_function: CostFunction,
         cache_size: u64,
     ) -> Result<Self> {
+        let tmp_path = tempfile::TempDir::new()
+            .expect("could not create temporary directory for swap dataset");
+        let tmp = tmp_path.path().to_path_buf();
+        info!("Initializing a temporary swap dataset at {:?}", tmp);
+        let mut dataset = Self::open_with_path(path, cost_function, cache_size, tmp)?;
+        dataset.cost_path = Some(tmp_path);
+        Ok(dataset)
+    }
+
+    pub(super) fn open_with_swap<P: AsRef<std::path::Path>>(
+        path: P,
+        cost_function: CostFunction,
+        cache_size: u64,
+        swap_fp: PathBuf,
+    ) -> Result<Self> {
+        Self::open_with_path(path, cost_function, cache_size, swap_fp)
+    }
+
+    fn open_with_path<P: AsRef<std::path::Path>>(
+        path: P,
+        cost_function: CostFunction,
+        cache_size: u64,
+        swap_fp: PathBuf,
+    ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
         let filesystem =
             zarrs::filesystem::FilesystemStore::new(path).expect("could not open filesystem store");
         let source = std::sync::Arc::new(filesystem);
 
         // ==== Create the swap dataset ====
-        let tmp_path = tempfile::TempDir::new().unwrap();
-        debug!(
-            "Initializing a temporary swap dataset at {:?}",
-            tmp_path.path()
-        );
         let swap: ReadableWritableListableStorage = std::sync::Arc::new(
-            zarrs::filesystem::FilesystemStore::new(tmp_path.path())
+            zarrs::filesystem::FilesystemStore::new(swap_fp)
                 .expect("could not open filesystem store"),
         );
 
@@ -169,7 +189,7 @@ impl Dataset {
         trace!("Dataset opened successfully");
         Ok(Self {
             source,
-            cost_path: tmp_path,
+            cost_path: None,
             swap,
             cost_chunk_idx,
             cost_function,
@@ -422,13 +442,15 @@ fn add_layer_to_data(
 ) -> Result<()> {
     trace!("Creating an empty {} array", layer_name);
     let dataset_path = format!("/{layer_name}");
-    let builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
+    let mut builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
         chunk_shape.clone(),
         zarrs::array::DataType::Float32,
         zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
     );
 
-    let built = builder.build(swap.clone(), &dataset_path)?;
+    let built = builder
+        .dimension_names(["band", "y", "x"].into())
+        .build(swap.clone(), &dataset_path)?;
     built.store_metadata()?;
 
     let array = zarrs::array::Array::open(swap.clone(), &dataset_path)?;

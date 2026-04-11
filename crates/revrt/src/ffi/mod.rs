@@ -139,6 +139,15 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     the indices in the array for the any allowed final pixel.
 ///     When the algorithm reaches any of these points, the routing
 ///     is terminated and the final path + cost is returned.
+/// routing_layer_out_fp : path-like, optional
+///    Optional path to a cost zarr file that will be used to store the routing
+///    cost layers. If not given, the routing layers will be kept in a temporary
+///    directory and deleted after the routing is done. By default, `None`.
+/// log_level : int, optional
+///     Logging level for Rust tracing emitted to stderr. Roughly follows the
+///     Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,
+///     30 = WARN, and 40 = ERROR. If None is given, no logging is set up.
+///     By default, `None`.
 /// mem_limit_bytes : int, default=250_000_000
 ///     Overall memory limit to use for routing computations, in bytes.
 ///     By default, `250,000,000` (250MB).
@@ -159,16 +168,19 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     route goes through and the second element is the final
 ///     route cost.
 #[pyfunction]
-#[pyo3(signature = (zarr_fp, cost_function, start, end, mem_limit_bytes=250_000_000, algorithm="long_range_dijkstra"))]
-#[allow(clippy::type_complexity)]
+#[pyo3(signature = (zarr_fp, cost_function, start, end, algorithm="long_range_dijkstra", routing_layer_out_fp=None, mem_limit_bytes=250_000_000, log_level=None))]
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn find_paths(
     zarr_fp: PathBuf,
     cost_function: String,
     start: Vec<(u64, u64)>,
     end: Vec<(u64, u64)>,
-    mem_limit_bytes: u64,
     algorithm: &str,
+    routing_layer_out_fp: Option<PathBuf>,
+    mem_limit_bytes: u64,
+    log_level: Option<u8>,
 ) -> PyResult<PyRoutingSolutions> {
+    py_tracing::configure(log_level).map_err(PyErr::from)?;
     let start: Vec<ArrayIndex> = start
         .into_iter()
         .map(|(i, j)| ArrayIndex { i, j })
@@ -177,10 +189,11 @@ fn find_paths(
     let paths = resolve(
         zarr_fp,
         &cost_function,
-        mem_limit_bytes,
         algorithm,
         &start,
         end,
+        routing_layer_out_fp,
+        mem_limit_bytes,
     )
     .map_err(PyErr::from)?;
     Ok(paths.into_iter().map(Into::into).collect())
@@ -209,6 +222,10 @@ fn find_paths(
 ///     begin/end. A unique path will be returned for each of the starting
 ///     points in each of the path definition tuples (assuming a valid path
 ///     exists).
+/// routing_layer_out_fp : path-like, optional
+///    Optional path to a cost zarr file that will be used to store the routing
+///    cost layers. If not given, the routing layers will be kept in a temporary
+///    directory and deleted after the routing is done. By default, `None`.
 /// mem_limit_bytes : int, default=250_000_000
 ///     Overall memory limit to use for routing computations, in bytes.
 ///     By default, `250,000,000` (250MB).
@@ -242,23 +259,37 @@ fn find_paths(
 ///     so use the route ID input to match results to inputs.
 #[pyclass]
 struct RouteFinder {
+    /// Path to the Zarr file containing the cost layers
+    #[pyo3(get)]
     zarr_fp: PathBuf,
+    /// JSON string representation of the cost function configuration
+    #[pyo3(get)]
     cost_function: String,
+    /// Route definitions as ``(route_id, start_points, end_points)`` tuples
+    #[pyo3(get)]
     route_definitions: Vec<PyRouteDefinition>,
+    /// Cache size used during routing, in bytes
+    #[pyo3(get)]
     mem_limit_bytes: u64,
+    /// Optional output path where routing layers are persisted
+    #[pyo3(get)]
+    routing_layer_out_fp: Option<PathBuf>,
+    /// Algorithm used for routing
+    #[pyo3(get)]
     algorithm: String,
 }
 
 #[pymethods]
 impl RouteFinder {
     #[new]
-    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, mem_limit_bytes=250_000_000, algorithm="long_range_dijkstra", log_level=None))]
+    #[pyo3(signature = (zarr_fp, cost_function, route_definitions, algorithm="long_range_dijkstra", routing_layer_out_fp=None, mem_limit_bytes=250_000_000, log_level=None))]
     fn new(
         zarr_fp: PathBuf,
         cost_function: String,
         route_definitions: Vec<PyRouteDefinition>,
-        mem_limit_bytes: u64,
         algorithm: &str,
+        routing_layer_out_fp: Option<PathBuf>,
+        mem_limit_bytes: u64,
         log_level: Option<u8>,
     ) -> PyResult<Self> {
         py_tracing::configure(log_level).map_err(PyErr::from)?;
@@ -267,6 +298,7 @@ impl RouteFinder {
             zarr_fp,
             cost_function,
             route_definitions,
+            routing_layer_out_fp,
             mem_limit_bytes,
             algorithm: algorithm.to_string(),
         })
@@ -303,6 +335,7 @@ impl RouteOutputIter {
                 .map(Into::into)
                 .collect::<Vec<_>>(),
             tx,
+            user_input.routing_layer_out_fp.clone(),
             user_input.mem_limit_bytes,
             &user_input.algorithm,
         )?;

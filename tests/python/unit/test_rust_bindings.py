@@ -9,6 +9,7 @@ import xarray as xr
 from skimage.graph import MCP_Geometric
 
 from revrt import RouteFinder, find_paths, simplify_using_slopes
+from revrt.routing.base import RoutingLayerManager, RoutingScenario
 
 
 def test_find_paths_basic_single_route(tmp_path):
@@ -111,6 +112,83 @@ def test_route_finder_basic_single_route(tmp_path):
 
     assert test_path == mcp.traceback((2, 6))
     assert np.isclose(test_cost, costs[(2, 6)])
+
+
+def test_route_finder_writes_routing_layer_to_expected_path(tmp_path):
+    """Test RouteFinder writes readable routing layer with expected costs"""
+    da = xr.DataArray(
+        np.array(
+            [
+                [
+                    [1, 2, 3],
+                    [4, 5, 6],
+                    [7, 8, 9],]
+            ],
+            dtype=np.float32,
+        ),
+        dims=("band", "y", "x"),
+
+        coords={
+            "x": np.array([0.5, 1.5, 2.5], dtype=np.float32),
+            "y": np.array([2.5, 1.5, 0.5], dtype=np.float32),
+        },
+    )
+    test_cost_fp = tmp_path / "test.zarr"
+    ds = xr.Dataset({"test_costs": da})
+    ds["test_costs"].encoding = {
+        "fill_value": 1_000.0,
+        "_FillValue": 1_000.0,
+    }
+    ds.chunk({"x": 3, "y": 3}).to_zarr(
+        test_cost_fp, mode="w", zarr_format=3, consolidated=False
+    )
+
+    routing_layer_out_fp = tmp_path / "routing_layer.zarr"
+
+    cost_definition = {
+        "cost_layers": [{"layer_name": "test_costs"}],
+        "ignore_invalid_costs": True,
+    }
+    routing_results = RouteFinder(
+        zarr_fp=test_cost_fp,
+        cost_function=json.dumps(cost_definition),
+        route_definitions=[
+            (11, [(0, 0)], [(2, 2)]),
+        ],
+        routing_layer_out_fp=routing_layer_out_fp,
+    )
+    list(routing_results)  # force routing to run
+
+    assert routing_layer_out_fp.exists()
+
+    with xr.open_dataset(
+        routing_layer_out_fp, engine="zarr", consolidated=False
+    ) as routing_ds:
+        assert "cost" in routing_ds
+        written_costs = routing_ds["cost"].astype(np.float32).values
+        assert written_costs.shape == (1, 3, 3)
+
+    scenario = RoutingScenario(
+        cost_fpath=test_cost_fp,
+        cost_layers=[{"layer_name": "test_costs"}],
+        ignore_invalid_costs=True,
+    )
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        expected_costs = (
+            routing_layers.final_routing_layer.astype(np.float32)
+            .compute()
+            .values
+        )
+    finally:
+        routing_layers.close()
+
+    np.testing.assert_allclose(
+        written_costs[0],
+        expected_costs,
+        rtol=1e-6,
+        atol=1e-6,
+    )
 
 
 def test_find_paths_supports_explicit_algorithm(tmp_path):

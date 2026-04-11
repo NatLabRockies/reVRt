@@ -284,6 +284,40 @@ def test_compute_lcp_routes_creates_geo_package_output(point_feature_dataset):
     assert not gdf.empty
 
 
+def test_compute_lcp_routes_saves_routing_layer(point_feature_dataset):
+    """compute_lcp_routes should persist routing layers when requested"""
+
+    route_table = _build_route_table(
+        point_feature_dataset["metadata"], [(1, 1)], [1]
+    )
+    route_table_fp = point_feature_dataset["tmp_path"] / "routes_saved.csv"
+    route_table.to_csv(route_table_fp, index=False)
+
+    out_dir = point_feature_dataset["tmp_path"] / "saved_layer_outputs"
+    csv_path = compute_lcp_routes(
+        cost_fpath=point_feature_dataset["cost_fp"],
+        route_table_fpath=route_table_fp,
+        features_fpath=point_feature_dataset["features_fp"],
+        cost_layers=[{"layer_name": "tie_line_costs_400MW"}],
+        out_dir=out_dir,
+        job_name="feature_save_layer",
+        save_routing_layer=True,
+    )
+
+    assert Path(csv_path).exists()
+
+    extra_outputs = out_dir / "extra_outputs"
+    saved_layers = sorted(extra_outputs.glob("*.zarr"))
+    assert saved_layers
+
+    with xr.open_dataset(
+        saved_layers[0], engine="zarr", consolidated=False
+    ) as ds:
+        assert "cost" in ds
+        assert "latitude" in ds.coords
+        assert "longitude" in ds.coords
+
+
 @pytest.mark.skipif(
     (os.environ.get("TOX_RUNNING") == "True")
     and (platform.system() == "Windows"),
