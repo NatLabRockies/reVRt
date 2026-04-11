@@ -191,7 +191,7 @@ class RouteToDefinitionConverter(ABC):
         raise NotImplementedError
 
 
-def run_lcp(
+def run_lcp(  # noqa
     cost_fpath,
     out_fp,
     routes_to_compute,
