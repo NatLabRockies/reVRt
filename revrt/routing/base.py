@@ -815,7 +815,7 @@ class BatchRouteProcessor:
                     attrs = self.route_attrs.get(attrs_key, self.default_attrs)
                     yield indices, optimized_objective, attrs
 
-                time_elapsed = f"{(time.monotonic() - ts) / 60:.4f} minute(s)"
+                time_elapsed = f"{(time.monotonic() - ts) / 60:.2f} minute(s)"
                 logger.info(
                     "%d/%d (%.2f%%) route definitions processed in %s",
                     num_complete,
