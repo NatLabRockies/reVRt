@@ -14,6 +14,7 @@ import rioxarray  # noqa: F401
 from slugify import slugify
 
 from revrt.exceptions import revrtFileExistsError
+from revrt.utilities.handlers import ZARR_COMPRESSORS
 
 
 logger = logging.getLogger(__name__)
@@ -217,6 +218,22 @@ def _persist_routing_layer_output(
         fixed_ds = fixed_ds.rio.write_transform(src_ds.rio.transform())
 
         fixed_ds.attrs.update(src_ds.attrs)
-        fixed_ds.to_zarr(out_fp, mode="w", consolidated=False)
+        fixed_ds.to_zarr(
+            out_fp,
+            mode="w",
+            encoding=_routing_layer_zarr_encoding(fixed_ds),
+            zarr_format=3,
+            consolidated=False,
+        )
 
     return out_fp
+
+
+def _routing_layer_zarr_encoding(ds):
+    """Build Zarr encoding for persisted routing layers"""
+    encoded_names = set(ds.data_vars) | {"latitude", "longitude"}
+    return {
+        name: {"compressors": ZARR_COMPRESSORS}
+        for name in encoded_names
+        if name in ds
+    }
