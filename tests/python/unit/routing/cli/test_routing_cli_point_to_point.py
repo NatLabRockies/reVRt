@@ -16,6 +16,7 @@ from rasterio.transform import from_origin
 
 from revrt._cli import main
 from revrt.utilities import LayeredFile
+from revrt.utilities.handlers import ZARR_COMPRESSORS
 from revrt.routing.utilities import map_to_costs
 
 from revrt.routing.cli.point_to_point import (
@@ -132,6 +133,14 @@ def _build_route_table(layered_fp, rows_cols):
         )
 
     return pd.DataFrame.from_records(records)
+
+
+def _assert_shared_compressor(codec):
+    """Validate shared Blosc compressor settings"""
+    assert isinstance(codec, type(ZARR_COMPRESSORS))
+    assert codec.cname == ZARR_COMPRESSORS.cname
+    assert codec.clevel == ZARR_COMPRESSORS.clevel
+    assert codec.shuffle == ZARR_COMPRESSORS.shuffle
 
 
 def test_compute_lcp_routes_generates_csv(sample_layered_data, tmp_path):
@@ -266,6 +275,9 @@ def test_compute_lcp_routes_saves_routing_layer(sample_layered_data, tmp_path):
         assert "cost" in ds
         assert "latitude" in ds.coords
         assert "longitude" in ds.coords
+        _assert_shared_compressor(ds["cost"].encoding["compressors"][0])
+        _assert_shared_compressor(ds["latitude"].encoding["compressors"][0])
+        _assert_shared_compressor(ds["longitude"].encoding["compressors"][0])
 
 
 def test_compute_lcp_routes_returns_none_on_empty_indices(
