@@ -37,11 +37,12 @@ from revrt.warn import revrtWarning
 
 
 logger = logging.getLogger(__name__)
-_ZARR_COMPRESSORS = zarr.codecs.BloscCodec(  # cspell:disable-line
+ZARR_COMPRESSORS = zarr.codecs.BloscCodec(  # cspell:disable-line
     cname="zstd",
     clevel=9,  # cspell:disable-line
     shuffle=zarr.codecs.BloscShuffle.shuffle,  # cspell:disable-line
 )
+"""[NOT PUBLIC API] Compressors to use when writing to Zarr file"""
 
 
 class IncrementalWriter:
@@ -425,7 +426,7 @@ class LayeredFile:
             encoding = {layer_name: da.encoding or {}}
             encoding[layer_name].update(
                 {
-                    "compressors": _ZARR_COMPRESSORS,
+                    "compressors": ZARR_COMPRESSORS,
                     "dtype": da.dtype,
                     "chunks": chunks,
                 }
@@ -1009,12 +1010,12 @@ def _save_ds_as_zarr_with_encodings(out_ds, chunk_x, chunk_y, out_fp):
         "y": {"dtype": "float32", "chunks": (chunk_y,)},
         "x": {"dtype": "float32", "chunks": (chunk_x,)},
         "longitude": {
-            "compressors": _ZARR_COMPRESSORS,
+            "compressors": ZARR_COMPRESSORS,
             "dtype": "float32",
             "chunks": (chunk_y, chunk_x),
         },
         "latitude": {
-            "compressors": _ZARR_COMPRESSORS,
+            "compressors": ZARR_COMPRESSORS,
             "dtype": "float32",
             "chunks": (chunk_y, chunk_x),
         },
