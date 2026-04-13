@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "NLR-reVRt"
-version = "0.4.1"
+version = "0.5.0"
 description = "National Laboratory of the Rockies' (NLR's) Transmission for reV tool"
 readme = "README.rst"
 authors = [
