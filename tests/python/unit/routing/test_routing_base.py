@@ -177,14 +177,19 @@ def sample_layered_data(tmp_path_factory):
     return layered_fp
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_basic_single_route_layered_file_short_path(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Test routing using a LayeredFile-generated cost surface"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -305,12 +310,19 @@ def test_batch_route_processor_forwards_algorithm(
     assert captured["algorithm"] == "dijkstra"
 
 
-def test_basic_single_route_layered_file(sample_layered_data, tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_basic_single_route_layered_file(
+    sample_layered_data, tmp_path, algorithm
+):
     """Test routing using a LayeredFile-generated cost surface"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -343,8 +355,12 @@ def test_basic_single_route_layered_file(sample_layered_data, tmp_path):
 
 
 @pytest.mark.parametrize("single_rd", [True, False])
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_multi_layer_route_layered_file(
-    sample_layered_data, tmp_path, single_rd
+    sample_layered_data, tmp_path, single_rd, algorithm
 ):
     """Test routing across multiple cost layers"""
 
@@ -354,6 +370,7 @@ def test_multi_layer_route_layered_file(
             {"layer_name": "layer_1"},
             {"layer_name": "layer_2"},
         ],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -432,12 +449,19 @@ def test_multi_layer_route_layered_file(
     assert second_route["route_type"] == "A"
 
 
-def test_save_paths_returns_expected_geometry(sample_layered_data, tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_save_paths_returns_expected_geometry(
+    sample_layered_data, tmp_path, algorithm
+):
     """Saving paths returns expected geometries for each route"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_gpkg = tmp_path / "routes.gpkg"
@@ -489,14 +513,19 @@ def test_save_paths_returns_expected_geometry(sample_layered_data, tmp_path):
         )
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_empty_route_definitions_returns_empty_dataframe(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Empty route definitions return an empty dataframe"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -508,14 +537,19 @@ def test_empty_route_definitions_returns_empty_dataframe(
     assert not out_csv.exists()
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_empty_route_definitions_returns_empty_geo_dataframe(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Empty route definitions return an empty dataframe"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_gpkg = tmp_path / "routes.gpkg"
@@ -527,7 +561,13 @@ def test_empty_route_definitions_returns_empty_geo_dataframe(
     assert not out_gpkg.exists()
 
 
-def test_multi_layer_route_with_multiplier(sample_layered_data, tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_multi_layer_route_with_multiplier(
+    sample_layered_data, tmp_path, algorithm
+):
     """Test routing with multiple layers and a scalar multiplier"""
 
     scenario = RoutingScenario(
@@ -539,6 +579,7 @@ def test_multi_layer_route_with_multiplier(sample_layered_data, tmp_path):
                 "multiplier_scalar": 0.5,
             },
         ],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -605,8 +646,12 @@ def test_multi_layer_route_with_multiplier(sample_layered_data, tmp_path):
     )
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_multi_layer_route_with_scalar_and_layer_multipliers(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Test routing when combining scalar and layer multipliers"""
 
@@ -625,6 +670,7 @@ def test_multi_layer_route_with_scalar_and_layer_multipliers(
                 "multiplier_layer": "layer_4",
             },
         ],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -653,7 +699,11 @@ def test_multi_layer_route_with_scalar_and_layer_multipliers(
     assert np.isclose(route["cost"], route["optimized_objective"], rtol=1e-6)
 
 
-def test_routing_with_tracked_layers(sample_layered_data, tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_routing_with_tracked_layers(sample_layered_data, tmp_path, algorithm):
     """Tracked layers report aggregated stats alongside routing results"""
 
     scenario = RoutingScenario(
@@ -664,6 +714,7 @@ def test_routing_with_tracked_layers(sample_layered_data, tmp_path):
             "layer_2": "max",
             "layer_3": "min",
         },
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -691,14 +742,23 @@ def test_routing_with_tracked_layers(sample_layered_data, tmp_path):
 
 
 @pytest.mark.parametrize("use_friction", [True, False])
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_start_point_on_barrier_returns_no_route(
-    sample_layered_data, assert_message_was_logged, use_friction, tmp_path
+    sample_layered_data,
+    assert_message_was_logged,
+    use_friction,
+    tmp_path,
+    algorithm,
 ):
     """If the start point is on a barrier (cost <= 0) no route is returned"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_6"}],
+        algorithm=algorithm,
     )
     if use_friction:
         scenario.friction_layers = [
@@ -728,14 +788,19 @@ def test_start_point_on_barrier_returns_no_route(
     assert not out_csv.exists()
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_invalid_start_point_logged(
-    sample_layered_data, assert_message_was_logged, tmp_path
+    sample_layered_data, assert_message_was_logged, tmp_path, algorithm
 ):
     """Test that only the invalid starting point is logged"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -767,8 +832,12 @@ def test_invalid_start_point_logged(
     assert route["end_col"] == 6
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_invalid_start_point_explicitly_allowed(
-    sample_layered_data, assert_message_was_logged, tmp_path
+    sample_layered_data, assert_message_was_logged, tmp_path, algorithm
 ):
     """Test out-of-bounds points logging when ignore_invalid_costs is False"""
 
@@ -776,6 +845,7 @@ def test_invalid_start_point_explicitly_allowed(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
         ignore_invalid_costs=False,
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -822,14 +892,19 @@ def test_invalid_start_point_explicitly_allowed(
     assert second_route["end_col"] == 6
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_some_endpoints_include_barriers_but_one_valid(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """If some end points <=0 but at least one is valid, route is found"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -854,14 +929,19 @@ def test_some_endpoints_include_barriers_but_one_valid(
     assert (end_row, end_col) == (2, 6)
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_all_endpoints_are_barriers_returns_no_route(
-    sample_layered_data, assert_message_was_logged, tmp_path
+    sample_layered_data, assert_message_was_logged, tmp_path, algorithm
 ):
     """If all end points are barriers, no route is returned"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -881,14 +961,19 @@ def test_all_endpoints_are_barriers_returns_no_route(
     assert not out_csv.exists()
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_bad_start_index_returns_no_route(
-    sample_layered_data, assert_message_was_logged, tmp_path
+    sample_layered_data, assert_message_was_logged, tmp_path, algorithm
 ):
     """If any points are out-of-bounds, no route is returned"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -908,14 +993,19 @@ def test_bad_start_index_returns_no_route(
     assert not out_csv.exists()
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_bad_end_index_returns_no_route(
-    sample_layered_data, assert_message_was_logged, tmp_path
+    sample_layered_data, assert_message_was_logged, tmp_path, algorithm
 ):
     """If any points are out-of-bounds, no route is returned"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -939,14 +1029,19 @@ def test_bad_end_index_returns_no_route(
     assert not out_csv.exists()
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_bad_index_skipped(
-    sample_layered_data, assert_message_was_logged, tmp_path
+    sample_layered_data, assert_message_was_logged, tmp_path, algorithm
 ):
     """Out-of-bounds points are skipped and routes are compute"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -1051,9 +1146,7 @@ def test_cost_multiplier_layer_and_scalar_applied(sample_layered_data):
         routing_layers.close()
 
 
-def test_length_invariant_layer_costs_ignore_path_length(
-    sample_layered_data,
-):
+def test_length_invariant_layer_costs_ignore_path_length(sample_layered_data):
     """Length invariant cost layers ignore per-cell distances"""
 
     scenario = RoutingScenario(
@@ -1086,7 +1179,13 @@ def test_length_invariant_layer_costs_ignore_path_length(
         routing_layers.close()
 
 
-def test_length_invariant_layers_sum_raw_values(sample_layered_data, tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_length_invariant_layers_sum_raw_values(
+    sample_layered_data, tmp_path, algorithm
+):
     """Length invariant layers sum raw cell values without distance scaling"""
 
     scenario = RoutingScenario(
@@ -1095,6 +1194,7 @@ def test_length_invariant_layers_sum_raw_values(sample_layered_data, tmp_path):
             {"layer_name": "layer_1"},
             {"layer_name": "layer_2", "is_invariant": True},
         ],
+        algorithm=algorithm,
     )
 
     out_gpkg = tmp_path / "routes.gpkg"
@@ -1142,8 +1242,12 @@ def test_length_invariant_layers_sum_raw_values(sample_layered_data, tmp_path):
     )
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_length_invariant_hidden_and_friction_layers(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Combined layer settings preserve cost reporting expectations"""
 
@@ -1165,6 +1269,7 @@ def test_length_invariant_hidden_and_friction_layers(
                 "multiplier_scalar": 0.5,
             },
         ],
+        algorithm=algorithm,
     )
 
     out_gpkg = tmp_path / "routes.gpkg"
@@ -1303,14 +1408,19 @@ def test_friction_layer_include_in_report_adds_tracker(sample_layered_data):
         routing_layers.close()
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_friction_layer_influences_objective_without_reporting(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Friction layers alter routing objective without affecting reports"""
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     friction_scenario = RoutingScenario(
@@ -1322,6 +1432,7 @@ def test_friction_layer_influences_objective_without_reporting(
                 "multiplier_scalar": 0.5,
             }
         ],
+        algorithm=algorithm,
     )
 
     base_csv = tmp_path / "base.csv"
@@ -1361,12 +1472,19 @@ def test_friction_layer_influences_objective_without_reporting(
     assert "layer_2_length_km" not in friction_route
 
 
-def test_friction_layer_influences_objective(sample_layered_data, tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_friction_layer_influences_objective(
+    sample_layered_data, tmp_path, algorithm
+):
     """Friction layers alter routing objective without affecting reports"""
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     friction_scenario = RoutingScenario(
@@ -1378,6 +1496,7 @@ def test_friction_layer_influences_objective(sample_layered_data, tmp_path):
                 "multiplier_scalar": 1000,
             }
         ],
+        algorithm=algorithm,
     )
 
     base_csv = tmp_path / "base.csv"
@@ -1420,14 +1539,19 @@ def test_friction_layer_influences_objective(sample_layered_data, tmp_path):
     assert "layer_5_length_km" not in friction_route
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_negative_friction_layer_influences_objective(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Friction layers alter routing objective without affecting reports"""
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     friction_scenario = RoutingScenario(
@@ -1439,6 +1563,7 @@ def test_negative_friction_layer_influences_objective(
                 "multiplier_scalar": -10,
             }
         ],
+        algorithm=algorithm,
     )
 
     base_gpkg = tmp_path / "base.gpkg"
@@ -1481,14 +1606,19 @@ def test_negative_friction_layer_influences_objective(
     assert "layer_5_length_km" not in friction_route
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_negative_friction_layer_does_not_go_thru_barrier(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Friction layers alter routing objective without affecting reports"""
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_6"}],
+        algorithm=algorithm,
     )
 
     friction_scenario = RoutingScenario(
@@ -1500,6 +1630,7 @@ def test_negative_friction_layer_does_not_go_thru_barrier(
                 "multiplier_scalar": -10,
             }
         ],
+        algorithm=algorithm,
     )
 
     base_gpkg = tmp_path / "base.gpkg"
@@ -1544,14 +1675,19 @@ def test_negative_friction_layer_does_not_go_thru_barrier(
     assert "layer_5_length_km" not in friction_route
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_include_in_final_cost_false_behaves_like_friction(
-    sample_layered_data, tmp_path
+    sample_layered_data, tmp_path, algorithm
 ):
     """Non-final cost layers steer routing but stay out of reports"""
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
+        algorithm=algorithm,
     )
 
     out_gpkg = tmp_path / "base.gpkg"
@@ -1730,7 +1866,13 @@ def test_characterized_layer_total_length_computation(sample_layered_data):
         routing_layers.close()
 
 
-def test_negative_cost_path_returns_no_route(sample_layered_data, tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_negative_cost_path_returns_no_route(
+    sample_layered_data, tmp_path, algorithm
+):
     """If all points between start and end are negative, return no route"""
 
     scenario = RoutingScenario(
@@ -1740,6 +1882,7 @@ def test_negative_cost_path_returns_no_route(sample_layered_data, tmp_path):
             {"layer_name": "layer_4", "multiplier_scalar": -3},
         ],
         friction_layers=[{"mask": "layer_5", "multiplier_scalar": -10}],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -1853,12 +1996,19 @@ def test_soft_barrier_setting_controls_barrier_value(sample_layered_data):
 
 
 @pytest.mark.parametrize("ignore_invalid_costs", [True, False])
-def test_soft_barrier(sample_layered_data, ignore_invalid_costs, tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_soft_barrier(
+    sample_layered_data, ignore_invalid_costs, tmp_path, algorithm
+):
     """Test that soft barriers work as expected in point-to-many routing"""
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_7"}],
         ignore_invalid_costs=ignore_invalid_costs,
+        algorithm=algorithm,
     )
 
     out_gpkg = tmp_path / "routes.gpkg"
@@ -1884,7 +2034,11 @@ def test_soft_barrier(sample_layered_data, ignore_invalid_costs, tmp_path):
 
 
 @pytest.mark.parametrize("single_rd", [True, False])
-def test_route_many_attrs(sample_layered_data, tmp_path, single_rd):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_route_many_attrs(sample_layered_data, tmp_path, single_rd, algorithm):
     """Test routing with multiple layers and a scalar multiplier"""
 
     scenario = RoutingScenario(
@@ -1892,6 +2046,7 @@ def test_route_many_attrs(sample_layered_data, tmp_path, single_rd):
         cost_layers=[
             {"layer_name": "layer_1"},
         ],
+        algorithm=algorithm,
     )
 
     out_csv = tmp_path / "routes.csv"

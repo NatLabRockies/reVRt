@@ -184,6 +184,7 @@ def test_route_finder_writes_routing_layer_to_expected_path(
         cost_fpath=test_cost_fp,
         cost_layers=[{"layer_name": "test_costs"}],
         ignore_invalid_costs=True,
+        algorithm=algorithm,
     )
     routing_layers = RoutingLayerManager(scenario).build()
     try:
