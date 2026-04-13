@@ -13,9 +13,10 @@ use std::str::FromStr;
 
 use num_traits::Zero;
 
-use pathfinding::prelude::dijkstra;
+use pathfinding::prelude::{astar, dijkstra};
 use tracing::{debug, warn};
 
+use super::astar::{astar_successors, octile_heuristic};
 use super::long_range;
 use crate::{ArrayIndex, Solution, error::Error, error::Result};
 
@@ -24,7 +25,7 @@ const MIN_MEMORY_BUDGET_MB: u64 = 2;
 /// Types of algorithms to determine optimal paths
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum AlgorithmType {
-    // Astar,
+    Astar,
     Dijkstra,
     LongRangeDijkstra,
     BidirectionalLongRangeDijkstra,
@@ -35,12 +36,14 @@ impl FromStr for AlgorithmType {
 
     fn from_str(value: &str) -> Result<Self> {
         match value.trim().to_ascii_lowercase().replace('-', "_").as_str() {
+            "astar" | "a_star" => Ok(Self::Astar),
             "dijkstra" => Ok(Self::Dijkstra),
             "long_range_dijkstra" => Ok(Self::LongRangeDijkstra),
             "bidirectional_long_range_dijkstra" => Ok(Self::BidirectionalLongRangeDijkstra),
             _ => Err(Error::InvalidAlgorithm {
                 value: value.to_string(),
                 allowed: &[
+                    "astar",
                     "dijkstra",
                     "long_range_dijkstra",
                     "bidirectional_long_range_dijkstra",
@@ -56,24 +59,14 @@ pub(super) struct Algorithm {
     per_worker_memory_budget_bytes: Option<u64>,
 }
 
-#[allow(dead_code)]
-/// Manhattan distance
-///
-/// For a given start point, calculates the shortest manhattan distance to a
-/// collection of possible end points, i.e. assume that there are multiple
-/// possible ends.
-fn manhattan_distance(start: &ArrayIndex, end: &[ArrayIndex]) -> u64 {
-    end.iter()
-        .map(|end| {
-            let di = start.i.abs_diff(end.i);
-            let dj = start.j.abs_diff(end.j);
-            di + dj
-        })
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap()
-}
-
 impl Algorithm {
+    pub(super) fn new_astar() -> Self {
+        Self {
+            algorithm_type: AlgorithmType::Astar,
+            per_worker_memory_budget_bytes: None,
+        }
+    }
+
     pub(super) fn new() -> Self {
         Self {
             algorithm_type: AlgorithmType::Dijkstra,
@@ -130,6 +123,7 @@ impl Algorithm {
         per_worker_memory_budget_bytes: u64,
     ) -> Self {
         match algorithm {
+            AlgorithmType::Astar => Self::new_astar(),
             AlgorithmType::Dijkstra => Self::new(),
             AlgorithmType::LongRangeDijkstra => {
                 Self::new_long_range(per_worker_memory_budget_bytes)
@@ -140,13 +134,11 @@ impl Algorithm {
         }
     }
 
-    #[allow(unused_variables)]
-    pub(super) fn compute<C, FN, IN, FH, FS>(
+    pub(super) fn compute<C, FN, IN, FS>(
         &self,
         start: &ArrayIndex,
         goals: &[ArrayIndex],
         successors: FN,
-        heuristic: Option<FH>,
         success: FS,
         grid_shape: (u64, u64),
     ) -> Option<Solution<ArrayIndex, f32>>
@@ -159,12 +151,22 @@ impl Algorithm {
         // C: Zero + Ord + Copy + From<u64>,
         FN: FnMut(&ArrayIndex) -> IN,
         IN: IntoIterator<Item = (ArrayIndex, C)>,
-        FH: FnMut(&ArrayIndex) -> C,
         FS: FnMut(&ArrayIndex) -> bool,
         // Temporary solution while we can't compare f32
         u64: From<C>,
     {
         let ans = match self.algorithm_type {
+            AlgorithmType::Astar => {
+                let min_cost = std::cell::Cell::new(None);
+                let mut successors = successors;
+
+                astar(
+                    start,
+                    |index| astar_successors(index, &mut successors, &min_cost),
+                    |index| octile_heuristic(index, goals, &min_cost),
+                    success,
+                )
+            }
             AlgorithmType::Dijkstra => dijkstra(start, successors, success),
             AlgorithmType::LongRangeDijkstra => {
                 let per_worker_memory_budget_bytes = self
@@ -208,6 +210,10 @@ mod tests {
     #[test]
     fn parses_supported_algorithm_names() {
         assert_eq!(
+            AlgorithmType::from_str("astar").unwrap(),
+            AlgorithmType::Astar
+        );
+        assert_eq!(
             AlgorithmType::from_str("dijkstra").unwrap(),
             AlgorithmType::Dijkstra
         );
@@ -223,6 +229,10 @@ mod tests {
 
     #[test]
     fn normalizes_case_whitespace_and_hyphens() {
+        assert_eq!(
+            AlgorithmType::from_str(" A-STAR ").unwrap(),
+            AlgorithmType::Astar
+        );
         assert_eq!(
             AlgorithmType::from_str("  Dijkstra  ").unwrap(),
             AlgorithmType::Dijkstra
