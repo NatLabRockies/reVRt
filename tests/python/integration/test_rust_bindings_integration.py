@@ -85,7 +85,12 @@ def test_find_paths_basic_single_route_layered_file(tmp_path):
 
 @pytest.mark.parametrize(
     "algorithm",
-    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+    [
+        "astar",
+        "dijkstra",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
 )
 def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
     """Test routing using a LayeredFile-generated cost surface"""
@@ -162,7 +167,12 @@ def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
 
 @pytest.mark.parametrize(
     "algorithm",
-    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+    [
+        "astar",
+        "dijkstra",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
 )
 def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
     tmp_path, algorithm
