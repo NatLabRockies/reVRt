@@ -123,6 +123,7 @@ mod tests {
         assert!(!vec_of_indices.contains(&ArrayIndex { i: 8, j: 9 }));
     }
 
+    #[test_case("astar"; "astar")]
     #[test_case("dijkstra"; "dijkstra")]
     #[test_case("long-range-dijkstra"; "long-range")]
     #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
@@ -144,6 +145,11 @@ mod tests {
 
     // Due to truncation solution to handle f32 costs.
     #[allow(clippy::approx_constant)]
+    #[test_case((1, 1), (1, 1), 1, 0., "astar"; "no movement astar")]
+    #[test_case((1, 1), (1, 2), 2, 1., "astar"; "step one cell to the side astar")]
+    #[test_case((1, 1), (2, 1), 2, 1., "astar"; "step one cell down astar")]
+    #[test_case((1, 1), (2, 2), 2, 1.4142, "astar"; "step one cell diagonally astar")]
+    #[test_case((1, 1), (2, 3), 3, 2.4142, "astar"; "step diagonally and across astar")]
     #[test_case((1, 1), (1, 1), 1, 0., "dijkstra"; "no movement dijkstra")]
     #[test_case((1, 1), (1, 2), 2, 1., "dijkstra"; "step one cell to the side dijkstra")]
     #[test_case((1, 1), (2, 1), 2, 1., "dijkstra"; "step one cell down dijkstra")]
@@ -179,6 +185,7 @@ mod tests {
         assert_eq!(solutions[0].total_cost(), &expected_cost);
     }
 
+    #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "astar"; "different cost endpoints astar")]
     #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "dijkstra"; "different cost endpoints dijkstra")]
     #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "long-range-dijkstra"; "different cost endpoints long-range")]
     #[test_case((1, 1), vec![(1, 4), (3, 1), (4, 4)], (3, 1), 3, 2., "bidirectional-long-range-dijkstra"; "different cost endpoints bidirectional long-range")]
@@ -211,6 +218,9 @@ mod tests {
         assert_eq!((ei, ej), expected_endpoint);
     }
 
+    #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "astar"; "horizontal and vertical astar")]
+    #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "astar"; "horizontal astar")]
+    #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "astar"; "vertical astar")]
     #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "dijkstra"; "horizontal and vertical dijkstra")]
     #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "dijkstra"; "horizontal dijkstra")]
     #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "dijkstra"; "vertical dijkstra")]
@@ -249,6 +259,7 @@ mod tests {
         assert!(endpoints.contains(&(ei, ej)));
     }
 
+    #[test_case("astar"; "astar")]
     #[test_case("dijkstra"; "dijkstra")]
     #[test_case("long-range-dijkstra"; "long-range")]
     #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
@@ -285,6 +296,7 @@ mod tests {
         }
     }
 
+    #[test_case("astar"; "astar")]
     #[test_case("dijkstra"; "dijkstra")]
     #[test_case("long-range-dijkstra"; "long-range")]
     #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
@@ -306,6 +318,7 @@ mod tests {
         }
     }
 
+    #[test_case("astar"; "astar")]
     #[test_case("dijkstra"; "dijkstra")]
     #[test_case("long-range-dijkstra"; "long-range")]
     #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
