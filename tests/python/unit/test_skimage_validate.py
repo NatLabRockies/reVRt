@@ -18,9 +18,14 @@ from revrt import RouteFinder, find_paths, simplify_using_slopes
 # Maximum value for input features used to calculate cost
 # The test never ends for large values, such as 1e10.
 MAX_COST = 1e6
+ALGORITHMS = [
+    "dijkstra",
+    "long-range-dijkstra",
+    "bidirectional-long-range-dijkstra",
+]
 
 
-def validate_find_paths_single_var(data, start, end, tmp_path):
+def validate_find_paths_single_var(data, start, end, tmp_path, algorithm):
     """Validate reVRt against skimage for a given feature array
 
     Currently only for a single variable
@@ -43,6 +48,7 @@ def validate_find_paths_single_var(data, start, end, tmp_path):
         cost_function=json.dumps(cost_definition),
         start=[start],
         end=[end],
+        algorithm=algorithm,
     )
 
     assert len(results) == 1
@@ -65,7 +71,7 @@ def validate_find_paths_single_var(data, start, end, tmp_path):
         )
 
 
-def validate_route_finder_single_var(data, start, end, tmp_path):
+def validate_route_finder_single_var(data, start, end, tmp_path, algorithm):
     """Validate reVRt against skimage for a given feature array
 
     Currently only for a single variable
@@ -84,6 +90,7 @@ def validate_route_finder_single_var(data, start, end, tmp_path):
         zarr_fp=test_cost_fp,
         cost_function=json.dumps(cost_definition),
         route_definitions=[(0, [start], [end])],
+        algorithm=algorithm,
     )
 
     results = list(routing_results)
@@ -126,9 +133,10 @@ def validate_route_finder_single_var(data, start, end, tmp_path):
     hypothesis.strategies.tuples(
         hypothesis.strategies.floats(0, 1), hypothesis.strategies.floats(0, 1)
     ),
+    hypothesis.strategies.sampled_from(ALGORITHMS),
 )
 @hypothesis.settings(deadline=10_000, max_examples=100)
-def test_basic_find_paths(tmp_path_factory, data, start, end):
+def test_basic_find_paths(tmp_path_factory, data, start, end, algorithm):
     """Validate single f32 variable"""
     start = (
         round(start[0] * max(0, data.shape[0] - 1)),
@@ -140,7 +148,7 @@ def test_basic_find_paths(tmp_path_factory, data, start, end):
     )
 
     tmpdir = tmp_path_factory.mktemp("skimage_test")
-    validate_find_paths_single_var(data, start, end, tmpdir)
+    validate_find_paths_single_var(data, start, end, tmpdir, algorithm)
 
 
 @hypothesis.given(
@@ -158,9 +166,10 @@ def test_basic_find_paths(tmp_path_factory, data, start, end):
     hypothesis.strategies.tuples(
         hypothesis.strategies.floats(0, 1), hypothesis.strategies.floats(0, 1)
     ),
+    hypothesis.strategies.sampled_from(ALGORITHMS),
 )
 @hypothesis.settings(deadline=10_000, max_examples=100)
-def test_basic_route_finder(tmp_path_factory, data, start, end):
+def test_basic_route_finder(tmp_path_factory, data, start, end, algorithm):
     """Validate single f32 variable"""
     start = (
         round(start[0] * max(0, data.shape[0] - 1)),
@@ -172,4 +181,4 @@ def test_basic_route_finder(tmp_path_factory, data, start, end):
     )
 
     tmpdir = tmp_path_factory.mktemp("skimage_test")
-    validate_route_finder_single_var(data, start, end, tmpdir)
+    validate_route_finder_single_var(data, start, end, tmpdir, algorithm)

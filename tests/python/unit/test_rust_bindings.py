@@ -61,7 +61,11 @@ def test_find_paths_basic_single_route(tmp_path):
     assert np.isclose(test_cost, costs[(2, 6)])
 
 
-def test_route_finder_basic_single_route(tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_route_finder_basic_single_route(tmp_path, algorithm):
     """Test a basic routing invocation"""
 
     da = xr.DataArray(
@@ -97,6 +101,7 @@ def test_route_finder_basic_single_route(tmp_path):
             (2, [(1, 1)], [(2, 6)]),
             (4, [(1, 2)], [(1000, 1000)]),
         ],
+        algorithm=algorithm,
     )
 
     for route_id, solutions in routing_results:
@@ -114,7 +119,13 @@ def test_route_finder_basic_single_route(tmp_path):
     assert np.isclose(test_cost, costs[(2, 6)])
 
 
-def test_route_finder_writes_routing_layer_to_expected_path(tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_route_finder_writes_routing_layer_to_expected_path(
+    tmp_path, algorithm
+):
     """Test RouteFinder writes readable routing layer with expected costs"""
     da = xr.DataArray(
         np.array(
@@ -156,6 +167,7 @@ def test_route_finder_writes_routing_layer_to_expected_path(tmp_path):
             (11, [(0, 0)], [(2, 2)]),
         ],
         routing_layer_out_fp=routing_layer_out_fp,
+        algorithm=algorithm,
     )
     list(routing_results)  # force routing to run
 

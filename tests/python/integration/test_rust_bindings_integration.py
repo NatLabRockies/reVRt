@@ -83,7 +83,11 @@ def test_find_paths_basic_single_route_layered_file(tmp_path):
     assert np.isclose(test_cost, costs[(2, 6)])
 
 
-def test_route_finder_basic_single_route_layered_file(tmp_path):
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
+def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
     """Test routing using a LayeredFile-generated cost surface"""
 
     cost_values = np.array(
@@ -138,6 +142,7 @@ def test_route_finder_basic_single_route_layered_file(tmp_path):
             (2, [(1, 1)], [(2, 6)]),
             (4, [(1, 2)], [(1000, 1000)]),
         ],
+        algorithm=algorithm,
     )
 
     for route_id, solutions in routing_results:
@@ -155,8 +160,12 @@ def test_route_finder_basic_single_route_layered_file(tmp_path):
     assert np.isclose(test_cost, costs[(2, 6)])
 
 
+@pytest.mark.parametrize(
+    "algorithm",
+    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+)
 def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
-    tmp_path,
+    tmp_path, algorithm
 ):
     """Test RouteFinder routing layer output for LayeredFile inputs"""
 
@@ -214,6 +223,7 @@ def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
             (11, [(0, 0)], [(2, 2)]),
         ],
         routing_layer_out_fp=routing_layer_out_fp,
+        algorithm=algorithm,
     )
     list(routing_results)
 
