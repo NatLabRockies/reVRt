@@ -869,18 +869,32 @@ class BatchRouteProcessor:
         if not points or not self.routing_scenario.ignore_invalid_costs:
             return points
 
+        all_invalid_points_msg = (
+            f"None of the end points have a valid cost (must be > 0): {points}"
+        )
+
         rows, cols = np.array(points).T
         costs = self.routing_layers.cost.isel(
             y=xr.DataArray(rows, dims="points"),
             x=xr.DataArray(cols, dims="points"),
         )
 
-        if not np.any(costs.compute() > 0):
+        cost_values = costs.compute()
+        bad_point_inds = np.where(np.isnan(cost_values) | (cost_values <= 0))[
+            0
+        ]
+        invalid_points = {points[i] for i in bad_point_inds}
+        if invalid_points:
             msg = (
-                f"None of the end points have a valid cost (must be > 0): "
-                f"{points}"
+                f"One or more of the end points have an invalid cost "
+                f"(must be > 0): {invalid_points}\n"
+                "Dropping these from consideration..."
             )
-            raise revrtLeastCostPathNotFoundError(msg)
+            warn(msg, revrtWarning)
+            points = [p for p in points if p not in invalid_points]
+
+        if not points:
+            raise revrtLeastCostPathNotFoundError(all_invalid_points_msg)
 
         return points
 
