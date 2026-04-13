@@ -275,8 +275,11 @@ impl FrontierOnlySearchState {
 
 #[derive(Debug)]
 pub(crate) struct BidirectionalSearchState {
-    forward: FrontierOnlySearchState,
-    backward: FrontierOnlySearchState,
+    // The forward frontier tracks paths from the start node(s).
+    forward_frontier: FrontierOnlySearchState,
+    // The backward frontier tracks paths from all goals simultaneously.
+    backward_frontier: FrontierOnlySearchState,
+    // Best candidate path found so far, represented as the meeting slot and total cost.
     best_path: Option<(usize, u64)>,
 }
 
@@ -290,8 +293,16 @@ impl BidirectionalSearchState {
         let per_direction_budget = (memory_budget_bytes / 2).max(1);
 
         Some(Self {
-            forward: FrontierOnlySearchState::new(start, per_direction_budget, grid_shape)?,
-            backward: FrontierOnlySearchState::new_many(goals, per_direction_budget, grid_shape)?,
+            forward_frontier: FrontierOnlySearchState::new(
+                start,
+                per_direction_budget,
+                grid_shape,
+            )?,
+            backward_frontier: FrontierOnlySearchState::new_many(
+                goals,
+                per_direction_budget,
+                grid_shape,
+            )?,
             best_path: None,
         })
     }
@@ -304,10 +315,10 @@ impl BidirectionalSearchState {
         u64: From<C>,
     {
         loop {
-            let Some(forward_cost) = self.forward.peek_next_cost() else {
+            let Some(forward_cost) = self.forward_frontier.peek_next_cost() else {
                 break;
             };
-            let Some(backward_cost) = self.backward.peek_next_cost() else {
+            let Some(backward_cost) = self.backward_frontier.peek_next_cost() else {
                 break;
             };
 
@@ -338,26 +349,26 @@ impl BidirectionalSearchState {
         let mut candidates = Vec::new();
 
         {
-            let (current, other) = if expand_forward {
-                (&mut self.forward, &mut self.backward)
+            let (current_frontier, other_frontier) = if expand_forward {
+                (&mut self.forward_frontier, &mut self.backward_frontier)
             } else {
-                (&mut self.backward, &mut self.forward)
+                (&mut self.backward_frontier, &mut self.forward_frontier)
             };
 
-            let node = match current.pop_next_node() {
+            let node = match current_frontier.pop_next_node() {
                 Some(node) => node,
                 None => return Some(()),
             };
 
-            if let Some(other_cost) = other.known_cost(node.slot) {
+            if let Some(other_cost) = other_frontier.known_cost(node.slot) {
                 candidates.push((node.slot, node.cost.saturating_add(other_cost)));
             }
 
-            current.add_successors_tracking(
+            current_frontier.add_successors_tracking(
                 &node,
                 successors(&node.array_index),
                 |slot, cost| {
-                    if let Some(other_cost) = other.known_cost(slot) {
+                    if let Some(other_cost) = other_frontier.known_cost(slot) {
                         candidates.push((slot, cost.saturating_add(other_cost)));
                     }
                 },
@@ -388,8 +399,8 @@ impl BidirectionalSearchState {
 
     fn reconstruct_route(&mut self, meeting_slot: usize) -> Option<Vec<ArrayIndex>> {
         debug!("Goal node found at meeting slot {}", meeting_slot);
-        let mut forward = self.forward.reconstruct_path_to(meeting_slot)?;
-        let mut backward = self.backward.reconstruct_path_to(meeting_slot)?;
+        let mut forward = self.forward_frontier.reconstruct_path_to(meeting_slot)?;
+        let mut backward = self.backward_frontier.reconstruct_path_to(meeting_slot)?;
         backward.reverse();
         forward.extend(backward.into_iter().skip(1));
         Some(forward)
