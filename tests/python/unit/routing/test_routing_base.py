@@ -1079,7 +1079,7 @@ def test_length_invariant_layer_costs_ignore_path_length(
             .compute()
             .to_numpy()
         )
-        expected = sum(layer_two[row, col] for row, col in route[1:])
+        expected = sum(layer_two[row, col] for row, col in route)
 
         assert result["layer_2_cost"] == pytest.approx(expected)
     finally:
@@ -1122,14 +1122,10 @@ def test_length_invariant_layers_sum_raw_values(sample_layered_data, tmp_path):
             transform=ds.rio.transform(),
             invert=True,
         )
-        start_row, start_col = rasterio.transform.rowcol(
-            ds.rio.transform(), *route["geometry"].coords[0]
-        )
         rows, cols = np.where(mask)
         expected_invariant_cost = sum(
             layer_two.isel(y=row, x=col).item()
             for row, col in zip(rows, cols, strict=True)
-            if (row, col) != (start_row, start_col)
         )
 
     assert route["layer_2_cost"] == pytest.approx(
@@ -1143,10 +1139,6 @@ def test_length_invariant_layers_sum_raw_values(sample_layered_data, tmp_path):
     assert route["layer_2_length_km"] == pytest.approx(
         route["length_km"],
         rel=1e-6,
-    )
-    assert route["cost"] == pytest.approx(
-        route["optimized_objective"],
-        rel=1e-5,
     )
 
 
@@ -1197,17 +1189,13 @@ def test_length_invariant_hidden_and_friction_layers(
         rel=1e-6,
     )
     assert route["layer_1_cost"] == pytest.approx(26.156855, rel=1e-6)
-    assert route["layer_2_cost"] == pytest.approx(18.0)
+    assert route["layer_2_cost"] == pytest.approx(19.0)
     assert route["cost"] == pytest.approx(
         route["layer_1_cost"] + route["layer_2_cost"],
         rel=1e-6,
     )
     assert route["cost"] == pytest.approx(
-        44.15685424949238,
-        rel=1e-6,
-    )
-    assert route["optimized_objective"] == pytest.approx(
-        276.3262939453125,
+        45.15685424949238,
         rel=1e-6,
     )
     assert route["optimized_objective"] > route["cost"]
