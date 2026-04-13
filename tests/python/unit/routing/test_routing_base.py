@@ -179,7 +179,12 @@ def sample_layered_data(tmp_path_factory):
 
 @pytest.mark.parametrize(
     "algorithm",
-    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+    [
+        "astar",
+        "dijkstra",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
 )
 def test_basic_single_route_layered_file_short_path(
     sample_layered_data, tmp_path, algorithm
@@ -260,6 +265,18 @@ def test_routing_scenario_normalizes_algorithm(sample_layered_data):
     assert "algorithm: long-range-dijkstra" in repr(scenario)
 
 
+def test_routing_scenario_forwards_a_star_alias(sample_layered_data):
+    """RoutingScenario preserves the A* alias for Rust parsing"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        algorithm="a-star",
+    )
+
+    assert "algorithm: a-star" in repr(scenario)
+
+
 def test_routing_scenario_rejects_invalid_algorithm(sample_layered_data):
     """RoutingScenario raises on unsupported algorithm names"""
 
@@ -312,7 +329,12 @@ def test_batch_route_processor_forwards_algorithm(
 
 @pytest.mark.parametrize(
     "algorithm",
-    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+    [
+        "astar",
+        "dijkstra",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
 )
 def test_basic_single_route_layered_file(
     sample_layered_data, tmp_path, algorithm

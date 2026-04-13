@@ -63,7 +63,12 @@ def test_find_paths_basic_single_route(tmp_path):
 
 @pytest.mark.parametrize(
     "algorithm",
-    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+    [
+        "astar",
+        "dijkstra",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
 )
 def test_route_finder_basic_single_route(tmp_path, algorithm):
     """Test a basic routing invocation"""
@@ -121,7 +126,12 @@ def test_route_finder_basic_single_route(tmp_path, algorithm):
 
 @pytest.mark.parametrize(
     "algorithm",
-    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+    [
+        "astar",
+        "dijkstra",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
 )
 def test_route_finder_writes_routing_layer_to_expected_path(
     tmp_path, algorithm
@@ -206,7 +216,12 @@ def test_route_finder_writes_routing_layer_to_expected_path(
 
 @pytest.mark.parametrize(
     "algorithm",
-    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+    [
+        "astar",
+        "dijkstra",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
 )
 def test_find_paths_supports_explicit_algorithm(tmp_path, algorithm):
     """find_paths accepts explicit routing algorithm selection"""
@@ -311,6 +326,37 @@ def test_route_finder_supports_explicit_algorithm(tmp_path, algorithm):
     assert path[0] == (1, 1)
     assert path[-1] == (2, 6)
     assert cost > 0
+
+
+def test_find_paths_supports_a_star_alias(tmp_path):
+    """find_paths accepts the hyphenated A* alias"""
+
+    da = xr.DataArray(
+        np.array([[[1, 1], [1, 1]]], dtype=np.float32),
+        dims=("band", "y", "x"),
+    )
+
+    test_cost_fp = tmp_path / "test.zarr"
+    ds = xr.Dataset({"test_costs": da})
+    ds["test_costs"].encoding = {
+        "fill_value": 1_000.0,
+        "_FillValue": 1_000.0,
+    }
+    ds.chunk({"x": 2, "y": 2}).to_zarr(
+        test_cost_fp, mode="w", zarr_format=3, consolidated=False
+    )
+
+    results = find_paths(
+        zarr_fp=test_cost_fp,
+        cost_function=json.dumps(
+            {"cost_layers": [{"layer_name": "test_costs"}]}
+        ),
+        start=[(0, 0)],
+        end=[(1, 1)],
+        algorithm="a-star",
+    )
+
+    assert len(results) == 1
 
 
 def test_find_paths_rejects_invalid_algorithm(tmp_path):

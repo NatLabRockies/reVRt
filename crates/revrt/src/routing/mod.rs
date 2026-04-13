@@ -1,6 +1,7 @@
 //! Routing module
 
 mod algorithm;
+mod astar;
 mod features;
 mod long_range;
 mod scenario;
@@ -44,7 +45,6 @@ impl Routing {
                     s,
                     &end,
                     |p| self.scenario.successors(p),
-                    None::<fn(&ArrayIndex) -> u64>,
                     |p| end.contains(p),
                     grid_shape,
                 )
@@ -195,7 +195,6 @@ impl ParRouting {
                                 &s,
                                 &end_ind_vec,
                                 |p| scenario.successors(p),
-                                None::<fn(&ArrayIndex) -> u64>,
                                 |p| end_inds.contains(p),
                                 grid_shape,
                             )

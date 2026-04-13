@@ -153,13 +153,13 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     By default, `250,000,000` (250MB).
 /// algorithm : str, default="long_range_dijkstra"
 ///     Routing algorithm implementation to use. Supported values are
-///     ``"long_range_dijkstra"``,
+///     ``"astar"``, ``"long_range_dijkstra"``,
 ///     ``"bidirectional_long_range_dijkstra"``, and ``"dijkstra"``.
-///     ``"dijkstra"`` is a faster implementation but does not respect
-///     the `mem_limit_bytes` input. Prefer the default
-///     ``"long_range_dijkstra"`` option unless you know for a fact that
-///     your route computations will not need much memory and speed is
-///     very important to you.
+///     ``"astar"`` and ``"dijkstra"`` are faster in-memory
+///     implementations but do not respect the `mem_limit_bytes` input.
+///     Prefer the default ``"long_range_dijkstra"`` option unless you
+///     know for a fact that your route computations will not need much
+///     memory and speed is very important to you.
 ///     By default, ``"long_range_dijkstra"``.
 ///
 /// Returns
@@ -233,13 +233,13 @@ fn find_paths(
 ///     By default, `250,000,000` (250MB).
 /// algorithm : str, default="long_range_dijkstra"
 ///     Routing algorithm implementation to use. Supported values are
-///     ``"long_range_dijkstra"``,
+///     ``"astar"``, ``"long_range_dijkstra"``,
 ///     ``"bidirectional_long_range_dijkstra"``, and ``"dijkstra"``.
-///     ``"dijkstra"`` is a faster implementation but does not respect
-///     the `mem_limit_bytes` input. Prefer the default
-///     ``"long_range_dijkstra"`` option unless you know for a fact that
-///     your route computations will not need much memory and speed is
-///     very important to you.
+///     ``"astar"`` and ``"dijkstra"`` are faster in-memory
+///     implementations but do not respect the `mem_limit_bytes` input.
+///     Prefer the default ``"long_range_dijkstra"`` option unless you
+///     know for a fact that your route computations will not need much
+///     memory and speed is very important to you.
 ///     By default, ``"long_range_dijkstra"``.
 /// log_level : int, optional
 ///     Logging level for Rust tracing emitted to stderr. Roughly follows the
