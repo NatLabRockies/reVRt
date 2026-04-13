@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.routing.base &#8212; reVRt 0.4.1 documentation</title>
+    <title>revrt.routing.base &#8212; reVRt 0.5.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=c87aa342"></script>
+    <script src="../../../_static/documentation_options.js?v=1dd76d02"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -415,7 +415,7 @@ window.addEventListener("load", load);
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4.1" />
+  <meta name="docsearch:version" content="0.5.0" />
   </head>
   
   
@@ -477,7 +477,7 @@ window.addEventListener("load", load);
   
   
   
-    <p class="title logo__title">reVRt 0.4.1 documentation</p>
+    <p class="title logo__title">reVRt 0.5.0 documentation</p>
   
 </a></div>
     
@@ -792,7 +792,7 @@ window.addEventListener("load", load);
         <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;long_range_dijkstra&quot;</span><span class="p">,</span>
+        <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;bidirectional_long_range_dijkstra&quot;</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
@@ -815,15 +815,16 @@ window.addEventListener("load", load);
 <span class="sd">            Scalar multiplier applied to the final cost surface.</span>
 <span class="sd">        ignore_invalid_costs : bool, optional</span>
 <span class="sd">            Flag indicating whether non-positive costs block traversal.</span>
-<span class="sd">        algorithm : str, default=&quot;long_range_dijkstra&quot;</span>
+<span class="sd">        algorithm : str, default=&quot;bidirectional_long_range_dijkstra&quot;</span>
 <span class="sd">            Routing algorithm implementation to use. Supported values</span>
-<span class="sd">            are ``&quot;long_range_dijkstra&quot;`` and ``&quot;dijkstra&quot;``.</span>
-<span class="sd">            ``&quot;dijkstra&quot;`` is a faster implementation but does not</span>
-<span class="sd">            respect the memory limit. Prefer the default</span>
+<span class="sd">            are ``&quot;long_range_dijkstra&quot;``,</span>
+<span class="sd">            ``&quot;bidirectional_long_range_dijkstra&quot;``, and</span>
+<span class="sd">            ``&quot;dijkstra&quot;``. ``&quot;dijkstra&quot;`` is a faster implementation</span>
+<span class="sd">            but does not respect the memory limit. Prefer the default</span>
 <span class="sd">            ``&quot;long_range_dijkstra&quot;`` option unless you know for a fact</span>
 <span class="sd">            that your route computations will not need much memory and</span>
 <span class="sd">            speed is very important to you.</span>
-<span class="sd">            By default, ``&quot;long_range_dijkstra&quot;``.</span>
+<span class="sd">            By default, ``&quot;bidirectional_long_range_dijkstra&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span> <span class="o">=</span> <span class="n">cost_fpath</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_layers</span> <span class="o">=</span> <span class="n">cost_layers</span>
@@ -1175,7 +1176,7 @@ window.addEventListener("load", load);
             <span class="n">layer_data</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">layer_data</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_length_invariant</span><span class="p">:</span>
-            <span class="n">layer_cost</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">layer_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">layer_cost</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">layer_data</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">layer_cost</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">layer_data</span> <span class="o">*</span> <span class="n">lens</span><span class="p">)</span>
 
@@ -1268,9 +1269,8 @@ window.addEventListener("load", load);
             <span class="n">y</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
             <span class="n">x</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
         <span class="p">)</span>
-        <span class="n">invariant_cost</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">inv_cell_costs</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">invariant_cost</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">inv_cell_costs</span><span class="p">)</span>
 
-        <span class="c1"># Multiple distance travel through cell by cost and sum it!</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">cost</span> <span class="o">+</span> <span class="n">invariant_cost</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
 
     <span class="nd">@property</span>
@@ -1612,7 +1612,7 @@ window.addEventListener("load", load);
                     <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attrs_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_attrs</span><span class="p">)</span>
                     <span class="k">yield</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">attrs</span>
 
-                <span class="n">time_elapsed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> minute(s)&quot;</span>
+                <span class="n">time_elapsed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> minute(s)&quot;</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> (</span><span class="si">%.2f%%</span><span class="s2">) route definitions processed in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">num_complete</span><span class="p">,</span>
@@ -1666,18 +1666,32 @@ window.addEventListener("load", load);
         <span class="k">if</span> <span class="ow">not</span> <span class="n">points</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">ignore_invalid_costs</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">points</span>
 
+        <span class="n">all_invalid_points_msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;None of the end points have a valid cost (must be &gt; 0): </span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span>
             <span class="n">y</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
             <span class="n">x</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">costs</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">cost_values</span> <span class="o">=</span> <span class="n">costs</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">bad_point_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">cost_values</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">cost_values</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">))[</span>
+            <span class="mi">0</span>
+        <span class="p">]</span>
+        <span class="n">invalid_points</span> <span class="o">=</span> <span class="p">{</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bad_point_inds</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">invalid_points</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;None of the end points have a valid cost (must be &gt; 0): &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;One or more of the end points have an invalid cost &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(must be &gt; 0): </span><span class="si">{</span><span class="n">invalid_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Dropping these from consideration...&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">revrtLeastCostPathNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invalid_points</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">points</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">revrtLeastCostPathNotFoundError</span><span class="p">(</span><span class="n">all_invalid_points_msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">points</span>
 

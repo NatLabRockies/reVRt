@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.RouteFinder &#8212; reVRt 0.4.1 documentation</title>
+    <title>revrt.RouteFinder &#8212; reVRt 0.5.0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c87aa342"></script>
+    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="prev" title="revrt.simplify_using_slopes" href="revrt.simplify_using_slopes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4.1" />
+  <meta name="docsearch:version" content="0.5.0" />
   </head>
   
   
@@ -113,7 +113,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.4.1 documentation</p>
+    <p class="title logo__title">reVRt 0.5.0 documentation</p>
   
 </a></div>
     
@@ -527,6 +527,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.handlers.html">revrt.utilities.handlers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.ZARR_COMPRESSORS.html">revrt.utilities.handlers.ZARR_COMPRESSORS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.chunked_read_gpkg.html">revrt.utilities.handlers.chunked_read_gpkg</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.gpkg_crs.html">revrt.utilities.handlers.gpkg_crs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.num_feats_in_gpkg.html">revrt.utilities.handlers.num_feats_in_gpkg</a></li>
@@ -639,11 +640,13 @@ directory and deleted after the routing is done. By default, <cite>None</cite>.<
 <li><p><strong>mem_limit_bytes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">250_000_000</span></code>) – Overall memory limit to use for routing computations, in bytes.
 By default, <cite>250,000,000</cite> (250MB).</p></li>
 <li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values are
-<code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is
-a faster implementation but does not respect the <cite>mem_limit_bytes</cite>
-input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless
-you know for a fact that your route computations will not need
-much memory and speed is very important to you.
+<code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>.
+<code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation but does not respect
+the <cite>mem_limit_bytes</cite> input. Prefer the default
+<code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless you know for a fact that
+your route computations will not need much memory and speed is
+very important to you.
 By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p></li>
 <li><p><strong>log_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Logging level for Rust tracing emitted to stderr. Roughly follows the
 Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,

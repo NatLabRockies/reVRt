@@ -1,0 +1,6 @@
+revrt.utilities.handlers.ZARR\_COMPRESSORS
+==========================================
+
+.. currentmodule:: revrt.utilities.handlers
+
+.. autodata:: ZARR_COMPRESSORS

@@ -5,6 +5,13 @@ revrt.utilities.handlers
 
    
    
+   .. rubric:: Module attributes
+
+   .. autosummary::
+      :toctree:
+   
+      ZARR_COMPRESSORS
+   
    
 
    

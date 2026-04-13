@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>reVRt &#8212; reVRt 0.4.1 documentation</title>
+    <title>reVRt &#8212; reVRt 0.5.0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c87aa342"></script>
+    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Command Line Interface (CLI)" href="cli.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4.1" />
+  <meta name="docsearch:version" content="0.5.0" />
   </head>
   
   
@@ -116,7 +116,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.4.1 documentation</p>
+    <p class="title logo__title">reVRt 0.5.0 documentation</p>
   
 </a></div>
     
@@ -3295,7 +3295,7 @@ in the <cite>cost_layers</cite> parameter.</p>
     <span class="s2">&quot;save_routing_layer&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
     <span class="s2">&quot;ignore_invalid_costs&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
     <span class="s2">&quot;connection_identifier_column&quot;</span><span class="p">:</span> <span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;long_range_dijkstra&quot;</span>
+    <span class="s2">&quot;algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;bidirectional_long_range_dijkstra&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -3328,7 +3328,7 @@ in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">save_routing_layer</span><span class="p">:</span> <span class="n">false</span>
 <span class="n">ignore_invalid_costs</span><span class="p">:</span> <span class="n">false</span>
 <span class="n">connection_identifier_column</span><span class="p">:</span> <span class="n">end_feat_id</span>
-<span class="n">algorithm</span><span class="p">:</span> <span class="n">long_range_dijkstra</span>
+<span class="n">algorithm</span><span class="p">:</span> <span class="n">bidirectional_long_range_dijkstra</span>
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-15-VE9NTA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-15-VE9NTA==" name="VE9NTA==" role="tabpanel" tabindex="0"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">log_directory</span> <span class="o">=</span> <span class="s2">&quot;./logs&quot;</span>
@@ -3342,7 +3342,7 @@ in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">save_routing_layer</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">ignore_invalid_costs</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">connection_identifier_column</span> <span class="o">=</span> <span class="s2">&quot;end_feat_id&quot;</span>
-<span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;long_range_dijkstra&quot;</span>
+<span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;bidirectional_long_range_dijkstra&quot;</span>
 
 <span class="p">[</span><span class="n">execution_control</span><span class="p">]</span>
 <span class="n">option</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
@@ -3634,7 +3634,7 @@ of “million $ per mile” and will be converted to
 </dd>
 <dt>connection_identifier_column<span class="classifier">str, default=”end_feat_id”</span></dt><dd><p>Column in the <cite>features_fpath</cite> data used to uniquely identify each feature. This column is also expected to be in the <cite>route_table</cite> input to map points to features. If a column name is given that does not exist in the data, an error will be raised. By default, <code class="docutils literal notranslate"><span class="pre">&quot;end_feat_id&quot;</span></code>.</p>
 </dd>
-<dt>algorithm<span class="classifier">str, default=”long_range_dijkstra”</span></dt><dd><p>Routing algorithm implementation to use. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation but does not respect the memory utilization limit input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless you know for a fact that your route computations will not need much memory and speed is very important to you. By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p>
+<dt>algorithm<span class="classifier">str, default=”bidirectional_long_range_dijkstra”</span></dt><dd><p>Routing algorithm implementation to use. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation but does not respect the memory utilization limit input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless you know for a fact that your route computations will not need much memory and speed is very important to you. By default, <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>.</p>
 </dd>
 </dl>
 <p>Note that you may remove any keys with a <code class="docutils literal notranslate"><span class="pre">null</span></code> value if you do not intend to update them yourself.</p>
@@ -3690,7 +3690,7 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
     <span class="s2">&quot;save_paths&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
     <span class="s2">&quot;save_routing_layer&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
     <span class="s2">&quot;ignore_invalid_costs&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-    <span class="s2">&quot;algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;long_range_dijkstra&quot;</span>
+    <span class="s2">&quot;algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;bidirectional_long_range_dijkstra&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -3721,7 +3721,7 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">save_paths</span><span class="p">:</span> <span class="n">false</span>
 <span class="n">save_routing_layer</span><span class="p">:</span> <span class="n">false</span>
 <span class="n">ignore_invalid_costs</span><span class="p">:</span> <span class="n">false</span>
-<span class="n">algorithm</span><span class="p">:</span> <span class="n">long_range_dijkstra</span>
+<span class="n">algorithm</span><span class="p">:</span> <span class="n">bidirectional_long_range_dijkstra</span>
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-16-VE9NTA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-16-VE9NTA==" name="VE9NTA==" role="tabpanel" tabindex="0"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">log_directory</span> <span class="o">=</span> <span class="s2">&quot;./logs&quot;</span>
@@ -3733,7 +3733,7 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">save_paths</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">save_routing_layer</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">ignore_invalid_costs</span> <span class="o">=</span> <span class="n">false</span>
-<span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;long_range_dijkstra&quot;</span>
+<span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;bidirectional_long_range_dijkstra&quot;</span>
 
 <span class="p">[</span><span class="n">execution_control</span><span class="p">]</span>
 <span class="n">option</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
@@ -4015,7 +4015,7 @@ of “million $ per mile” and will be converted to
 </dd>
 <dt>ignore_invalid_costs<span class="classifier">bool, optional</span></dt><dd><p>Optional flag to treat any cost values &lt;= 0 as impassable (i.e. no paths can ever cross this). If <code class="docutils literal notranslate"><span class="pre">False</span></code>, cost values of &lt;= 0 are set to a large value to simulate a strong but permeable “quasi-barrier”. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
-<dt>algorithm<span class="classifier">str, default=”long_range_dijkstra”</span></dt><dd><p>Routing algorithm implementation to use. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation but does not respect the memory utilization limit input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless you know for a fact that your route computations will not need much memory and speed is very important to you. By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p>
+<dt>algorithm<span class="classifier">str, default=”bidirectional_long_range_dijkstra”</span></dt><dd><p>Routing algorithm implementation to use. Supported values are <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation but does not respect the memory utilization limit input. Prefer the default <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless you know for a fact that your route computations will not need much memory and speed is very important to you. By default, <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>.</p>
 </dd>
 </dl>
 <p>Note that you may remove any keys with a <code class="docutils literal notranslate"><span class="pre">null</span></code> value if you do not intend to update them yourself.</p>

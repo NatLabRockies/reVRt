@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.costs.dry_costs_creator.DryCostsCreator &#8212; reVRt 0.5.0 documentation</title>
+    <title>revrt.utilities.handlers.ZARR_COMPRESSORS &#8212; reVRt 0.5.0 documentation</title>
   
   
   
@@ -47,8 +47,8 @@
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="revrt.costs.layer_creator" href="revrt.costs.layer_creator.html" />
-    <link rel="prev" title="revrt.costs.dry_costs_creator.compute_slope_multipliers" href="revrt.costs.dry_costs_creator.compute_slope_multipliers.html" />
+    <link rel="next" title="revrt.utilities.handlers.chunked_read_gpkg" href="revrt.utilities.handlers.chunked_read_gpkg.html" />
+    <link rel="prev" title="revrt.utilities.handlers" href="revrt.utilities.handlers.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.5.0" />
@@ -351,7 +351,7 @@
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.MEDIUM_CUTOFF.html">revrt.constants.MEDIUM_CUTOFF</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="revrt.costs.html">revrt.costs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="revrt.costs.html">revrt.costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.base.html">revrt.costs.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.base.BaseLayerCreator.html">revrt.costs.base.BaseLayerCreator</a></li>
 </ul>
@@ -370,7 +370,7 @@
 </details></li>
 </ul>
 </details></li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.costs.dry_costs_creator.html">revrt.costs.dry_costs_creator</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.dry_costs_creator.html">revrt.costs.dry_costs_creator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.dry_costs_creator.DEFAULT_HILL_MULTIPLIER.html">revrt.costs.dry_costs_creator.DEFAULT_HILL_MULTIPLIER</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.dry_costs_creator.DEFAULT_MTN_MULTIPLIER.html">revrt.costs.dry_costs_creator.DEFAULT_MTN_MULTIPLIER</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.dry_costs_creator.DEFAULT_HILL_SLOPE.html">revrt.costs.dry_costs_creator.DEFAULT_HILL_SLOPE</a></li>
@@ -380,7 +380,7 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.dry_costs_creator.WATER_MULTIPLIER.html">revrt.costs.dry_costs_creator.WATER_MULTIPLIER</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.dry_costs_creator.compute_land_use_multipliers.html">revrt.costs.dry_costs_creator.compute_land_use_multipliers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.dry_costs_creator.compute_slope_multipliers.html">revrt.costs.dry_costs_creator.compute_slope_multipliers</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">revrt.costs.dry_costs_creator.DryCostsCreator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.costs.dry_costs_creator.DryCostsCreator.html">revrt.costs.dry_costs_creator.DryCostsCreator</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.layer_creator.html">revrt.costs.layer_creator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -501,7 +501,7 @@
 </details></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="revrt.utilities.html">revrt.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="revrt.utilities.html">revrt.utilities</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.base.html">revrt.utilities.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.TRANSFORM_ATOL.html">revrt.utilities.base.TRANSFORM_ATOL</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
@@ -526,8 +526,8 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.cli.ss_from_conn.html">revrt.utilities.cli.ss_from_conn</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.handlers.html">revrt.utilities.handlers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.ZARR_COMPRESSORS.html">revrt.utilities.handlers.ZARR_COMPRESSORS</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.utilities.handlers.html">revrt.utilities.handlers</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">revrt.utilities.handlers.ZARR_COMPRESSORS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.chunked_read_gpkg.html">revrt.utilities.handlers.chunked_read_gpkg</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.gpkg_crs.html">revrt.utilities.handlers.gpkg_crs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.num_feats_in_gpkg.html">revrt.utilities.handlers.num_feats_in_gpkg</a></li>
@@ -592,12 +592,12 @@
     <li class="breadcrumb-item"><a href="revrt.html" class="nav-link">revrt</a></li>
     
     
-    <li class="breadcrumb-item"><a href="revrt.costs.html" class="nav-link">revrt.costs</a></li>
+    <li class="breadcrumb-item"><a href="revrt.utilities.html" class="nav-link">revrt.utilities</a></li>
     
     
-    <li class="breadcrumb-item"><a href="revrt.costs.dry_costs_creator.html" class="nav-link">revrt.costs.dry_costs_creator</a></li>
+    <li class="breadcrumb-item"><a href="revrt.utilities.handlers.html" class="nav-link">revrt.utilities.handlers</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">revrt.costs.dry_costs_creator.DryCostsCreator</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">revrt.utilities.handlers.ZARR_COMPRESSORS</span></li>
   </ul>
 </nav>
 </div>
@@ -614,180 +614,12 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="revrt-costs-dry-costs-creator-drycostscreator">
-<h1>revrt.costs.dry_costs_creator.DryCostsCreator<a class="headerlink" href="#revrt-costs-dry-costs-creator-drycostscreator" title="Link to this heading">#</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="revrt.costs.dry_costs_creator.DryCostsCreator">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DryCostsCreator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">io_handler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_layer_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_tiff_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/costs/dry_costs_creator.html#DryCostsCreator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.costs.dry_costs_creator.DryCostsCreator" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="revrt.costs.base.BaseLayerCreator.html#revrt.costs.base.BaseLayerCreator" title="revrt.costs.base.BaseLayerCreator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseLayerCreator</span></code></a></p>
-<p>Class to create and save dry transmission cost layers</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>io_handler</strong> (<a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>) – Transmission layer IO handler</p></li>
-<li><p><strong>input_layer_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory to search for input layers in, if not found in
-current directory. By default, <code class="docutils literal notranslate"><span class="pre">'.'</span></code>.</p></li>
-<li><p><strong>output_tiff_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where cost layers should be saved as GeoTIFF.
-By default, <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code>.</p></li>
-<li><p><strong>dtype</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>, <em>optional</em>) – Data type for final dataset. By default, <code class="docutils literal notranslate"><span class="pre">float32</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.costs.dry_costs_creator.DryCostsCreator.build" title="revrt.costs.dry_costs_creator.DryCostsCreator.build"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build</span></code></a>(iso_region_tiff, nlcd_tiff, slope_tiff)</p></td>
-<td><p>Build cost rasters using base line costs and multipliers</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p class="rubric">Attributes</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.costs.dry_costs_creator.DryCostsCreator.cell_size" title="revrt.costs.dry_costs_creator.DryCostsCreator.cell_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cell_size</span></code></a></p></td>
-<td><p>Size of cell in layer file</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#revrt.costs.dry_costs_creator.DryCostsCreator.chunks" title="revrt.costs.dry_costs_creator.DryCostsCreator.chunks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chunks</span></code></a></p></td>
-<td><p>Layer chunks (no band dimension)</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir" title="revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_tiff_dir</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#revrt.costs.dry_costs_creator.DryCostsCreator.shape" title="revrt.costs.dry_costs_creator.DryCostsCreator.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></p></td>
-<td><p>Layer shape</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="revrt.costs.dry_costs_creator.DryCostsCreator.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iso_region_tiff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlcd_tiff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slope_tiff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmission_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_multipliers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_tiffs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiff_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'file'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">profile_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/costs/dry_costs_creator.html#DryCostsCreator.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.costs.dry_costs_creator.DryCostsCreator.build" title="Link to this definition">#</a></dt>
-<dd><p>Build cost rasters using base line costs and multipliers</p>
-<p>This function also allows you to save to GeoTIFF.</p>
-<p>Cells without a know ISO region are left with a cost value of 0.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>iso_region_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the ISO region GeoTIFF.</p></li>
-<li><p><strong>nlcd_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the National Land Coverage Database GeoTIFF.</p></li>
-<li><p><strong>slope_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the slope GeoTIFF. Slope must be in decimal percent.</p></li>
-<li><p><strong>transmission_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – <p>Dictionary or path to JSON file containing dictionary with
-transmission cost configuration values. Valid configuration
-keys are:</p>
-<blockquote>
-<div><ul>
-<li><p>”base_line_costs”</p></li>
-<li><p>”iso_lookup”</p></li>
-<li><p>”iso_multipliers”</p></li>
-<li><p>”land_use_classes”</p></li>
-<li><p>”new_substation_costs”</p></li>
-<li><p>”power_classes”</p></li>
-<li><p>”power_to_voltage”</p></li>
-<li><p>”transformer_costs”</p></li>
-<li><p>”upgrade_substation_costs”</p></li>
-</ul>
-</div></blockquote>
-<p>Each of these keys should point to a dictionary or a path to
-a separate path-like file containing a dictionary of
-configurations for each section. BY default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which
-uses the default cost configs for all values.</p>
-</p></li>
-<li><p><strong>mask</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>) – Boolean array representing mask where dry cost values should
-be applied. BY default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not apply a
-mask to the cost array.</p></li>
-<li><p><strong>default_multipliers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference internal" href="revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers" title="revrt.models.cost_layers.IsoMultipliers"><code class="xref py py-class docutils literal notranslate"><span class="pre">IsoMultipliers</span></code></a>, <em>optional</em>) – <p>Multipliers for regions not specified in the
-<cite>iso_region_tiff</cite>. Must be a dictionary of the form:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;land_use&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s2">&quot;cropland&quot;</span><span class="p">:</span> <span class="mf">1.03</span><span class="p">,</span>
-    <span class="s2">&quot;forest&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
-    <span class="s2">&quot;suburban&quot;</span><span class="p">:</span> <span class="mf">1.08</span><span class="p">,</span>
-    <span class="s2">&quot;urban&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
-    <span class="s2">&quot;wetland&quot;</span><span class="p">:</span> <span class="mf">1.8</span>
-<span class="p">},</span>
-<span class="s2">&quot;slope&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s2">&quot;hill_mult&quot;</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span>
-    <span class="s2">&quot;hill_slope&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-    <span class="s2">&quot;mtn_mult&quot;</span><span class="p">:</span> <span class="mf">1.21</span><span class="p">,</span>
-    <span class="s2">&quot;mtn_slope&quot;</span><span class="p">:</span> <span class="mi">8</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>All keys are optional. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-</p></li>
-<li><p><strong>extra_tiffs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – Optional list of extra GeoTIFFs to add to cost layer file
-(e.g. a transmission barrier file). By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>,
-which does not add any extra layers.</p></li>
-<li><p><strong>descriptions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping  where keys are layer names and values are
-descriptions to add to the layer’s attributes meta
-dictionary under the “description” key.
-By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not add any description.</p></li>
-<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping where keys are layer names and values are
-the nodata value for the output raster of that layer. This
-value will be added to the layer’s attributes meta
-dictionary under the “nodata” key. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>lock</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> or <cite>dask.distributed.Lock</cite>, <em>optional</em>) – Lock to use to write data to GeoTIFF using dask. If not
-supplied, a single process is used for writing data to disk.
-By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>**profile_kwargs</strong> – <p>Additional keyword arguments to pass into writing output
-rasters. The following attributes ar ignored (they are set
-using properties of the
-<a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>):</p>
-<blockquote>
-<div><ul>
-<li><p>nodata</p></li>
-<li><p>transform</p></li>
-<li><p>crs</p></li>
-<li><p>count</p></li>
-<li><p>width</p></li>
-<li><p>height</p></li>
-</ul>
-</div></blockquote>
-</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="revrt.costs.dry_costs_creator.DryCostsCreator.cell_size">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cell_size</span></span><a class="headerlink" href="#revrt.costs.dry_costs_creator.DryCostsCreator.cell_size" title="Link to this definition">#</a></dt>
-<dd><p>Size of cell in layer file</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="revrt.costs.dry_costs_creator.DryCostsCreator.chunks">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chunks</span></span><a class="headerlink" href="#revrt.costs.dry_costs_creator.DryCostsCreator.chunks" title="Link to this definition">#</a></dt>
-<dd><p>Layer chunks (no band dimension)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_tiff_dir</span></span><a class="headerlink" href="#revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir" title="Link to this definition">#</a></dt>
-<dd><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="revrt.costs.dry_costs_creator.DryCostsCreator.shape">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#revrt.costs.dry_costs_creator.DryCostsCreator.shape" title="Link to this definition">#</a></dt>
-<dd><p>Layer shape</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
-</dd>
-</dl>
-</dd></dl>
-
+  <section id="revrt-utilities-handlers-zarr-compressors">
+<h1>revrt.utilities.handlers.ZARR_COMPRESSORS<a class="headerlink" href="#revrt-utilities-handlers-zarr-compressors" title="Link to this heading">#</a></h1>
+<dl class="py data">
+<dt class="sig sig-object py" id="revrt.utilities.handlers.ZARR_COMPRESSORS">
+<span class="sig-name descname"><span class="pre">ZARR_COMPRESSORS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">BloscCodec(_tunable_attrs={'typesize'},</span> <span class="pre">typesize=1,</span> <span class="pre">cname=&lt;BloscCname.zstd:</span> <span class="pre">'zstd'&gt;,</span> <span class="pre">clevel=9,</span> <span class="pre">shuffle=&lt;BloscShuffle.shuffle:</span> <span class="pre">'shuffle'&gt;,</span> <span class="pre">blocksize=0)</span></em><a class="headerlink" href="#revrt.utilities.handlers.ZARR_COMPRESSORS" title="Link to this definition">#</a></dt>
+<dd><p>[NOT PUBLIC API] Compressors to use when writing to Zarr file</p>
 </dd></dl>
 
 </section>
@@ -803,20 +635,20 @@ using properties of the
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="revrt.costs.dry_costs_creator.compute_slope_multipliers.html"
+       href="revrt.utilities.handlers.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">revrt.costs.dry_costs_creator.compute_slope_multipliers</p>
+        <p class="prev-next-title">revrt.utilities.handlers</p>
       </div>
     </a>
     <a class="right-next"
-       href="revrt.costs.layer_creator.html"
+       href="revrt.utilities.handlers.chunked_read_gpkg.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">revrt.costs.layer_creator</p>
+        <p class="prev-next-title">revrt.utilities.handlers.chunked_read_gpkg</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -839,14 +671,7 @@ using properties of the
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.dry_costs_creator.DryCostsCreator"><code class="docutils literal notranslate"><span class="pre">DryCostsCreator</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.dry_costs_creator.DryCostsCreator.build"><code class="docutils literal notranslate"><span class="pre">DryCostsCreator.build()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.dry_costs_creator.DryCostsCreator.cell_size"><code class="docutils literal notranslate"><span class="pre">DryCostsCreator.cell_size</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.dry_costs_creator.DryCostsCreator.chunks"><code class="docutils literal notranslate"><span class="pre">DryCostsCreator.chunks</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir"><code class="docutils literal notranslate"><span class="pre">DryCostsCreator.output_tiff_dir</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.dry_costs_creator.DryCostsCreator.shape"><code class="docutils literal notranslate"><span class="pre">DryCostsCreator.shape</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.utilities.handlers.ZARR_COMPRESSORS"><code class="docutils literal notranslate"><span class="pre">ZARR_COMPRESSORS</span></code></a></li>
 </ul>
   </nav></div>
 

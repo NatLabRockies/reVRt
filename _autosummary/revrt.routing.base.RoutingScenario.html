@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.routing.base.RoutingScenario &#8212; reVRt 0.4.1 documentation</title>
+    <title>revrt.routing.base.RoutingScenario &#8212; reVRt 0.5.0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c87aa342"></script>
+    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <link rel="prev" title="revrt.routing.base.RoutingLayerManager" href="revrt.routing.base.RoutingLayerManager.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4.1" />
+  <meta name="docsearch:version" content="0.5.0" />
   </head>
   
   
@@ -113,7 +113,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.4.1 documentation</p>
+    <p class="title logo__title">reVRt 0.5.0 documentation</p>
   
 </a></div>
     
@@ -527,6 +527,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.handlers.html">revrt.utilities.handlers</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.ZARR_COMPRESSORS.html">revrt.utilities.handlers.ZARR_COMPRESSORS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.chunked_read_gpkg.html">revrt.utilities.handlers.chunked_read_gpkg</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.gpkg_crs.html">revrt.utilities.handlers.gpkg_crs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.num_feats_in_gpkg.html">revrt.utilities.handlers.num_feats_in_gpkg</a></li>
@@ -617,7 +618,7 @@
 <h1>revrt.routing.base.RoutingScenario<a class="headerlink" href="#revrt-routing-base-routingscenario" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.routing.base.RoutingScenario">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RoutingScenario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">friction_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_scalar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_invalid_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'long_range_dijkstra'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#RoutingScenario"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.RoutingScenario" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RoutingScenario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">friction_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_scalar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_invalid_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bidirectional_long_range_dijkstra'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#RoutingScenario"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.RoutingScenario" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Container for routing scenario configuration</p>
 <dl class="field-list simple">
@@ -633,14 +634,15 @@ names.</p></li>
 <li><p><strong>cost_multiplier_layer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Layer name providing spatial multipliers for total cost.</p></li>
 <li><p><strong>cost_multiplier_scalar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Scalar multiplier applied to the final cost surface.</p></li>
 <li><p><strong>ignore_invalid_costs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Flag indicating whether non-positive costs block traversal.</p></li>
-<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values
-are <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>.
-<code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation but does not
-respect the memory limit. Prefer the default
+<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values
+are <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> is a faster implementation
+but does not respect the memory limit. Prefer the default
 <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code> option unless you know for a fact
 that your route computations will not need much memory and
 speed is very important to you.
-By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p></li>
+By default, <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
