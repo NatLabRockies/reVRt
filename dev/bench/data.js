@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775940151471,
+  "lastUpdate": 1776103802514,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -8147,6 +8147,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 378151420,
             "range": "± 6908065",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f2e4c47b1ccac6c488fe66a56e892c90d7b44241",
+          "message": "Add Bidirectional Dijkstras (#249)\n\n* Add error types\n\n* Remove outdated docstring\n\n* Remove unneeded checks\n\n* Support f64\n\n* Add test cases\n\n* Add to docs\n\n* Pass in endpoints\n\n* Add more test cases\n\n* New defaults\n\n* Update docs\n\n* Parameterize tests\n\n* Add new algo\n\n* Support new algo\n\n* Unoptimized implementation\n\n* Add some debug logging\n\n* Non private var\n\n* 2 decimals to report time\n\n* Use encoding when saving routing layer\n\n* Add test\n\n* Update debug statement\n\n* Make sure all endpoints are also valid\n\n* Minor updates\n\n* Fix tests\n\n* Touch-up\n\n* Bump version\n\n* Bump version\n\n* Test algorithms\n\n* Test all algos",
+          "timestamp": "2026-04-13T11:34:54-06:00",
+          "tree_id": "52f5e27964996bcf5c5298e214a6053e74b08761",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/f2e4c47b1ccac6c488fe66a56e892c90d7b44241"
+        },
+        "date": 1776103800760,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 72274798,
+            "range": "± 1257790",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 114739227,
+            "range": "± 2056624",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 102104405,
+            "range": "± 2233566",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 149407299,
+            "range": "± 4106461",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 619175313,
+            "range": "± 21286467",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 141625741,
+            "range": "± 535145",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 145992439,
+            "range": "± 961727",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 159301896,
+            "range": "± 1312007",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 203431367,
+            "range": "± 2307357",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 364532936,
+            "range": "± 8423923",
             "unit": "ns/iter"
           }
         ]
