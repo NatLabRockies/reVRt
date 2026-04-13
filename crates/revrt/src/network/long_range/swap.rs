@@ -152,6 +152,14 @@ impl SwapStore {
         let record = SpillRecord::from_bytes(bytes);
         Ok((record.cost, record.parent_slot()))
     }
+
+    pub(super) fn slot_in_buffer(&self, slot: usize) -> bool {
+        let slot = match u64::try_from(slot) {
+            Ok(slot) => slot,
+            Err(_) => return false,
+        };
+        self.write_buffer.contains_key(&slot)
+    }
 }
 
 impl Drop for SwapStore {

@@ -42,7 +42,7 @@ class RoutingScenario:
         cost_multiplier_layer=None,
         cost_multiplier_scalar=1,
         ignore_invalid_costs=True,
-        algorithm="long_range_dijkstra",
+        algorithm="bidirectional_long_range_dijkstra",
     ):
         """
 
@@ -65,15 +65,16 @@ class RoutingScenario:
             Scalar multiplier applied to the final cost surface.
         ignore_invalid_costs : bool, optional
             Flag indicating whether non-positive costs block traversal.
-        algorithm : str, default="long_range_dijkstra"
+        algorithm : str, default="bidirectional_long_range_dijkstra"
             Routing algorithm implementation to use. Supported values
-            are ``"long_range_dijkstra"`` and ``"dijkstra"``.
-            ``"dijkstra"`` is a faster implementation but does not
-            respect the memory limit. Prefer the default
+            are ``"long_range_dijkstra"``,
+            ``"bidirectional_long_range_dijkstra"``, and
+            ``"dijkstra"``. ``"dijkstra"`` is a faster implementation
+            but does not respect the memory limit. Prefer the default
             ``"long_range_dijkstra"`` option unless you know for a fact
             that your route computations will not need much memory and
             speed is very important to you.
-            By default, ``"long_range_dijkstra"``.
+            By default, ``"bidirectional_long_range_dijkstra"``.
         """
         self.cost_fpath = cost_fpath
         self.cost_layers = cost_layers
@@ -407,7 +408,7 @@ class CharacterizedLayer:
             layer_data = da.asarray(layer_data)
 
         if self.is_length_invariant:
-            layer_cost = da.sum(layer_data[1:])
+            layer_cost = da.sum(layer_data)
         else:
             layer_cost = da.sum(layer_data * lens)
 
@@ -497,9 +498,8 @@ class RouteMetrics:
             y=xr.DataArray(rows, dims="points"),
             x=xr.DataArray(cols, dims="points"),
         )
-        invariant_cost = da.sum(inv_cell_costs[1:])
+        invariant_cost = da.sum(inv_cell_costs)
 
-        # Multiple distance travel through cell by cost and sum it!
         return (cost + invariant_cost).compute()
 
     @property
@@ -814,7 +814,7 @@ class BatchRouteProcessor:
                     attrs = self.route_attrs.get(attrs_key, self.default_attrs)
                     yield indices, optimized_objective, attrs
 
-                time_elapsed = f"{(time.monotonic() - ts) / 60:.4f} minute(s)"
+                time_elapsed = f"{(time.monotonic() - ts) / 60:.2f} minute(s)"
                 logger.info(
                     "%d/%d (%.2f%%) route definitions processed in %s",
                     num_complete,
@@ -868,18 +868,32 @@ class BatchRouteProcessor:
         if not points or not self.routing_scenario.ignore_invalid_costs:
             return points
 
+        all_invalid_points_msg = (
+            f"None of the end points have a valid cost (must be > 0): {points}"
+        )
+
         rows, cols = np.array(points).T
         costs = self.routing_layers.cost.isel(
             y=xr.DataArray(rows, dims="points"),
             x=xr.DataArray(cols, dims="points"),
         )
 
-        if not np.any(costs.compute() > 0):
+        cost_values = costs.compute()
+        bad_point_inds = np.where(np.isnan(cost_values) | (cost_values <= 0))[
+            0
+        ]
+        invalid_points = {points[i] for i in bad_point_inds}
+        if invalid_points:
             msg = (
-                f"None of the end points have a valid cost (must be > 0): "
-                f"{points}"
+                f"One or more of the end points have an invalid cost "
+                f"(must be > 0): {invalid_points}\n"
+                "Dropping these from consideration..."
             )
-            raise revrtLeastCostPathNotFoundError(msg)
+            warn(msg, revrtWarning)
+            points = [p for p in points if p not in invalid_points]
+
+        if not points:
+            raise revrtLeastCostPathNotFoundError(all_invalid_points_msg)
 
         return points
 

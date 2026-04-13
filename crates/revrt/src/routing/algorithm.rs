@@ -27,6 +27,7 @@ pub(super) enum AlgorithmType {
     // Astar,
     Dijkstra,
     LongRangeDijkstra,
+    BidirectionalLongRangeDijkstra,
 }
 
 impl FromStr for AlgorithmType {
@@ -36,9 +37,14 @@ impl FromStr for AlgorithmType {
         match value.trim().to_ascii_lowercase().replace('-', "_").as_str() {
             "dijkstra" => Ok(Self::Dijkstra),
             "long_range_dijkstra" => Ok(Self::LongRangeDijkstra),
+            "bidirectional_long_range_dijkstra" => Ok(Self::BidirectionalLongRangeDijkstra),
             _ => Err(Error::InvalidAlgorithm {
                 value: value.to_string(),
-                allowed: &["dijkstra", "long_range_dijkstra"],
+                allowed: &[
+                    "dijkstra",
+                    "long_range_dijkstra",
+                    "bidirectional_long_range_dijkstra",
+                ],
             }),
         }
     }
@@ -97,6 +103,28 @@ impl Algorithm {
         }
     }
 
+    pub(super) fn new_bidirectional_long_range(per_worker_memory_budget_bytes: u64) -> Self {
+        if per_worker_memory_budget_bytes < MIN_MEMORY_BUDGET_MB * 1024 * 1024 {
+            warn!(
+                "Bidirectional long-range Dijkstra per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
+                MIN_MEMORY_BUDGET_MB, MIN_MEMORY_BUDGET_MB
+            );
+            Self {
+                algorithm_type: AlgorithmType::BidirectionalLongRangeDijkstra,
+                per_worker_memory_budget_bytes: Some(MIN_MEMORY_BUDGET_MB * 1024 * 1024),
+            }
+        } else {
+            debug!(
+                "Bidirectional long-range Dijkstra per-worker memory budget set to {}MB",
+                per_worker_memory_budget_bytes / (1024 * 1024)
+            );
+            Self {
+                algorithm_type: AlgorithmType::BidirectionalLongRangeDijkstra,
+                per_worker_memory_budget_bytes: Some(per_worker_memory_budget_bytes),
+            }
+        }
+    }
+
     pub(super) fn from_selection(
         algorithm: AlgorithmType,
         per_worker_memory_budget_bytes: u64,
@@ -106,6 +134,9 @@ impl Algorithm {
             AlgorithmType::LongRangeDijkstra => {
                 Self::new_long_range(per_worker_memory_budget_bytes)
             }
+            AlgorithmType::BidirectionalLongRangeDijkstra => {
+                Self::new_bidirectional_long_range(per_worker_memory_budget_bytes)
+            }
         }
     }
 
@@ -113,6 +144,7 @@ impl Algorithm {
     pub(super) fn compute<C, FN, IN, FH, FS>(
         &self,
         start: &ArrayIndex,
+        goals: &[ArrayIndex],
         successors: FN,
         heuristic: Option<FH>,
         success: FS,
@@ -146,6 +178,18 @@ impl Algorithm {
                     grid_shape,
                 )
             }
+            AlgorithmType::BidirectionalLongRangeDijkstra => {
+                let per_worker_memory_budget_bytes = self
+                    .per_worker_memory_budget_bytes
+                    .expect("Memory budget not set for bidirectional long-range Dijkstra");
+                long_range::bidirectional_long_range_dijkstra(
+                    start,
+                    goals,
+                    successors,
+                    per_worker_memory_budget_bytes,
+                    grid_shape,
+                )
+            }
         };
 
         ans.map(|(route, total_cost)| {
@@ -171,6 +215,10 @@ mod tests {
             AlgorithmType::from_str("long_range_dijkstra").unwrap(),
             AlgorithmType::LongRangeDijkstra
         );
+        assert_eq!(
+            AlgorithmType::from_str("bidirectional_long_range_dijkstra").unwrap(),
+            AlgorithmType::BidirectionalLongRangeDijkstra
+        );
     }
 
     #[test]
@@ -182,6 +230,10 @@ mod tests {
         assert_eq!(
             AlgorithmType::from_str(" LONG-RANGE-DIJKSTRA ").unwrap(),
             AlgorithmType::LongRangeDijkstra
+        );
+        assert_eq!(
+            AlgorithmType::from_str(" bidirectional-long-range-dijkstra ").unwrap(),
+            AlgorithmType::BidirectionalLongRangeDijkstra
         );
     }
 

@@ -317,8 +317,13 @@ impl Dataset {
                         );
                     } else {
                         self.calculate_chunk_cost(ci, cj);
-                        debug!("Recording chunk ({}, {}) as calculated", ci, cj);
                         chunk_idx[[ci as usize, cj as usize]] = true;
+                        debug!(
+                            "Recorded chunk ({}, {}) as calculated. Total number of computed chunks: {}",
+                            ci,
+                            cj,
+                            chunk_idx.iter().filter(|&&value| value).count()
+                        );
                     }
                     debug!("Released write lock for cost_chunk_idx ({}, {})", ci, cj);
                 }

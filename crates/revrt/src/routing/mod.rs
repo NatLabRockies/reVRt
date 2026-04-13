@@ -42,6 +42,7 @@ impl Routing {
             .filter_map(|s| {
                 self.algorithm.compute(
                     s,
+                    &end,
                     |p| self.scenario.successors(p),
                     None::<fn(&ArrayIndex) -> u64>,
                     |p| end.contains(p),
@@ -189,8 +190,10 @@ impl ParRouting {
                     let routes: RevrtRoutingSolutions = start_inds
                         .into_par_iter()
                         .filter_map(|s| {
+                            let end_ind_vec: Vec<_> = end_inds.iter().cloned().collect();
                             algorithm.compute(
                                 &s,
+                                &end_ind_vec,
                                 |p| scenario.successors(p),
                                 None::<fn(&ArrayIndex) -> u64>,
                                 |p| end_inds.contains(p),
