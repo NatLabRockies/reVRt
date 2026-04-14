@@ -14,7 +14,7 @@ jobs:
     name: Verify publish
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
     - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
       with:
@@ -23,7 +23,7 @@ jobs:
         frozen: true
         cache-write: ${{ github.ref == 'refs/heads/main' }}
 
-    - uses: Swatinem/rust-cache@v2
+    - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
       with:
         shared-key: "gha"
         save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -38,7 +38,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/r')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
         with:
@@ -47,7 +47,7 @@ jobs:
           frozen: true
           cache-write: ${{ github.ref == 'refs/heads/main' }}
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
         with:
           shared-key: "gha"
           save-if: false
@@ -64,7 +64,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/c')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
         with:
@@ -73,7 +73,7 @@ jobs:
           frozen: true
           cache-write: ${{ github.ref == 'refs/heads/main' }}
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
         with:
           shared-key: "gha"
           save-if: false
@@ -116,10 +116,10 @@ jobs:
             strip: strip
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: actions-rs/toolchain@b2417cde72dcf67f306c0ae8e0828a81bf0b189f
       with:
         toolchain: stable
         profile: minimal
@@ -143,7 +143,7 @@ jobs:
         fi
 
     - name: Build
-      uses: actions-rs/cargo@v1
+      uses: actions-rs/cargo@ae10961054e4aa8b4aa7dffede299aaf087aa33b
       with:
         use-cross: ${{ matrix.use-cross }}
         command: build
@@ -154,7 +154,7 @@ jobs:
       run: ${{ matrix.strip }} target/${{ matrix.target }}/release/revrt-cli${{ matrix.binary_ext }}
 
     - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v2
+      uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/${{ matrix.target }}/release/revrt-cli${{ matrix.binary_ext }}
