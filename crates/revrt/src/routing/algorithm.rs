@@ -27,6 +27,7 @@ const MIN_MEMORY_BUDGET_MB: u64 = 2;
 pub(super) enum AlgorithmType {
     Astar,
     Dijkstra,
+    LongRangeAstar,
     LongRangeDijkstra,
     BidirectionalLongRangeDijkstra,
 }
@@ -38,6 +39,7 @@ impl FromStr for AlgorithmType {
         match value.trim().to_ascii_lowercase().replace('-', "_").as_str() {
             "astar" | "a_star" => Ok(Self::Astar),
             "dijkstra" => Ok(Self::Dijkstra),
+            "long_range_astar" | "long_range_a_star" => Ok(Self::LongRangeAstar),
             "long_range_dijkstra" => Ok(Self::LongRangeDijkstra),
             "bidirectional_long_range_dijkstra" => Ok(Self::BidirectionalLongRangeDijkstra),
             _ => Err(Error::InvalidAlgorithm {
@@ -45,6 +47,7 @@ impl FromStr for AlgorithmType {
                 allowed: &[
                     "astar",
                     "dijkstra",
+                    "long_range_astar",
                     "long_range_dijkstra",
                     "bidirectional_long_range_dijkstra",
                 ],
@@ -71,6 +74,28 @@ impl Algorithm {
         Self {
             algorithm_type: AlgorithmType::Dijkstra,
             per_worker_memory_budget_bytes: None,
+        }
+    }
+
+    pub(super) fn new_long_range_astar(per_worker_memory_budget_bytes: u64) -> Self {
+        if per_worker_memory_budget_bytes < MIN_MEMORY_BUDGET_MB * 1024 * 1024 {
+            warn!(
+                "Long-range A* per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
+                MIN_MEMORY_BUDGET_MB, MIN_MEMORY_BUDGET_MB
+            );
+            Self {
+                algorithm_type: AlgorithmType::LongRangeAstar,
+                per_worker_memory_budget_bytes: Some(MIN_MEMORY_BUDGET_MB * 1024 * 1024),
+            }
+        } else {
+            debug!(
+                "Long-range A* per-worker memory budget set to {}MB",
+                per_worker_memory_budget_bytes / (1024 * 1024)
+            );
+            Self {
+                algorithm_type: AlgorithmType::LongRangeAstar,
+                per_worker_memory_budget_bytes: Some(per_worker_memory_budget_bytes),
+            }
         }
     }
 
@@ -125,6 +150,9 @@ impl Algorithm {
         match algorithm {
             AlgorithmType::Astar => Self::new_astar(),
             AlgorithmType::Dijkstra => Self::new(),
+            AlgorithmType::LongRangeAstar => {
+                Self::new_long_range_astar(per_worker_memory_budget_bytes)
+            }
             AlgorithmType::LongRangeDijkstra => {
                 Self::new_long_range(per_worker_memory_budget_bytes)
             }
@@ -168,6 +196,19 @@ impl Algorithm {
                 )
             }
             AlgorithmType::Dijkstra => dijkstra(start, successors, success),
+            AlgorithmType::LongRangeAstar => {
+                let per_worker_memory_budget_bytes = self
+                    .per_worker_memory_budget_bytes
+                    .expect("Memory budget not set for long-range A*");
+                long_range::long_range_astar(
+                    start,
+                    goals,
+                    successors,
+                    success,
+                    per_worker_memory_budget_bytes,
+                    grid_shape,
+                )
+            }
             AlgorithmType::LongRangeDijkstra => {
                 let per_worker_memory_budget_bytes = self
                     .per_worker_memory_budget_bytes
@@ -218,6 +259,10 @@ mod tests {
             AlgorithmType::Dijkstra
         );
         assert_eq!(
+            AlgorithmType::from_str("long_range_astar").unwrap(),
+            AlgorithmType::LongRangeAstar
+        );
+        assert_eq!(
             AlgorithmType::from_str("long_range_dijkstra").unwrap(),
             AlgorithmType::LongRangeDijkstra
         );
@@ -236,6 +281,10 @@ mod tests {
         assert_eq!(
             AlgorithmType::from_str("  Dijkstra  ").unwrap(),
             AlgorithmType::Dijkstra
+        );
+        assert_eq!(
+            AlgorithmType::from_str(" LONG-RANGE-ASTAR ").unwrap(),
+            AlgorithmType::LongRangeAstar
         );
         assert_eq!(
             AlgorithmType::from_str(" LONG-RANGE-DIJKSTRA ").unwrap(),
