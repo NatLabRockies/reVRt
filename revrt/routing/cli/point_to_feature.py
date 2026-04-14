@@ -428,14 +428,15 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         is given that does not exist in the data, an error will be
         raised. By default, ``"end_feat_id"``.
     algorithm : str, default="bidirectional_long_range_dijkstra"
-        Routing algorithm implementation to use. Supported values are
+        Routing algorithm implementation to use. Supported values
+        are ``"astar"``, ``"long_range_astar"``,
         ``"long_range_dijkstra"``,
-        ``"bidirectional_long_range_dijkstra"``, and ``"dijkstra"``.
-        ``"dijkstra"`` is a faster implementation but does not respect
-        the memory utilization limit input. Prefer the default
-        ``"long_range_dijkstra"`` option unless you know for a fact that
-        your route computations will not need much memory and speed is
-        very important to you.
+        ``"bidirectional_long_range_dijkstra"``, and
+        ``"dijkstra"``. ``"astar"`` and ``"dijkstra"`` are
+        in-memory implementations that do not respect the memory
+        limit. Prefer a long-range option unless you know for a fact
+        that your route computations will not need much memory and
+        speed is very important to you.
         By default, ``"bidirectional_long_range_dijkstra"``.
     memory_utilization_limit : float, default=0.9
         Fraction of `system_mem_limit_gb` to utilize for routing. Should

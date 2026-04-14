@@ -13,9 +13,17 @@ where
     IN: IntoIterator<Item = (ArrayIndex, C)>,
     u64: From<C>,
 {
-    let neighbors: Vec<_> = successors(index).into_iter().collect();
-
-    if let Some(candidate) = neighbors.iter().map(|(_, cost)| u64::from(*cost)).min() {
+    let mut neighbors = Vec::new();
+    let mut candidate: Option<u64> = None;
+    for (neighbor, cost) in successors(index) {
+        let cost_u64 = u64::from(cost);
+        candidate = Some(match candidate {
+            Some(observed) => observed.min(cost_u64),
+            None => cost_u64,
+        });
+        neighbors.push((neighbor, cost));
+    }
+    if let Some(candidate) = candidate {
         min_cost.set(Some(match min_cost.get() {
             Some(observed) => observed.min(candidate),
             None => candidate,

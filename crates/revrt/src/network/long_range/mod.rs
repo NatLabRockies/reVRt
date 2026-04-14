@@ -12,6 +12,12 @@ use utilities::{FinalizedBits, GridIndexer};
 
 const MAX_PQ_TO_FRONTIER_NODE_RATIO: usize = 2;
 
+#[derive(Clone, Copy, Debug)]
+struct BestNodeCost {
+    cost: u64,
+    estimated_cost: u64,
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct FinalizedNode {
     slot: usize,
@@ -33,7 +39,7 @@ pub(crate) struct FrontierOnlySearchState {
     // Cheapest known cost for each frontier node still tracked in memory.
     // Once a node is finalized, its cost is removed from this map and can
     // be recovered from the swap store during path reconstruction.
-    best_node_costs: HashMap<usize, u64>,
+    best_node_costs: HashMap<usize, BestNodeCost>,
     // Parent slot for each frontier node's current best path.
     parents: HashMap<usize, usize>,
     // Compact membership set for nodes whose cheapest path is finalized.
@@ -80,7 +86,13 @@ impl FrontierOnlySearchState {
                 continue;
             }
 
-            state.best_node_costs.insert(start_slot, 0);
+            state.best_node_costs.insert(
+                start_slot,
+                BestNodeCost {
+                    cost: 0,
+                    estimated_cost: 0,
+                },
+            );
             state.pq.push(NodeCost {
                 index: start_slot,
                 cost: 0,
@@ -129,14 +141,14 @@ impl FrontierOnlySearchState {
         C: Copy,
         u64: From<C>,
     {
-        self.add_successors_tracking(node, successors, |_, _| {})
+        self.add_successors_tracking_with_estimator(node, successors, |_, cost| cost, |_, _| {})
     }
 
     pub(crate) fn add_successors_tracking<C, IN, F>(
         &mut self,
         node: &FinalizedNode,
         successors: IN,
-        mut on_update: F,
+        on_update: F,
     ) -> Option<()>
     where
         IN: IntoIterator<Item = (ArrayIndex, C)>,
@@ -144,10 +156,31 @@ impl FrontierOnlySearchState {
         F: FnMut(usize, u64),
         u64: From<C>,
     {
+        self.add_successors_tracking_with_estimator(node, successors, |_, cost| cost, on_update)
+    }
+
+    pub(crate) fn add_successors_tracking_with_estimator<C, IN, H, F>(
+        &mut self,
+        node: &FinalizedNode,
+        successors: IN,
+        mut estimate_total_cost: H,
+        mut on_update: F,
+    ) -> Option<()>
+    where
+        IN: IntoIterator<Item = (ArrayIndex, C)>,
+        C: Copy,
+        H: FnMut(&ArrayIndex, u64) -> u64,
+        F: FnMut(usize, u64),
+        u64: From<C>,
+    {
         for (neighbor, edge_cost) in successors {
-            if let Some((slot, cost)) =
-                self.add_neighbor(node.slot, node.cost, &neighbor, edge_cost)
-            {
+            if let Some((slot, cost)) = self.add_neighbor(
+                node.slot,
+                node.cost,
+                &neighbor,
+                edge_cost,
+                &mut estimate_total_cost,
+            ) {
                 on_update(slot, cost);
             }
         }
@@ -160,6 +193,7 @@ impl FrontierOnlySearchState {
         from_cost: u64,
         neighbor: &ArrayIndex,
         edge_cost: C,
+        estimate_total_cost: &mut impl FnMut(&ArrayIndex, u64) -> u64,
     ) -> Option<(usize, u64)>
     where
         C: Copy,
@@ -175,16 +209,23 @@ impl FrontierOnlySearchState {
         let should_update = self
             .best_node_costs
             .get(&neighbor_slot)
-            .map(|current_best_cost| next_cost < *current_best_cost)
+            .map(|current_best| next_cost < current_best.cost)
             .unwrap_or(true);
 
         if should_update {
-            self.best_node_costs.insert(neighbor_slot, next_cost);
+            let estimated_cost = estimate_total_cost(neighbor, next_cost);
+            self.best_node_costs.insert(
+                neighbor_slot,
+                BestNodeCost {
+                    cost: next_cost,
+                    estimated_cost,
+                },
+            );
             self.parents.insert(neighbor_slot, from_slot);
             self.pq.push(NodeCost {
                 index: neighbor_slot,
                 cost: next_cost,
-                estimated_cost: next_cost,
+                estimated_cost,
             });
             return Some((neighbor_slot, next_cost));
         }
@@ -206,8 +247,8 @@ impl FrontierOnlySearchState {
     }
 
     pub(crate) fn known_cost(&mut self, slot: usize) -> Option<u64> {
-        if let Some(cost) = self.best_node_costs.get(&slot).copied() {
-            return Some(cost);
+        if let Some(best_cost) = self.best_node_costs.get(&slot).copied() {
+            return Some(best_cost.cost);
         }
 
         if self.finalized_bits.contains(slot) {
@@ -407,13 +448,15 @@ impl BidirectionalSearchState {
     }
 }
 
-fn compact_pq_set(best_node_costs: &HashMap<usize, u64>) -> BinaryHeap<NodeCost<usize, u64>> {
+fn compact_pq_set(
+    best_node_costs: &HashMap<usize, BestNodeCost>,
+) -> BinaryHeap<NodeCost<usize, u64>> {
     best_node_costs
         .iter()
-        .map(|(index, cost)| NodeCost {
+        .map(|(index, best_cost)| NodeCost {
             index: *index,
-            cost: *cost,
-            estimated_cost: *cost,
+            cost: best_cost.cost,
+            estimated_cost: best_cost.estimated_cost,
         })
         .collect()
 }
@@ -534,6 +577,34 @@ mod tests {
         let path = state.reconstruct_path_to(slot).unwrap();
 
         assert_eq!(path, vec![ArrayIndex::new(0, 0), ArrayIndex::new(0, 1)]);
+    }
+
+    #[test]
+    fn frontier_prefers_lower_estimated_cost() {
+        let start = ArrayIndex::new(0, 0);
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (3, 3)).unwrap();
+        let node = state.pop_next_node().unwrap();
+
+        state
+            .add_successors_tracking_with_estimator(
+                &node,
+                vec![
+                    (ArrayIndex::new(0, 1), 1_u64),
+                    (ArrayIndex::new(1, 0), 2_u64),
+                ],
+                |neighbor, cost| match (neighbor.i, neighbor.j) {
+                    (0, 1) => cost.saturating_add(20),
+                    (1, 0) => cost.saturating_add(1),
+                    _ => cost,
+                },
+                |_, _| {},
+            )
+            .unwrap();
+
+        let next = state.pop_next_node().unwrap();
+
+        assert_eq!(next.array_index, ArrayIndex::new(1, 0));
+        assert_eq!(next.cost, 2);
     }
 
     #[test]

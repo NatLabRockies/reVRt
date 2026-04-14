@@ -66,6 +66,7 @@ def test_find_paths_basic_single_route(tmp_path):
     [
         "astar",
         "dijkstra",
+        "long-range-astar",
         "long-range-dijkstra",
         "bidirectional-long-range-dijkstra",
     ],
@@ -129,6 +130,7 @@ def test_route_finder_basic_single_route(tmp_path, algorithm):
     [
         "astar",
         "dijkstra",
+        "long-range-astar",
         "long-range-dijkstra",
         "bidirectional-long-range-dijkstra",
     ],
@@ -219,6 +221,7 @@ def test_route_finder_writes_routing_layer_to_expected_path(
     [
         "astar",
         "dijkstra",
+        "long-range-astar",
         "long-range-dijkstra",
         "bidirectional-long-range-dijkstra",
     ],
@@ -275,7 +278,12 @@ def test_find_paths_supports_explicit_algorithm(tmp_path, algorithm):
 
 @pytest.mark.parametrize(
     "algorithm",
-    ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
+    [
+        "dijkstra",
+        "long-range-astar",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
 )
 def test_route_finder_supports_explicit_algorithm(tmp_path, algorithm):
     """RouteFinder accepts explicit routing algorithm selection"""
