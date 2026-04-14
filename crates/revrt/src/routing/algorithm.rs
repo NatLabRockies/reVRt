@@ -56,18 +56,6 @@ impl FromStr for AlgorithmType {
     }
 }
 
-impl AlgorithmType {
-    fn display_name(self) -> &'static str {
-        match self {
-            Self::Astar => "A*",
-            Self::Dijkstra => "Dijkstra",
-            Self::LongRangeAstar => "Long-range A*",
-            Self::LongRangeDijkstra => "Long-range Dijkstra",
-            Self::BidirectionalLongRangeDijkstra => "Bidirectional long-range Dijkstra",
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug)]
 pub(super) enum Algorithm {
     Astar,
@@ -79,7 +67,7 @@ pub(super) enum Algorithm {
 
 impl Algorithm {
     fn normalize_per_worker_memory_budget(
-        algorithm_type: AlgorithmType,
+        algorithm_name: &str,
         per_worker_memory_budget_bytes: u64,
     ) -> u64 {
         let min_memory_budget_bytes = MIN_MEMORY_BUDGET_MB * 1024 * 1024;
@@ -87,15 +75,13 @@ impl Algorithm {
         if per_worker_memory_budget_bytes < min_memory_budget_bytes {
             warn!(
                 "{} per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
-                algorithm_type.display_name(),
-                MIN_MEMORY_BUDGET_MB,
-                MIN_MEMORY_BUDGET_MB
+                algorithm_name, MIN_MEMORY_BUDGET_MB, MIN_MEMORY_BUDGET_MB
             );
             min_memory_budget_bytes
         } else {
             debug!(
                 "{} per-worker memory budget set to {}MB",
-                algorithm_type.display_name(),
+                algorithm_name,
                 per_worker_memory_budget_bytes / (1024 * 1024)
             );
             per_worker_memory_budget_bytes
@@ -111,19 +97,19 @@ impl Algorithm {
             AlgorithmType::Dijkstra => Self::Dijkstra,
             AlgorithmType::LongRangeAstar => Self::LongRangeAstar {
                 per_worker_memory_budget_bytes: Self::normalize_per_worker_memory_budget(
-                    algorithm,
+                    "Long-range A*",
                     per_worker_memory_budget_bytes,
                 ),
             },
             AlgorithmType::LongRangeDijkstra => Self::LongRangeDijkstra {
                 per_worker_memory_budget_bytes: Self::normalize_per_worker_memory_budget(
-                    algorithm,
+                    "Long-range Dijkstra",
                     per_worker_memory_budget_bytes,
                 ),
             },
             AlgorithmType::BidirectionalLongRangeDijkstra => Self::BidirectionalLongRangeDijkstra {
                 per_worker_memory_budget_bytes: Self::normalize_per_worker_memory_budget(
-                    algorithm,
+                    "Bidirectional long-range Dijkstra",
                     per_worker_memory_budget_bytes,
                 ),
             },
