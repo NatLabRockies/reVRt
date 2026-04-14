@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776146626510,
+  "lastUpdate": 1776206650913,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -8651,6 +8651,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 377063389,
             "range": "± 3605436",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58a4b861aaed2e358fb11337bb641a5a477bc36c",
+          "message": "Minor tweaks (#255)\n\n* Update docstrings\n\n* Use capacity\n\n* Update var\n\n* Update var\n\n* Update var\n\n* Final update var\n\n* No more forced flush\n\n* Rename func for consistency with functionality",
+          "timestamp": "2026-04-14T16:31:09-06:00",
+          "tree_id": "11c851bd2a6bf73cdba6ef5be280501cca157a5b",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/58a4b861aaed2e358fb11337bb641a5a477bc36c"
+        },
+        "date": 1776206649418,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 76464044,
+            "range": "± 1246203",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 66117265,
+            "range": "± 1119774",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 105568936,
+            "range": "± 2107932",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 155772394,
+            "range": "± 3788542",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 647837758,
+            "range": "± 15773618",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 143858612,
+            "range": "± 1592458",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 148301874,
+            "range": "± 1005972",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 162638443,
+            "range": "± 1365662",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 208937376,
+            "range": "± 2262737",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 381265439,
+            "range": "± 7092104",
             "unit": "ns/iter"
           }
         ]
