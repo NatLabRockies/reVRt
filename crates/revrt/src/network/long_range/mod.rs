@@ -12,6 +12,12 @@ use utilities::{FinalizedBits, GridIndexer};
 
 const MAX_PQ_TO_FRONTIER_NODE_RATIO: usize = 2;
 
+#[derive(Clone, Copy, Debug)]
+struct BestNodeCost {
+    cost: u64,
+    estimated_cost: u64,
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct FinalizedNode {
     slot: usize,
@@ -33,7 +39,7 @@ pub(crate) struct FrontierOnlySearchState {
     // Cheapest known cost for each frontier node still tracked in memory.
     // Once a node is finalized, its cost is removed from this map and can
     // be recovered from the swap store during path reconstruction.
-    best_node_costs: HashMap<usize, (u64, u64)>,
+    best_node_costs: HashMap<usize, BestNodeCost>,
     // Parent slot for each frontier node's current best path.
     parents: HashMap<usize, usize>,
     // Compact membership set for nodes whose cheapest path is finalized.
@@ -80,7 +86,13 @@ impl FrontierOnlySearchState {
                 continue;
             }
 
-            state.best_node_costs.insert(start_slot, (0, 0));
+            state.best_node_costs.insert(
+                start_slot,
+                BestNodeCost {
+                    cost: 0,
+                    estimated_cost: 0,
+                },
+            );
             state.pq.push(NodeCost {
                 index: start_slot,
                 cost: 0,
@@ -197,13 +209,18 @@ impl FrontierOnlySearchState {
         let should_update = self
             .best_node_costs
             .get(&neighbor_slot)
-            .map(|(current_best_cost, __)| next_cost < *current_best_cost)
+            .map(|current_best| next_cost < current_best.cost)
             .unwrap_or(true);
 
         if should_update {
             let estimated_cost = estimate_total_cost(neighbor, next_cost);
-            self.best_node_costs
-                .insert(neighbor_slot, (next_cost, estimated_cost));
+            self.best_node_costs.insert(
+                neighbor_slot,
+                BestNodeCost {
+                    cost: next_cost,
+                    estimated_cost,
+                },
+            );
             self.parents.insert(neighbor_slot, from_slot);
             self.pq.push(NodeCost {
                 index: neighbor_slot,
@@ -230,8 +247,8 @@ impl FrontierOnlySearchState {
     }
 
     pub(crate) fn known_cost(&mut self, slot: usize) -> Option<u64> {
-        if let Some((cost, __)) = self.best_node_costs.get(&slot).copied() {
-            return Some(cost);
+        if let Some(best_cost) = self.best_node_costs.get(&slot).copied() {
+            return Some(best_cost.cost);
         }
 
         if self.finalized_bits.contains(slot) {
@@ -432,14 +449,14 @@ impl BidirectionalSearchState {
 }
 
 fn compact_pq_set(
-    best_node_costs: &HashMap<usize, (u64, u64)>,
+    best_node_costs: &HashMap<usize, BestNodeCost>,
 ) -> BinaryHeap<NodeCost<usize, u64>> {
     best_node_costs
         .iter()
-        .map(|(index, (cost, estimated_cost))| NodeCost {
+        .map(|(index, best_cost)| NodeCost {
             index: *index,
-            cost: *cost,
-            estimated_cost: *estimated_cost,
+            cost: best_cost.cost,
+            estimated_cost: best_cost.estimated_cost,
         })
         .collect()
 }
