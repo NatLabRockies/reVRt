@@ -16,10 +16,11 @@ where
     let mut neighbors = Vec::with_capacity(16);
     let mut lowest_cost_from_neighbors: Option<u64> = None;
     for (neighbor, neighbor_cell_cost) in successors(index) {
-        let neighbor_cell_cost_u64 = u64::from(neighbor_cell_cost);
         lowest_cost_from_neighbors = Some(match lowest_cost_from_neighbors {
-            Some(observed) => observed.min(neighbor_cell_cost_u64),
-            None => neighbor_cell_cost_u64,
+            Some(curr_lowest_neighbor_cost) => {
+                curr_lowest_neighbor_cost.min(u64::from(neighbor_cell_cost))
+            }
+            None => u64::from(neighbor_cell_cost),
         });
         neighbors.push((neighbor, neighbor_cell_cost));
     }
