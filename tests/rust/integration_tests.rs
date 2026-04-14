@@ -8,6 +8,7 @@ const TEST_DATA: &str = concat!(
 );
 
 #[test_case("dijkstra"; "dijkstra")]
+#[test_case("long-range-astar"; "long-range-astar")]
 #[test_case("long-range-dijkstra"; "long-range")]
 #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
 fn basic_routing_in_data(algorithm: &str) {
@@ -31,6 +32,7 @@ fn basic_routing_in_data(algorithm: &str) {
 }
 
 #[test_case("dijkstra"; "dijkstra")]
+#[test_case("long-range-astar"; "long-range-astar")]
 #[test_case("long-range-dijkstra"; "long-range")]
 #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
 fn basic_routing_in_data_with_friction(algorithm: &str) {
