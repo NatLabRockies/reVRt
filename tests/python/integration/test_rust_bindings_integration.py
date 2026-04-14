@@ -88,6 +88,7 @@ def test_find_paths_basic_single_route_layered_file(tmp_path):
     [
         "astar",
         "dijkstra",
+        "long-range-astar",
         "long-range-dijkstra",
         "bidirectional-long-range-dijkstra",
     ],
@@ -170,6 +171,7 @@ def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
     [
         "astar",
         "dijkstra",
+        "long-range-astar",
         "long-range-dijkstra",
         "bidirectional-long-range-dijkstra",
     ],
