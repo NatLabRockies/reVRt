@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776119439256,
+  "lastUpdate": 1776146158154,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -8399,6 +8399,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 365499704,
             "range": "± 6816177",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3558c344176d40f37b03005d9c484a5b8d7a4b89",
+          "message": "Add long-range A* implementation (#253)\n\n* Minor optimization\n\n* Add functions to support a*\n\n* add long range a* as option\n\n* add tests\n\n* Implement `long_range_astar`\n\n* Add to docstring\n\n* Update docstring\n\n* Add test\n\n* Updaet docstring\n\n* Update docstring\n\n* Add tests\n\n* Minor refactor\n\n* Minor refactor\n\n* Add guards\n\n* Use namespace to make intent clearer",
+          "timestamp": "2026-04-13T23:43:25-06:00",
+          "tree_id": "122966c886566c2074b8c4ad0d0988bbc2b2d80b",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/3558c344176d40f37b03005d9c484a5b8d7a4b89"
+        },
+        "date": 1776146156610,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 73335465,
+            "range": "± 1265528",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 92752897,
+            "range": "± 1056992",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 102854034,
+            "range": "± 1764460",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 150577967,
+            "range": "± 2448514",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 618310562,
+            "range": "± 14969480",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 140001448,
+            "range": "± 384267",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 144495833,
+            "range": "± 671057",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 157790423,
+            "range": "± 888167",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 202189842,
+            "range": "± 2130426",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 366784267,
+            "range": "± 3507061",
             "unit": "ns/iter"
           }
         ]
