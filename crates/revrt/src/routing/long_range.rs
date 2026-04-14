@@ -32,6 +32,15 @@ where
         "Starting long-range A* with memory budget of {} bytes",
         memory_budget_bytes
     );
+
+    if goals.is_empty() {
+        return None;
+    }
+
+    if goals.iter().any(|goal| goal == start) {
+        return Some((vec![start.clone()], C::zero()));
+    }
+
     let min_cost = Cell::new(None);
     let mut state = FrontierOnlySearchState::new(start, memory_budget_bytes, grid_shape)?;
 
@@ -191,6 +200,41 @@ mod tests {
         assert_eq!(ans.1, 4_u64);
         assert_eq!(ans.0.first(), Some(&start));
         assert_eq!(ans.0.last(), Some(&goal));
+    }
+
+    #[test]
+    fn bounded_astar_rejects_missing_goals() {
+        let start = ArrayIndex::new(0, 0);
+
+        let ans = long_range_astar(
+            &start,
+            &[],
+            |_p: &ArrayIndex| Vec::<(ArrayIndex, u64)>::new(),
+            |_p| false,
+            2 * 1024 * 1024,
+            (1, 1),
+        );
+
+        assert!(ans.is_none());
+    }
+
+    #[test]
+    fn bounded_astar_returns_zero_cost_when_start_is_goal() {
+        let start = ArrayIndex::new(0, 0);
+        let goals = vec![start.clone(), ArrayIndex::new(1, 1)];
+
+        let ans = long_range_astar(
+            &start,
+            &goals,
+            |_p: &ArrayIndex| Vec::<(ArrayIndex, u64)>::new(),
+            |_p| false,
+            2 * 1024 * 1024,
+            (2, 2),
+        )
+        .unwrap();
+
+        assert_eq!(ans.0, vec![start]);
+        assert_eq!(ans.1, 0_u64);
     }
 
     #[test]
