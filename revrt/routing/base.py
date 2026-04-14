@@ -67,13 +67,14 @@ class RoutingScenario:
             Flag indicating whether non-positive costs block traversal.
         algorithm : str, default="bidirectional_long_range_dijkstra"
             Routing algorithm implementation to use. Supported values
-            are ``"astar"``, ``"long_range_dijkstra"``,
+            are ``"astar"``, ``"long_range_astar"``,
+            ``"long_range_dijkstra"``,
             ``"bidirectional_long_range_dijkstra"``, and
             ``"dijkstra"``. ``"astar"`` and ``"dijkstra"`` are
             in-memory implementations that do not respect the memory
-            limit. Prefer the default ``"long_range_dijkstra"`` option
-            unless you know for a fact that your route computations will
-            not need much memory and speed is very important to you.
+            limit. Prefer a long-range option unless you know for a fact
+            that your route computations will not need much memory and
+            speed is very important to you.
             By default, ``"bidirectional_long_range_dijkstra"``.
         """
         self.cost_fpath = cost_fpath
