@@ -8,10 +8,9 @@ use std::cmp::Ordering;
 // Consider renaming to NodePriority
 pub(super) struct NodeCost<I, C> {
     pub(super) index: I,
-    /// Cost (cheapest) to reach this node from the start node.
+    /// Total cost (cheapest) to reach this node from the start node.
     pub(super) cost: C,
-    /// Estimated cost to reach the goal from this node.
-    /// This is not used now, but preparing for A* algorithm.
+    /// Estimated (total) cost to reach the goal from this node.
     pub(super) estimated_cost: C,
 }
 

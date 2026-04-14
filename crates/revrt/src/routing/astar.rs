@@ -13,20 +13,21 @@ where
     IN: IntoIterator<Item = (ArrayIndex, C)>,
     u64: From<C>,
 {
-    let mut neighbors = Vec::new();
-    let mut candidate: Option<u64> = None;
-    for (neighbor, cost) in successors(index) {
-        let cost_u64 = u64::from(cost);
-        candidate = Some(match candidate {
-            Some(observed) => observed.min(cost_u64),
-            None => cost_u64,
+    let mut neighbors = Vec::with_capacity(16);
+    let mut lowest_cost_from_neighbors: Option<u64> = None;
+    for (neighbor, neighbor_cell_cost) in successors(index) {
+        lowest_cost_from_neighbors = Some(match lowest_cost_from_neighbors {
+            Some(curr_lowest_neighbor_cost) => {
+                curr_lowest_neighbor_cost.min(u64::from(neighbor_cell_cost))
+            }
+            None => u64::from(neighbor_cell_cost),
         });
-        neighbors.push((neighbor, cost));
+        neighbors.push((neighbor, neighbor_cell_cost));
     }
-    if let Some(candidate) = candidate {
+    if let Some(maybe_new_min_cost) = lowest_cost_from_neighbors {
         min_cost.set(Some(match min_cost.get() {
-            Some(observed) => observed.min(candidate),
-            None => candidate,
+            Some(current_min_cost) => current_min_cost.min(maybe_new_min_cost),
+            None => maybe_new_min_cost,
         }));
     }
 
