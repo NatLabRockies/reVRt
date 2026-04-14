@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776146288180,
+  "lastUpdate": 1776146626510,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -8567,6 +8567,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 359276646,
             "range": "± 3788289",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8b778037cd804ad21c7ccba4dbef4ad6b8a4dbc8",
+          "message": "Build(deps): Bump rand from 0.10.0 to 0.10.1 (#254)\n\nBumps [rand](https://github.com/rust-random/rand) from 0.10.0 to 0.10.1.\n- [Release notes](https://github.com/rust-random/rand/releases)\n- [Changelog](https://github.com/rust-random/rand/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/rust-random/rand/compare/0.10.0...0.10.1)\n\n---\nupdated-dependencies:\n- dependency-name: rand\n  dependency-version: 0.10.1\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-13T23:44:07-06:00",
+          "tree_id": "9a5a8feebf9ecd7aa4287b0f0ce0efd835797d39",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/8b778037cd804ad21c7ccba4dbef4ad6b8a4dbc8"
+        },
+        "date": 1776146625743,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 75266378,
+            "range": "± 713100",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 98098324,
+            "range": "± 1360300",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 105319079,
+            "range": "± 1894558",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 153611298,
+            "range": "± 2590136",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 639388243,
+            "range": "± 13256894",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 142494248,
+            "range": "± 2930987",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147122239,
+            "range": "± 10851381",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 160380011,
+            "range": "± 1046477",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 206444480,
+            "range": "± 1644821",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 377063389,
+            "range": "± 3605436",
             "unit": "ns/iter"
           }
         ]
