@@ -307,7 +307,6 @@ impl FrontierOnlySearchState {
             );
             self.pq = compact_pq_set(&self.best_node_costs);
             debug!("PQ len end: {}", self.pq.len());
-            self.swap.flush().ok()?;
         }
 
         Some(())
