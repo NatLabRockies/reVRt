@@ -24,10 +24,10 @@ where
         });
         neighbors.push((neighbor, neighbor_cell_cost));
     }
-    if let Some(candidate) = lowest_cost_from_neighbors {
+    if let Some(maybe_new_min_cost) = lowest_cost_from_neighbors {
         min_cost.set(Some(match min_cost.get() {
-            Some(observed) => observed.min(candidate),
-            None => candidate,
+            Some(current_min_cost) => current_min_cost.min(maybe_new_min_cost),
+            None => maybe_new_min_cost,
         }));
     }
 
