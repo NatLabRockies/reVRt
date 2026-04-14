@@ -56,90 +56,49 @@ impl FromStr for AlgorithmType {
     }
 }
 
-#[derive(Debug)]
-pub(super) struct Algorithm {
-    algorithm_type: AlgorithmType,
-    per_worker_memory_budget_bytes: Option<u64>,
+impl AlgorithmType {
+    fn display_name(self) -> &'static str {
+        match self {
+            Self::Astar => "A*",
+            Self::Dijkstra => "Dijkstra",
+            Self::LongRangeAstar => "Long-range A*",
+            Self::LongRangeDijkstra => "Long-range Dijkstra",
+            Self::BidirectionalLongRangeDijkstra => "Bidirectional long-range Dijkstra",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub(super) enum Algorithm {
+    Astar,
+    Dijkstra,
+    LongRangeAstar { per_worker_memory_budget_bytes: u64 },
+    LongRangeDijkstra { per_worker_memory_budget_bytes: u64 },
+    BidirectionalLongRangeDijkstra { per_worker_memory_budget_bytes: u64 },
 }
 
 impl Algorithm {
-    pub(super) fn new_astar() -> Self {
-        Self {
-            algorithm_type: AlgorithmType::Astar,
-            per_worker_memory_budget_bytes: None,
-        }
-    }
+    fn normalize_per_worker_memory_budget(
+        algorithm_type: AlgorithmType,
+        per_worker_memory_budget_bytes: u64,
+    ) -> u64 {
+        let min_memory_budget_bytes = MIN_MEMORY_BUDGET_MB * 1024 * 1024;
 
-    pub(super) fn new() -> Self {
-        Self {
-            algorithm_type: AlgorithmType::Dijkstra,
-            per_worker_memory_budget_bytes: None,
-        }
-    }
-
-    pub(super) fn new_long_range_astar(per_worker_memory_budget_bytes: u64) -> Self {
-        if per_worker_memory_budget_bytes < MIN_MEMORY_BUDGET_MB * 1024 * 1024 {
+        if per_worker_memory_budget_bytes < min_memory_budget_bytes {
             warn!(
-                "Long-range A* per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
-                MIN_MEMORY_BUDGET_MB, MIN_MEMORY_BUDGET_MB
+                "{} per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
+                algorithm_type.display_name(),
+                MIN_MEMORY_BUDGET_MB,
+                MIN_MEMORY_BUDGET_MB
             );
-            Self {
-                algorithm_type: AlgorithmType::LongRangeAstar,
-                per_worker_memory_budget_bytes: Some(MIN_MEMORY_BUDGET_MB * 1024 * 1024),
-            }
+            min_memory_budget_bytes
         } else {
             debug!(
-                "Long-range A* per-worker memory budget set to {}MB",
+                "{} per-worker memory budget set to {}MB",
+                algorithm_type.display_name(),
                 per_worker_memory_budget_bytes / (1024 * 1024)
             );
-            Self {
-                algorithm_type: AlgorithmType::LongRangeAstar,
-                per_worker_memory_budget_bytes: Some(per_worker_memory_budget_bytes),
-            }
-        }
-    }
-
-    pub(super) fn new_long_range(per_worker_memory_budget_bytes: u64) -> Self {
-        if per_worker_memory_budget_bytes < MIN_MEMORY_BUDGET_MB * 1024 * 1024 {
-            warn!(
-                "Long-range Dijkstra per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
-                MIN_MEMORY_BUDGET_MB, MIN_MEMORY_BUDGET_MB
-            );
-            Self {
-                algorithm_type: AlgorithmType::LongRangeDijkstra,
-                per_worker_memory_budget_bytes: Some(MIN_MEMORY_BUDGET_MB * 1024 * 1024),
-            }
-        } else {
-            debug!(
-                "Long-range Dijkstra per-worker memory budget set to {}MB",
-                per_worker_memory_budget_bytes / (1024 * 1024)
-            );
-            Self {
-                algorithm_type: AlgorithmType::LongRangeDijkstra,
-                per_worker_memory_budget_bytes: Some(per_worker_memory_budget_bytes),
-            }
-        }
-    }
-
-    pub(super) fn new_bidirectional_long_range(per_worker_memory_budget_bytes: u64) -> Self {
-        if per_worker_memory_budget_bytes < MIN_MEMORY_BUDGET_MB * 1024 * 1024 {
-            warn!(
-                "Bidirectional long-range Dijkstra per-worker memory budget smaller than the {}MB minimum! Setting to {}MB...",
-                MIN_MEMORY_BUDGET_MB, MIN_MEMORY_BUDGET_MB
-            );
-            Self {
-                algorithm_type: AlgorithmType::BidirectionalLongRangeDijkstra,
-                per_worker_memory_budget_bytes: Some(MIN_MEMORY_BUDGET_MB * 1024 * 1024),
-            }
-        } else {
-            debug!(
-                "Bidirectional long-range Dijkstra per-worker memory budget set to {}MB",
-                per_worker_memory_budget_bytes / (1024 * 1024)
-            );
-            Self {
-                algorithm_type: AlgorithmType::BidirectionalLongRangeDijkstra,
-                per_worker_memory_budget_bytes: Some(per_worker_memory_budget_bytes),
-            }
+            per_worker_memory_budget_bytes
         }
     }
 
@@ -148,17 +107,26 @@ impl Algorithm {
         per_worker_memory_budget_bytes: u64,
     ) -> Self {
         match algorithm {
-            AlgorithmType::Astar => Self::new_astar(),
-            AlgorithmType::Dijkstra => Self::new(),
-            AlgorithmType::LongRangeAstar => {
-                Self::new_long_range_astar(per_worker_memory_budget_bytes)
-            }
-            AlgorithmType::LongRangeDijkstra => {
-                Self::new_long_range(per_worker_memory_budget_bytes)
-            }
-            AlgorithmType::BidirectionalLongRangeDijkstra => {
-                Self::new_bidirectional_long_range(per_worker_memory_budget_bytes)
-            }
+            AlgorithmType::Astar => Self::Astar,
+            AlgorithmType::Dijkstra => Self::Dijkstra,
+            AlgorithmType::LongRangeAstar => Self::LongRangeAstar {
+                per_worker_memory_budget_bytes: Self::normalize_per_worker_memory_budget(
+                    algorithm,
+                    per_worker_memory_budget_bytes,
+                ),
+            },
+            AlgorithmType::LongRangeDijkstra => Self::LongRangeDijkstra {
+                per_worker_memory_budget_bytes: Self::normalize_per_worker_memory_budget(
+                    algorithm,
+                    per_worker_memory_budget_bytes,
+                ),
+            },
+            AlgorithmType::BidirectionalLongRangeDijkstra => Self::BidirectionalLongRangeDijkstra {
+                per_worker_memory_budget_bytes: Self::normalize_per_worker_memory_budget(
+                    algorithm,
+                    per_worker_memory_budget_bytes,
+                ),
+            },
         }
     }
 
@@ -183,8 +151,8 @@ impl Algorithm {
         // Temporary solution while we can't compare f32
         u64: From<C>,
     {
-        let ans = match self.algorithm_type {
-            AlgorithmType::Astar => {
+        let ans = match *self {
+            Self::Astar => {
                 let min_cost = std::cell::Cell::new(None);
                 let mut successors = successors;
 
@@ -195,44 +163,35 @@ impl Algorithm {
                     success,
                 )
             }
-            AlgorithmType::Dijkstra => dijkstra(start, successors, success),
-            AlgorithmType::LongRangeAstar => {
-                let per_worker_memory_budget_bytes = self
-                    .per_worker_memory_budget_bytes
-                    .expect("Memory budget not set for long-range A*");
-                long_range::long_range_astar(
-                    start,
-                    goals,
-                    successors,
-                    success,
-                    per_worker_memory_budget_bytes,
-                    grid_shape,
-                )
-            }
-            AlgorithmType::LongRangeDijkstra => {
-                let per_worker_memory_budget_bytes = self
-                    .per_worker_memory_budget_bytes
-                    .expect("Memory budget not set for long-range Dijkstra");
-                long_range::long_range_dijkstra(
-                    start,
-                    successors,
-                    success,
-                    per_worker_memory_budget_bytes,
-                    grid_shape,
-                )
-            }
-            AlgorithmType::BidirectionalLongRangeDijkstra => {
-                let per_worker_memory_budget_bytes = self
-                    .per_worker_memory_budget_bytes
-                    .expect("Memory budget not set for bidirectional long-range Dijkstra");
-                long_range::bidirectional_long_range_dijkstra(
-                    start,
-                    goals,
-                    successors,
-                    per_worker_memory_budget_bytes,
-                    grid_shape,
-                )
-            }
+            Self::Dijkstra => dijkstra(start, successors, success),
+            Self::LongRangeAstar {
+                per_worker_memory_budget_bytes,
+            } => long_range::long_range_astar(
+                start,
+                goals,
+                successors,
+                success,
+                per_worker_memory_budget_bytes,
+                grid_shape,
+            ),
+            Self::LongRangeDijkstra {
+                per_worker_memory_budget_bytes,
+            } => long_range::long_range_dijkstra(
+                start,
+                successors,
+                success,
+                per_worker_memory_budget_bytes,
+                grid_shape,
+            ),
+            Self::BidirectionalLongRangeDijkstra {
+                per_worker_memory_budget_bytes,
+            } => long_range::bidirectional_long_range_dijkstra(
+                start,
+                goals,
+                successors,
+                per_worker_memory_budget_bytes,
+                grid_shape,
+            ),
         };
 
         ans.map(|(route, total_cost)| {
@@ -245,7 +204,7 @@ impl Algorithm {
 mod tests {
     use std::str::FromStr;
 
-    use super::AlgorithmType;
+    use super::{Algorithm, AlgorithmType, MIN_MEMORY_BUDGET_MB};
     use crate::error::Error;
 
     #[test]
@@ -307,6 +266,18 @@ mod tests {
                 value,
                 ..
             } if value == invalid_value
+        ));
+    }
+
+    #[test]
+    fn long_range_algorithms_store_normalized_budget() {
+        let algorithm = Algorithm::from_selection(AlgorithmType::LongRangeAstar, 1);
+
+        assert!(matches!(
+            algorithm,
+            Algorithm::LongRangeAstar {
+                per_worker_memory_budget_bytes,
+            } if per_worker_memory_budget_bytes == MIN_MEMORY_BUDGET_MB * 1024 * 1024
         ));
     }
 }
