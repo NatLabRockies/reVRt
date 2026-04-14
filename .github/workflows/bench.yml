@@ -19,7 +19,7 @@ jobs:
     name: Run Rust benchmark with criterion
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
         with:
@@ -29,7 +29,7 @@ jobs:
           cache-write: false
           environments: dev
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4
         with:
           shared-key: "gha"
           save-if: false
@@ -40,7 +40,7 @@ jobs:
           pixi r -e dev cargo --locked criterion --output-format bencher --benches 2>&1 | tee output.txt
 
       - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
+        uses: benchmark-action/github-action-benchmark@a60cea5bc7b49e15c1f58f411161f99e0df48372
         if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
         with:
           name: Rust Benchmark
