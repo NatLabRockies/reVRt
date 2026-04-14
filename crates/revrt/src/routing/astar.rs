@@ -13,7 +13,7 @@ where
     IN: IntoIterator<Item = (ArrayIndex, C)>,
     u64: From<C>,
 {
-    let mut neighbors = Vec::new();
+    let mut neighbors = Vec::with_capacity(16);
     let mut candidate: Option<u64> = None;
     for (neighbor, cost) in successors(index) {
         let cost_u64 = u64::from(cost);
