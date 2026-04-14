@@ -1,4 +1,6 @@
 name: Rust checks
+permissions:
+  contents: read
 
 on:
   push:

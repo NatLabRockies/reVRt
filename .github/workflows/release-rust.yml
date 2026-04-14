@@ -9,6 +9,9 @@ on:
       - 'r*.*.*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Verify publish
@@ -90,6 +93,8 @@ jobs:
     # Only publish CLI binaries for tags starting with 'c', e.g. 'c1.2.3'.
     # This tagging convention distinguishes CLI releases from library releases.
     if: startsWith(github.ref, 'refs/tags/c')
+    permissions:
+      contents: write
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
