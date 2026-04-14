@@ -184,7 +184,7 @@ impl FrontierOnlySearchState {
                 on_update(slot, cost);
             }
         }
-        self.enforce_memory_budget()
+        self.manage_pq_size()
     }
 
     fn add_neighbor<C>(
@@ -297,7 +297,7 @@ impl FrontierOnlySearchState {
         Some(path)
     }
 
-    pub(crate) fn enforce_memory_budget(&mut self) -> Option<()> {
+    fn manage_pq_size(&mut self) -> Option<()> {
         if self.pq.len() > self.best_node_costs.len() * MAX_PQ_TO_FRONTIER_NODE_RATIO {
             debug!(
                 "Compacting priority queue after checking {} nodes: PQ len {}, best_node_costs len {}",
