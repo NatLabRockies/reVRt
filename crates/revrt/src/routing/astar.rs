@@ -14,16 +14,16 @@ where
     u64: From<C>,
 {
     let mut neighbors = Vec::with_capacity(16);
-    let mut candidate: Option<u64> = None;
+    let mut lowest_cost_from_neighbors: Option<u64> = None;
     for (neighbor, cost) in successors(index) {
         let cost_u64 = u64::from(cost);
-        candidate = Some(match candidate {
+        lowest_cost_from_neighbors = Some(match lowest_cost_from_neighbors {
             Some(observed) => observed.min(cost_u64),
             None => cost_u64,
         });
         neighbors.push((neighbor, cost));
     }
-    if let Some(candidate) = candidate {
+    if let Some(candidate) = lowest_cost_from_neighbors {
         min_cost.set(Some(match min_cost.get() {
             Some(observed) => observed.min(candidate),
             None => candidate,
