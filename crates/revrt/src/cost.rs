@@ -39,6 +39,20 @@ pub(crate) struct CostFunction {
     pub(crate) ignore_invalid_costs: bool,
 }
 
+#[derive(Clone, Copy, Debug, serde::Deserialize)]
+pub(crate) enum BarrierOperator {
+    #[serde(rename = "gt")]
+    GreaterThan,
+    #[serde(rename = "ge")]
+    GreaterThanOrEqual,
+    #[serde(rename = "lt")]
+    LessThan,
+    #[serde(rename = "le")]
+    LessThanOrEqual,
+    #[serde(rename = "eq")]
+    Equal,
+}
+
 #[derive(Builder, Clone, Debug, serde::Deserialize)]
 /// A cost layer
 ///
