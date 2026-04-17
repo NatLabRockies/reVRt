@@ -34,7 +34,7 @@ pub(super) struct DerivedDataWriter {
     /// Barrier layers that always behave as hard exclusions.
     hard_barrier_layers: Vec<BarrierLayer>,
     /// Soft barrier layers grouped by importance in ascending retry order.
-    soft_barrier_groups: Vec<(u32, Vec<BarrierLayer>)>,
+    pub(super) soft_barrier_groups: Vec<(u32, Vec<BarrierLayer>)>,
     /// Cost function stripped of barrier layers for numeric cost derivation.
     cost_function: CostFunction,
 }
@@ -98,15 +98,6 @@ impl DerivedDataWriter {
         self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, false);
         self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
         self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
-    }
-
-    /// Return the number of soft barrier importance groups.
-    ///
-    /// # Returns
-    /// The count of retry-state groups that can be progressively dropped
-    /// during routing retries.
-    pub(super) fn soft_barrier_group_count(&self) -> usize {
-        self.soft_barrier_groups.len()
     }
 
     /// Compute and store one of the two chunk cost arrays.
@@ -545,7 +536,7 @@ mod tests {
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
 
         assert!(writer.has_hard_barriers());
-        assert_eq!(writer.soft_barrier_group_count(), 2);
+        assert_eq!(writer.soft_barrier_groups.len(), 2);
 
         writer.materialize_chunk(0, 0);
 

@@ -27,7 +27,7 @@ use tracing::{debug, info, trace};
 use zarrs::storage::ReadableListableStorage;
 
 use crate::ArrayIndex;
-use crate::cost::CostFunction;
+use crate::cost::{BarrierLayer, CostFunction};
 use crate::error::Result;
 use derived::DerivedDataWriter;
 pub(crate) use lazy_subset::LazySubset;
@@ -190,12 +190,21 @@ impl Dataset {
         dropped_soft_groups: usize,
     ) -> Vec<ArrayIndex> {
         let retry_state =
-            dropped_soft_groups.min(self.derived_data_writer.soft_barrier_group_count());
+            dropped_soft_groups.min(self.derived_data_writer.soft_barrier_groups.len());
         self.neighborhood_reader.get_3x3_soft_barrier_cells(
             index,
             retry_state,
             &self.derived_data_writer,
         )
+    }
+
+    /// Return the number of soft barrier importance groups.
+    ///
+    /// # Returns
+    /// The count of retry-state groups that can be progressively dropped
+    /// during routing retries.
+    pub(super) fn soft_barrier_groups(&self) -> &Vec<(u32, Vec<BarrierLayer>)> {
+        &self.derived_data_writer.soft_barrier_groups
     }
 }
 
