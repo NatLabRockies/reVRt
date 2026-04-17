@@ -19,7 +19,6 @@ mod lazy_subset;
 mod reader;
 #[cfg(test)]
 pub(crate) mod samples;
-mod state;
 mod swap;
 
 use std::path::PathBuf;
@@ -33,7 +32,6 @@ use crate::error::Result;
 use derived::DerivedDataWriter;
 pub(crate) use lazy_subset::LazySubset;
 use reader::NeighborhoodReader;
-use state::DerivedChunkState;
 use swap::{initialize_swap, inspect_source_layout};
 
 /// Manage source features together with derived swap-backed routing data.
@@ -52,13 +50,7 @@ pub(super) struct Dataset {
     /// the dataset handle.
     #[allow(dead_code)]
     cost_path: Option<tempfile::TempDir>,
-    /// State tracking which swap chunks have already been materialized.
-    ///
-    /// Internally this mirrors the source chunk grid as a boolean array where
-    /// `true` means the corresponding derived swap chunk has already been
-    /// computed.
-    derived_chunk_state: DerivedChunkState,
-    /// Writer responsible for materializing derived chunk data into swap.
+    /// Derived-data materializer responsible for chunk tracking and writes.
     derived_data_writer: DerivedDataWriter,
     /// Reader responsible for cached neighborhood access to derived data.
     neighborhood_reader: NeighborhoodReader,
@@ -142,9 +134,8 @@ impl Dataset {
         let source_layout = inspect_source_layout(&source)?;
         let swap = initialize_swap(swap_fp, &source_layout, soft_barrier_group_count)?;
 
-        let derived_chunk_state = DerivedChunkState::new(&source_layout);
         let derived_data_writer =
-            DerivedDataWriter::new(source.clone(), swap.clone(), cost_function);
+            DerivedDataWriter::new(&source_layout, source.clone(), swap.clone(), cost_function);
 
         let neighborhood_reader = NeighborhoodReader::open(
             swap.clone(),
@@ -158,7 +149,6 @@ impl Dataset {
         Ok(Self {
             source,
             cost_path: None,
-            derived_chunk_state,
             derived_data_writer,
             neighborhood_reader,
             grid_shape,
@@ -223,10 +213,8 @@ impl Dataset {
         array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
         subset: &zarrs::array_subset::ArraySubset,
     ) {
-        self.derived_chunk_state
-            .ensure_derived_data_for_subset(array, subset, |ci, cj| {
-                self.derived_data_writer.materialize_chunk(ci, cj)
-            });
+        self.derived_data_writer
+            .ensure_derived_data_for_subset(array, subset);
     }
 }
 

@@ -5,10 +5,14 @@
 //! length-dependent cost layers, builds the hard barrier mask, and writes
 //! cumulative soft barrier masks that can be reused across retry states.
 
+use std::sync::RwLock;
+
+use ndarray::Array2;
 use tracing::trace;
 use zarrs::storage::{ReadableListableStorage, ReadableWritableListableStorage};
 
 use super::LazySubset;
+use super::swap::SourceLayout;
 use super::swap::cumulative_soft_barrier_mask_name;
 use crate::cost::{BarrierLayer, CostFunction};
 
@@ -24,6 +28,8 @@ pub(super) struct DerivedDataWriter {
     source: ReadableListableStorage,
     /// Writable swap storage where derived arrays are materialized.
     swap: ReadableWritableListableStorage,
+    /// Boolean materialization state indexed by chunk row and chunk column.
+    swap_chunk_idx: RwLock<ndarray::Array2<bool>>,
     /// Barrier layers that always behave as hard exclusions.
     hard_barrier_layers: Vec<BarrierLayer>,
     /// Soft barrier layers grouped by importance in ascending retry order.
@@ -36,6 +42,8 @@ impl DerivedDataWriter {
     /// Create a writer for materializing derived swap data.
     ///
     /// # Arguments
+    /// `layout`: Source layout whose chunk-grid dimensions determine the size
+    ///           of the internal tracking array.
     /// `source`: Storage containing the original input feature arrays.
     /// `swap`: Writable storage that will receive derived arrays.
     /// `cost_function`: Full cost function definition, including barrier
@@ -43,8 +51,10 @@ impl DerivedDataWriter {
     ///
     /// # Returns
     /// A `DerivedDataWriter` configured to compute cost arrays and barrier
-    /// masks for chunk-sized subsets.
+    /// masks for chunk-sized subsets while tracking which chunks have already
+    /// been materialized.
     pub(super) fn new(
+        layout: &SourceLayout,
         source: ReadableListableStorage,
         swap: ReadableWritableListableStorage,
         cost_function: CostFunction,
@@ -52,13 +62,74 @@ impl DerivedDataWriter {
         let hard_barrier_layers = cost_function.hard_barrier_layers();
         let soft_barrier_groups = cost_function.soft_barrier_groups();
         let cost_function = cost_function.without_barriers();
+        let swap_chunk_idx =
+            Array2::from_elem((layout.chunk_grid_rows, layout.chunk_grid_cols), false).into();
 
         Self {
             source,
             swap,
+            swap_chunk_idx,
             hard_barrier_layers,
             soft_barrier_groups,
             cost_function,
+        }
+    }
+
+    /// Materialize any missing derived chunks overlapping a subset.
+    ///
+    /// This method first determines which chunk-grid cells intersect the
+    /// requested subset. Each chunk is checked under a read lock and, when
+    /// still missing, rechecked under a write lock before invoking chunk
+    /// materialization. This avoids duplicate work when multiple threads
+    /// request the same chunk concurrently.
+    ///
+    /// # Arguments
+    /// `array`: Swap array whose chunk grid is used to map the subset to
+    ///          chunk indices.
+    /// `subset`: Requested array subset that may span one or more chunks.
+    pub(super) fn ensure_derived_data_for_subset(
+        &self,
+        array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
+        subset: &zarrs::array_subset::ArraySubset,
+    ) {
+        let chunks = &array.chunks_in_array_subset(subset).unwrap().unwrap();
+        trace!("Derived-data chunks: {:?}", chunks);
+        trace!(
+            "Derived-data subset extends to {:?} chunks",
+            chunks.num_elements_usize()
+        );
+
+        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
+            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
+                trace!(
+                    "Checking if derived data for chunk ({}, {}) has been calculated",
+                    ci, cj
+                );
+                if self.swap_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
+                    trace!("Derived data for chunk ({}, {}) already calculated", ci, cj);
+                    continue;
+                }
+
+                let mut chunk_idx = self
+                    .swap_chunk_idx
+                    .write()
+                    .expect("Failed to acquire write lock");
+                if chunk_idx[[ci as usize, cj as usize]] {
+                    trace!(
+                        "Derived data for chunk ({}, {}) already calculated while waiting for the lock",
+                        ci, cj
+                    );
+                } else {
+                    self.materialize_chunk(ci, cj);
+                    chunk_idx[[ci as usize, cj as usize]] = true;
+                    trace!(
+                        "Recorded derived data for chunk ({}, {}) as calculated. Total number of computed chunks: {}",
+                        ci,
+                        cj,
+                        chunk_idx.iter().filter(|&&value| value).count()
+                    );
+                }
+            }
         }
     }
 
@@ -71,7 +142,7 @@ impl DerivedDataWriter {
     /// # Arguments
     /// `ci`: Chunk row index in the swap dataset.
     /// `cj`: Chunk column index in the swap dataset.
-    pub(super) fn materialize_chunk(&self, ci: u64, cj: u64) {
+    fn materialize_chunk(&self, ci: u64, cj: u64) {
         trace!("Creating a LazySubset for ({}, {})", ci, cj);
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
@@ -305,7 +376,7 @@ fn combine_barrier_layers_for_subset(
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex};
 
     use ndarray::{ArrayD, IxDyn};
     use tempfile::TempDir;
@@ -315,6 +386,7 @@ mod tests {
     use zarrs::storage::ReadableListableStorage;
 
     use super::*;
+    use crate::dataset::samples;
     use crate::dataset::samples::{FillStrategy, LayerConfig, ZarrTestBuilder};
     use crate::dataset::swap::{initialize_swap, inspect_source_layout};
 
@@ -471,7 +543,7 @@ mod tests {
         let layout = super::super::swap::inspect_source_layout(&source).unwrap();
         let swap_tmp = TempDir::new().unwrap();
         let swap = super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2).unwrap();
-        let writer = DerivedDataWriter::new(source, swap.clone(), cost_function);
+        let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
 
         assert_eq!(writer.hard_barrier_layers().len(), 2);
@@ -541,7 +613,7 @@ mod tests {
             cost_function.soft_barrier_groups().len(),
         )
         .expect("Error initializing swap dataset");
-        let writer = DerivedDataWriter::new(source, swap.clone(), cost_function);
+        let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
 
         assert_eq!(writer.hard_barrier_layers().len(), 1);
 
@@ -565,5 +637,96 @@ mod tests {
             hard_barrier_mask,
             vec![false, true, false, true, false, true, false, true, false]
         );
+    }
+
+    #[test]
+    fn new_initializes_all_chunks_as_not_materialized() {
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let swap_tmp = TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+            .expect("failed to initialize swap dataset");
+        let cost_function = CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#)
+            .expect("failed to construct cost function");
+
+        let writer = DerivedDataWriter::new(&layout, source, swap, cost_function);
+        let chunk_idx = writer
+            .swap_chunk_idx
+            .read()
+            .expect("failed to acquire read lock");
+
+        assert_eq!(chunk_idx.dim(), (2, 2));
+        assert!(chunk_idx.iter().all(|&value| !value));
+    }
+
+    #[test]
+    fn ensure_derived_data_for_subset_only_materializes_missing_chunks() {
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let readable_source: Arc<dyn zarrs::storage::ReadableStorageTraits> = Arc::new(
+            FilesystemStore::new(tmp.path()).expect("could not reopen readable test store"),
+        );
+        let array =
+            zarrs::array::Array::open(readable_source, "/A").expect("failed to open source array");
+        let swap_tmp = TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+            .expect("failed to initialize swap dataset");
+        let cost_function = CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#)
+            .expect("failed to construct cost function");
+        let writer = DerivedDataWriter::new(&layout, source, swap, cost_function);
+        let materialized = Mutex::new(Vec::new());
+
+        let first_subset = ArraySubset::new_with_ranges(&[0..1, 1..7, 1..3]);
+        writer.ensure_derived_data_for_subset(&array, &first_subset);
+        {
+            let chunk_idx = writer
+                .swap_chunk_idx
+                .read()
+                .expect("failed to acquire read lock");
+            for (ci, cj) in [(0, 0), (1, 0)] {
+                if chunk_idx[[ci, cj]] {
+                    materialized
+                        .lock()
+                        .expect("failed to record materialized chunk")
+                        .push((ci as u64, cj as u64));
+                }
+            }
+        }
+
+        let second_subset = ArraySubset::new_with_ranges(&[0..1, 3..6, 2..7]);
+        writer.ensure_derived_data_for_subset(&array, &second_subset);
+        {
+            let chunk_idx = writer
+                .swap_chunk_idx
+                .read()
+                .expect("failed to acquire read lock");
+            for (ci, cj) in [(0, 1), (1, 1)] {
+                if chunk_idx[[ci, cj]] {
+                    materialized
+                        .lock()
+                        .expect("failed to record materialized chunk")
+                        .push((ci as u64, cj as u64));
+                }
+            }
+        }
+
+        writer.ensure_derived_data_for_subset(&array, &second_subset);
+
+        assert_eq!(
+            *materialized
+                .lock()
+                .expect("failed to read materialized chunks"),
+            vec![(0, 0), (1, 0), (0, 1), (1, 1)]
+        );
+
+        let chunk_idx = writer
+            .swap_chunk_idx
+            .read()
+            .expect("failed to acquire read lock");
+        assert_eq!(*chunk_idx, Array2::from_elem((2, 2), true));
     }
 }
