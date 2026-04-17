@@ -36,6 +36,7 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
         out_fp,
         cost_layers,
         friction_layers=None,
+        barrier_layers=None,
         transmission_config=None,
         connection_identifier_column="end_feat_id",
     ):
@@ -80,6 +81,7 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
             out_fp=out_fp,
             cost_layers=cost_layers,
             friction_layers=friction_layers,
+            barrier_layers=barrier_layers,
             transmission_config=transmission_config,
         )
         self.features_fpath = features_fpath
@@ -187,6 +189,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     out_dir,
     job_name,
     friction_layers=None,
+    barrier_layers=None,
     tracked_layers=None,
     cost_multiplier_layer=None,
     cost_multiplier_scalar=1,
@@ -376,6 +379,38 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
               Default is ``False``.
 
         By default, ``None``.
+    barrier_layers : list, optional
+        Layers defining explicit routing barriers that routes should
+        not cross. Unlike `friction_layers`, barrier layers do not add
+        a penalty to the routing surface. Instead, any pixel matching a
+        barrier definition is treated as blocked during routing.
+
+        Each item in this list should be a dictionary containing the
+        following keys:
+
+                - ``"layer_name"``: (REQUIRED) Name of layer in the
+                    layered file containing the values to test for
+                    barrier cells.
+                - ``"barrier_values"``: (REQUIRED) Comparison expression
+                    defining which pixel values act as barriers.
+                    Supported operators are ``">"``, ``">="``, ``"<"``,
+                    ``"<="``, and ``"=="``, followed by a numeric
+                    threshold. For example, ``">=15"`` marks all pixels
+                    with values greater than or equal to ``15`` as
+                    barriers, and ``"==1"`` marks pixels equal to ``1``
+                    as barriers.
+                - ``"barrier_importance"``: (OPTIONAL) Positive integer
+                    ranking used to define a soft barrier. When a route
+                    cannot be found, reVRt will iteratively drop the
+                    lowest-ranked soft barrier and retry routing until a
+                    route is found or all ranked barriers have been
+                    removed.
+
+        If ``"barrier_importance"`` is omitted, the barrier is treated
+        as a hard barrier and is never relaxed. This allows hard and
+        soft barriers to be combined in the same routing run. Multiple
+        entries may reference the same layer with different
+        ``"barrier_values"`` definitions. By default, ``None``.
     tracked_layers : dict, optional
         Dictionary mapping layer names to strings, where the strings are
         dask aggregation methods (similar to what numpy has) that
@@ -490,6 +525,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         out_fp=out_fp,
         cost_layers=cost_layers,
         friction_layers=friction_layers,
+        barrier_layers=barrier_layers,
         transmission_config=transmission_config,
         connection_identifier_column=connection_identifier_column,
     )
