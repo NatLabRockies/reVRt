@@ -867,9 +867,12 @@ class BatchRouteProcessor:
                     start_points,
                     end_points,
                 )
-                for indices, optimized_objective in solutions:
+                for indices, optimized_objective, dbl in solutions:
                     attrs_key = (route_id, indices[0])
-                    attrs = self.route_attrs.get(attrs_key, self.default_attrs)
+                    attrs = {
+                        **self.route_attrs.get(attrs_key, self.default_attrs),
+                        "dropped_barrier_layers": json.dumps(dbl),
+                    }
                     yield indices, optimized_objective, attrs
 
                 time_elapsed = f"{(time.monotonic() - ts) / 60:.2f} minute(s)"
