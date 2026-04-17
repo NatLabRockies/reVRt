@@ -1,3 +1,9 @@
+//! Cached readers for derived neighborhood data
+//!
+//! This module provides read access to chunk-cached derived arrays stored in
+//! the swap dataset. It focuses on retrieving clipped 3x3 neighborhoods for
+//! routing, including cost surfaces, invariant penalties, and barrier masks.
+
 use std::iter;
 use std::sync::Arc;
 
@@ -12,34 +18,59 @@ use crate::ArrayIndex;
 use crate::error::{Error, Result};
 
 #[derive(Debug, Clone, Copy)]
-/// Cache sizes assigned to each neighborhood reader dataset
+/// Cache sizes assigned to each neighborhood reader dataset.
+///
+/// The cache budget is split between the two cost arrays, the hard barrier
+/// mask, and the family of cumulative soft barrier masks so neighborhood
+/// lookups can reuse decoded chunks efficiently.
 struct CacheBudgets {
-    /// Cache budget for the primary cost array
+    /// Cache budget for the primary cost array.
     per_cost_cache: u64,
-    /// Cache budget for the hard barrier mask
+    /// Cache budget for the hard barrier mask.
     hard_barrier_cache: u64,
-    /// Cache budget for each cumulative soft barrier mask
+    /// Cache budget for each cumulative soft barrier mask.
     per_soft_barrier_cache: u64,
 }
 
-/// Cached access to derived 3x3 neighborhoods from the swap dataset
+/// Cached access to derived 3x3 neighborhoods from the swap dataset.
+///
+/// The reader keeps decoded chunk caches for each derived array needed during
+/// routing so repeated neighborhood lookups can avoid reopening and decoding
+/// the same swap chunks.
 pub(super) struct NeighborhoodReader {
-    /// Decoded chunk cache for the main per-cell routing cost
+    /// Decoded chunk cache for the main per-cell routing cost.
     cost_cache: ChunkCacheDecodedLruSizeLimit,
-    /// Decoded chunk cache for invariant movement costs
+    /// Decoded chunk cache for invariant movement costs.
     cost_invariant_cache: ChunkCacheDecodedLruSizeLimit,
-    /// Decoded chunk cache for the hard barrier mask
+    /// Decoded chunk cache for the hard barrier mask.
     hard_barrier_cache: ChunkCacheDecodedLruSizeLimit,
-    /// Decoded chunk caches for cumulative soft barrier masks by retry state
+    /// Decoded chunk caches for cumulative soft barrier masks by retry state.
     cumulative_soft_barrier_caches: Vec<ChunkCacheDecodedLruSizeLimit>,
-    /// Number of rows in the routing grid
+    /// Number of rows in the routing grid.
     grid_nrows: u64,
-    /// Number of columns in the routing grid
+    /// Number of columns in the routing grid.
     grid_ncols: u64,
 }
 
 impl NeighborhoodReader {
-    /// Open cached readers for the derived swap arrays
+    /// Open cached readers for the derived swap arrays.
+    ///
+    /// This initializes one decoded chunk cache per derived array used during
+    /// routing and records the grid dimensions needed to clip neighborhood
+    /// lookups at dataset boundaries.
+    ///
+    /// # Arguments
+    /// `swap`: Writable swap storage that already contains the derived arrays.
+    /// `cache_size`: Total cache budget, in bytes, to distribute across all
+    ///               internal chunk caches.
+    /// `soft_barrier_group_count`: Number of soft barrier importance groups,
+    ///                             used to determine how many cumulative mask
+    ///                             caches are required.
+    /// `layout`: Source grid layout metadata used to record dataset shape.
+    ///
+    /// # Returns
+    /// A `NeighborhoodReader` with initialized chunk caches for every derived
+    /// neighborhood array.
     pub(super) fn open(
         swap: ReadableWritableListableStorage,
         cache_size: u64,
@@ -96,12 +127,24 @@ impl NeighborhoodReader {
         })
     }
 
-    /// Read the valid 3x3 neighborhood movement costs around an index
+    /// Read the valid 3x3 neighborhood movement costs around an index.
     ///
     /// The returned costs combine the directional cost surface, the
     /// invariant movement penalty, diagonal scaling, and optional hard
     /// barrier filtering. If the center cell is itself a hard barrier,
     /// an empty vector is returned.
+    ///
+    /// # Arguments
+    /// `index`: Grid index whose neighborhood should be read.
+    /// `has_hard_barriers`: Whether the hard barrier mask should be consulted
+    ///                      while filtering candidate neighbors.
+    /// `ensure_derived_data_for_subset`: Callback that materializes the
+    ///                                   required swap chunks before the cached
+    ///                                   read occurs.
+    ///
+    /// # Returns
+    /// A vector of reachable neighboring indices paired with movement costs
+    /// from the center cell to each neighbor.
     pub(super) fn get_3x3<F>(
         &self,
         index: &ArrayIndex,
@@ -178,7 +221,22 @@ impl NeighborhoodReader {
         cost_to_neighbors
     }
 
-    /// Return soft barrier cells in the 3x3 neighborhood for a retry state
+    /// Return soft barrier cells in the 3x3 neighborhood for a retry state.
+    ///
+    /// The retry state selects which cumulative soft barrier mask should be
+    /// consulted. Higher retry states correspond to progressively more relaxed
+    /// soft barrier constraints.
+    ///
+    /// # Arguments
+    /// `index`: Grid index whose neighborhood should be inspected.
+    /// `retry_state`: Index into the cumulative soft barrier mask caches.
+    /// `ensure_derived_data_for_subset`: Callback that materializes the
+    ///                                   required swap chunks before the cached
+    ///                                   read occurs.
+    ///
+    /// # Returns
+    /// A vector containing the neighborhood cells marked as soft barriers for
+    /// the selected retry state.
     pub(super) fn get_3x3_soft_barrier_cells<F>(
         &self,
         index: &ArrayIndex,
@@ -195,15 +253,25 @@ impl NeighborhoodReader {
         )
     }
 
-    /// Return the grid shape backing this reader as `(rows, cols)`
+    /// Return the grid shape backing this reader as `(rows, cols)`.
+    ///
+    /// # Returns
+    /// The routing grid dimensions recorded when the reader was opened.
     pub(super) fn grid_shape(&self) -> (u64, u64) {
         (self.grid_nrows, self.grid_ncols)
     }
 
-    /// Build the row and column ranges for a clipped 3x3 neighborhood
+    /// Build the row and column ranges for a clipped 3x3 neighborhood.
     ///
     /// The returned subset includes the leading band dimension expected by
     /// the derived swap arrays.
+    ///
+    /// # Arguments
+    /// `index`: Center grid index for the requested neighborhood.
+    ///
+    /// # Returns
+    /// A tuple containing the clipped row range, clipped column range, and
+    /// the corresponding swap-array subset including the leading band axis.
     pub(super) fn neighborhood_subset(
         &self,
         index: &ArrayIndex,
@@ -241,10 +309,21 @@ impl NeighborhoodReader {
         (i_range, j_range, subset)
     }
 
-    /// Read cost values for every cell in a neighborhood subset
+    /// Read cost values for every cell in a neighborhood subset.
     ///
     /// When `is_invariant` is true, values are read from the invariant cost
     /// array. Otherwise values are read from the primary cost array.
+    ///
+    /// # Arguments
+    /// `i_range`: Row indices covered by the neighborhood subset.
+    /// `j_range`: Column indices covered by the neighborhood subset.
+    /// `subset`: Swap-array subset to read from the selected cache.
+    /// `is_invariant`: Whether to read from the invariant cost cache instead
+    ///                 of the primary cost cache.
+    ///
+    /// # Returns
+    /// A vector pairing each neighborhood cell coordinate with the decoded
+    /// cost value read from the selected cache.
     pub(super) fn get_neighbor_costs(
         &self,
         i_range: std::ops::Range<u64>,
@@ -281,7 +360,21 @@ impl NeighborhoodReader {
         neighbor_costs
     }
 
-    /// Read barrier cells from a cached boolean neighborhood mask
+    /// Read barrier cells from a cached boolean neighborhood mask.
+    ///
+    /// This helper is shared by hard and soft barrier lookups. It materializes
+    /// the necessary derived data, reads the boolean neighborhood mask from the
+    /// provided cache, and returns the coordinates of every barrier cell.
+    ///
+    /// # Arguments
+    /// `index`: Center grid index for the neighborhood lookup.
+    /// `cache`: Chunk cache for the barrier mask to inspect.
+    /// `ensure_derived_data_for_subset`: Callback that materializes the
+    ///                                   required swap chunks before the cached
+    ///                                   read occurs.
+    ///
+    /// # Returns
+    /// A vector of neighborhood indices whose cached mask value is `true`.
     fn get_3x3_cached_barrier_cells<F>(
         &self,
         index: &ArrayIndex,
@@ -311,7 +404,7 @@ impl NeighborhoodReader {
     }
 }
 
-/// Split the requested cache size across all neighborhood reader caches
+/// Split the requested cache size across all neighborhood reader caches.
 ///
 /// One third of `cache_size` is assigned to each of the two cost caches,
 /// with a minimum of 1 byte per cache. The remaining budget is then split
@@ -321,6 +414,15 @@ impl NeighborhoodReader {
 /// minimum of 1 byte per cache. Saturating subtraction is used for the
 /// remainder calculations so very small cache sizes still produce valid
 /// nonzero budgets.
+///
+/// # Arguments
+/// `cache_size`: Total cache budget, in bytes.
+/// `soft_barrier_cache_count`: Number of cumulative soft barrier caches that
+///                             need a share of the remaining budget.
+///
+/// # Returns
+/// A `CacheBudgets` value containing the per-cache allocations used to build
+/// the neighborhood reader.
 fn distribute_cache_budgets(cache_size: u64, soft_barrier_cache_count: usize) -> CacheBudgets {
     let per_cost_cache = (cache_size / 3).max(1);
     let remaining_cache = cache_size.saturating_sub(2 * per_cost_cache).max(1);

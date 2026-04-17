@@ -1,18 +1,18 @@
 //! Source Dataset Access
 //!
-//! This module focus on accessing the input features data that are used by
-//! the cost function.
+//! This module manages access to the input feature data used during routing.
 //!
-//! We are currently based on Zarr but we might move this to a generalized
-//! backend on the future to access different data formats.
+//! It is built around Zarr-backed source arrays together with a temporary
+//! swap dataset that stores derived cost and barrier layers. The public
+//! surface of the module focuses on opening datasets, materializing derived
+//! chunks on demand, and returning 3x3 neighborhoods suitable for routing.
 //!
-//! The main benefits of using Zarr in the moment are the natural support
-//! to concurrent access to multiple chunks, async support, rich metadata,
-//! and up to a 20x factor on size reduction (mostly due to efficient
-//! compression and constant values within the same chunk).
+//! Zarr is currently a good fit because it supports concurrent chunk access,
+//! rich metadata, and efficient compression for large raster-like grids.
 //!
-//! Note: This is currently in a transition state. The initial prototype
-//! included the cost function, which was removed to the `Scenario` level.
+//! Note: This module is still in a transition state. The initial prototype
+//! included the cost function directly here, but cost-function ownership was
+//! moved up to the `Scenario` level.
 
 mod derived;
 mod lazy_subset;
@@ -36,27 +36,47 @@ use reader::NeighborhoodReader;
 use state::DerivedChunkState;
 use swap::{initialize_swap, inspect_source_layout};
 
-/// Manages the features datasets and calculated total cost
+/// Manage source features together with derived swap-backed routing data.
+///
+/// A `Dataset` owns access to the original feature store, the temporary swap
+/// dataset, the chunk-materialization state, and the cached readers used to
+/// serve routing neighborhoods. Derived arrays are created lazily, chunk by
+/// chunk, the first time a neighborhood read requires them.
 pub(super) struct Dataset {
-    /// A Zarr storages with the features
+    /// Zarr storage containing the original feature arrays.
     #[allow(dead_code)]
     source: ReadableListableStorage,
-    // Silly way to keep the tmp path alive
+    /// Temporary directory backing the swap dataset when one is auto-created.
+    ///
+    /// This is stored only to keep the directory alive for the lifetime of
+    /// the dataset handle.
     #[allow(dead_code)]
     cost_path: Option<tempfile::TempDir>,
-    /// State tracking which swap chunks have already been materialized
-    /// Internally this is a boolean array of the same shape as the chunk grid,
-    /// where a true value means the data has been derived
+    /// State tracking which swap chunks have already been materialized.
+    ///
+    /// Internally this mirrors the source chunk grid as a boolean array where
+    /// `true` means the corresponding derived swap chunk has already been
+    /// computed.
     derived_chunk_state: DerivedChunkState,
-    /// Writer responsible for materializing derived chunk data into swap
+    /// Writer responsible for materializing derived chunk data into swap.
     derived_data_writer: DerivedDataWriter,
-    /// Reader responsible for cached neighborhood access to derived data
+    /// Reader responsible for cached neighborhood access to derived data.
     neighborhood_reader: NeighborhoodReader,
-    /// Shape of data grid
+    /// Shape of the source routing grid as `(rows, cols)`.
     pub(super) grid_shape: (u64, u64),
 }
 
 impl Dataset {
+    /// Open a dataset using an automatically managed temporary swap directory.
+    ///
+    /// # Arguments
+    /// `path`: Filesystem path to the source Zarr dataset.
+    /// `cost_function`: Cost function definition used to derive cost and
+    ///                  barrier arrays.
+    /// `cache_size`: Total cache budget, in bytes, for neighborhood readers.
+    ///
+    /// # Returns
+    /// A `Dataset` backed by the source store and a new temporary swap store.
     pub(super) fn open<P: AsRef<std::path::Path>>(
         path: P,
         cost_function: CostFunction,
@@ -71,6 +91,17 @@ impl Dataset {
         Ok(dataset)
     }
 
+    /// Open a dataset using an existing or caller-provided swap path.
+    ///
+    /// # Arguments
+    /// `path`: Filesystem path to the source Zarr dataset.
+    /// `cost_function`: Cost function definition used to derive cost and
+    ///                  barrier arrays.
+    /// `cache_size`: Total cache budget, in bytes, for neighborhood readers.
+    /// `swap_fp`: Filesystem path where the swap dataset should be created.
+    ///
+    /// # Returns
+    /// A `Dataset` backed by the source store and the specified swap path.
     pub(super) fn open_with_swap<P: AsRef<std::path::Path>>(
         path: P,
         cost_function: CostFunction,
@@ -80,6 +111,21 @@ impl Dataset {
         Self::open_with_path(path, cost_function, cache_size, swap_fp)
     }
 
+    /// Open a dataset using the provided swap path and initialize internals.
+    ///
+    /// This helper inspects the source layout, initializes the swap dataset,
+    /// prepares chunk-derivation tracking, and builds the cached neighborhood
+    /// readers.
+    ///
+    /// # Arguments
+    /// `path`: Filesystem path to the source Zarr dataset.
+    /// `cost_function`: Cost function definition used to derive cost and
+    ///                  barrier arrays.
+    /// `cache_size`: Total cache budget, in bytes, for neighborhood readers.
+    /// `swap_fp`: Filesystem path where the swap dataset should be created.
+    ///
+    /// # Returns
+    /// A fully initialized `Dataset` ready to serve routing neighborhoods.
     fn open_with_path<P: AsRef<std::path::Path>>(
         path: P,
         cost_function: CostFunction,
@@ -119,6 +165,17 @@ impl Dataset {
         })
     }
 
+    /// Return reachable movement costs in the 3x3 neighborhood of an index.
+    ///
+    /// Derived data is materialized on demand for the needed swap chunks
+    /// before the neighborhood is read.
+    ///
+    /// # Arguments
+    /// `index`: Center cell whose 3x3 neighborhood should be queried.
+    ///
+    /// # Returns
+    /// A vector of neighboring indices paired with movement costs from the
+    /// center cell.
     pub(super) fn get_3x3(&self, index: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
         self.neighborhood_reader.get_3x3(
             index,
@@ -127,6 +184,19 @@ impl Dataset {
         )
     }
 
+    /// Return soft-barrier cells in the 3x3 neighborhood of an index.
+    ///
+    /// The number of dropped soft groups is clamped to the available retry
+    /// states before the matching cumulative soft barrier mask is queried.
+    ///
+    /// # Arguments
+    /// `index`: Center cell whose 3x3 neighborhood should be queried.
+    /// `dropped_soft_groups`: Number of soft barrier groups that have already
+    ///                        been relaxed for the current retry state.
+    ///
+    /// # Returns
+    /// A vector of neighborhood cells that remain soft barriers for the
+    /// selected retry state.
     pub(super) fn get_3x3_soft_barrier_cells(
         &self,
         index: &ArrayIndex,
@@ -140,6 +210,14 @@ impl Dataset {
             })
     }
 
+    /// Ensure all derived swap data exists for a requested subset.
+    ///
+    /// Any chunk overlapped by `subset` is materialized exactly once through
+    /// the tracked chunk state before cached neighborhood reads proceed.
+    ///
+    /// # Arguments
+    /// `array`: Swap array whose subset is about to be accessed.
+    /// `subset`: Requested subset within the swap array.
     fn ensure_derived_data_for_subset(
         &self,
         array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
@@ -152,16 +230,33 @@ impl Dataset {
     }
 
     #[cfg(test)]
+    /// Return the extracted hard barrier layers for assertions in tests.
+    ///
+    /// # Returns
+    /// A shared slice of hard barrier layers owned by the derived data writer.
     pub(super) fn hard_barrier_layers(&self) -> &[crate::cost::BarrierLayer] {
         self.derived_data_writer.hard_barrier_layers()
     }
 
     #[cfg(test)]
+    /// Return the number of soft barrier importance groups in tests.
+    ///
+    /// # Returns
+    /// The number of distinct retry states backed by cumulative soft barrier
+    /// masks, excluding the final fully relaxed state calculation details.
     pub(super) fn soft_barrier_group_count(&self) -> usize {
         self.derived_data_writer.soft_barrier_group_count()
     }
 
     #[cfg(test)]
+    /// Delegate neighborhood-subset construction for test assertions.
+    ///
+    /// # Arguments
+    /// `index`: Center cell whose neighborhood bounds should be computed.
+    ///
+    /// # Returns
+    /// The clipped row range, clipped column range, and matching swap-array
+    /// subset for the requested neighborhood.
     fn neighborhood_subset(
         &self,
         index: &ArrayIndex,
@@ -174,6 +269,16 @@ impl Dataset {
     }
 
     #[cfg(test)]
+    /// Delegate neighborhood cost reads for test assertions.
+    ///
+    /// # Arguments
+    /// `i_range`: Row range covering the neighborhood.
+    /// `j_range`: Column range covering the neighborhood.
+    /// `subset`: Swap-array subset to read.
+    /// `is_invariant`: Whether to read the invariant cost array.
+    ///
+    /// # Returns
+    /// A vector pairing neighborhood coordinates with their cached cost values.
     fn get_neighbor_costs(
         &self,
         i_range: std::ops::Range<u64>,
@@ -186,6 +291,17 @@ impl Dataset {
     }
 
     #[cfg(test)]
+    /// Build explicit barrier cells directly from barrier layers for tests.
+    ///
+    /// This bypasses the cached swap masks so tests can compare the direct
+    /// barrier interpretation of source features against derived swap output.
+    ///
+    /// # Arguments
+    /// `index`: Center cell whose 3x3 neighborhood should be inspected.
+    /// `barrier_layers`: Barrier layers to evaluate directly from source data.
+    ///
+    /// # Returns
+    /// A vector of neighborhood cells where any provided barrier layer is true.
     pub(super) fn get_3x3_barrier_cells(
         &self,
         index: &ArrayIndex,
@@ -219,10 +335,14 @@ impl Dataset {
 }
 
 #[cfg(test)]
-/// Make a LazySubset from a source and array subset to be used in tests
+/// Construct a `LazySubset` helper for tests.
+///
+/// # Arguments
+/// `source`: Source dataset storage to read from lazily.
+/// `subset`: Array subset that bounds the lazy view.
 ///
 /// # Returns
-/// An initialized LazySubset<f32> instance.
+/// An initialized `LazySubset<f32>` instance.
 pub(crate) fn make_lazy_subset_for_tests(
     source: ReadableListableStorage,
     subset: zarrs::array_subset::ArraySubset,

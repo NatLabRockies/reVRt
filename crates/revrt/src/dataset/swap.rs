@@ -1,3 +1,9 @@
+//! Swap dataset initialization helpers
+//!
+//! This module inspects the source dataset to recover the grid and chunk
+//! layout needed by routing, then creates a temporary swap dataset with the
+//! derived arrays used during neighborhood expansion.
+
 use std::path::Path;
 
 use tracing::{debug, trace};
@@ -8,14 +14,36 @@ use zarrs::storage::{
 
 use crate::error::{Error, Result};
 
+/// Grid and chunk metadata derived from the source dataset.
+///
+/// The swap dataset mirrors the representative source array layout so all
+/// derived cost and barrier arrays align with the original feature data.
 pub(super) struct SourceLayout {
+    /// Chunk grid definition copied from the representative source array.
     pub(super) chunk_grid: ChunkGrid,
+    /// Number of chunk rows in the source grid.
     pub(super) chunk_grid_rows: usize,
+    /// Number of chunk columns in the source grid.
     pub(super) chunk_grid_cols: usize,
+    /// Number of rows in the full source grid.
     pub(super) grid_nrows: u64,
+    /// Number of columns in the full source grid.
     pub(super) grid_ncols: u64,
 }
 
+/// Inspect the source dataset and recover the layout used for swap storage.
+///
+/// A representative non-coordinate variable is selected from the source store
+/// and used to infer the full grid shape and chunk grid. Coordinate-like
+/// arrays such as latitude, longitude, and spatial reference metadata are
+/// ignored during selection.
+///
+/// # Arguments
+/// `source`: Source dataset storage containing the input feature arrays.
+///
+/// # Returns
+/// A `SourceLayout` describing the representative array's grid and chunking,
+/// which is then reused when creating swap arrays.
 pub(super) fn inspect_source_layout(source: &ReadableListableStorage) -> Result<SourceLayout> {
     let entries = source
         .list()
@@ -72,6 +100,22 @@ pub(super) fn inspect_source_layout(source: &ReadableListableStorage) -> Result<
     Ok(layout)
 }
 
+/// Create and initialize the derived swap dataset.
+///
+/// The swap dataset contains floating-point cost arrays and boolean barrier
+/// masks with the same chunk structure as the representative source array.
+/// One cumulative soft barrier mask is created for each retry state, including
+/// the initial state where no soft barrier groups have been dropped.
+///
+/// # Arguments
+/// `swap_path`: Filesystem location where the swap dataset should be created.
+/// `layout`: Grid and chunk metadata copied from the source dataset.
+/// `soft_barrier_group_count`: Number of soft barrier importance groups,
+///                             which determines how many cumulative retry
+///                             masks must be created.
+///
+/// # Returns
+/// A readable and writable storage handle for the initialized swap dataset.
 pub(super) fn initialize_swap<P: AsRef<Path>>(
     swap_path: P,
     layout: &SourceLayout,
@@ -104,10 +148,31 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
     Ok(swap)
 }
 
+/// Build the array name for a cumulative soft barrier retry mask.
+///
+/// # Arguments
+/// `retry_state`: Retry-state index whose cumulative mask name should be
+///                constructed.
+///
+/// # Returns
+/// The swap-array name used to store the cumulative soft barrier mask for the
+/// requested retry state.
 pub(super) fn cumulative_soft_barrier_mask_name(retry_state: usize) -> String {
     format!("soft_barrier_mask_retry_{retry_state}")
 }
 
+/// Add a floating-point derived layer to the swap dataset.
+///
+/// The created array uses the source chunk grid, a leading `band` dimension,
+/// and a `NaN` fill value so unread cells default to an invalid routing cost.
+///
+/// # Arguments
+/// `layer_name`: Name of the derived layer to create.
+/// `chunk_shape`: Chunk grid copied from the representative source array.
+/// `swap`: Swap dataset storage that will receive the new array.
+///
+/// # Returns
+/// `Ok(())` after the array metadata has been written successfully.
 fn add_layer_to_data(
     layer_name: &str,
     chunk_shape: &ChunkGrid,
@@ -138,6 +203,19 @@ fn add_layer_to_data(
     Ok(())
 }
 
+/// Add a boolean derived layer to the swap dataset.
+///
+/// The created array uses the source chunk grid, a leading `band` dimension,
+/// and an all-`false` fill value so barriers are absent until explicitly
+/// materialized for a chunk.
+///
+/// # Arguments
+/// `layer_name`: Name of the boolean mask layer to create.
+/// `chunk_shape`: Chunk grid copied from the representative source array.
+/// `swap`: Swap dataset storage that will receive the new array.
+///
+/// # Returns
+/// `Ok(())` after the array metadata has been written successfully.
 fn add_bool_layer_to_data(
     layer_name: &str,
     chunk_shape: &ChunkGrid,

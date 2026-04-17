@@ -57,7 +57,14 @@ impl<T> fmt::Display for LazySubset<T> {
     }
 }
 impl<T: ElementOwned> LazySubset<T> {
-    /// Create a new LazySubset for a given source and subset.
+    /// Create a lazy subset for a fixed source and array subset.
+    ///
+    /// # Arguments
+    /// `source`: Source storage containing the variables to load lazily.
+    /// `subset`: Fixed subset that will be read from each requested variable.
+    ///
+    /// # Returns
+    /// A `LazySubset` with an empty per-variable cache.
     pub(super) fn new(source: ReadableListableStorage, subset: ArraySubset) -> Self {
         trace!("Creating LazySubset for subset: {:?}", subset);
 
@@ -68,14 +75,31 @@ impl<T: ElementOwned> LazySubset<T> {
         }
     }
 
-    /// Show the subset used by this LazySubset.
+    /// Return the fixed subset covered by this lazy view.
+    ///
+    /// # Returns
+    /// A shared reference to the `ArraySubset` used for all variable reads.
     pub(crate) fn subset(&self) -> &ArraySubset {
         &self.subset
     }
 }
 
 impl LazySubset<f32> {
-    /// Get a data for a specific variable.
+    /// Load or return cached data for a variable as `f32` values.
+    ///
+    /// If the variable has already been requested for this subset, the cached
+    /// ndarray is cloned from the internal map. Otherwise the variable is
+    /// opened from storage, converted to `f32` if needed, cached, and returned.
+    ///
+    /// # Arguments
+    /// `varname`: Name of the source variable to retrieve.
+    ///
+    /// # Returns
+    /// The requested subset data converted to an `ndarray` of `f32` values.
+    ///
+    /// # Errors
+    /// Returns an error if the layer cannot be opened, read, or converted from
+    /// an unsupported source data type.
     pub(crate) fn get(
         &mut self,
         varname: &str,
@@ -111,6 +135,22 @@ impl LazySubset<f32> {
         Ok(data)
     }
 
+    /// Load a variable subset and normalize it to `f32` values.
+    ///
+    /// Supported numeric source types are converted with a simple cast. Any
+    /// unsupported data type results in an error that names the offending
+    /// layer.
+    ///
+    /// # Arguments
+    /// `variable`: Open source array to read from.
+    /// `varname`: Variable name used for error reporting.
+    ///
+    /// # Returns
+    /// The requested subset as an `ndarray` of `f32` values.
+    ///
+    /// # Errors
+    /// Returns an error if the variable data type is unsupported or the subset
+    /// cannot be read.
     fn load_as_f32<TStorage: ?Sized + ReadableListableStorageTraits + 'static>(
         &self,
         variable: &Array<TStorage>,
@@ -156,6 +196,18 @@ impl LazySubset<f32> {
         }
     }
 
+    /// Retrieve a typed subset and convert it element-wise to `f32`.
+    ///
+    /// # Arguments
+    /// `variable`: Open source array to read from.
+    /// `varname`: Variable name used for error reporting.
+    /// `converter`: Conversion applied to each retrieved element.
+    ///
+    /// # Returns
+    /// The requested subset converted to an `ndarray` of `f32` values.
+    ///
+    /// # Errors
+    /// Returns an error if the subset cannot be retrieved from storage.
     fn retrieve_and_convert<T, TStorage, F>(
         &self,
         variable: &Array<TStorage>,
@@ -215,11 +267,14 @@ mod tests {
 }
 
 #[allow(dead_code)]
-/// Trait defining types that can be used as LazySubset element types
+/// Trait describing element types supported by `AsyncLazySubset`.
+///
+/// Implementors define how values loaded from `f32` or `f64` arrays should be
+/// converted into the target cached element type.
 trait LazySubsetElement: ElementOwned + Clone + Send + Sync {
-    /// Convert from f32
+    /// Convert a `f32` value into the target element type.
     fn from_f32(value: f32) -> Self;
-    /// Convert from f64
+    /// Convert a `f64` value into the target element type.
     fn from_f64(value: f64) -> Self;
 }
 
@@ -250,12 +305,11 @@ impl LazySubsetElement for f64 {
 /// multiple variables of a Zarr Dataset.
 // pub struct AsyncLazySubset<T: LazySubsetElement> {
 struct AsyncLazySubset<T: LazySubsetElement> {
-    /// Source Zarr storage
+    /// Async source storage used to open variables on demand.
     source: AsyncReadableListableStorage,
-    /// Subset of the source to be lazily loaded
+    /// Fixed subset to read from each requested variable.
     subset: ArraySubset,
-    /// Cached data with RwLock for concurrent access
-    // Eventually refactor this into a new type: cache
+    /// Cached subset data guarded by an async read-write lock.
     #[allow(clippy::type_complexity)]
     data: Arc<
         RwLock<
@@ -268,12 +322,14 @@ struct AsyncLazySubset<T: LazySubsetElement> {
 }
 
 impl<T: LazySubsetElement> fmt::Display for AsyncLazySubset<T> {
+    /// Format the async lazy subset for logs and diagnostics.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "AsyncLazySubset {{ subset: {:?}, ... }}", self.subset)
     }
 }
 
 impl<T: LazySubsetElement> fmt::Debug for AsyncLazySubset<T> {
+    /// Format the async lazy subset with subset and element-type details.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("AsyncLazySubset")
             .field("subset", &self.subset)
@@ -302,7 +358,10 @@ impl<T: LazySubsetElement> AsyncLazySubset<T> {
         }
     }
 
-    /// Get the subset used by this AsyncLazySubset.
+    /// Return the fixed subset covered by this async lazy view.
+    ///
+    /// # Returns
+    /// A shared reference to the `ArraySubset` used for all variable reads.
     fn subset(&self) -> &ArraySubset {
         &self.subset
     }

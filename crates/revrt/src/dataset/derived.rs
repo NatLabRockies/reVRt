@@ -1,3 +1,10 @@
+//! Derived dataset materialization helpers
+//!
+//! This module is responsible for materializing derived arrays in the swap
+//! dataset for a single chunk at a time. It computes invariant and
+//! length-dependent cost layers, builds the hard barrier mask, and writes
+//! cumulative soft barrier masks that can be reused across retry states.
+
 use tracing::trace;
 use zarrs::storage::{ReadableListableStorage, ReadableWritableListableStorage};
 
@@ -5,15 +12,38 @@ use super::LazySubset;
 use super::swap::cumulative_soft_barrier_mask_name;
 use crate::cost::{BarrierLayer, CostFunction};
 
+/// Writes derived chunk-level arrays into the swap dataset.
+///
+/// The writer keeps the source feature storage, the writable swap storage,
+/// and the barrier groupings needed to derive all secondary arrays for a
+/// given chunk. Barrier layers are separated from the cost function during
+/// construction so the cost arrays and barrier masks can be derived
+/// independently.
 pub(super) struct DerivedDataWriter {
+    /// Source storage containing the original feature arrays.
     source: ReadableListableStorage,
+    /// Writable swap storage where derived arrays are materialized.
     swap: ReadableWritableListableStorage,
+    /// Barrier layers that always behave as hard exclusions.
     hard_barrier_layers: Vec<BarrierLayer>,
+    /// Soft barrier layers grouped by importance in ascending retry order.
     soft_barrier_groups: Vec<(u32, Vec<BarrierLayer>)>,
+    /// Cost function stripped of barrier layers for numeric cost derivation.
     cost_function: CostFunction,
 }
 
 impl DerivedDataWriter {
+    /// Create a writer for materializing derived swap data.
+    ///
+    /// # Arguments
+    /// `source`: Storage containing the original input feature arrays.
+    /// `swap`: Writable storage that will receive derived arrays.
+    /// `cost_function`: Full cost function definition, including barrier
+    ///                  layers that will be separated into dedicated masks.
+    ///
+    /// # Returns
+    /// A `DerivedDataWriter` configured to compute cost arrays and barrier
+    /// masks for chunk-sized subsets.
     pub(super) fn new(
         source: ReadableListableStorage,
         swap: ReadableWritableListableStorage,
@@ -32,6 +62,15 @@ impl DerivedDataWriter {
         }
     }
 
+    /// Materialize every derived array for a single chunk.
+    ///
+    /// This computes both cost layers and all barrier masks for the chunk
+    /// identified by the chunk-grid coordinates `ci` and `cj`, then stores
+    /// the results into the swap dataset.
+    ///
+    /// # Arguments
+    /// `ci`: Chunk row index in the swap dataset.
+    /// `cj`: Chunk column index in the swap dataset.
     pub(super) fn materialize_chunk(&self, ci: u64, cj: u64) {
         trace!("Creating a LazySubset for ({}, {})", ci, cj);
 
@@ -47,14 +86,38 @@ impl DerivedDataWriter {
         self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
     }
 
+    /// Return the hard barrier layers tracked by this writer.
+    ///
+    /// # Returns
+    /// A shared slice of barrier layers that should always be treated as
+    /// impassable.
     pub(super) fn hard_barrier_layers(&self) -> &[BarrierLayer] {
         &self.hard_barrier_layers
     }
 
+    /// Return the number of soft barrier importance groups.
+    ///
+    /// # Returns
+    /// The count of retry-state groups that can be progressively dropped
+    /// during routing retries.
     pub(super) fn soft_barrier_group_count(&self) -> usize {
         self.soft_barrier_groups.len()
     }
 
+    /// Compute and store one of the two chunk cost arrays.
+    ///
+    /// The cost function is evaluated either for invariant terms or for
+    /// length-dependent terms, and the result is written to the matching
+    /// destination array in the swap dataset.
+    ///
+    /// # Arguments
+    /// `ci`: Chunk row index in the swap dataset.
+    /// `cj`: Chunk column index in the swap dataset.
+    /// `features`: Lazily loaded source features for the target chunk.
+    /// `chunk_subset`: Chunk-shaped subset describing the destination region
+    ///                 in the swap dataset.
+    /// `is_invariant`: When true, compute only invariant cost terms;
+    ///                 otherwise compute length-dependent terms.
     fn calculate_chunk_cost_single_layer(
         &self,
         ci: u64,
@@ -88,6 +151,17 @@ impl DerivedDataWriter {
         cost.store_chunks_ndarray(chunk_subset, output).unwrap();
     }
 
+    /// Compute and store the hard barrier mask for a chunk.
+    ///
+    /// The output mask is the logical OR of all hard barrier layers. When no
+    /// hard barrier layers are configured, an all-false mask is stored so the
+    /// swap dataset maintains a consistent shape.
+    ///
+    /// # Arguments
+    /// `features`: Lazily loaded source features for the target chunk.
+    /// `subset`: Source-data subset used to evaluate the barrier layers.
+    /// `chunk_subset`: Chunk-shaped subset describing where the output mask
+    ///                 should be written in the swap dataset.
     fn calculate_chunk_hard_barrier_mask(
         &self,
         features: &mut LazySubset<f32>,
@@ -120,6 +194,18 @@ impl DerivedDataWriter {
         variable.store_chunks_ndarray(chunk_subset, output).unwrap();
     }
 
+    /// Compute and store cumulative soft barrier masks for every retry state.
+    ///
+    /// Soft barriers are grouped by importance. For each retry state, this
+    /// method combines the masks for the remaining groups so routing can
+    /// progressively relax the least important barriers while reusing the same
+    /// derived dataset.
+    ///
+    /// # Arguments
+    /// `features`: Lazily loaded source features for the target chunk.
+    /// `subset`: Source-data subset used to evaluate the barrier layers.
+    /// `chunk_subset`: Chunk-shaped subset describing where each output mask
+    ///                 should be written in the swap dataset.
     fn calculate_chunk_cumulative_soft_barrier_masks(
         &self,
         features: &mut LazySubset<f32>,
@@ -159,6 +245,14 @@ impl DerivedDataWriter {
     }
 }
 
+/// Create an all-false boolean mask for a subset shape.
+///
+/// # Arguments
+/// `subset`: Subset whose shape should be mirrored in the output mask.
+///
+/// # Returns
+/// A boolean array with the same dimensionality as `subset`, initialized to
+/// `false` in every cell.
 fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD<bool> {
     ndarray::ArrayD::<bool>::from_elem(
         ndarray::IxDyn(
@@ -172,6 +266,20 @@ fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD
     )
 }
 
+/// Combine multiple barrier layers into a single mask for a subset.
+///
+/// The returned mask is the logical OR of every barrier layer evaluated for
+/// the provided subset. If `barrier_layers` is empty, the function returns
+/// `None` so callers can decide how to handle the absence of barriers.
+///
+/// # Arguments
+/// `barrier_layers`: Barrier layer definitions to evaluate.
+/// `features`: Lazily loaded source features for the target subset.
+/// `subset`: Subset whose shape should be used for the output mask.
+///
+/// # Returns
+/// `Some(mask)` containing the combined barrier mask when at least one layer
+/// is provided, or `None` when there is nothing to combine.
 fn combine_barrier_layers_for_subset(
     barrier_layers: &[BarrierLayer],
     features: &mut LazySubset<f32>,

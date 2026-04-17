@@ -1,3 +1,8 @@
+//! Derived chunk materialization state
+//!
+//! This module tracks which swap chunks have already been derived so repeated
+//! neighborhood reads can avoid recomputing the same cost and barrier data.
+
 use std::sync::RwLock;
 
 use tracing::{debug, trace};
@@ -6,11 +11,26 @@ use ndarray::Array2;
 
 use super::swap::SourceLayout;
 
+/// Track which swap chunks have already been materialized.
+///
+/// The internal boolean grid mirrors the source chunk layout. A value of
+/// `true` means the corresponding derived swap chunk has already been written
+/// and does not need to be recomputed.
 pub(super) struct DerivedChunkState {
+    /// Boolean materialization state indexed by chunk row and chunk column.
     swap_chunk_idx: RwLock<ndarray::Array2<bool>>,
 }
 
 impl DerivedChunkState {
+    /// Create an empty materialization-state grid for a source layout.
+    ///
+    /// # Arguments
+    /// `layout`: Source layout whose chunk-grid dimensions determine the size
+    ///           of the internal tracking array.
+    ///
+    /// # Returns
+    /// A `DerivedChunkState` initialized with all chunks marked as not yet
+    /// materialized.
     pub(super) fn new(layout: &SourceLayout) -> Self {
         Self {
             swap_chunk_idx: Array2::from_elem(
@@ -21,6 +41,20 @@ impl DerivedChunkState {
         }
     }
 
+    /// Materialize any missing derived chunks overlapping a subset.
+    ///
+    /// This method first determines which chunk-grid cells intersect the
+    /// requested subset. Each chunk is checked under a read lock and, when
+    /// still missing, rechecked under a write lock before invoking the
+    /// provided `materialize_chunk` callback. This avoids duplicate work when
+    /// multiple threads request the same chunk concurrently.
+    ///
+    /// # Arguments
+    /// `array`: Swap array whose chunk grid is used to map the subset to
+    ///          chunk indices.
+    /// `subset`: Requested array subset that may span one or more chunks.
+    /// `materialize_chunk`: Callback that computes and writes the derived data
+    ///                      for a given chunk row and column index.
     pub(super) fn ensure_derived_data_for_subset<F>(
         &self,
         array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
