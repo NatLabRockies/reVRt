@@ -39,6 +39,7 @@ class RoutingScenario:
         cost_layers,
         friction_layers=None,
         tracked_layers=None,
+        barrier_layers=None,
         cost_multiplier_layer=None,
         cost_multiplier_scalar=1,
         ignore_invalid_costs=True,
@@ -56,6 +57,9 @@ class RoutingScenario:
         friction_layers : list, optional
             List of dictionaries defining layers that influence routing
             but are excluded from reports.
+        barrier_layers : list, optional
+            List of dictionaries defining explicit hard or soft
+            barriers in the routing surface.
         tracked_layers : dict, optional
             Layers to summarize along the path, mapped to aggregation
             names.
@@ -80,6 +84,7 @@ class RoutingScenario:
         self.cost_fpath = cost_fpath
         self.cost_layers = cost_layers
         self.friction_layers = friction_layers or []
+        self.barrier_layers = barrier_layers or []
         self.tracked_layers = tracked_layers or {}
         self.cost_multiplier_layer = cost_multiplier_layer
         self.cost_multiplier_scalar = cost_multiplier_scalar
@@ -91,6 +96,7 @@ class RoutingScenario:
             "RoutingScenario:"
             f"\n\t- cost_layers: {self.cost_layers}"
             f"\n\t- friction_layers: {self.friction_layers}"
+            f"\n\t- barrier_layers: {self.barrier_layers}"
             f"\n\t- cost_multiplier_layer: {self.cost_multiplier_layer}"
             f"\n\t- cost_multiplier_scalar: {self.cost_multiplier_scalar}"
             f"\n\t- algorithm: {self.algorithm}"
@@ -103,6 +109,7 @@ class RoutingScenario:
             {
                 "cost_layers": list(self._cost_layers_for_rust()),
                 "friction_layers": list(self._friction_layers_for_rust()),
+                "barrier_layers": list(self._barrier_layers_for_rust()),
                 "ignore_invalid_costs": self.ignore_invalid_costs,
             }
         )
@@ -134,6 +141,11 @@ class RoutingScenario:
 
             out_layer.pop("include_in_report", None)
             yield out_layer
+
+    def _barrier_layers_for_rust(self):
+        """Barrier layers formatted for Rust ingestion"""
+        for layer in self.barrier_layers:
+            yield BarrierLayer(**layer).to_routing_dict()
 
 
 class RoutingLayerManager:
