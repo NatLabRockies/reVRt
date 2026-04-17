@@ -135,6 +135,33 @@ impl CostFunction {
         Ok(cost)
     }
 
+    pub(crate) fn without_barriers(&self) -> Self {
+        let mut cost_function = self.clone();
+        cost_function.barrier_layers = None;
+        cost_function
+    }
+
+    pub(crate) fn hard_barrier_layers(&self) -> Vec<BarrierLayer> {
+        self.barrier_layers
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|layer| layer.importance().is_none())
+            .collect()
+    }
+
+    pub(crate) fn soft_barrier_groups(&self) -> Vec<(u32, Vec<BarrierLayer>)> {
+        let mut groups = std::collections::BTreeMap::<u32, Vec<BarrierLayer>>::new();
+
+        for layer in self.barrier_layers.clone().unwrap_or_default() {
+            if let Some(importance) = layer.importance() {
+                groups.entry(importance).or_default().push(layer);
+            }
+        }
+
+        groups.into_iter().collect()
+    }
+
     /// Calculate the cost from a given collection of input features
     ///
     /// Applies the cost function to a collection of input features, which
