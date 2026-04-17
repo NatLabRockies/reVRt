@@ -22,7 +22,14 @@ logger = logging.getLogger(__name__)
 
 @contextlib.contextmanager
 def routing_layer_mover(
-    save, cost_fpath, out_fp, route_attrs, job_name, route_cl, route_fl
+    save,
+    cost_fpath,
+    out_fp,
+    route_attrs,
+    job_name,
+    route_cl,
+    route_fl,
+    route_bl,
 ):
     """Yield temporary routing-layer path and optionally persist it
 
@@ -45,6 +52,9 @@ def routing_layer_mover(
         build the output hash suffix.
     route_fl : list
         List of dictionaries representing friction layer definitions
+        used to build the output hash suffix.
+    route_bl : list
+        List of dictionaries representing barrier layer definitions
         used to build the output hash suffix.
 
     Yields
@@ -84,6 +94,7 @@ def routing_layer_mover(
             voltage=voltage,
             cost_layers=route_cl,
             friction_layers=route_fl,
+            barrier_layers=route_bl,
         )
         logger.info("Saved routing layer to %s", saved_fp)
 
@@ -141,12 +152,13 @@ def _extract_batch_group(route_attrs):
     return polarity, voltage
 
 
-def _route_layer_hash(cost_layers, friction_layers):
+def _route_layer_hash(cost_layers, friction_layers, barrier_layers):
     """Compute short hash for layer definitions"""
     payload = json.dumps(
         {
             "cost_layers": cost_layers,
             "friction_layers": friction_layers,
+            "barrier_layers": barrier_layers,
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -184,12 +196,15 @@ def _persist_routing_layer_output(
     voltage,
     cost_layers,
     friction_layers,
+    barrier_layers,
 ):
     """Save routing layer output with coordinates"""
     extra_outputs = Path(out_dir) / "extra_outputs"
     extra_outputs.mkdir(parents=True, exist_ok=True)
 
-    layer_hash = _route_layer_hash(cost_layers, friction_layers)
+    layer_hash = _route_layer_hash(
+        cost_layers, friction_layers, barrier_layers
+    )
     base_name = (
         f"{slugify(job_name)}_"
         f"p-{slugify(polarity)}_"
