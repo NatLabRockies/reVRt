@@ -99,8 +99,7 @@ pub(crate) struct BarrierLayer {
     layer_name: String,
     barrier_operator: BarrierOperator,
     barrier_threshold: f32,
-    #[serde(rename = "barrier_importance")]
-    _barrier_importance: Option<u32>,
+    barrier_importance: Option<u32>,
 }
 
 impl BarrierLayer {
@@ -109,7 +108,7 @@ impl BarrierLayer {
     }
 
     pub(crate) fn importance(&self) -> Option<u32> {
-        self._barrier_importance
+        self.barrier_importance
     }
 }
 
