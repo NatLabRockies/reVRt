@@ -8,6 +8,7 @@ from typing_extensions import TypedDict
 from pydantic import BaseModel, DirectoryPath, FilePath, field_validator
 
 from revrt.constants import ALL, BARRIER_H5_LAYER_NAME
+from revrt.exceptions import revrtConfigurationError
 
 
 _BARRIER_VALUE_PATTERN = re.compile(
@@ -184,7 +185,7 @@ def parse_barrier_values(barrier_values):
             "operators ('>', '>=', '<', '<=', '==') followed by a "
             f"number. Got: {barrier_values!r}"
         )
-        raise ValueError(msg)
+        raise revrtConfigurationError(msg)
 
     operator, threshold = match.groups()
     return _BARRIER_OPERATOR_MAP[operator], float(threshold)
@@ -216,7 +217,7 @@ class BarrierLayer(BaseModel, extra="forbid"):
                 "Barrier importance must be a positive integer when "
                 f"provided. Got: {barrier_importance!r}"
             )
-            raise ValueError(msg)
+            raise revrtConfigurationError(msg)
 
         return barrier_importance
 
