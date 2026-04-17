@@ -557,6 +557,49 @@ mod tests {
     }
 
     #[test]
+    fn get_3x3_filters_hard_barriers_without_mutating_cached_costs() {
+        let fixture = reader_fixture(
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
+            vec![0.0; 9],
+            vec![false, true, false, true, false, true, false, true, false],
+            vec![false; 9],
+            vec![false; 9],
+        );
+        let index = ArrayIndex { i: 1, j: 1 };
+
+        let (i_range, j_range, subset) = fixture.reader.neighborhood_subset(&index);
+        let raw_costs = fixture
+            .reader
+            .get_neighbor_costs(i_range, j_range, &subset, false);
+        let neighbors = fixture.reader.get_3x3(&index, true, |_array, _subset| {});
+
+        assert_eq!(raw_costs.len(), 9);
+        assert_eq!(
+            raw_costs,
+            vec![
+                ((0, 0), 1.0),
+                ((0, 1), 2.0),
+                ((0, 2), 3.0),
+                ((1, 0), 4.0),
+                ((1, 1), 5.0),
+                ((1, 2), 6.0),
+                ((2, 0), 7.0),
+                ((2, 1), 8.0),
+                ((2, 2), 9.0),
+            ]
+        );
+        assert_eq!(
+            neighbors,
+            vec![
+                (ArrayIndex { i: 0, j: 0 }, 3.0 * SQRT_2),
+                (ArrayIndex { i: 0, j: 2 }, 4.0 * SQRT_2),
+                (ArrayIndex { i: 2, j: 0 }, 6.0 * SQRT_2),
+                (ArrayIndex { i: 2, j: 2 }, 7.0 * SQRT_2),
+            ]
+        );
+    }
+
+    #[test]
     fn get_3x3_soft_barrier_cells_reads_retry_state_specific_mask() {
         let fixture = reader_fixture(
             vec![1.0; 9],

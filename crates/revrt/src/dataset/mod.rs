@@ -228,58 +228,6 @@ impl Dataset {
                 self.derived_data_writer.materialize_chunk(ci, cj)
             });
     }
-
-    #[cfg(test)]
-    /// Return the number of soft barrier importance groups in tests.
-    ///
-    /// # Returns
-    /// The number of distinct retry states backed by cumulative soft barrier
-    /// masks, excluding the final fully relaxed state calculation details.
-    pub(super) fn soft_barrier_group_count(&self) -> usize {
-        self.derived_data_writer.soft_barrier_group_count()
-    }
-
-    #[cfg(test)]
-    /// Delegate neighborhood-subset construction for test assertions.
-    ///
-    /// # Arguments
-    /// `index`: Center cell whose neighborhood bounds should be computed.
-    ///
-    /// # Returns
-    /// The clipped row range, clipped column range, and matching swap-array
-    /// subset for the requested neighborhood.
-    fn neighborhood_subset(
-        &self,
-        index: &ArrayIndex,
-    ) -> (
-        std::ops::Range<u64>,
-        std::ops::Range<u64>,
-        zarrs::array_subset::ArraySubset,
-    ) {
-        self.neighborhood_reader.neighborhood_subset(index)
-    }
-
-    #[cfg(test)]
-    /// Delegate neighborhood cost reads for test assertions.
-    ///
-    /// # Arguments
-    /// `i_range`: Row range covering the neighborhood.
-    /// `j_range`: Column range covering the neighborhood.
-    /// `subset`: Swap-array subset to read.
-    /// `is_invariant`: Whether to read the invariant cost array.
-    ///
-    /// # Returns
-    /// A vector pairing neighborhood coordinates with their cached cost values.
-    fn get_neighbor_costs(
-        &self,
-        i_range: std::ops::Range<u64>,
-        j_range: std::ops::Range<u64>,
-        subset: &zarrs::array_subset::ArraySubset,
-        is_invariant: bool,
-    ) -> Vec<((u64, u64), f32)> {
-        self.neighborhood_reader
-            .get_neighbor_costs(i_range, j_range, subset, is_invariant)
-    }
 }
 
 #[cfg(test)]
@@ -838,9 +786,6 @@ mod tests {
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
-        let (i_range, j_range, subset) = dataset.neighborhood_subset(&ArrayIndex { i: 1, j: 1 });
-        let raw_costs = dataset.get_neighbor_costs(i_range, j_range, &subset, false);
-        assert_eq!(raw_costs.len(), 9);
         assert_eq!(
             results,
             vec![
@@ -926,7 +871,6 @@ mod tests {
         let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
             .expect("Error opening dataset");
 
-        assert_eq!(dataset.soft_barrier_group_count(), 2);
         let center = ArrayIndex { i: 1, j: 1 };
         dataset.get_3x3(&center);
 
@@ -984,7 +928,6 @@ mod tests {
         let center = ArrayIndex { i: 1, j: 1 };
         dataset.get_3x3(&center);
 
-        assert_eq!(dataset.soft_barrier_group_count(), 1);
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 0),
             vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
