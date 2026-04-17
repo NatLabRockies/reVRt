@@ -148,12 +148,17 @@ impl CostFunction {
         Ok(cost)
     }
 
+    /// Return a copy of this cost function with all barrier layers removed.
     pub(crate) fn without_barriers(&self) -> Self {
         let mut cost_function = self.clone();
         cost_function.barrier_layers = None;
         cost_function
     }
 
+    /// Collect all barrier layers that act as hard barriers.
+    ///
+    /// Hard barriers are layers with no assigned importance, so they are
+    /// always treated as impassable.
     pub(crate) fn hard_barrier_layers(&self) -> Vec<BarrierLayer> {
         self.barrier_layers
             .clone()
@@ -163,6 +168,10 @@ impl CostFunction {
             .collect()
     }
 
+    /// Group soft barrier layers by their importance.
+    ///
+    /// Only layers with an assigned importance are included in the output,
+    /// and the returned groups are ordered by importance.
     pub(crate) fn soft_barrier_groups(&self) -> Vec<(u32, Vec<BarrierLayer>)> {
         let mut groups = std::collections::BTreeMap::<u32, Vec<BarrierLayer>>::new();
 
