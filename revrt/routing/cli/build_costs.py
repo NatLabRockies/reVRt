@@ -63,6 +63,7 @@ def build_routing_layer(lcp_config_fp, out_dir, polarity=None, voltage=None):
         cost_fpath=config["cost_fpath"],
         cost_layers=route_cl,
         friction_layers=route_fl,
+        barrier_layers=config.get("barrier_layers"),
         cost_multiplier_layer=config.get("cost_multiplier_layer"),
         cost_multiplier_scalar=config.get("cost_multiplier_scalar", 1),
         ignore_invalid_costs=config.get("ignore_invalid_costs", False),
