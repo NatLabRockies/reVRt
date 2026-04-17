@@ -94,6 +94,25 @@ struct FrictionLayer {
     multiplier_scalar: Option<f32>,
 }
 
+#[derive(Clone, Debug, serde::Deserialize)]
+pub(crate) struct BarrierLayer {
+    layer_name: String,
+    barrier_operator: BarrierOperator,
+    barrier_threshold: f32,
+    #[serde(rename = "barrier_importance")]
+    _barrier_importance: Option<u32>,
+}
+
+impl BarrierLayer {
+    pub(crate) fn layer_name(&self) -> &str {
+        &self.layer_name
+    }
+
+    pub(crate) fn importance(&self) -> Option<u32> {
+        self._barrier_importance
+    }
+}
+
 impl CostFunction {
     /// Create a new cost function from a JSON string (reVX format)
     ///
