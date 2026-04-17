@@ -7,12 +7,17 @@
 pub struct Solution<I, C> {
     pub(crate) route: Vec<I>,
     pub(crate) total_cost: C,
+    pub(crate) dropped_barrier_layers: Vec<String>,
 }
 
 impl<I, C> Solution<I, C> {
-    #[allow(dead_code, missing_docs)]
+    #[allow(missing_docs)]
     pub(crate) fn new(route: Vec<I>, total_cost: C) -> Self {
-        Self { route, total_cost }
+        Self {
+            route,
+            total_cost,
+            dropped_barrier_layers: Vec::new(),
+        }
     }
 
     #[allow(dead_code, missing_docs)]
