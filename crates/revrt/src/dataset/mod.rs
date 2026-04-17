@@ -541,6 +541,43 @@ impl Dataset {
         */
     }
 
+    fn neighborhood_subset(
+        &self,
+        index: &ArrayIndex,
+    ) -> (
+        std::ops::Range<u64>,
+        std::ops::Range<u64>,
+        zarrs::array_subset::ArraySubset,
+    ) {
+        let &ArrayIndex { i, j } = index;
+        debug_assert!(self.grid_nrows > 0);
+        debug_assert!(self.grid_ncols > 0);
+
+        let max_i = self.grid_nrows - 1;
+        let max_j = self.grid_ncols - 1;
+
+        let i_range = match i {
+            0 if max_i == 0 => 0..1,
+            0 => 0..2,
+            _ if i == max_i => i - 1..i + 1,
+            _ => i - 1..i + 2,
+        };
+        let j_range = match j {
+            0 if max_j == 0 => 0..1,
+            0 => 0..2,
+            _ if j == max_j => j - 1..j + 1,
+            _ => j - 1..j + 2,
+        };
+
+        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            0..1,
+            i_range.clone(),
+            j_range.clone(),
+        ]);
+
+        (i_range, j_range, subset)
+    }
+
     fn get_neighbor_costs(
         &self,
         i_range: std::ops::Range<u64>,
