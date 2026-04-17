@@ -157,7 +157,8 @@ def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
         else:
             assert route_id == 2
             assert len(solutions) == 1
-            test_path, test_cost = solutions[0]
+            (test_path, test_cost, dropped_barrier_layers) = solutions[0]
+            assert dropped_barrier_layers == []
 
     mcp = MCP_Geometric(cost_values[0])
     costs, __ = mcp.find_costs(starts=[(1, 1)], ends=[(2, 6)])
