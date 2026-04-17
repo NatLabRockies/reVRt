@@ -185,38 +185,43 @@ impl Dataset {
         })
     }
 
-    fn calculate_chunk_cost(&self, ci: u64, cj: u64) {
+    fn calculate_chunk_derived_data(&self, ci: u64, cj: u64) {
         trace!("Creating a LazySubset for ({}, {})", ci, cj);
 
         // cost variable is stored in the swap dataset
         let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
         // Get the subset according to cost's chunk
         let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
-        let mut data = LazySubset::<f32>::new(self.source.clone(), subset);
+        let chunk_subset =
+            zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
+        let mut data = LazySubset::<f32>::new(self.source.clone(), subset.clone());
 
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, true);
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, false);
+        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, true);
+        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, false);
+        self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
+        self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
     }
 
     fn calculate_chunk_cost_single_layer(
         &self,
         ci: u64,
         cj: u64,
-        subset: &mut LazySubset<f32>,
+        features: &mut LazySubset<f32>,
+        chunk_subset: &zarrs::array_subset::ArraySubset,
         is_invariant: bool,
     ) {
         let output;
         let layer_name;
         if is_invariant {
             trace!("Calculating invariant cost for chunk ({}, {})", ci, cj);
-            output = self.cost_function.compute(subset, true);
+            output = self.cost_function.compute(features, true);
             layer_name = "/cost_invariant";
         } else {
             trace!(
                 "Calculating length-dependent cost for chunk ({}, {})",
                 ci, cj
             );
-            output = self.cost_function.compute(subset, false);
+            output = self.cost_function.compute(features, false);
             layer_name = "/cost";
         }
 
@@ -226,19 +231,17 @@ impl Dataset {
         cost.store_metadata().unwrap();
         let chunk_indices: Vec<u64> = vec![0, ci, cj];
         trace!("Storing chunk at {:?}", chunk_indices);
-        let chunk_subset =
-            &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
         trace!("Target chunk subset: {:?}", chunk_subset);
         cost.store_chunks_ndarray(chunk_subset, output).unwrap();
     }
 
-    fn calculate_chunk_hard_barrier_mask(&self, ci: u64, cj: u64) {
-        trace!("Calculating hard barrier mask for chunk ({}, {})", ci, cj);
-
-        let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
-        let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
-        let chunk_subset =
-            &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
+    fn calculate_chunk_hard_barrier_mask(
+        &self,
+        features: &mut LazySubset<f32>,
+        subset: &zarrs::array_subset::ArraySubset,
+        chunk_subset: &zarrs::array_subset::ArraySubset,
+    ) {
+        trace!("Calculating hard barrier mask for subset {:?}", subset);
 
         let output = if self.hard_barrier_layers.is_empty() {
             ndarray::ArrayD::<bool>::from_elem(
@@ -254,11 +257,10 @@ impl Dataset {
                 false,
             )
         } else {
-            let mut data = LazySubset::<f32>::new(self.source.clone(), subset);
             let barrier_masks = self
                 .hard_barrier_layers
                 .iter()
-                .map(|layer| crate::cost::build_single_barrier_layer(layer, &mut data))
+                .map(|layer| crate::cost::build_single_barrier_layer(layer, features))
                 .collect::<Vec<_>>();
 
             let mut output =
@@ -271,30 +273,28 @@ impl Dataset {
             output
         };
 
+        let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
         variable.store_metadata().unwrap();
         variable.store_chunks_ndarray(chunk_subset, output).unwrap();
     }
 
-    fn calculate_chunk_cumulative_soft_barrier_masks(&self, ci: u64, cj: u64) {
+    fn calculate_chunk_cumulative_soft_barrier_masks(
+        &self,
+        features: &mut LazySubset<f32>,
+        subset: &zarrs::array_subset::ArraySubset,
+        chunk_subset: &zarrs::array_subset::ArraySubset,
+    ) {
         trace!(
-            "Calculating cumulative soft barrier masks for chunk ({}, {})",
-            ci, cj
+            "Calculating cumulative soft barrier masks for subset {:?}",
+            subset
         );
 
-        let variable = zarrs::array::Array::open(
-            self.swap.clone(),
-            &format!("/{}", cumulative_soft_barrier_mask_name(0)),
-        )
-        .unwrap();
-        let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
-
-        let mut features = LazySubset::<f32>::new(self.source.clone(), subset.clone());
-        let empty_mask = empty_bool_mask(&subset);
+        let empty_mask = empty_bool_mask(subset);
         let group_masks = self
             .soft_barrier_groups
             .iter()
             .map(|(_, layers)| {
-                combine_barrier_layers_for_subset(layers, &mut features, &subset)
+                combine_barrier_layers_for_subset(layers, features, subset)
                     .unwrap_or_else(|| empty_mask.clone())
             })
             .collect::<Vec<_>>();
@@ -303,11 +303,6 @@ impl Dataset {
             let layer_name = cumulative_soft_barrier_mask_name(retry_state);
             let target =
                 zarrs::array::Array::open(self.swap.clone(), &format!("/{layer_name}")).unwrap();
-            let chunk_subset = &zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                0..1,
-                ci..(ci + 1),
-                cj..(cj + 1),
-            ]);
 
             let mut output = empty_mask.clone();
             for mask in group_masks.iter().skip(retry_state) {
@@ -567,9 +562,7 @@ impl Dataset {
                         ci, cj
                     );
                 } else {
-                    self.calculate_chunk_cost(ci, cj);
-                    self.calculate_chunk_hard_barrier_mask(ci, cj);
-                    self.calculate_chunk_cumulative_soft_barrier_masks(ci, cj);
+                    self.calculate_chunk_derived_data(ci, cj);
                     chunk_idx[[ci as usize, cj as usize]] = true;
                     debug!(
                         "Recorded derived data for chunk ({}, {}) as calculated. Total number of computed chunks: {}",
