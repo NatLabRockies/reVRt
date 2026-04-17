@@ -313,6 +313,25 @@ fn build_single_friction_layer(layer: &FrictionLayer, features: &mut LazySubset<
     friction
 }
 
+pub(crate) fn build_single_barrier_layer(
+    layer: &BarrierLayer,
+    features: &mut LazySubset<f32>,
+) -> BarrierArray {
+    trace!("Building barrier layer: {:?}", layer);
+
+    let barrier_values = features
+        .get(&layer.layer_name)
+        .expect("Barrier layer not found in features");
+
+    barrier_values.mapv(|value| match layer.barrier_operator {
+        BarrierOperator::GreaterThan => value > layer.barrier_threshold,
+        BarrierOperator::GreaterThanOrEqual => value >= layer.barrier_threshold,
+        BarrierOperator::LessThan => value < layer.barrier_threshold,
+        BarrierOperator::LessThanOrEqual => value <= layer.barrier_threshold,
+        BarrierOperator::Equal => value == layer.barrier_threshold,
+    })
+}
+
 fn reduce_layers(data: Vec<CostArray>) -> CostArray {
     let views: Vec<_> = data.iter().map(|a| a.view()).collect();
     let stack = stack(Axis(0), &views).unwrap();
