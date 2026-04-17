@@ -614,6 +614,36 @@ fn add_layer_to_data(
     Ok(())
 }
 
+fn add_bool_layer_to_data(
+    layer_name: &str,
+    chunk_shape: &ChunkGrid,
+    swap: &ReadableWritableListableStorage,
+) -> Result<()> {
+    trace!("Creating an empty {} array", layer_name);
+    let dataset_path = format!("/{layer_name}");
+    let mut builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
+        chunk_shape.clone(),
+        zarrs::array::DataType::Bool,
+        zarrs::array::FillValue::from(false),
+    );
+
+    let built = builder
+        .dimension_names(["band", "y", "x"].into())
+        .build(swap.clone(), &dataset_path)?;
+    built.store_metadata()?;
+
+    let array = zarrs::array::Array::open(swap.clone(), &dataset_path)?;
+    trace!("'{}' shape: {:?}", layer_name, array.shape().to_vec());
+    trace!("'{}' chunk shape: {:?}", layer_name, array.chunk_grid());
+
+    trace!(
+        "Dataset contents after '{}' creation: {:?}",
+        layer_name,
+        swap.list()?
+    );
+    Ok(())
+}
+
 #[cfg(test)]
 /// Make a LazySubset from a source and array subset to be used in tests
 ///
