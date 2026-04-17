@@ -403,79 +403,40 @@ impl Dataset {
         let cost_array = self.cost_cache.array();
         trace!("Cost dataset with shape: {:?}", cost_array.shape());
 
-        // Cutting off the edges for now.
-        let shape = cost_array.shape();
-        debug_assert!(!shape.contains(&0));
-
-        let max_i = shape[1] - 1;
-        let max_j = shape[2] - 1;
-
-        let i_range = match i {
-            0 if max_i == 0 => 0..1,
-            0 => 0..2,
-            _ if i == max_i => i - 1..i + 1,
-            _ => i - 1..i + 2,
-        };
-        let j_range = match j {
-            0 if max_j == 0 => 0..1,
-            0 => 0..2,
-            _ if j == max_j => j - 1..j + 1,
-            _ => j - 1..j + 2,
-        };
-
-        // Capture the 3x3 neighborhood
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-            0..1,
-            i_range.clone(),
-            j_range.clone(),
-        ]);
+        let (i_range, j_range, subset) = self.neighborhood_subset(index);
         trace!("Cost subset: {:?}", subset);
-
-        // Find the chunks that intersect the subset
-        let chunks = &cost_array.chunks_in_array_subset(&subset).unwrap().unwrap();
-        trace!("Cost chunks: {:?}", chunks);
-        trace!(
-            "Cost subset extends to {:?} chunks",
-            chunks.num_elements_usize()
-        );
-
-        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
-            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
-                trace!(
-                    "Checking if cost for chunk ({}, {}) has been calculated",
-                    ci, cj
-                );
-                if self.cost_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
-                    trace!("Cost for chunk ({}, {}) already calculated", ci, cj);
-                } else {
-                    debug!("Requesting write lock for cost_chunk_idx ({}, {})", ci, cj);
-                    let mut chunk_idx = self
-                        .cost_chunk_idx
-                        .write()
-                        .expect("Failed to acquire write lock");
-                    debug!("Acquired write lock for cost_chunk_idx ({}, {})", ci, cj);
-                    if chunk_idx[[ci as usize, cj as usize]] {
-                        trace!(
-                            "Cost for chunk ({}, {}) already calculated while waiting for the lock",
-                            ci, cj
-                        );
-                    } else {
-                        self.calculate_chunk_cost(ci, cj);
-                        chunk_idx[[ci as usize, cj as usize]] = true;
-                        debug!(
-                            "Recorded chunk ({}, {}) as calculated. Total number of computed chunks: {}",
-                            ci,
-                            cj,
-                            chunk_idx.iter().filter(|&&value| value).count()
-                        );
-                    }
-                    debug!("Released write lock for cost_chunk_idx ({}, {})", ci, cj);
-                }
-            }
-        }
+        self.ensure_derived_data_for_subset(&cost_array, &subset);
 
         let neighbors = self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, false);
-        let invariant_neighbors = self.get_neighbor_costs(i_range, j_range, &subset, true);
+        let invariant_neighbors =
+            self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, true);
+        let hard_barrier_values: Vec<bool> = if self.hard_barrier_layers.is_empty() {
+            std::iter::repeat_n(false, neighbors.len()).collect()
+        } else {
+            self.hard_barrier_cache
+                .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
+                .unwrap()
+        };
+
+        // Extract the origin point.
+        let center = neighbors
+            .iter()
+            .zip(hard_barrier_values.iter())
+            .find(|(((ir, jr), _), _)| *ir == i && *jr == j)
+            .map(|(((ir, jr), v), is_barrier)| {
+                if *is_barrier {
+                    ((ir, jr), &0_f32, true)
+                } else if v.is_nan() {
+                    ((ir, jr), &0_f32, false) // NaN's don't contribute to cost
+                } else {
+                    ((ir, jr), v, false)
+                }
+            })
+            .unwrap();
+        if center.2 {
+            return Vec::new();
+        }
+        trace!("Center point: {:?}", center);
 
         /*
          * The transition between two gridpoint centers is along half the distance
@@ -486,29 +447,17 @@ impl Dataset {
          * of both values, but we have to scale for the longer distance along the
          * diagonal, thus a sqrt(2) factor along the diagonals.
          */
-
-        // Extract the origin point.
-        let center = neighbors
-            .iter()
-            .find(|((ir, jr), _)| *ir == i && *jr == j)
-            .map(|((ir, jr), v)| {
-                if v.is_nan() {
-                    ((ir, jr), &0_f32) // NaN's don't contribute to cost
-                } else {
-                    ((ir, jr), v)
-                }
-            })
-            .unwrap();
-        trace!("Center point: {:?}", center);
-
         // Calculate the average with center point (half grid + other half grid).
         // Also, apply the diagonal factor for the extra distance.
         // Finally, add any invariant costs.
         let cost_to_neighbors = neighbors
             .iter()
             .zip(invariant_neighbors.iter())
-            .filter(|(((ir, jr), v), _)| !(v.is_nan() || *ir == i && *jr == j)) // no center point and only valid costs
-            .map(|(((ir, jr), v), ((inv_ir, inv_jr), inv_cost))| {
+            .zip(hard_barrier_values.iter())
+            .filter(|((((ir, jr), v), _), is_barrier)| {
+                !(**is_barrier || v.is_nan() || (*ir == i && *jr == j))
+            })
+            .map(|((((ir, jr), v), ((inv_ir, inv_jr), inv_cost)), _)| {
                 debug_assert_eq!((ir, jr), (inv_ir, inv_jr));
                 ((ir, jr), 0.5 * (v + center.1), inv_cost)
             })
