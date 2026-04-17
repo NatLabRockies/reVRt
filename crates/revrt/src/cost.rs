@@ -11,6 +11,7 @@ use crate::error::Result;
 
 /// A multi-dimensional array representing cost data
 type CostArray = ndarray::Array<f32, ndarray::Dim<ndarray::IxDynImpl>>;
+type BarrierArray = ndarray::Array<bool, ndarray::Dim<ndarray::IxDynImpl>>;
 
 /// Large friction value to use for invalid costs that can be routed through
 const HIGH_FRICTION_INVALID_COST: f32 = 1e10;
