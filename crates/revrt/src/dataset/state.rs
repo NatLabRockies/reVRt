@@ -107,3 +107,84 @@ impl DerivedChunkState {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use zarrs::array_subset::ArraySubset;
+    use zarrs::filesystem::FilesystemStore;
+    use zarrs::storage::ReadableListableStorage;
+
+    use super::*;
+    use crate::dataset::samples;
+    use crate::dataset::swap::inspect_source_layout;
+
+    #[test]
+    fn new_initializes_all_chunks_as_not_materialized() {
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+
+        let state = DerivedChunkState::new(&layout);
+        let chunk_idx = state
+            .swap_chunk_idx
+            .read()
+            .expect("failed to acquire read lock");
+
+        assert_eq!(chunk_idx.dim(), (2, 2));
+        assert!(chunk_idx.iter().all(|&value| !value));
+    }
+
+    #[test]
+    fn ensure_derived_data_for_subset_only_materializes_missing_chunks() {
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let readable_source: Arc<dyn zarrs::storage::ReadableStorageTraits> = Arc::new(
+            FilesystemStore::new(tmp.path()).expect("could not reopen readable test store"),
+        );
+        let array =
+            zarrs::array::Array::open(readable_source, "/A").expect("failed to open source array");
+        let state = DerivedChunkState::new(&layout);
+        let materialized = Mutex::new(Vec::new());
+
+        let first_subset = ArraySubset::new_with_ranges(&[0..1, 1..7, 1..3]);
+        state.ensure_derived_data_for_subset(&array, &first_subset, |ci, cj| {
+            materialized
+                .lock()
+                .expect("failed to record materialized chunk")
+                .push((ci, cj));
+        });
+
+        let second_subset = ArraySubset::new_with_ranges(&[0..1, 3..6, 2..7]);
+        state.ensure_derived_data_for_subset(&array, &second_subset, |ci, cj| {
+            materialized
+                .lock()
+                .expect("failed to record materialized chunk")
+                .push((ci, cj));
+        });
+
+        state.ensure_derived_data_for_subset(&array, &second_subset, |ci, cj| {
+            materialized
+                .lock()
+                .expect("failed to record materialized chunk")
+                .push((ci, cj));
+        });
+
+        assert_eq!(
+            *materialized
+                .lock()
+                .expect("failed to read materialized chunks"),
+            vec![(0, 0), (1, 0), (0, 1), (1, 1)]
+        );
+
+        let chunk_idx = state
+            .swap_chunk_idx
+            .read()
+            .expect("failed to acquire read lock");
+        assert_eq!(*chunk_idx, Array2::from_elem((2, 2), true));
+    }
+}
