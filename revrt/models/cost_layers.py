@@ -1,12 +1,26 @@
 """Definition of friction, barrier, and costs processing config files"""
 
+import re
 from pathlib import Path
 from typing import Literal
 from typing_extensions import TypedDict
 
-from pydantic import BaseModel, DirectoryPath, FilePath
+from pydantic import BaseModel, DirectoryPath, FilePath, field_validator
 
 from revrt.constants import ALL, BARRIER_H5_LAYER_NAME
+
+
+_BARRIER_VALUE_PATTERN = re.compile(
+    r"^\s*(>=|<=|==|>|<)\s*"
+    r"(-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*$"
+)
+_BARRIER_OPERATOR_MAP = {
+    ">": "gt",
+    ">=": "ge",
+    "<": "lt",
+    "<=": "le",
+    "==": "eq",
+}
 
 
 Extents = Literal["all", "wet", "wet+", "landfall", "dry+", "dry"]
@@ -159,6 +173,65 @@ class LayerBuildConfig(BaseModel, extra="forbid"):
     force the final value of corresponding cells to 0. Multiple forced
     inclusions are allowed.
     """
+
+
+def parse_barrier_values(barrier_values):
+    """Parse barrier comparison text into an operator and threshold"""
+    match = _BARRIER_VALUE_PATTERN.fullmatch(barrier_values)
+    if match is None:
+        msg = (
+            "Barrier values must use one of the supported comparison "
+            "operators ('>', '>=', '<', '<=', '==') followed by a "
+            f"number. Got: {barrier_values!r}"
+        )
+        raise ValueError(msg)
+
+    operator, threshold = match.groups()
+    return _BARRIER_OPERATOR_MAP[operator], float(threshold)
+
+
+class BarrierLayer(BaseModel, extra="forbid"):
+    """Config for a routing barrier layer"""
+
+    layer_name: str
+    """Name of layer in H5/Zarr file"""
+
+    barrier_values: str
+    """Comparison definition describing barrier cells"""
+
+    barrier_importance: int | None = None
+    """Optional rank used when relaxing soft barriers"""
+
+    @field_validator("barrier_values")
+    @classmethod
+    def _validate_barrier_values(cls, barrier_values):
+        parse_barrier_values(barrier_values)
+        return barrier_values
+
+    @field_validator("barrier_importance")
+    @classmethod
+    def _validate_barrier_importance(cls, barrier_importance):
+        if barrier_importance is not None and barrier_importance <= 0:
+            msg = (
+                "Barrier importance must be a positive integer when "
+                f"provided. Got: {barrier_importance!r}"
+            )
+            raise ValueError(msg)
+
+        return barrier_importance
+
+    def to_routing_dict(self):
+        """Convert barrier config to the normalized routing payload"""
+        barrier_operator, barrier_threshold = parse_barrier_values(
+            self.barrier_values
+        )
+
+        return {
+            "layer_name": self.layer_name,
+            "barrier_operator": barrier_operator,
+            "barrier_threshold": barrier_threshold,
+            "barrier_importance": self.barrier_importance,
+        }
 
 
 class DryCosts(BaseModel, extra="forbid"):
