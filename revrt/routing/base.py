@@ -58,15 +58,12 @@ class RoutingScenario:
         friction_layers : list, optional
             List of dictionaries defining layers that influence routing
             but are excluded from reports.
-        barrier_layers : list, optional
-            List of dictionaries defining explicit hard or soft
-            barriers in the routing surface.
-        barrier_layers : list, optional
-            List of dictionaries defining explicit hard or soft
-            barriers in the routing surface.
         tracked_layers : dict, optional
             Layers to summarize along the path, mapped to aggregation
             names.
+        barrier_layers : list, optional
+            List of dictionaries defining explicit hard or soft
+            barriers in the routing surface.
         cost_multiplier_layer : str, optional
             Layer name providing spatial multipliers for total cost.
         cost_multiplier_scalar : int or float, optional
@@ -184,6 +181,7 @@ class RoutingLayerManager:
         self.li_cost = None
         self.untracked_cost = None
         self.final_routing_layer = None
+        self.barrier_mask = None
 
     def __repr__(self):
         return f"RoutingLayerManager for {self.routing_scenario!r}"
@@ -280,11 +278,17 @@ class RoutingLayerManager:
         frictions = da.where(frictions <= -1, -1.0 + 1e-7, frictions)
         self.final_routing_layer *= 1 + frictions
         self.final_routing_layer += self.li_cost
+        self.barrier_mask = self._build_barrier_mask()
 
         self.final_routing_layer.values = da.where(
             self.final_routing_layer <= 0,
             -1 if self.routing_scenario.ignore_invalid_costs else 1e10,
             self.final_routing_layer,
+        )
+        self.final_routing_layer.values = da.where(
+            self.barrier_mask,
+            da.nan,
+            self.final_routing_layer.values,
         )
 
     def _extract_and_scale_cost_layer(self, layer_info):
@@ -312,6 +316,43 @@ class RoutingLayerManager:
         cost = self._extract_layer(mask_layer_name)
         cost *= layer_info.get("multiplier_scalar", 1)
         return cost
+
+    def _build_barrier_mask(self):
+        """Build a mask for always-active explicit barriers"""
+        barrier_mask = da.zeros(self._full_shape, dtype=bool)
+        for layer_info in self._iter_hard_barrier_layers():
+            barrier_mask |= self._extract_barrier_layer(layer_info)
+        return barrier_mask
+
+    def _iter_hard_barrier_layers(self):
+        """Yield barrier layers without retry importance"""
+        for layer_info in self.routing_scenario.barrier_layers:
+            if layer_info.get("barrier_importance") is None:
+                yield BarrierLayer(**layer_info).to_routing_dict()
+
+    def _extract_barrier_layer(self, layer_info):
+        """Extract one barrier layer mask from the layered file"""
+        layer = self._extract_layer(layer_info["layer_name"])
+        layer_data = getattr(layer, "data", layer)
+        threshold = layer_info["barrier_threshold"]
+        operator = layer_info["barrier_operator"]
+
+        if operator == "gt":
+            return layer_data > threshold
+        if operator == "ge":
+            return layer_data >= threshold
+        if operator == "lt":
+            return layer_data < threshold
+        if operator == "le":
+            return layer_data <= threshold
+        if operator == "eq":
+            return layer_data == threshold
+
+        msg = (
+            "Did not recognize barrier operator "
+            f"{operator!r} for layer {layer_info['layer_name']!r}"
+        )
+        raise revrtKeyError(msg)
 
     def _extract_layer(self, layer_name):
         """Extract layer based on name"""
