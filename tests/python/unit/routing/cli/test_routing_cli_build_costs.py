@@ -156,6 +156,51 @@ def test_build_route_costs_command_writes_expected_layers(
     assert np.allclose(final_layer, expected_vals)
 
 
+def test_build_route_costs_command_applies_explicit_barriers(
+    sample_layered_data, tmp_path
+):
+    """build-route-costs applies explicit barriers to routing rasters"""
+
+    config = {
+        "cost_fpath": str(sample_layered_data),
+        "cost_layers": [
+            {"layer_name": "layer_2"},
+        ],
+        "barrier_layers": [
+            {"layer_name": "layer_1", "barrier_values": "==0"},
+        ],
+        "ignore_invalid_costs": False,
+    }
+
+    config_fp = tmp_path / "barrier_lcp_config.json"
+    config_fp.write_text(json.dumps(config))
+    out_dir = tmp_path / "barrier_outputs"
+
+    outputs = build_route_costs_command.runner(
+        lcp_config_fp=config_fp,
+        out_dir=out_dir,
+        polarity=None,
+        voltage=None,
+    )
+
+    cost_fp, final_fp = [Path(fp) for fp in outputs]
+    with xr.open_dataset(
+        sample_layered_data, consolidated=False, engine="zarr"
+    ) as ds:
+        expected_costs = ds["layer_2"].isel(band=0).astype(np.float32).load()
+        expected_final = expected_costs.to_numpy().copy()
+        expected_final[ds["layer_1"].isel(band=0).to_numpy() == 0] = np.nan
+
+    with rasterio.open(cost_fp) as src:
+        agg_costs = src.read(1)
+
+    with rasterio.open(final_fp) as src:
+        final_layer = src.read(1)
+
+    assert np.allclose(agg_costs, expected_costs)
+    assert np.array_equal(final_layer, expected_final, equal_nan=True)
+
+
 @pytest.mark.skipif(
     (os.environ.get("TOX_RUNNING") == "True")
     and (platform.system() == "Windows"),
