@@ -47,6 +47,7 @@ class RouteToDefinitionConverter(ABC):
         out_fp,
         cost_layers,
         friction_layers=None,
+        barrier_layers=None,
         transmission_config=None,
     ):
         """
@@ -77,6 +78,11 @@ class RouteToDefinitionConverter(ABC):
             (i.e. friction, barriers, etc.). See the description of
             :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
             for more details.
+        barrier_layers : list
+            Layers defining explicit hard or soft routing barriers. See
+            the description of
+            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
+            for more details.
         transmission_config : path-like or dict, optional
             Dictionary of transmission cost configuration values, or
             path to JSON/JSON5 file containing this dictionary. See the
@@ -89,6 +95,7 @@ class RouteToDefinitionConverter(ABC):
         self.out_fp = Path(out_fp)
         self.cost_layers = cost_layers
         self.friction_layers = friction_layers or []
+        self.barrier_layers = barrier_layers or []
         self.transmission_config = transmission_config
 
     @property
