@@ -34,6 +34,13 @@ use crate::cost::CostFunction;
 use crate::error::{Error, Result};
 pub(crate) use lazy_subset::LazySubset;
 
+#[derive(Debug, Clone, Copy)]
+struct CacheBudgets {
+    per_cost_cache: u64,
+    hard_barrier_cache: u64,
+    per_soft_barrier_cache: u64,
+}
+
 /// Manages the features datasets and calculated total cost
 pub(super) struct Dataset {
     /// A Zarr storages with the features
@@ -52,12 +59,20 @@ pub(super) struct Dataset {
     swap: ReadableWritableListableStorage,
     /// Index of cost chunks already calculated
     cost_chunk_idx: RwLock<ndarray::Array2<bool>>,
+    /// Explicit barriers that are always active for this dataset
+    hard_barrier_layers: Vec<crate::cost::BarrierLayer>,
+    /// Soft barriers grouped by importance and ordered for retry states
+    soft_barrier_groups: Vec<(u32, Vec<crate::cost::BarrierLayer>)>,
     /// Custom cost function definition
     cost_function: CostFunction,
     /// Cache for decoded cost chunks shared across calls
     cost_cache: ChunkCacheDecodedLruSizeLimit,
     /// Cache for decoded invariant cost chunks shared across calls
     cost_invariant_cache: ChunkCacheDecodedLruSizeLimit,
+    /// Cache for decoded hard barrier chunks shared across calls
+    hard_barrier_cache: ChunkCacheDecodedLruSizeLimit,
+    /// Caches for decoded cumulative soft barrier chunks per retry state
+    cumulative_soft_barrier_caches: Vec<ChunkCacheDecodedLruSizeLimit>,
     /// Number of rows in the routing grid
     grid_nrows: u64,
     /// Number of columns in the routing grid
@@ -95,6 +110,9 @@ impl Dataset {
         swap_fp: PathBuf,
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
+        let hard_barrier_layers = cost_function.hard_barrier_layers();
+        let soft_barrier_groups = cost_function.soft_barrier_groups();
+        let cost_function = cost_function.without_barriers();
         let filesystem =
             zarrs::filesystem::FilesystemStore::new(path).expect("could not open filesystem store");
         let source = std::sync::Arc::new(filesystem);
@@ -159,6 +177,14 @@ impl Dataset {
 
         add_layer_to_data("cost_invariant", chunk_grid, &swap)?;
         add_layer_to_data("cost", chunk_grid, &swap)?;
+        add_bool_layer_to_data("hard_barrier_mask", chunk_grid, &swap)?;
+        for retry_state in 0..=soft_barrier_groups.len() {
+            add_bool_layer_to_data(
+                &cumulative_soft_barrier_mask_name(retry_state),
+                chunk_grid,
+                &swap,
+            )?;
+        }
 
         let cost_chunk_idx = ndarray::Array2::from_elem(
             (
@@ -172,19 +198,44 @@ impl Dataset {
         if cache_size < 1_000_000 {
             warn!("Cache size smaller than 1MB");
         }
-        debug!("Creating cache with size {}MB", cache_size / 1_000_000);
+        debug!(
+            "Creating caches with total size {}MB",
+            cache_size / 1_000_000
+        );
         // TODO: tune cache_size against typical chunk sizes
         // (e.g. chunk_bytes * hot_chunks * safety_factor)
         let cost_array_readable =
             Arc::new(zarrs::array::Array::open(swap.clone(), "/cost")?.readable());
         let cost_invariant_array_readable =
             Arc::new(zarrs::array::Array::open(swap.clone(), "/cost_invariant")?.readable());
+        let hard_barrier_array_readable =
+            Arc::new(zarrs::array::Array::open(swap.clone(), "/hard_barrier_mask")?.readable());
+        let cumulative_soft_barrier_arrays = (0..=soft_barrier_groups.len())
+            .map(|retry_state| {
+                let path = format!("/{}", cumulative_soft_barrier_mask_name(retry_state));
+                zarrs::array::Array::open(swap.clone(), &path)
+                    .map_err(|err| Error::IO(std::io::Error::other(err.to_string())))
+                    .map(|array| Arc::new(array.readable()))
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        let budgets = distribute_cache_budgets(cache_size, cumulative_soft_barrier_arrays.len());
+        debug!("Cache budgets: {:?}", budgets);
+
         let cost_cache =
-            ChunkCacheDecodedLruSizeLimit::new(cost_array_readable.clone(), cache_size / 2);
+            ChunkCacheDecodedLruSizeLimit::new(cost_array_readable.clone(), budgets.per_cost_cache);
         let cost_invariant_cache = ChunkCacheDecodedLruSizeLimit::new(
             cost_invariant_array_readable.clone(),
-            cache_size / 2,
+            budgets.per_cost_cache,
         );
+        let hard_barrier_cache = ChunkCacheDecodedLruSizeLimit::new(
+            hard_barrier_array_readable.clone(),
+            budgets.hard_barrier_cache,
+        );
+        let cumulative_soft_barrier_caches = cumulative_soft_barrier_arrays
+            .into_iter()
+            .map(|array| ChunkCacheDecodedLruSizeLimit::new(array, budgets.per_soft_barrier_cache))
+            .collect();
 
         trace!("Dataset opened successfully");
         Ok(Self {
@@ -192,9 +243,13 @@ impl Dataset {
             cost_path: None,
             swap,
             cost_chunk_idx,
+            hard_barrier_layers,
+            soft_barrier_groups,
             cost_function,
             cost_cache,
             cost_invariant_cache,
+            hard_barrier_cache,
+            cumulative_soft_barrier_caches,
             grid_nrows,
             grid_ncols,
         })
