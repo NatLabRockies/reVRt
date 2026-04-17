@@ -52,7 +52,7 @@ def validate_find_paths_single_var(data, start, end, tmp_path, algorithm):
     )
 
     assert len(results) == 1
-    revrt_route, revrt_cost = results[0]
+    revrt_route, revrt_cost, dropped_barrier_layers = results[0]
 
     cost = da.values[0]
     mcp = MCP_Geometric(cost)
@@ -63,6 +63,7 @@ def validate_find_paths_single_var(data, start, end, tmp_path, algorithm):
     assert np.array_equal(skimage_route, revrt_route)
     # compare final cost
     assert np.isclose(revrt_cost, costs[end])
+    assert not dropped_barrier_layers
 
     # make sure path simplification is equivalent
     if len(revrt_route) > 1:
@@ -99,7 +100,8 @@ def validate_route_finder_single_var(data, start, end, tmp_path, algorithm):
     route_id, solutions = results[0]
     assert route_id == 0
     assert len(solutions) == 1
-    revrt_route, revrt_cost = solutions[0]
+    (revrt_route, revrt_cost, dropped_barrier_layers) = solutions[0]
+    assert dropped_barrier_layers == []
 
     cost = da.values[0]
     mcp = MCP_Geometric(cost)
