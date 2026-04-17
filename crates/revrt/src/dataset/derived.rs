@@ -12,6 +12,7 @@ use tracing::trace;
 use zarrs::storage::{ReadableListableStorage, ReadableWritableListableStorage};
 
 use super::LazySubset;
+use super::reader::DerivedDataMaterializer;
 use super::swap::SourceLayout;
 use super::swap::cumulative_soft_barrier_mask_name;
 use crate::cost::{BarrierLayer, CostFunction};
@@ -75,64 +76,6 @@ impl DerivedDataWriter {
         }
     }
 
-    /// Materialize any missing derived chunks overlapping a subset.
-    ///
-    /// This method first determines which chunk-grid cells intersect the
-    /// requested subset. Each chunk is checked under a read lock and, when
-    /// still missing, rechecked under a write lock before invoking chunk
-    /// materialization. This avoids duplicate work when multiple threads
-    /// request the same chunk concurrently.
-    ///
-    /// # Arguments
-    /// `array`: Swap array whose chunk grid is used to map the subset to
-    ///          chunk indices.
-    /// `subset`: Requested array subset that may span one or more chunks.
-    pub(super) fn ensure_derived_data_for_subset(
-        &self,
-        array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
-        subset: &zarrs::array_subset::ArraySubset,
-    ) {
-        let chunks = &array.chunks_in_array_subset(subset).unwrap().unwrap();
-        trace!("Derived-data chunks: {:?}", chunks);
-        trace!(
-            "Derived-data subset extends to {:?} chunks",
-            chunks.num_elements_usize()
-        );
-
-        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
-            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
-                trace!(
-                    "Checking if derived data for chunk ({}, {}) has been calculated",
-                    ci, cj
-                );
-                if self.swap_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
-                    trace!("Derived data for chunk ({}, {}) already calculated", ci, cj);
-                    continue;
-                }
-
-                let mut chunk_idx = self
-                    .swap_chunk_idx
-                    .write()
-                    .expect("Failed to acquire write lock");
-                if chunk_idx[[ci as usize, cj as usize]] {
-                    trace!(
-                        "Derived data for chunk ({}, {}) already calculated while waiting for the lock",
-                        ci, cj
-                    );
-                } else {
-                    self.materialize_chunk(ci, cj);
-                    chunk_idx[[ci as usize, cj as usize]] = true;
-                    trace!(
-                        "Recorded derived data for chunk ({}, {}) as calculated. Total number of computed chunks: {}",
-                        ci,
-                        cj,
-                        chunk_idx.iter().filter(|&&value| value).count()
-                    );
-                }
-            }
-        }
-    }
-
     /// Materialize every derived array for a single chunk.
     ///
     /// This computes both cost layers and all barrier masks for the chunk
@@ -155,15 +98,6 @@ impl DerivedDataWriter {
         self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, false);
         self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
         self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
-    }
-
-    /// Return the hard barrier layers tracked by this writer.
-    ///
-    /// # Returns
-    /// A shared slice of barrier layers that should always be treated as
-    /// impassable.
-    pub(super) fn hard_barrier_layers(&self) -> &[BarrierLayer] {
-        &self.hard_barrier_layers
     }
 
     /// Return the number of soft barrier importance groups.
@@ -312,6 +246,70 @@ impl DerivedDataWriter {
 
             target.store_metadata().unwrap();
             target.store_chunks_ndarray(chunk_subset, output).unwrap();
+        }
+    }
+}
+
+impl DerivedDataMaterializer for DerivedDataWriter {
+    fn has_hard_barriers(&self) -> bool {
+        !self.hard_barrier_layers.is_empty()
+    }
+
+    /// Materialize any missing derived chunks overlapping a subset.
+    ///
+    /// This method first determines which chunk-grid cells intersect the
+    /// requested subset. Each chunk is checked under a read lock and, when
+    /// still missing, rechecked under a write lock before invoking chunk
+    /// materialization. This avoids duplicate work when multiple threads
+    /// request the same chunk concurrently.
+    ///
+    /// # Arguments
+    /// `array`: Swap array whose chunk grid is used to map the subset to
+    ///          chunk indices.
+    /// `subset`: Requested array subset that may span one or more chunks.
+    fn ensure_derived_data_for_subset(
+        &self,
+        array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
+        subset: &zarrs::array_subset::ArraySubset,
+    ) {
+        let chunks = &array.chunks_in_array_subset(subset).unwrap().unwrap();
+        trace!("Derived-data chunks: {:?}", chunks);
+        trace!(
+            "Derived-data subset extends to {:?} chunks",
+            chunks.num_elements_usize()
+        );
+
+        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
+            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
+                trace!(
+                    "Checking if derived data for chunk ({}, {}) has been calculated",
+                    ci, cj
+                );
+                if self.swap_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
+                    trace!("Derived data for chunk ({}, {}) already calculated", ci, cj);
+                    continue;
+                }
+
+                let mut chunk_idx = self
+                    .swap_chunk_idx
+                    .write()
+                    .expect("Failed to acquire write lock");
+                if chunk_idx[[ci as usize, cj as usize]] {
+                    trace!(
+                        "Derived data for chunk ({}, {}) already calculated while waiting for the lock",
+                        ci, cj
+                    );
+                } else {
+                    self.materialize_chunk(ci, cj);
+                    chunk_idx[[ci as usize, cj as usize]] = true;
+                    trace!(
+                        "Recorded derived data for chunk ({}, {}) as calculated. Total number of computed chunks: {}",
+                        ci,
+                        cj,
+                        chunk_idx.iter().filter(|&&value| value).count()
+                    );
+                }
+            }
         }
     }
 }
@@ -546,7 +544,7 @@ mod tests {
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
 
-        assert_eq!(writer.hard_barrier_layers().len(), 2);
+        assert!(writer.has_hard_barriers());
         assert_eq!(writer.soft_barrier_group_count(), 2);
 
         writer.materialize_chunk(0, 0);
@@ -615,7 +613,7 @@ mod tests {
         .expect("Error initializing swap dataset");
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
 
-        assert_eq!(writer.hard_barrier_layers().len(), 1);
+        assert!(writer.has_hard_barriers());
 
         writer.materialize_chunk(0, 0);
 

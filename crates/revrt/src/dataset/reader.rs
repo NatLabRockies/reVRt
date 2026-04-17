@@ -17,6 +17,19 @@ use super::swap::cumulative_soft_barrier_mask_name;
 use crate::ArrayIndex;
 use crate::error::{Error, Result};
 
+/// Capability required to materialize derived swap data for a subset.
+pub(super) trait DerivedDataMaterializer {
+    /// Whether the derived dataset includes a hard barrier mask.
+    fn has_hard_barriers(&self) -> bool;
+
+    /// Ensure all derived swap data exists for a requested subset.
+    fn ensure_derived_data_for_subset(
+        &self,
+        array: &zarrs::array::Array<dyn ReadableStorageTraits>,
+        subset: &zarrs::array_subset::ArraySubset,
+    );
+}
+
 #[derive(Debug, Clone, Copy)]
 /// Cache sizes assigned to each neighborhood reader dataset.
 ///
@@ -136,24 +149,18 @@ impl NeighborhoodReader {
     ///
     /// # Arguments
     /// `index`: Grid index whose neighborhood should be read.
-    /// `has_hard_barriers`: Whether the hard barrier mask should be consulted
-    ///                      while filtering candidate neighbors.
-    /// `ensure_derived_data_for_subset`: Callback that materializes the
-    ///                                   required swap chunks before the cached
-    ///                                   read occurs.
+    /// `data_materializer`: Derived-data materializer responsible for
+    ///                      ensuring the required swap chunks exist
+    ///                      before the cached read occurs.
     ///
     /// # Returns
     /// A vector of reachable neighboring indices paired with movement costs
     /// from the center cell to each neighbor.
-    pub(super) fn get_3x3<F>(
+    pub(super) fn get_3x3(
         &self,
         index: &ArrayIndex,
-        has_hard_barriers: bool,
-        ensure_derived_data_for_subset: F,
-    ) -> Vec<(ArrayIndex, f32)>
-    where
-        F: Fn(&zarrs::array::Array<dyn ReadableStorageTraits>, &zarrs::array_subset::ArraySubset),
-    {
+        data_materializer: &impl DerivedDataMaterializer,
+    ) -> Vec<(ArrayIndex, f32)> {
         let &ArrayIndex { i, j } = index;
 
         trace!("Getting 3x3 neighborhood for (i={}, j={})", i, j);
@@ -164,12 +171,12 @@ impl NeighborhoodReader {
 
         let (i_range, j_range, subset) = self.neighborhood_subset(index);
         trace!("Cost subset: {:?}", subset);
-        ensure_derived_data_for_subset(&cost_array, &subset);
+        data_materializer.ensure_derived_data_for_subset(&cost_array, &subset);
 
         let neighbors = self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, false);
         let invariant_neighbors =
             self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, true);
-        let hard_barrier_values: Vec<bool> = if has_hard_barriers {
+        let hard_barrier_values: Vec<bool> = if data_materializer.has_hard_barriers() {
             self.hard_barrier_cache
                 .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
                 .unwrap()
@@ -230,26 +237,23 @@ impl NeighborhoodReader {
     /// # Arguments
     /// `index`: Grid index whose neighborhood should be inspected.
     /// `retry_state`: Index into the cumulative soft barrier mask caches.
-    /// `ensure_derived_data_for_subset`: Callback that materializes the
-    ///                                   required swap chunks before the cached
-    ///                                   read occurs.
+    /// `data_materializer`: Derived-data materializer responsible for ensuring
+    ///                      the required swap chunks exist before the cached
+    ///                      read occurs.
     ///
     /// # Returns
     /// A vector containing the neighborhood cells marked as soft barriers for
     /// the selected retry state.
-    pub(super) fn get_3x3_soft_barrier_cells<F>(
+    pub(super) fn get_3x3_soft_barrier_cells(
         &self,
         index: &ArrayIndex,
         retry_state: usize,
-        ensure_derived_data_for_subset: F,
-    ) -> Vec<ArrayIndex>
-    where
-        F: Fn(&zarrs::array::Array<dyn ReadableStorageTraits>, &zarrs::array_subset::ArraySubset),
-    {
+        data_materializer: &impl DerivedDataMaterializer,
+    ) -> Vec<ArrayIndex> {
         self.get_3x3_cached_barrier_cells(
             index,
             &self.cumulative_soft_barrier_caches[retry_state],
-            ensure_derived_data_for_subset,
+            data_materializer,
         )
     }
 
@@ -369,23 +373,20 @@ impl NeighborhoodReader {
     /// # Arguments
     /// `index`: Center grid index for the neighborhood lookup.
     /// `cache`: Chunk cache for the barrier mask to inspect.
-    /// `ensure_derived_data_for_subset`: Callback that materializes the
-    ///                                   required swap chunks before the cached
-    ///                                   read occurs.
+    /// `data_materializer`: Derived-data materializer responsible for ensuring
+    ///                      the required swap chunks exist before the cached
+    ///                      read occurs.
     ///
     /// # Returns
     /// A vector of neighborhood indices whose cached mask value is `true`.
-    fn get_3x3_cached_barrier_cells<F>(
+    fn get_3x3_cached_barrier_cells(
         &self,
         index: &ArrayIndex,
         cache: &ChunkCacheDecodedLruSizeLimit,
-        ensure_derived_data_for_subset: F,
-    ) -> Vec<ArrayIndex>
-    where
-        F: Fn(&zarrs::array::Array<dyn ReadableStorageTraits>, &zarrs::array_subset::ArraySubset),
-    {
+        data_materializer: &impl DerivedDataMaterializer,
+    ) -> Vec<ArrayIndex> {
         let (i_range, j_range, subset) = self.neighborhood_subset(index);
-        ensure_derived_data_for_subset(&cache.array(), &subset);
+        data_materializer.ensure_derived_data_for_subset(&cache.array(), &subset);
         let barrier_values = cache
             .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
             .unwrap();
@@ -459,6 +460,23 @@ mod tests {
     use crate::dataset::samples::{LayerConfig, ZarrTestBuilder};
     use crate::dataset::swap::{initialize_swap, inspect_source_layout};
 
+    struct NoOpMaterializer {
+        has_hard_barriers: bool,
+    }
+
+    impl DerivedDataMaterializer for NoOpMaterializer {
+        fn has_hard_barriers(&self) -> bool {
+            self.has_hard_barriers
+        }
+
+        fn ensure_derived_data_for_subset(
+            &self,
+            _array: &zarrs::array::Array<dyn ReadableStorageTraits>,
+            _subset: &zarrs::array_subset::ArraySubset,
+        ) {
+        }
+    }
+
     #[test]
     fn distribute_cache_budgets_splits_budget_across_cache_types() {
         let budgets = distribute_cache_budgets(120, 4);
@@ -515,10 +533,12 @@ mod tests {
             vec![true, false, false, false, false, false, false, true, false],
         );
 
-        let neighbors =
-            fixture
-                .reader
-                .get_3x3(&ArrayIndex { i: 1, j: 1 }, true, |_array, _subset| {});
+        let neighbors = fixture.reader.get_3x3(
+            &ArrayIndex { i: 1, j: 1 },
+            &NoOpMaterializer {
+                has_hard_barriers: true,
+            },
+        );
 
         let expected = [
             (ArrayIndex { i: 0, j: 0 }, 3.0 * SQRT_2 + 1.0),
@@ -548,10 +568,12 @@ mod tests {
             vec![false; 9],
         );
 
-        let neighbors =
-            fixture
-                .reader
-                .get_3x3(&ArrayIndex { i: 1, j: 1 }, true, |_array, _subset| {});
+        let neighbors = fixture.reader.get_3x3(
+            &ArrayIndex { i: 1, j: 1 },
+            &NoOpMaterializer {
+                has_hard_barriers: true,
+            },
+        );
 
         assert!(neighbors.is_empty());
     }
@@ -571,7 +593,12 @@ mod tests {
         let raw_costs = fixture
             .reader
             .get_neighbor_costs(i_range, j_range, &subset, false);
-        let neighbors = fixture.reader.get_3x3(&index, true, |_array, _subset| {});
+        let neighbors = fixture.reader.get_3x3(
+            &index,
+            &NoOpMaterializer {
+                has_hard_barriers: true,
+            },
+        );
 
         assert_eq!(raw_costs.len(), 9);
         assert_eq!(
@@ -612,12 +639,16 @@ mod tests {
         let retry_zero = fixture.reader.get_3x3_soft_barrier_cells(
             &ArrayIndex { i: 1, j: 1 },
             0,
-            |_array, _subset| {},
+            &NoOpMaterializer {
+                has_hard_barriers: false,
+            },
         );
         let retry_one = fixture.reader.get_3x3_soft_barrier_cells(
             &ArrayIndex { i: 1, j: 1 },
             1,
-            |_array, _subset| {},
+            &NoOpMaterializer {
+                has_hard_barriers: false,
+            },
         );
 
         assert_eq!(

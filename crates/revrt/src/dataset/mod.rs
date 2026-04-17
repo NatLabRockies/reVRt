@@ -167,11 +167,8 @@ impl Dataset {
     /// A vector of neighboring indices paired with movement costs from the
     /// center cell.
     pub(super) fn get_3x3(&self, index: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
-        self.neighborhood_reader.get_3x3(
-            index,
-            !self.derived_data_writer.hard_barrier_layers().is_empty(),
-            |array, subset| self.ensure_derived_data_for_subset(array, subset),
-        )
+        self.neighborhood_reader
+            .get_3x3(index, &self.derived_data_writer)
     }
 
     /// Return soft-barrier cells in the 3x3 neighborhood of an index.
@@ -194,27 +191,11 @@ impl Dataset {
     ) -> Vec<ArrayIndex> {
         let retry_state =
             dropped_soft_groups.min(self.derived_data_writer.soft_barrier_group_count());
-        self.neighborhood_reader
-            .get_3x3_soft_barrier_cells(index, retry_state, |array, subset| {
-                self.ensure_derived_data_for_subset(array, subset)
-            })
-    }
-
-    /// Ensure all derived swap data exists for a requested subset.
-    ///
-    /// Any chunk overlapped by `subset` is materialized exactly once through
-    /// the tracked chunk state before cached neighborhood reads proceed.
-    ///
-    /// # Arguments
-    /// `array`: Swap array whose subset is about to be accessed.
-    /// `subset`: Requested subset within the swap array.
-    fn ensure_derived_data_for_subset(
-        &self,
-        array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
-        subset: &zarrs::array_subset::ArraySubset,
-    ) {
-        self.derived_data_writer
-            .ensure_derived_data_for_subset(array, subset);
+        self.neighborhood_reader.get_3x3_soft_barrier_cells(
+            index,
+            retry_state,
+            &self.derived_data_writer,
+        )
     }
 }
 
