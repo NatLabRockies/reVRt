@@ -17,6 +17,7 @@ from shapely.geometry import Point
 from shapely.geometry.linestring import LineString
 
 from revrt import RouteFinder, simplify_using_slopes
+from revrt.models.cost_layers import BarrierLayer
 from revrt.utilities.handlers import IncrementalWriter
 from revrt.exceptions import (
     revrtKeyError,
@@ -57,6 +58,9 @@ class RoutingScenario:
         friction_layers : list, optional
             List of dictionaries defining layers that influence routing
             but are excluded from reports.
+        barrier_layers : list, optional
+            List of dictionaries defining explicit hard or soft
+            barriers in the routing surface.
         barrier_layers : list, optional
             List of dictionaries defining explicit hard or soft
             barriers in the routing surface.
