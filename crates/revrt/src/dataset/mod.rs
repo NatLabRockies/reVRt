@@ -1164,4 +1164,238 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_get_3x3_keeps_explicit_barriers_out_of_cached_costs() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0
+                }
+            ]
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let cost_function = CostFunction::from_json(json).unwrap();
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+
+        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let (i_range, j_range, subset) = dataset.neighborhood_subset(&ArrayIndex { i: 1, j: 1 });
+        let raw_costs = dataset.get_neighbor_costs(i_range, j_range, &subset, false);
+        assert_eq!(raw_costs.len(), 9);
+        assert_eq!(
+            results,
+            vec![
+                (ArrayIndex { i: 0, j: 0 }, 3.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex { i: 0, j: 2 }, 4.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex { i: 2, j: 0 }, 6.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex { i: 2, j: 2 }, 7.0 * std::f32::consts::SQRT_2),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_explicit_barriers_do_not_modify_cached_costs_when_invalid_costs_are_soft() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 1
+                }
+            ],
+            "ignore_invalid_costs": false
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("A", 1.0))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let cost_function = CostFunction::from_json(json).unwrap();
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+
+        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        assert_eq!(results.len(), 8);
+    }
+
+    #[test]
+    fn test_cumulative_soft_barrier_masks_follow_retry_state() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 1
+                },
+                {
+                    "layer_name": "C",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 2
+                }
+            ]
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("A", 1.0))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            ))
+            .layer(samples::LayerConfig::new(
+                "C",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
+            .expect("Error opening dataset");
+
+        assert_eq!(dataset.soft_barrier_group_count(), 2);
+        let center = ArrayIndex { i: 1, j: 1 };
+        dataset.get_3x3(&center);
+
+        assert_eq!(
+            dataset.get_3x3_soft_barrier_cells(&center, 0),
+            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
+        );
+        assert_eq!(
+            dataset.get_3x3_soft_barrier_cells(&center, 1),
+            vec![ArrayIndex { i: 0, j: 1 }]
+        );
+        assert!(dataset.get_3x3_soft_barrier_cells(&center, 2).is_empty());
+        assert!(dataset.get_3x3_soft_barrier_cells(&center, 99).is_empty());
+    }
+
+    #[test]
+    fn test_cumulative_soft_barrier_masks_or_tied_importance_groups() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 1
+                },
+                {
+                    "layer_name": "C",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 1
+                }
+            ]
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("A", 1.0))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            ))
+            .layer(samples::LayerConfig::new(
+                "C",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
+            .expect("Error opening dataset");
+
+        let center = ArrayIndex { i: 1, j: 1 };
+        dataset.get_3x3(&center);
+
+        assert_eq!(dataset.soft_barrier_group_count(), 1);
+        assert_eq!(
+            dataset.get_3x3_soft_barrier_cells(&center, 0),
+            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
+        );
+        assert!(dataset.get_3x3_soft_barrier_cells(&center, 1).is_empty());
+    }
+
+    #[test]
+    fn test_open_extracts_hard_barriers_while_preserving_barrier_free_costs() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0
+                }
+            ]
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let cost_function = CostFunction::from_json(json).unwrap();
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+
+        assert_eq!(dataset.hard_barrier_layers().len(), 1);
+
+        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let (i_range, j_range, subset) = dataset.neighborhood_subset(&ArrayIndex { i: 1, j: 1 });
+        let raw_costs = dataset.get_neighbor_costs(i_range, j_range, &subset, false);
+        let barrier_cells = dataset
+            .get_3x3_barrier_cells(&ArrayIndex { i: 1, j: 1 }, dataset.hard_barrier_layers());
+
+        assert_eq!(raw_costs.len(), 9);
+        assert_eq!(results.len(), 4);
+        assert_eq!(
+            barrier_cells,
+            vec![
+                ArrayIndex { i: 0, j: 1 },
+                ArrayIndex { i: 1, j: 0 },
+                ArrayIndex { i: 1, j: 2 },
+                ArrayIndex { i: 2, j: 1 },
+            ]
+        );
+    }
 }
