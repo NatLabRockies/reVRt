@@ -230,15 +230,6 @@ impl Dataset {
     }
 
     #[cfg(test)]
-    /// Return the extracted hard barrier layers for assertions in tests.
-    ///
-    /// # Returns
-    /// A shared slice of hard barrier layers owned by the derived data writer.
-    pub(super) fn hard_barrier_layers(&self) -> &[crate::cost::BarrierLayer] {
-        self.derived_data_writer.hard_barrier_layers()
-    }
-
-    #[cfg(test)]
     /// Return the number of soft barrier importance groups in tests.
     ///
     /// # Returns
@@ -288,49 +279,6 @@ impl Dataset {
     ) -> Vec<((u64, u64), f32)> {
         self.neighborhood_reader
             .get_neighbor_costs(i_range, j_range, subset, is_invariant)
-    }
-
-    #[cfg(test)]
-    /// Build explicit barrier cells directly from barrier layers for tests.
-    ///
-    /// This bypasses the cached swap masks so tests can compare the direct
-    /// barrier interpretation of source features against derived swap output.
-    ///
-    /// # Arguments
-    /// `index`: Center cell whose 3x3 neighborhood should be inspected.
-    /// `barrier_layers`: Barrier layers to evaluate directly from source data.
-    ///
-    /// # Returns
-    /// A vector of neighborhood cells where any provided barrier layer is true.
-    pub(super) fn get_3x3_barrier_cells(
-        &self,
-        index: &ArrayIndex,
-        barrier_layers: &[crate::cost::BarrierLayer],
-    ) -> Vec<ArrayIndex> {
-        if barrier_layers.is_empty() {
-            return Vec::new();
-        }
-
-        let (i_range, j_range, subset) = self.neighborhood_subset(index);
-        let mut features = LazySubset::<f32>::new(self.source.clone(), subset);
-        let barrier_masks = barrier_layers
-            .iter()
-            .map(|layer| crate::cost::build_single_barrier_layer(layer, &mut features))
-            .collect::<Vec<_>>();
-        let mut barrier_cells = Vec::new();
-
-        for (row_offset, ir) in i_range.enumerate() {
-            for (col_offset, jr) in j_range.clone().enumerate() {
-                let is_barrier = barrier_masks
-                    .iter()
-                    .any(|mask| mask[[0, row_offset, col_offset]]);
-                if is_barrier {
-                    barrier_cells.push(ArrayIndex { i: ir, j: jr });
-                }
-            }
-        }
-
-        barrier_cells
     }
 }
 
@@ -1042,55 +990,5 @@ mod tests {
             vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
         );
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 1).is_empty());
-    }
-
-    #[test]
-    fn test_open_extracts_hard_barriers_while_preserving_barrier_free_costs() {
-        let json = r#"
-        {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0
-                }
-            ]
-        }
-        "#;
-
-        let tmp = samples::ZarrTestBuilder::new()
-            .dimensions(1, 3, 3)
-            .chunks(1, 3, 3)
-            .layer(samples::LayerConfig::sequential("A", 1))
-            .layer(samples::LayerConfig::new(
-                "B",
-                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]),
-            ))
-            .build()
-            .expect("Error creating test zarr");
-        let cost_function = CostFunction::from_json(json).unwrap();
-        let dataset =
-            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
-
-        assert_eq!(dataset.hard_barrier_layers().len(), 1);
-
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
-        let (i_range, j_range, subset) = dataset.neighborhood_subset(&ArrayIndex { i: 1, j: 1 });
-        let raw_costs = dataset.get_neighbor_costs(i_range, j_range, &subset, false);
-        let barrier_cells = dataset
-            .get_3x3_barrier_cells(&ArrayIndex { i: 1, j: 1 }, dataset.hard_barrier_layers());
-
-        assert_eq!(raw_costs.len(), 9);
-        assert_eq!(results.len(), 4);
-        assert_eq!(
-            barrier_cells,
-            vec![
-                ArrayIndex { i: 0, j: 1 },
-                ArrayIndex { i: 1, j: 0 },
-                ArrayIndex { i: 1, j: 2 },
-                ArrayIndex { i: 2, j: 1 },
-            ]
-        );
     }
 }

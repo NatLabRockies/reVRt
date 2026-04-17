@@ -302,3 +302,78 @@ fn combine_barrier_layers_for_subset(
 
     Some(output)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use zarrs::array::Array;
+    use zarrs::array_subset::ArraySubset;
+    use zarrs::filesystem::FilesystemStore;
+
+    use super::*;
+    use crate::dataset::samples;
+    use crate::dataset::swap::{initialize_swap, inspect_source_layout};
+
+    #[test]
+    fn materialize_chunk_extracts_hard_barriers_and_preserves_costs() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0
+                }
+            ]
+        }
+        "#;
+
+        let source_dir = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(source_dir.path()).expect("could not open source"));
+        let cost_function = CostFunction::from_json(json).unwrap();
+        let layout = inspect_source_layout(&source).expect("Error inspecting source layout");
+        let swap_dir = tempfile::TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(
+            swap_dir.path(),
+            &layout,
+            cost_function.soft_barrier_groups().len(),
+        )
+        .expect("Error initializing swap dataset");
+        let writer = DerivedDataWriter::new(source, swap.clone(), cost_function);
+
+        assert_eq!(writer.hard_barrier_layers().len(), 1);
+
+        writer.materialize_chunk(0, 0);
+
+        let subset = ArraySubset::new_with_ranges(&[0..1, 0..3, 0..3]);
+        let cost_values: Vec<f32> = Array::open(swap.clone(), "/cost")
+            .expect("could not open derived cost array")
+            .retrieve_array_subset_elements(&subset)
+            .expect("could not read derived costs");
+        let hard_barrier_mask: Vec<bool> = Array::open(swap, "/hard_barrier_mask")
+            .expect("could not open hard barrier mask")
+            .retrieve_array_subset_elements(&subset)
+            .expect("could not read hard barrier mask");
+
+        assert_eq!(
+            cost_values,
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+        );
+        assert_eq!(
+            hard_barrier_mask,
+            vec![false, true, false, true, false, true, false, true, false]
+        );
+    }
+}
