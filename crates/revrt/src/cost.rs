@@ -124,10 +124,23 @@ impl CostFunction {
     ///
     /// The JSON pattern used by reVX was the following:
     /// ```json
-    /// {"cost_layers": [
-    ///   {"layer_name": "A"},
-    ///   {"layer_name": "A", "multiplier_scalar": 2, "multiplier_layer": "B"}
-    ///   ]}
+    /// {
+    ///   "cost_layers": [
+    ///     {"layer_name": "A"},
+    ///     {
+    ///       "layer_name": "A",
+    ///       "multiplier_scalar": 2,
+    ///       "multiplier_layer": "B"
+    ///     }
+    ///   ],
+    ///   "barrier_layers": [
+    ///     {
+    ///       "layer_name": "barrier_mask",
+    ///       "barrier_operator": "eq",
+    ///       "barrier_threshold": 1.0
+    ///     }
+    ///   ]
+    /// }
     /// ```
     pub(super) fn from_json(json: &str) -> Result<Self> {
         trace!("Parsing cost definition from json: {}", json);
