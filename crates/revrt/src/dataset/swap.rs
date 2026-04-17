@@ -19,7 +19,7 @@ pub(super) struct SourceLayout {
 
 pub(super) struct InitializedSwap {
     pub(super) storage: ReadableWritableListableStorage,
-    pub(super) cost_chunk_idx: Array2<bool>,
+    pub(super) swap_chunk_idx: Array2<bool>,
 }
 
 pub(super) fn inspect_source_layout(source: &ReadableListableStorage) -> Result<SourceLayout> {
@@ -106,7 +106,7 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
 
     Ok(InitializedSwap {
         storage: swap,
-        cost_chunk_idx: Array2::from_elem((layout.chunk_grid_rows, layout.chunk_grid_cols), false),
+        swap_chunk_idx: Array2::from_elem((layout.chunk_grid_rows, layout.chunk_grid_cols), false),
     })
 }
 
@@ -251,8 +251,8 @@ mod tests {
         let initialized_swap =
             initialize_swap(swap_dir.path(), &layout, 2).expect("swap initialization failed");
 
-        assert_eq!(initialized_swap.cost_chunk_idx.shape(), &[2, 2]);
-        assert!(initialized_swap.cost_chunk_idx.iter().all(|value| !*value));
+        assert_eq!(initialized_swap.swap_chunk_idx.shape(), &[2, 2]);
+        assert!(initialized_swap.swap_chunk_idx.iter().all(|value| !*value));
 
         let expected_layers = [
             ("/cost", DataType::Float32),

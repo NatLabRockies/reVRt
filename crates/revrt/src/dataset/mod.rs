@@ -59,8 +59,8 @@ pub(super) struct Dataset {
     // cost_variables: Vec<String>,
     /// Storage for the calculated cost
     swap: ReadableWritableListableStorage,
-    /// Index of cost chunks already calculated
-    cost_chunk_idx: RwLock<ndarray::Array2<bool>>,
+    /// Index of derived swap chunks already calculated
+    swap_chunk_idx: RwLock<ndarray::Array2<bool>>,
     /// Explicit barriers that are always active for this dataset
     hard_barrier_layers: Vec<crate::cost::BarrierLayer>,
     /// Soft barriers grouped by importance and ordered for retry states
@@ -121,7 +121,7 @@ impl Dataset {
         let source_layout = inspect_source_layout(&source)?;
         let initialized_swap = initialize_swap(swap_fp, &source_layout, soft_barrier_groups.len())?;
         let swap = initialized_swap.storage;
-        let cost_chunk_idx = initialized_swap.cost_chunk_idx.into();
+        let swap_chunk_idx = initialized_swap.swap_chunk_idx.into();
         let grid_nrows = source_layout.grid_nrows;
         let grid_ncols = source_layout.grid_ncols;
 
@@ -172,7 +172,7 @@ impl Dataset {
             source,
             cost_path: None,
             swap,
-            cost_chunk_idx,
+            swap_chunk_idx,
             hard_barrier_layers,
             soft_barrier_groups,
             cost_function,
@@ -545,17 +545,17 @@ impl Dataset {
                     "Checking if derived data for chunk ({}, {}) has been calculated",
                     ci, cj
                 );
-                if self.cost_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
+                if self.swap_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
                     trace!("Derived data for chunk ({}, {}) already calculated", ci, cj);
                     continue;
                 }
 
-                debug!("Requesting write lock for cost_chunk_idx ({}, {})", ci, cj);
+                debug!("Requesting write lock for swap_chunk_idx ({}, {})", ci, cj);
                 let mut chunk_idx = self
-                    .cost_chunk_idx
+                    .swap_chunk_idx
                     .write()
                     .expect("Failed to acquire write lock");
-                debug!("Acquired write lock for cost_chunk_idx ({}, {})", ci, cj);
+                debug!("Acquired write lock for swap_chunk_idx ({}, {})", ci, cj);
                 if chunk_idx[[ci as usize, cj as usize]] {
                     trace!(
                         "Derived data for chunk ({}, {}) already calculated while waiting for the lock",
@@ -571,7 +571,7 @@ impl Dataset {
                         chunk_idx.iter().filter(|&&value| value).count()
                     );
                 }
-                debug!("Released write lock for cost_chunk_idx ({}, {})", ci, cj);
+                debug!("Released write lock for swap_chunk_idx ({}, {})", ci, cj);
             }
         }
     }
