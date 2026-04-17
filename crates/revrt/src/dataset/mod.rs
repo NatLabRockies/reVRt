@@ -652,6 +652,168 @@ impl Dataset {
     pub(super) fn grid_shape(&self) -> (u64, u64) {
         (self.grid_nrows, self.grid_ncols)
     }
+
+    fn ensure_derived_data_for_subset(
+        &self,
+        array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
+        subset: &zarrs::array_subset::ArraySubset,
+    ) {
+        let chunks = &array.chunks_in_array_subset(subset).unwrap().unwrap();
+        trace!("Derived-data chunks: {:?}", chunks);
+        trace!(
+            "Derived-data subset extends to {:?} chunks",
+            chunks.num_elements_usize()
+        );
+
+        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
+            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
+                trace!(
+                    "Checking if derived data for chunk ({}, {}) has been calculated",
+                    ci, cj
+                );
+                if self.cost_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
+                    trace!("Derived data for chunk ({}, {}) already calculated", ci, cj);
+                    continue;
+                }
+
+                debug!("Requesting write lock for cost_chunk_idx ({}, {})", ci, cj);
+                let mut chunk_idx = self
+                    .cost_chunk_idx
+                    .write()
+                    .expect("Failed to acquire write lock");
+                debug!("Acquired write lock for cost_chunk_idx ({}, {})", ci, cj);
+                if chunk_idx[[ci as usize, cj as usize]] {
+                    trace!(
+                        "Derived data for chunk ({}, {}) already calculated while waiting for the lock",
+                        ci, cj
+                    );
+                } else {
+                    self.calculate_chunk_cost(ci, cj);
+                    self.calculate_chunk_hard_barrier_mask(ci, cj);
+                    self.calculate_chunk_cumulative_soft_barrier_masks(ci, cj);
+                    chunk_idx[[ci as usize, cj as usize]] = true;
+                    debug!(
+                        "Recorded derived data for chunk ({}, {}) as calculated. Total number of computed chunks: {}",
+                        ci,
+                        cj,
+                        chunk_idx.iter().filter(|&&value| value).count()
+                    );
+                }
+                debug!("Released write lock for cost_chunk_idx ({}, {})", ci, cj);
+            }
+        }
+    }
+
+    #[cfg(test)]
+    pub(super) fn hard_barrier_layers(&self) -> &[crate::cost::BarrierLayer] {
+        &self.hard_barrier_layers
+    }
+
+    #[cfg(test)]
+    pub(super) fn soft_barrier_group_count(&self) -> usize {
+        self.soft_barrier_groups.len()
+    }
+
+    #[cfg(test)]
+    pub(super) fn get_3x3_barrier_cells(
+        &self,
+        index: &ArrayIndex,
+        barrier_layers: &[crate::cost::BarrierLayer],
+    ) -> Vec<ArrayIndex> {
+        if barrier_layers.is_empty() {
+            return Vec::new();
+        }
+
+        let (i_range, j_range, subset) = self.neighborhood_subset(index);
+        let mut features = LazySubset::<f32>::new(self.source.clone(), subset);
+        let barrier_masks = barrier_layers
+            .iter()
+            .map(|layer| crate::cost::build_single_barrier_layer(layer, &mut features))
+            .collect::<Vec<_>>();
+        let mut barrier_cells = Vec::new();
+
+        for (row_offset, ir) in i_range.enumerate() {
+            for (col_offset, jr) in j_range.clone().enumerate() {
+                let is_barrier = barrier_masks
+                    .iter()
+                    .any(|mask| mask[[0, row_offset, col_offset]]);
+                if is_barrier {
+                    barrier_cells.push(ArrayIndex { i: ir, j: jr });
+                }
+            }
+        }
+
+        barrier_cells
+    }
+}
+
+/// Split the decoded chunk cache budget across derived dataset layers.
+///
+/// One third of the total budget is assigned to the dynamic cost cache and
+/// one third to the invariant cost cache. The remaining budget is then split
+/// between the hard-barrier cache and the cumulative soft-barrier caches:
+/// half goes to the hard-barrier cache and the rest is divided evenly across
+/// each soft-barrier retry-state cache.
+///
+/// Every allocation is clamped to at least 1 so the cache setup remains
+/// valid even when the total cache budget is very small.
+fn distribute_cache_budgets(cache_size: u64, soft_barrier_cache_count: usize) -> CacheBudgets {
+    let per_cost_cache = (cache_size / 3).max(1);
+    let remaining_cache = cache_size.saturating_sub(2 * per_cost_cache).max(1);
+    let hard_barrier_cache = (remaining_cache / 2).max(1);
+    let soft_cache_budget = remaining_cache.saturating_sub(hard_barrier_cache).max(1);
+
+    let per_soft_barrier_cache = if soft_barrier_cache_count == 0 {
+        1
+    } else {
+        (soft_cache_budget / soft_barrier_cache_count as u64).max(1)
+    };
+
+    CacheBudgets {
+        per_cost_cache,
+        hard_barrier_cache,
+        per_soft_barrier_cache,
+    }
+}
+
+fn cumulative_soft_barrier_mask_name(retry_state: usize) -> String {
+    format!("soft_barrier_mask_retry_{retry_state}")
+}
+
+fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD<bool> {
+    ndarray::ArrayD::<bool>::from_elem(
+        ndarray::IxDyn(
+            &subset
+                .shape()
+                .iter()
+                .map(|&dim| usize::try_from(dim).expect("subset dimension exceeds usize range"))
+                .collect::<Vec<_>>(),
+        ),
+        false,
+    )
+}
+
+fn combine_barrier_layers_for_subset(
+    barrier_layers: &[crate::cost::BarrierLayer],
+    features: &mut LazySubset<f32>,
+    subset: &zarrs::array_subset::ArraySubset,
+) -> Option<ndarray::ArrayD<bool>> {
+    if barrier_layers.is_empty() {
+        return None;
+    }
+
+    let barrier_masks = barrier_layers
+        .iter()
+        .map(|layer| crate::cost::build_single_barrier_layer(layer, features))
+        .collect::<Vec<_>>();
+    let mut output = empty_bool_mask(subset);
+    for mask in barrier_masks {
+        ndarray::Zip::from(&mut output)
+            .and(mask.view())
+            .for_each(|out, value| *out = *out || *value);
+    }
+
+    Some(output)
 }
 
 fn add_layer_to_data(
