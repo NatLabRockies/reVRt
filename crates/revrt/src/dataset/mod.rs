@@ -616,6 +616,39 @@ impl Dataset {
         neighbor_costs
     }
 
+    fn get_3x3_cached_barrier_cells(
+        &self,
+        index: &ArrayIndex,
+        cache: &ChunkCacheDecodedLruSizeLimit,
+    ) -> Vec<ArrayIndex> {
+        let (i_range, j_range, subset) = self.neighborhood_subset(index);
+        self.ensure_derived_data_for_subset(&cache.array(), &subset);
+        let barrier_values = cache
+            .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
+            .unwrap();
+        let mut barrier_cells = Vec::new();
+
+        for ((ir, jr), is_barrier) in i_range
+            .flat_map(|row| iter::repeat(row).zip(j_range.clone()))
+            .zip(barrier_values)
+        {
+            if is_barrier {
+                barrier_cells.push(ArrayIndex { i: ir, j: jr });
+            }
+        }
+
+        barrier_cells
+    }
+
+    pub(super) fn get_3x3_soft_barrier_cells(
+        &self,
+        index: &ArrayIndex,
+        dropped_soft_groups: usize,
+    ) -> Vec<ArrayIndex> {
+        let retry_state = dropped_soft_groups.min(self.soft_barrier_groups.len());
+        self.get_3x3_cached_barrier_cells(index, &self.cumulative_soft_barrier_caches[retry_state])
+    }
+
     pub(super) fn grid_shape(&self) -> (u64, u64) {
         (self.grid_nrows, self.grid_ncols)
     }
