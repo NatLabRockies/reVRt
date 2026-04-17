@@ -20,7 +20,14 @@ impl<I, C> Solution<I, C> {
         }
     }
 
-    #[allow(dead_code, missing_docs)]
+    #[allow(missing_docs)]
+    pub(crate) fn record_dropped_barriers(mut self, dropped_barrier_layers: Vec<String>) -> Self {
+        self.dropped_barrier_layers = dropped_barrier_layers;
+        self
+    }
+
+    #[cfg(any(test, feature = "test-integration"))]
+    #[allow(missing_docs)]
     pub fn route(&self) -> &Vec<I> {
         &self.route
     }
