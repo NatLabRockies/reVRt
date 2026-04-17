@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use ndarray::Array2;
 use tracing::{debug, trace};
 use zarrs::array::ChunkGrid;
 use zarrs::storage::{
@@ -15,11 +14,6 @@ pub(super) struct SourceLayout {
     pub(super) chunk_grid_cols: usize,
     pub(super) grid_nrows: u64,
     pub(super) grid_ncols: u64,
-}
-
-pub(super) struct InitializedSwap {
-    pub(super) storage: ReadableWritableListableStorage,
-    pub(super) swap_chunk_idx: Array2<bool>,
 }
 
 pub(super) fn inspect_source_layout(source: &ReadableListableStorage) -> Result<SourceLayout> {
@@ -82,13 +76,13 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
     swap_path: P,
     layout: &SourceLayout,
     soft_barrier_group_count: usize,
-) -> Result<InitializedSwap> {
+) -> Result<ReadableWritableListableStorage> {
     let swap: ReadableWritableListableStorage = std::sync::Arc::new(
         zarrs::filesystem::FilesystemStore::new(swap_path)
             .expect("could not open filesystem store"),
     );
 
-    trace!("Creating a new group for the cost dataset");
+    debug!("Creating a new group for the cost dataset");
     zarrs::group::GroupBuilder::new()
         .build(swap.clone(), "/")?
         .store_metadata()?;
@@ -104,10 +98,10 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
         )?;
     }
 
-    Ok(InitializedSwap {
-        storage: swap,
-        swap_chunk_idx: Array2::from_elem((layout.chunk_grid_rows, layout.chunk_grid_cols), false),
-    })
+    debug!("Swap dataset contents: {:?}", swap.list().unwrap());
+    debug!("Swap dataset size: {:?}", swap.size().unwrap());
+
+    Ok(swap)
 }
 
 pub(super) fn cumulative_soft_barrier_mask_name(retry_state: usize) -> String {
@@ -251,9 +245,6 @@ mod tests {
         let initialized_swap =
             initialize_swap(swap_dir.path(), &layout, 2).expect("swap initialization failed");
 
-        assert_eq!(initialized_swap.swap_chunk_idx.shape(), &[2, 2]);
-        assert!(initialized_swap.swap_chunk_idx.iter().all(|value| !*value));
-
         let expected_layers = [
             ("/cost", DataType::Float32),
             ("/cost_invariant", DataType::Float32),
@@ -264,7 +255,7 @@ mod tests {
         ];
 
         for (layer_name, expected_dtype) in expected_layers {
-            let array = zarrs::array::Array::open(initialized_swap.storage.clone(), layer_name)
+            let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
                 .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
             assert_eq!(array.shape(), &[1, 8, 8], "wrong shape for {layer_name}");
             assert_eq!(

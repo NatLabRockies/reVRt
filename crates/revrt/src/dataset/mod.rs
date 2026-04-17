@@ -14,71 +14,46 @@
 //! Note: This is currently in a transition state. The initial prototype
 //! included the cost function, which was removed to the `Scenario` level.
 
+mod derived;
 mod lazy_subset;
+mod reader;
 #[cfg(test)]
 pub(crate) mod samples;
+mod state;
 mod swap;
 
-use std::iter;
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
 
-use tracing::{debug, info, trace, warn};
-use zarrs::array::codec::CodecOptions;
-use zarrs::array::{ChunkCache, ChunkCacheDecodedLruSizeLimit};
-use zarrs::storage::{
-    ListableStorageTraits, ReadableListableStorage, ReadableWritableListableStorage,
-};
+use tracing::{debug, info, trace};
+use zarrs::storage::ReadableListableStorage;
 
 use crate::ArrayIndex;
 use crate::cost::CostFunction;
-use crate::error::{Error, Result};
+use crate::error::Result;
+use derived::DerivedDataWriter;
 pub(crate) use lazy_subset::LazySubset;
-use swap::{cumulative_soft_barrier_mask_name, initialize_swap, inspect_source_layout};
-
-#[derive(Debug, Clone, Copy)]
-struct CacheBudgets {
-    per_cost_cache: u64,
-    hard_barrier_cache: u64,
-    per_soft_barrier_cache: u64,
-}
+use reader::NeighborhoodReader;
+use state::DerivedChunkState;
+use swap::{initialize_swap, inspect_source_layout};
 
 /// Manages the features datasets and calculated total cost
 pub(super) struct Dataset {
     /// A Zarr storages with the features
+    #[allow(dead_code)]
     source: ReadableListableStorage,
     // Silly way to keep the tmp path alive
     #[allow(dead_code)]
     cost_path: Option<tempfile::TempDir>,
-    /// Variables used to define cost
-    /// Minimalist solution for the cost calculation. In the future
-    /// it will be modified to include weights and other types of
-    /// relations such as operations between features.
-    /// At this point it just allows custom variables names and the
-    /// cost is calculated from multiple variables.
-    // cost_variables: Vec<String>,
-    /// Storage for the calculated cost
-    swap: ReadableWritableListableStorage,
-    /// Index of derived swap chunks already calculated
-    swap_chunk_idx: RwLock<ndarray::Array2<bool>>,
-    /// Explicit barriers that are always active for this dataset
-    hard_barrier_layers: Vec<crate::cost::BarrierLayer>,
-    /// Soft barriers grouped by importance and ordered for retry states
-    soft_barrier_groups: Vec<(u32, Vec<crate::cost::BarrierLayer>)>,
-    /// Custom cost function definition
-    cost_function: CostFunction,
-    /// Cache for decoded cost chunks shared across calls
-    cost_cache: ChunkCacheDecodedLruSizeLimit,
-    /// Cache for decoded invariant cost chunks shared across calls
-    cost_invariant_cache: ChunkCacheDecodedLruSizeLimit,
-    /// Cache for decoded hard barrier chunks shared across calls
-    hard_barrier_cache: ChunkCacheDecodedLruSizeLimit,
-    /// Caches for decoded cumulative soft barrier chunks per retry state
-    cumulative_soft_barrier_caches: Vec<ChunkCacheDecodedLruSizeLimit>,
-    /// Number of rows in the routing grid
-    grid_nrows: u64,
-    /// Number of columns in the routing grid
-    grid_ncols: u64,
+    /// State tracking which swap chunks have already been materialized
+    /// Internally this is a boolean array of the same shape as the chunk grid,
+    /// where a true value means the data has been derived
+    derived_chunk_state: DerivedChunkState,
+    /// Writer responsible for materializing derived chunk data into swap
+    derived_data_writer: DerivedDataWriter,
+    /// Reader responsible for cached neighborhood access to derived data
+    neighborhood_reader: NeighborhoodReader,
+    /// Shape of data grid
+    pub(super) grid_shape: (u64, u64),
 }
 
 impl Dataset {
@@ -112,309 +87,81 @@ impl Dataset {
         swap_fp: PathBuf,
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
-        let hard_barrier_layers = cost_function.hard_barrier_layers();
-        let soft_barrier_groups = cost_function.soft_barrier_groups();
-        let cost_function = cost_function.without_barriers();
+        let soft_barrier_group_count = cost_function.soft_barrier_groups().len();
+
         let filesystem =
             zarrs::filesystem::FilesystemStore::new(path).expect("could not open filesystem store");
         let source: ReadableListableStorage = std::sync::Arc::new(filesystem);
+
         let source_layout = inspect_source_layout(&source)?;
-        let initialized_swap = initialize_swap(swap_fp, &source_layout, soft_barrier_groups.len())?;
-        let swap = initialized_swap.storage;
-        let swap_chunk_idx = initialized_swap.swap_chunk_idx.into();
-        let grid_nrows = source_layout.grid_nrows;
-        let grid_ncols = source_layout.grid_ncols;
+        let swap = initialize_swap(swap_fp, &source_layout, soft_barrier_group_count)?;
 
-        if cache_size < 1_000_000 {
-            warn!("Cache size smaller than 1MB");
-        }
-        debug!(
-            "Creating caches with total size {}MB",
-            cache_size / 1_000_000
-        );
-        // TODO: tune cache_size against typical chunk sizes
-        // (e.g. chunk_bytes * hot_chunks * safety_factor)
-        let cost_array_readable =
-            Arc::new(zarrs::array::Array::open(swap.clone(), "/cost")?.readable());
-        let cost_invariant_array_readable =
-            Arc::new(zarrs::array::Array::open(swap.clone(), "/cost_invariant")?.readable());
-        let hard_barrier_array_readable =
-            Arc::new(zarrs::array::Array::open(swap.clone(), "/hard_barrier_mask")?.readable());
-        let cumulative_soft_barrier_arrays = (0..=soft_barrier_groups.len())
-            .map(|retry_state| {
-                let path = format!("/{}", cumulative_soft_barrier_mask_name(retry_state));
-                zarrs::array::Array::open(swap.clone(), &path)
-                    .map_err(|err| Error::IO(std::io::Error::other(err.to_string())))
-                    .map(|array| Arc::new(array.readable()))
-            })
-            .collect::<Result<Vec<_>>>()?;
+        let derived_chunk_state = DerivedChunkState::new(&source_layout);
+        let derived_data_writer =
+            DerivedDataWriter::new(source.clone(), swap.clone(), cost_function);
 
-        let budgets = distribute_cache_budgets(cache_size, cumulative_soft_barrier_arrays.len());
-        debug!("Cache budgets: {:?}", budgets);
-
-        let cost_cache =
-            ChunkCacheDecodedLruSizeLimit::new(cost_array_readable.clone(), budgets.per_cost_cache);
-        let cost_invariant_cache = ChunkCacheDecodedLruSizeLimit::new(
-            cost_invariant_array_readable.clone(),
-            budgets.per_cost_cache,
-        );
-        let hard_barrier_cache = ChunkCacheDecodedLruSizeLimit::new(
-            hard_barrier_array_readable.clone(),
-            budgets.hard_barrier_cache,
-        );
-        let cumulative_soft_barrier_caches = cumulative_soft_barrier_arrays
-            .into_iter()
-            .map(|array| ChunkCacheDecodedLruSizeLimit::new(array, budgets.per_soft_barrier_cache))
-            .collect();
+        let neighborhood_reader = NeighborhoodReader::open(
+            swap.clone(),
+            cache_size,
+            soft_barrier_group_count,
+            source_layout,
+        )?;
+        let grid_shape = neighborhood_reader.grid_shape();
 
         trace!("Dataset opened successfully");
         Ok(Self {
             source,
             cost_path: None,
-            swap,
-            swap_chunk_idx,
-            hard_barrier_layers,
-            soft_barrier_groups,
-            cost_function,
-            cost_cache,
-            cost_invariant_cache,
-            hard_barrier_cache,
-            cumulative_soft_barrier_caches,
-            grid_nrows,
-            grid_ncols,
+            derived_chunk_state,
+            derived_data_writer,
+            neighborhood_reader,
+            grid_shape,
         })
     }
 
-    fn calculate_chunk_derived_data(&self, ci: u64, cj: u64) {
-        trace!("Creating a LazySubset for ({}, {})", ci, cj);
-
-        // cost variable is stored in the swap dataset
-        let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
-        // Get the subset according to cost's chunk
-        let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
-        let chunk_subset =
-            zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
-        let mut data = LazySubset::<f32>::new(self.source.clone(), subset.clone());
-
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, true);
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, false);
-        self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
-        self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
-    }
-
-    fn calculate_chunk_cost_single_layer(
-        &self,
-        ci: u64,
-        cj: u64,
-        features: &mut LazySubset<f32>,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
-        is_invariant: bool,
-    ) {
-        let output;
-        let layer_name;
-        if is_invariant {
-            trace!("Calculating invariant cost for chunk ({}, {})", ci, cj);
-            output = self.cost_function.compute(features, true);
-            layer_name = "/cost_invariant";
-        } else {
-            trace!(
-                "Calculating length-dependent cost for chunk ({}, {})",
-                ci, cj
-            );
-            output = self.cost_function.compute(features, false);
-            layer_name = "/cost";
-        }
-
-        trace!("Cost function: {:?}", self.cost_function);
-
-        let cost = zarrs::array::Array::open(self.swap.clone(), layer_name).unwrap();
-        cost.store_metadata().unwrap();
-        let chunk_indices: Vec<u64> = vec![0, ci, cj];
-        trace!("Storing chunk at {:?}", chunk_indices);
-        trace!("Target chunk subset: {:?}", chunk_subset);
-        cost.store_chunks_ndarray(chunk_subset, output).unwrap();
-    }
-
-    fn calculate_chunk_hard_barrier_mask(
-        &self,
-        features: &mut LazySubset<f32>,
-        subset: &zarrs::array_subset::ArraySubset,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
-    ) {
-        trace!("Calculating hard barrier mask for subset {:?}", subset);
-
-        let output = if self.hard_barrier_layers.is_empty() {
-            ndarray::ArrayD::<bool>::from_elem(
-                ndarray::IxDyn(
-                    &subset
-                        .shape()
-                        .iter()
-                        .map(|&dim| {
-                            usize::try_from(dim).expect("subset dimension exceeds usize range")
-                        })
-                        .collect::<Vec<_>>(),
-                ),
-                false,
-            )
-        } else {
-            let barrier_masks = self
-                .hard_barrier_layers
-                .iter()
-                .map(|layer| crate::cost::build_single_barrier_layer(layer, features))
-                .collect::<Vec<_>>();
-
-            let mut output =
-                ndarray::ArrayD::<bool>::from_elem(ndarray::IxDyn(barrier_masks[0].shape()), false);
-            for mask in barrier_masks {
-                ndarray::Zip::from(&mut output)
-                    .and(mask.view())
-                    .for_each(|out, value| *out = *out || *value);
-            }
-            output
-        };
-
-        let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
-        variable.store_metadata().unwrap();
-        variable.store_chunks_ndarray(chunk_subset, output).unwrap();
-    }
-
-    fn calculate_chunk_cumulative_soft_barrier_masks(
-        &self,
-        features: &mut LazySubset<f32>,
-        subset: &zarrs::array_subset::ArraySubset,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
-    ) {
-        trace!(
-            "Calculating cumulative soft barrier masks for subset {:?}",
-            subset
-        );
-
-        let empty_mask = empty_bool_mask(subset);
-        let group_masks = self
-            .soft_barrier_groups
-            .iter()
-            .map(|(_, layers)| {
-                combine_barrier_layers_for_subset(layers, features, subset)
-                    .unwrap_or_else(|| empty_mask.clone())
-            })
-            .collect::<Vec<_>>();
-
-        for retry_state in 0..=self.soft_barrier_groups.len() {
-            let layer_name = cumulative_soft_barrier_mask_name(retry_state);
-            let target =
-                zarrs::array::Array::open(self.swap.clone(), &format!("/{layer_name}")).unwrap();
-
-            let mut output = empty_mask.clone();
-            for mask in group_masks.iter().skip(retry_state) {
-                ndarray::Zip::from(&mut output)
-                    .and(mask.view())
-                    .for_each(|out, value| *out = *out || *value);
-            }
-
-            target.store_metadata().unwrap();
-            target.store_chunks_ndarray(chunk_subset, output).unwrap();
-        }
-    }
-
     pub(super) fn get_3x3(&self, index: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
-        let &ArrayIndex { i, j } = index;
-
-        trace!("Getting 3x3 neighborhood for (i={}, j={})", i, j);
-
-        trace!("Cost dataset contents: {:?}", self.swap.list().unwrap());
-        trace!("Cost dataset size: {:?}", self.swap.size().unwrap());
-
-        trace!("Opening cost dataset via cache");
-        let cost_array = self.cost_cache.array();
-        trace!("Cost dataset with shape: {:?}", cost_array.shape());
-
-        let (i_range, j_range, subset) = self.neighborhood_subset(index);
-        trace!("Cost subset: {:?}", subset);
-        self.ensure_derived_data_for_subset(&cost_array, &subset);
-
-        let neighbors = self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, false);
-        let invariant_neighbors =
-            self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, true);
-        let hard_barrier_values: Vec<bool> = if self.hard_barrier_layers.is_empty() {
-            std::iter::repeat_n(false, neighbors.len()).collect()
-        } else {
-            self.hard_barrier_cache
-                .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
-                .unwrap()
-        };
-
-        // Extract the origin point.
-        let center = neighbors
-            .iter()
-            .zip(hard_barrier_values.iter())
-            .find(|(((ir, jr), _), _)| *ir == i && *jr == j)
-            .map(|(((ir, jr), v), is_barrier)| {
-                if *is_barrier {
-                    ((ir, jr), &0_f32, true)
-                } else if v.is_nan() {
-                    ((ir, jr), &0_f32, false) // NaN's don't contribute to cost
-                } else {
-                    ((ir, jr), v, false)
-                }
-            })
-            .unwrap();
-        if center.2 {
-            return Vec::new();
-        }
-        trace!("Center point: {:?}", center);
-
-        /*
-         * The transition between two gridpoint centers is along half the distance
-         * on the original gridpoint, plus half the distance to the target gridpoint
-         * (center). Therefore, the transition cost is the average between the origin
-         * gridpoint cost and the target gridpoint cost.
-         * Note that the same principle is valid for diagonals, it is still the average
-         * of both values, but we have to scale for the longer distance along the
-         * diagonal, thus a sqrt(2) factor along the diagonals.
-         */
-        // Calculate the average with center point (half grid + other half grid).
-        // Also, apply the diagonal factor for the extra distance.
-        // Finally, add any invariant costs.
-        let cost_to_neighbors = neighbors
-            .iter()
-            .zip(invariant_neighbors.iter())
-            .zip(hard_barrier_values.iter())
-            .filter(|((((ir, jr), v), _), is_barrier)| {
-                !(**is_barrier || v.is_nan() || (*ir == i && *jr == j))
-            })
-            .map(|((((ir, jr), v), ((inv_ir, inv_jr), inv_cost)), _)| {
-                debug_assert_eq!((ir, jr), (inv_ir, inv_jr));
-                ((ir, jr), 0.5 * (v + center.1), inv_cost)
-            })
-            .map(|((ir, jr), v, inv_cost)| {
-                let scaled = if *ir != i && *jr != j {
-                    // Diagonal factor for longer distance (hypotenuse)
-                    v * f32::sqrt(2.0)
-                } else {
-                    v
-                };
-                (ArrayIndex { i: *ir, j: *jr }, scaled + inv_cost)
-            })
-            .collect::<Vec<_>>();
-
-        trace!("Neighbors {:?}", cost_to_neighbors);
-
-        cost_to_neighbors
-
-        /*
-        let mut data = array
-            .load_chunks_ndarray(&zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]))
-            .unwrap();
-        data[[x as usize, y as usize]] = 0.0;
-        array
-            .store_chunks_ndarray(
-                &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]),
-                data,
-            )
-            .unwrap();
-        */
+        self.neighborhood_reader.get_3x3(
+            index,
+            !self.derived_data_writer.hard_barrier_layers().is_empty(),
+            |array, subset| self.ensure_derived_data_for_subset(array, subset),
+        )
     }
 
+    pub(super) fn get_3x3_soft_barrier_cells(
+        &self,
+        index: &ArrayIndex,
+        dropped_soft_groups: usize,
+    ) -> Vec<ArrayIndex> {
+        let retry_state =
+            dropped_soft_groups.min(self.derived_data_writer.soft_barrier_group_count());
+        self.neighborhood_reader
+            .get_3x3_soft_barrier_cells(index, retry_state, |array, subset| {
+                self.ensure_derived_data_for_subset(array, subset)
+            })
+    }
+
+    fn ensure_derived_data_for_subset(
+        &self,
+        array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
+        subset: &zarrs::array_subset::ArraySubset,
+    ) {
+        self.derived_chunk_state
+            .ensure_derived_data_for_subset(array, subset, |ci, cj| {
+                self.derived_data_writer.materialize_chunk(ci, cj)
+            });
+    }
+
+    #[cfg(test)]
+    pub(super) fn hard_barrier_layers(&self) -> &[crate::cost::BarrierLayer] {
+        self.derived_data_writer.hard_barrier_layers()
+    }
+
+    #[cfg(test)]
+    pub(super) fn soft_barrier_group_count(&self) -> usize {
+        self.derived_data_writer.soft_barrier_group_count()
+    }
+
+    #[cfg(test)]
     fn neighborhood_subset(
         &self,
         index: &ArrayIndex,
@@ -423,35 +170,10 @@ impl Dataset {
         std::ops::Range<u64>,
         zarrs::array_subset::ArraySubset,
     ) {
-        let &ArrayIndex { i, j } = index;
-        debug_assert!(self.grid_nrows > 0);
-        debug_assert!(self.grid_ncols > 0);
-
-        let max_i = self.grid_nrows - 1;
-        let max_j = self.grid_ncols - 1;
-
-        let i_range = match i {
-            0 if max_i == 0 => 0..1,
-            0 => 0..2,
-            _ if i == max_i => i - 1..i + 1,
-            _ => i - 1..i + 2,
-        };
-        let j_range = match j {
-            0 if max_j == 0 => 0..1,
-            0 => 0..2,
-            _ if j == max_j => j - 1..j + 1,
-            _ => j - 1..j + 2,
-        };
-
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-            0..1,
-            i_range.clone(),
-            j_range.clone(),
-        ]);
-
-        (i_range, j_range, subset)
+        self.neighborhood_reader.neighborhood_subset(index)
     }
 
+    #[cfg(test)]
     fn get_neighbor_costs(
         &self,
         i_range: std::ops::Range<u64>,
@@ -459,131 +181,8 @@ impl Dataset {
         subset: &zarrs::array_subset::ArraySubset,
         is_invariant: bool,
     ) -> Vec<((u64, u64), f32)> {
-        trace!("Opening cost dataset (is_invariant={})", is_invariant);
-
-        let cache = if is_invariant {
-            &self.cost_invariant_cache
-        } else {
-            &self.cost_cache
-        };
-        let cost_array = cache.array();
-        trace!(
-            "Cost dataset (is_invariant={}) with shape: {:?}",
-            is_invariant,
-            cost_array.shape()
-        );
-
-        // Retrieve the 3x3 neighborhood values
-        let cost_values: Vec<f32> = cache
-            .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
-            .unwrap();
-
-        trace!("Read values {:?}", cost_values);
-
-        // Match the indices
-        let neighbor_costs = i_range
-            .flat_map(|e| iter::repeat(e).zip(j_range.clone()))
-            .zip(cost_values)
-            .collect();
-
-        trace!("Neighbors {:?}", neighbor_costs);
-        neighbor_costs
-    }
-
-    fn get_3x3_cached_barrier_cells(
-        &self,
-        index: &ArrayIndex,
-        cache: &ChunkCacheDecodedLruSizeLimit,
-    ) -> Vec<ArrayIndex> {
-        let (i_range, j_range, subset) = self.neighborhood_subset(index);
-        self.ensure_derived_data_for_subset(&cache.array(), &subset);
-        let barrier_values = cache
-            .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
-            .unwrap();
-        let mut barrier_cells = Vec::new();
-
-        for ((ir, jr), is_barrier) in i_range
-            .flat_map(|row| iter::repeat(row).zip(j_range.clone()))
-            .zip(barrier_values)
-        {
-            if is_barrier {
-                barrier_cells.push(ArrayIndex { i: ir, j: jr });
-            }
-        }
-
-        barrier_cells
-    }
-
-    pub(super) fn get_3x3_soft_barrier_cells(
-        &self,
-        index: &ArrayIndex,
-        dropped_soft_groups: usize,
-    ) -> Vec<ArrayIndex> {
-        let retry_state = dropped_soft_groups.min(self.soft_barrier_groups.len());
-        self.get_3x3_cached_barrier_cells(index, &self.cumulative_soft_barrier_caches[retry_state])
-    }
-
-    pub(super) fn grid_shape(&self) -> (u64, u64) {
-        (self.grid_nrows, self.grid_ncols)
-    }
-
-    fn ensure_derived_data_for_subset(
-        &self,
-        array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
-        subset: &zarrs::array_subset::ArraySubset,
-    ) {
-        let chunks = &array.chunks_in_array_subset(subset).unwrap().unwrap();
-        trace!("Derived-data chunks: {:?}", chunks);
-        trace!(
-            "Derived-data subset extends to {:?} chunks",
-            chunks.num_elements_usize()
-        );
-
-        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
-            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
-                trace!(
-                    "Checking if derived data for chunk ({}, {}) has been calculated",
-                    ci, cj
-                );
-                if self.swap_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
-                    trace!("Derived data for chunk ({}, {}) already calculated", ci, cj);
-                    continue;
-                }
-
-                debug!("Requesting write lock for swap_chunk_idx ({}, {})", ci, cj);
-                let mut chunk_idx = self
-                    .swap_chunk_idx
-                    .write()
-                    .expect("Failed to acquire write lock");
-                debug!("Acquired write lock for swap_chunk_idx ({}, {})", ci, cj);
-                if chunk_idx[[ci as usize, cj as usize]] {
-                    trace!(
-                        "Derived data for chunk ({}, {}) already calculated while waiting for the lock",
-                        ci, cj
-                    );
-                } else {
-                    self.calculate_chunk_derived_data(ci, cj);
-                    chunk_idx[[ci as usize, cj as usize]] = true;
-                    debug!(
-                        "Recorded derived data for chunk ({}, {}) as calculated. Total number of computed chunks: {}",
-                        ci,
-                        cj,
-                        chunk_idx.iter().filter(|&&value| value).count()
-                    );
-                }
-                debug!("Released write lock for swap_chunk_idx ({}, {})", ci, cj);
-            }
-        }
-    }
-
-    #[cfg(test)]
-    pub(super) fn hard_barrier_layers(&self) -> &[crate::cost::BarrierLayer] {
-        &self.hard_barrier_layers
-    }
-
-    #[cfg(test)]
-    pub(super) fn soft_barrier_group_count(&self) -> usize {
-        self.soft_barrier_groups.len()
+        self.neighborhood_reader
+            .get_neighbor_costs(i_range, j_range, subset, is_invariant)
     }
 
     #[cfg(test)]
@@ -619,71 +218,6 @@ impl Dataset {
     }
 }
 
-/// Split the decoded chunk cache budget across derived dataset layers.
-///
-/// One third of the total budget is assigned to the dynamic cost cache and
-/// one third to the invariant cost cache. The remaining budget is then split
-/// between the hard-barrier cache and the cumulative soft-barrier caches:
-/// half goes to the hard-barrier cache and the rest is divided evenly across
-/// each soft-barrier retry-state cache.
-///
-/// Every allocation is clamped to at least 1 so the cache setup remains
-/// valid even when the total cache budget is very small.
-fn distribute_cache_budgets(cache_size: u64, soft_barrier_cache_count: usize) -> CacheBudgets {
-    let per_cost_cache = (cache_size / 3).max(1);
-    let remaining_cache = cache_size.saturating_sub(2 * per_cost_cache).max(1);
-    let hard_barrier_cache = (remaining_cache / 2).max(1);
-    let soft_cache_budget = remaining_cache.saturating_sub(hard_barrier_cache).max(1);
-
-    let per_soft_barrier_cache = if soft_barrier_cache_count == 0 {
-        1
-    } else {
-        (soft_cache_budget / soft_barrier_cache_count as u64).max(1)
-    };
-
-    CacheBudgets {
-        per_cost_cache,
-        hard_barrier_cache,
-        per_soft_barrier_cache,
-    }
-}
-
-fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD<bool> {
-    ndarray::ArrayD::<bool>::from_elem(
-        ndarray::IxDyn(
-            &subset
-                .shape()
-                .iter()
-                .map(|&dim| usize::try_from(dim).expect("subset dimension exceeds usize range"))
-                .collect::<Vec<_>>(),
-        ),
-        false,
-    )
-}
-
-fn combine_barrier_layers_for_subset(
-    barrier_layers: &[crate::cost::BarrierLayer],
-    features: &mut LazySubset<f32>,
-    subset: &zarrs::array_subset::ArraySubset,
-) -> Option<ndarray::ArrayD<bool>> {
-    if barrier_layers.is_empty() {
-        return None;
-    }
-
-    let barrier_masks = barrier_layers
-        .iter()
-        .map(|layer| crate::cost::build_single_barrier_layer(layer, features))
-        .collect::<Vec<_>>();
-    let mut output = empty_bool_mask(subset);
-    for mask in barrier_masks {
-        ndarray::Zip::from(&mut output)
-            .and(mask.view())
-            .for_each(|out, value| *out = *out || *value);
-    }
-
-    Some(output)
-}
-
 #[cfg(test)]
 /// Make a LazySubset from a source and array subset to be used in tests
 ///
@@ -699,6 +233,7 @@ pub(crate) fn make_lazy_subset_for_tests(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::Error;
     use std::f32::consts::SQRT_2;
     use std::sync::Arc;
     use test_case::test_case;
