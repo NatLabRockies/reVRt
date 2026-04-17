@@ -32,9 +32,16 @@ impl<I, C> Solution<I, C> {
         &self.route
     }
 
-    #[allow(dead_code, missing_docs)]
+    #[cfg(any(test, feature = "test-integration"))]
+    #[allow(missing_docs)]
     pub fn total_cost(&self) -> &C {
         &self.total_cost
+    }
+
+    #[cfg(any(test, feature = "test-integration"))]
+    #[allow(missing_docs)]
+    pub fn dropped_barrier_layers(&self) -> &Vec<String> {
+        &self.dropped_barrier_layers
     }
 }
 

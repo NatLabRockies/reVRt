@@ -48,6 +48,10 @@ harness = false
 [lints]
 workspace = true
 
+[features]
+test-integration = []
+
 [[test]]
 name = "revrt-integration-tests"
 path = "../../tests/rust/integration_tests.rs"
+required-features = ["test-integration"]
