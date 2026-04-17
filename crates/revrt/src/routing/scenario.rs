@@ -21,13 +21,33 @@ use super::cost_as_u64;
 use crate::routing::features::Features;
 use crate::{ArrayIndex, Result};
 
+/// Scenario state required to evaluate routing moves.
+///
+/// A scenario owns the derived routing dataset together with the feature
+/// metadata used to open and validate the underlying store. It provides
+/// helpers for neighborhood lookups, retry-aware soft barrier filtering,
+/// and reporting information about the active barrier groups.
 pub(super) struct Scenario {
+    /// Derived dataset containing cost arrays and barrier masks.
     pub dataset: crate::dataset::Dataset,
     #[allow(dead_code)]
+    /// Source feature metadata kept alive for scenario lifetime management.
     features: Features,
 }
 
 impl Scenario {
+    /// Open a scenario backed by a swap dataset.
+    ///
+    /// # Arguments
+    /// `store_path`: Path to the source dataset store.
+    /// `cost_function`: Cost function used to derive routing costs and
+    ///                  barrier masks.
+    /// `cache_size`: Maximum cache size for dataset-backed reads.
+    /// `swap_fp`: Filesystem path where the swap dataset should be created.
+    ///
+    /// # Returns
+    /// A `Scenario` whose dataset materializes derived arrays in the swap
+    /// location while reusing the source feature definitions.
     pub(super) fn new_with_swap<P: AsRef<std::path::Path>>(
         store_path: P,
         cost_function: crate::cost::CostFunction,
@@ -47,6 +67,16 @@ impl Scenario {
         Ok(Self { dataset, features })
     }
 
+    /// Open a scenario that derives routing data directly from the source.
+    ///
+    /// # Arguments
+    /// `store_path`: Path to the source dataset store.
+    /// `cost_function`: Cost function used to derive routing costs and
+    ///                  barrier masks.
+    /// `cache_size`: Maximum cache size for dataset-backed reads.
+    ///
+    /// # Returns
+    /// A `Scenario` ready to serve neighborhood and barrier queries.
     pub(super) fn new<P: AsRef<std::path::Path>>(
         store_path: P,
         cost_function: crate::cost::CostFunction,
@@ -60,10 +90,32 @@ impl Scenario {
         Ok(Self { dataset, features })
     }
 
+    /// Retrieve the local 3x3 neighborhood costs around a position.
+    ///
+    /// # Arguments
+    /// `position`: Grid index at the center of the neighborhood query.
+    ///
+    /// # Returns
+    /// Neighbor positions and their floating-point traversal costs.
     pub(super) fn get_3x3(&self, position: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
         self.dataset.get_3x3(position)
     }
 
+    /// Return retry-aware successor cells for a routing attempt.
+    ///
+    /// The returned successors exclude non-finite or non-positive costs and
+    /// any cells covered by currently active soft barrier groups. If the
+    /// starting cell itself is masked by an active soft barrier, no
+    /// successors are returned.
+    ///
+    /// # Arguments
+    /// `position`: Current grid position whose neighbors should be explored.
+    /// `dropped_soft_groups`: Number of lowest-importance soft barrier
+    ///                        groups that should be ignored for this retry.
+    ///
+    /// # Returns
+    /// Neighbor positions and integer-encoded traversal costs suitable for
+    /// routing expansion.
     pub(super) fn successors_for_attempt(
         &self,
         position: &ArrayIndex,
@@ -89,10 +141,23 @@ impl Scenario {
         neighbors
     }
 
+    /// Count the configured soft barrier groups.
+    ///
+    /// # Returns
+    /// Number of retry stages available for progressively dropping soft
+    /// barrier groups.
     pub(super) fn soft_barrier_group_count(&self) -> usize {
         self.dataset.soft_barrier_groups().len()
     }
 
+    /// List barrier layer names dropped for a retry state.
+    ///
+    /// # Arguments
+    /// `dropped_soft_groups`: Number of soft barrier groups dropped in
+    ///                        ascending importance order.
+    ///
+    /// # Returns
+    /// Barrier layer names belonging to the dropped groups.
     pub(super) fn dropped_barrier_layers(&self, dropped_soft_groups: usize) -> Vec<String> {
         let mut dropped_barrier_layers = Vec::new();
 
@@ -110,6 +175,10 @@ impl Scenario {
         dropped_barrier_layers
     }
 
+    /// Return the scenario grid dimensions.
+    ///
+    /// # Returns
+    /// Tuple of `(rows, cols)` describing the routing grid shape.
     pub(super) fn grid_shape(&self) -> (u64, u64) {
         self.dataset.grid_shape
     }
