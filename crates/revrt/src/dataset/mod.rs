@@ -302,6 +302,95 @@ impl Dataset {
         cost.store_chunks_ndarray(chunk_subset, output).unwrap();
     }
 
+    fn calculate_chunk_hard_barrier_mask(&self, ci: u64, cj: u64) {
+        trace!("Calculating hard barrier mask for chunk ({}, {})", ci, cj);
+
+        let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
+        let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
+        let chunk_subset =
+            &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
+
+        let output = if self.hard_barrier_layers.is_empty() {
+            ndarray::ArrayD::<bool>::from_elem(
+                ndarray::IxDyn(
+                    &subset
+                        .shape()
+                        .iter()
+                        .map(|&dim| {
+                            usize::try_from(dim).expect("subset dimension exceeds usize range")
+                        })
+                        .collect::<Vec<_>>(),
+                ),
+                false,
+            )
+        } else {
+            let mut data = LazySubset::<f32>::new(self.source.clone(), subset);
+            let barrier_masks = self
+                .hard_barrier_layers
+                .iter()
+                .map(|layer| crate::cost::build_single_barrier_layer(layer, &mut data))
+                .collect::<Vec<_>>();
+
+            let mut output =
+                ndarray::ArrayD::<bool>::from_elem(ndarray::IxDyn(barrier_masks[0].shape()), false);
+            for mask in barrier_masks {
+                ndarray::Zip::from(&mut output)
+                    .and(mask.view())
+                    .for_each(|out, value| *out = *out || *value);
+            }
+            output
+        };
+
+        variable.store_metadata().unwrap();
+        variable.store_chunks_ndarray(chunk_subset, output).unwrap();
+    }
+
+    fn calculate_chunk_cumulative_soft_barrier_masks(&self, ci: u64, cj: u64) {
+        trace!(
+            "Calculating cumulative soft barrier masks for chunk ({}, {})",
+            ci, cj
+        );
+
+        let variable = zarrs::array::Array::open(
+            self.swap.clone(),
+            &format!("/{}", cumulative_soft_barrier_mask_name(0)),
+        )
+        .unwrap();
+        let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
+
+        let mut features = LazySubset::<f32>::new(self.source.clone(), subset.clone());
+        let empty_mask = empty_bool_mask(&subset);
+        let group_masks = self
+            .soft_barrier_groups
+            .iter()
+            .map(|(_, layers)| {
+                combine_barrier_layers_for_subset(layers, &mut features, &subset)
+                    .unwrap_or_else(|| empty_mask.clone())
+            })
+            .collect::<Vec<_>>();
+
+        for retry_state in 0..=self.soft_barrier_groups.len() {
+            let layer_name = cumulative_soft_barrier_mask_name(retry_state);
+            let target =
+                zarrs::array::Array::open(self.swap.clone(), &format!("/{layer_name}")).unwrap();
+            let chunk_subset = &zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                0..1,
+                ci..(ci + 1),
+                cj..(cj + 1),
+            ]);
+
+            let mut output = empty_mask.clone();
+            for mask in group_masks.iter().skip(retry_state) {
+                ndarray::Zip::from(&mut output)
+                    .and(mask.view())
+                    .for_each(|out, value| *out = *out || *value);
+            }
+
+            target.store_metadata().unwrap();
+            target.store_chunks_ndarray(chunk_subset, output).unwrap();
+        }
+    }
+
     pub(super) fn get_3x3(&self, index: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
         let &ArrayIndex { i, j } = index;
 
