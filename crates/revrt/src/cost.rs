@@ -25,6 +25,7 @@ fn true_option() -> bool {
 ///
 /// `cost_layers`: A collection of cost layers with equal weight.
 /// `friction_layers`: A collection of friction layers that scale the cost layer.
+/// `barrier_layers`: A collection of layers that create impassable cells.
 /// `ignore_invalid_costs`: If true, cells with <=0 or NaN costs are skipped completely.
 ///
 /// This was based on the original transmission router and is composed of
@@ -32,6 +33,7 @@ fn true_option() -> bool {
 pub(crate) struct CostFunction {
     cost_layers: Vec<CostLayer>,
     friction_layers: Option<Vec<FrictionLayer>>,
+    barrier_layers: Option<Vec<BarrierLayer>>,
     /// Option to completely ignore <=0 cost cells
     #[serde(default = "true_option")]
     pub(crate) ignore_invalid_costs: bool,
