@@ -250,11 +250,24 @@ impl NeighborhoodReader {
         retry_state: usize,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<ArrayIndex> {
-        self.get_3x3_cached_barrier_cells(
-            index,
-            &self.cumulative_soft_barrier_caches[retry_state],
-            data_materializer,
-        )
+        let (i_range, j_range, subset) = self.neighborhood_subset(index);
+        let cache = &self.cumulative_soft_barrier_caches[retry_state];
+        data_materializer.ensure_derived_data_for_subset(&cache.array(), &subset);
+        let barrier_values = cache
+            .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
+            .unwrap();
+        let mut barrier_cells = Vec::new();
+
+        for ((ir, jr), is_barrier) in i_range
+            .flat_map(|row| iter::repeat(row).zip(j_range.clone()))
+            .zip(barrier_values)
+        {
+            if is_barrier {
+                barrier_cells.push(ArrayIndex { i: ir, j: jr });
+            }
+        }
+
+        barrier_cells
     }
 
     /// Return the grid shape backing this reader as `(rows, cols)`.
@@ -362,46 +375,6 @@ impl NeighborhoodReader {
 
         trace!("Neighbors {:?}", neighbor_costs);
         neighbor_costs
-    }
-
-    /// Read barrier cells from a cached boolean neighborhood mask.
-    ///
-    /// This helper is shared by hard and soft barrier lookups. It materializes
-    /// the necessary derived data, reads the boolean neighborhood mask from the
-    /// provided cache, and returns the coordinates of every barrier cell.
-    ///
-    /// # Arguments
-    /// `index`: Center grid index for the neighborhood lookup.
-    /// `cache`: Chunk cache for the barrier mask to inspect.
-    /// `data_materializer`: Derived-data materializer responsible for ensuring
-    ///                      the required swap chunks exist before the cached
-    ///                      read occurs.
-    ///
-    /// # Returns
-    /// A vector of neighborhood indices whose cached mask value is `true`.
-    fn get_3x3_cached_barrier_cells(
-        &self,
-        index: &ArrayIndex,
-        cache: &ChunkCacheDecodedLruSizeLimit,
-        data_materializer: &impl DerivedDataMaterializer,
-    ) -> Vec<ArrayIndex> {
-        let (i_range, j_range, subset) = self.neighborhood_subset(index);
-        data_materializer.ensure_derived_data_for_subset(&cache.array(), &subset);
-        let barrier_values = cache
-            .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
-            .unwrap();
-        let mut barrier_cells = Vec::new();
-
-        for ((ir, jr), is_barrier) in i_range
-            .flat_map(|row| iter::repeat(row).zip(j_range.clone()))
-            .zip(barrier_values)
-        {
-            if is_barrier {
-                barrier_cells.push(ArrayIndex { i: ir, j: jr });
-            }
-        }
-
-        barrier_cells
     }
 }
 
