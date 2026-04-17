@@ -12,12 +12,11 @@ use std::str::FromStr;
 use std::sync::{Arc, mpsc};
 
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-use tracing::debug;
+use tracing::{debug, info};
 
 use crate::{ArrayIndex, RevrtRoutingSolutions, Solution, error::Result};
 use algorithm::Algorithm;
 use algorithm::AlgorithmType;
-use features::Features;
 use scenario::Scenario;
 
 // Percent of the total memory allocation given to the Zarr cache.
@@ -36,22 +35,7 @@ impl Routing {
         end: Vec<ArrayIndex>,
     ) -> impl Iterator<Item = Solution<ArrayIndex, f32>> {
         debug!("Starting compute with {} start points", start.len());
-        let grid_shape = self.scenario.grid_shape();
-
-        let solution: Vec<Solution<ArrayIndex, f32>> = start
-            .into_par_iter()
-            .filter_map(|s| {
-                self.algorithm.compute(
-                    s,
-                    &end,
-                    |p| self.scenario.successors(p),
-                    |p| end.contains(p),
-                    grid_shape,
-                )
-            })
-            .collect();
-
-        solution.into_iter()
+        compute_route_attempt_result(&self.scenario, &self.algorithm, start, &end).into_iter()
     }
 
     pub(super) fn new<P: AsRef<std::path::Path>>(
@@ -169,50 +153,82 @@ impl ParRouting {
                      end_inds,
                  }| {
                     debug!("Computing routes between {start_inds:?} and {end_inds:?}");
-                    let grid_shape = scenario.grid_shape();
-                    // if end_inds.last() == Some(&ArrayIndex { i: 2, j: 6 }) {
-                    //     use std::thread;
-                    //     use std::time::Duration;
-                    //     // let mut rng = rand::rng();
-                    //     // let delay_secs = rng.random_range(3..=7);
-                    //     let delay_secs = if start_inds.first() == Some(&ArrayIndex { i: 1, j: 1 }) {
-                    //         6
-                    //         // return sender.send(Err(InvalidRouteStart(
-                    //         //     "start index ArrayIndex { i: 1, j: 1 } is invalid".into(),
-                    //         // )));
-                    //     } else {
-                    //         10
-                    //     };
-                    //     // println!("Sleeping {delay_secs}s before yielding");
-                    //     // io::stdout().flush().expect("Failed to flush stdout");
-                    //     thread::sleep(Duration::from_secs(delay_secs));
-                    // }
-                    let routes: RevrtRoutingSolutions = start_inds
-                        .into_par_iter()
-                        .filter_map(|s| {
-                            let end_ind_vec: Vec<_> = end_inds.iter().cloned().collect();
-                            algorithm.compute(
-                                &s,
-                                &end_ind_vec,
-                                |p| scenario.successors(p),
-                                |p| end_inds.contains(p),
-                                grid_shape,
-                            )
-                            // pathfinding::prelude::dijkstra(
-                            //     &s,
-                            //     |p| scenario.successors(p),
-                            //     |p| end_inds.contains(p),
-                            // )
-                        })
-                        // .map(|(route, total_cost)| Solution::new(route, unscaled_cost(total_cost)))
-                        .collect();
-                    let num_routes = routes.len();
+                    let result = compute_route_attempt_result(
+                        &scenario,
+                        &algorithm,
+                        &start_inds,
+                        &end_inds.iter().cloned().collect::<Vec<_>>(),
+                    );
+                    let num_routes = result.len();
                     debug!("Finished computing {num_routes} route(s) to {end_inds:?}");
-                    sender.send((route_id, routes))
+                    sender.send((route_id, result))
                 },
             );
         });
     }
+}
+
+fn compute_route_attempt_result(
+    scenario: &Scenario,
+    algorithm: &Algorithm,
+    start: &[ArrayIndex],
+    end: &[ArrayIndex],
+) -> RevrtRoutingSolutions {
+    start
+        .into_par_iter()
+        .filter_map(|start_point| compute_solution_for_start(scenario, algorithm, start_point, end))
+        .collect()
+}
+
+fn compute_solution_for_start(
+    scenario: &Scenario,
+    algorithm: &Algorithm,
+    start_point: &ArrayIndex,
+    end: &[ArrayIndex],
+) -> Option<Solution<ArrayIndex, f32>> {
+    let grid_shape = scenario.grid_shape();
+
+    // if end_inds.last() == Some(&ArrayIndex { i: 2, j: 6 }) {
+    //     use std::thread;
+    //     use std::time::Duration;
+    //     // let mut rng = rand::rng();
+    //     // let delay_secs = rng.random_range(3..=7);
+    //     let delay_secs = if start_inds.first() == Some(&ArrayIndex { i: 1, j: 1 }) {
+    //         6
+    //         // return sender.send(Err(InvalidRouteStart(
+    //         //     "start index ArrayIndex { i: 1, j: 1 } is invalid".into(),
+    //         // )));
+    //     } else {
+    //         10
+    //     };
+    //     // println!("Sleeping {delay_secs}s before yielding");
+    //     // io::stdout().flush().expect("Failed to flush stdout");
+    //     thread::sleep(Duration::from_secs(delay_secs));
+    // }
+
+    for dropped_soft_groups in 0..=scenario.soft_barrier_group_count() {
+        if dropped_soft_groups > 0 {
+            info!(
+                "Retrying route from {:?} with {} soft-barrier group(s) dropped",
+                start_point, dropped_soft_groups
+            );
+        }
+
+        let solution = algorithm.compute(
+            start_point,
+            end,
+            |p| scenario.successors_for_attempt(p, dropped_soft_groups),
+            |p| end.contains(p),
+            grid_shape,
+        );
+
+        if let Some(solution) = solution {
+            let dropped_barrier_layers = scenario.dropped_barrier_layers(dropped_soft_groups);
+            return Some(solution.record_dropped_barriers(dropped_barrier_layers));
+        }
+    }
+
+    None
 }
 
 const PRECISION_SCALAR: f32 = 1e4;
@@ -241,4 +257,77 @@ fn per_rayon_worker_memory_budget(total_budget_bytes: u64) -> u64 {
     );
 
     per_worker_budget
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Algorithm, AlgorithmType, Scenario, compute_route_attempt_result};
+    use crate::ArrayIndex;
+
+    #[test]
+    fn compute_route_attempt_result_tracks_dropped_barriers_per_start() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 5)
+            .chunks(1, 3, 5)
+            .layer(crate::dataset::samples::LayerConfig::ones("cost"))
+            .layer(crate::dataset::samples::LayerConfig::new(
+                "hard_barrier",
+                crate::dataset::samples::FillStrategy::Values(vec![
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                ]),
+            ))
+            .layer(crate::dataset::samples::LayerConfig::new(
+                "soft_barrier",
+                crate::dataset::samples::FillStrategy::Values(vec![
+                    0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                ]),
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "cost_layers": [{"layer_name": "cost"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "hard_barrier",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0
+                    },
+                    {
+                        "layer_name": "soft_barrier",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0,
+                        "barrier_importance": 1
+                    }
+                ],
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+        let algorithm = Algorithm::from_selection(AlgorithmType::Dijkstra, 8 * 1024 * 1024);
+        let start = [ArrayIndex::new(0, 0), ArrayIndex::new(2, 0)];
+        let end = [ArrayIndex::new(0, 4), ArrayIndex::new(2, 4)];
+
+        let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
+
+        assert_eq!(result.len(), 2);
+
+        let top_solution = result
+            .iter()
+            .find(|solution| solution.route().first() == Some(&ArrayIndex::new(0, 0)))
+            .unwrap();
+        assert_eq!(top_solution.route().last(), Some(&ArrayIndex::new(0, 4)));
+        assert_eq!(
+            top_solution.dropped_barrier_layers(),
+            &vec!["soft_barrier".to_string()]
+        );
+
+        let bottom_solution = result
+            .iter()
+            .find(|solution| solution.route().first() == Some(&ArrayIndex::new(2, 0)))
+            .unwrap();
+        assert_eq!(bottom_solution.route().last(), Some(&ArrayIndex::new(2, 4)));
+        assert!(bottom_solution.dropped_barrier_layers().is_empty());
+    }
 }
