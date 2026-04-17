@@ -15,6 +15,43 @@ from revrt.routing.base import RoutingLayerManager, RoutingScenario
 from revrt.utilities import LayeredFile
 
 
+def _write_layers_to_layered_file(tmp_path, layers):
+    """Write in-memory arrays to a layered-file test store"""
+
+    first_layer = next(iter(layers.values()))
+    height, width = first_layer.shape[1:]
+    cell_size = 1.0
+    x0, y0 = 0.0, float(height)
+    transform = from_origin(x0, y0, cell_size, cell_size)
+    x_coords = (
+        x0 + np.arange(width, dtype=np.float32) * cell_size + cell_size / 2
+    )
+    y_coords = (
+        y0 - np.arange(height, dtype=np.float32) * cell_size - cell_size / 2
+    )
+
+    layered_fp = tmp_path / "test_layered.zarr"
+    layer_file = LayeredFile(layered_fp)
+    for layer_name, layer_values in layers.items():
+        da = xr.DataArray(
+            layer_values,
+            dims=("band", "y", "x"),
+            coords={"y": y_coords, "x": x_coords},
+        )
+        da = da.rio.write_crs("EPSG:4326")
+        da = da.rio.write_transform(transform)
+
+        geotiff_fp = tmp_path / f"{layer_name}.tif"
+        da.rio.to_raster(geotiff_fp, driver="GTiff")
+        layer_file.write_geotiff_to_file(
+            geotiff_fp,
+            layer_name,
+            overwrite=True,
+        )
+
+    return layered_fp
+
+
 def test_find_paths_basic_single_route_layered_file(tmp_path):
     """Test routing using a LayeredFile-generated cost surface"""
 
@@ -74,13 +111,54 @@ def test_find_paths_basic_single_route_layered_file(tmp_path):
     )
 
     assert len(results) == 1
-    test_path, test_cost = results[0]
+    test_path, test_cost, dropped_barrier_layers = results[0]
 
     mcp = MCP_Geometric(cost_values[0])
     costs, __ = mcp.find_costs(starts=[(1, 1)], ends=[(2, 6)])
 
     assert test_path == mcp.traceback((2, 6))
     assert np.isclose(test_cost, costs[(2, 6)])
+    assert not dropped_barrier_layers
+
+
+def test_find_paths_respects_hard_barrier_layered_file(tmp_path):
+    """Test that hard barriers block routing for layered-file inputs"""
+
+    layered_fp = _write_layers_to_layered_file(
+        tmp_path,
+        {
+            "test_costs": np.ones((1, 3, 3), dtype=np.float32),
+            "test_barrier": np.array(
+                [
+                    [
+                        [1, 1, 1],
+                        [1, 0, 1],
+                        [1, 1, 1],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+        },
+    )
+
+    cost_definition = {
+        "cost_layers": [{"layer_name": "test_costs"}],
+        "barrier_layers": [
+            {
+                "layer_name": "test_barrier",
+                "barrier_values": "== 1",
+            }
+        ],
+        "ignore_invalid_costs": False,
+    }
+    results = find_paths(
+        zarr_fp=layered_fp,
+        cost_function=json.dumps(cost_definition),
+        start=[(1, 1)],
+        end=[(0, 0)],
+    )
+
+    assert results == []
 
 
 @pytest.mark.parametrize(
@@ -157,14 +235,104 @@ def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
         else:
             assert route_id == 2
             assert len(solutions) == 1
-            (test_path, test_cost, dropped_barrier_layers) = solutions[0]
+            test_path, test_cost, dropped_barrier_layers = solutions[0][:3]
             assert dropped_barrier_layers == []
+            if len(solutions[0]) > 3:
+                assert solutions[0][3] == []
 
     mcp = MCP_Geometric(cost_values[0])
     costs, __ = mcp.find_costs(starts=[(1, 1)], ends=[(2, 6)])
 
     assert test_path == mcp.traceback((2, 6))
     assert np.isclose(test_cost, costs[(2, 6)])
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "astar",
+        "dijkstra",
+        "long-range-astar",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
+)
+def test_route_finder_retries_soft_barriers_layered_file(tmp_path, algorithm):
+    """Test mixed hard and soft barriers for layered-file inputs"""
+
+    layered_fp = _write_layers_to_layered_file(
+        tmp_path,
+        {
+            "test_costs": np.ones((1, 3, 5), dtype=np.float32),
+            "hard_barrier": np.array(
+                [
+                    [
+                        [0, 0, 0, 0, 0],
+                        [1, 1, 1, 1, 1],
+                        [0, 0, 0, 0, 0],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+            "soft_barrier": np.array(
+                [
+                    [
+                        [0, 0, 1, 0, 0],
+                        [0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+        },
+    )
+
+    cost_definition = {
+        "cost_layers": [{"layer_name": "test_costs"}],
+        "barrier_layers": [
+            {
+                "layer_name": "hard_barrier",
+                "barrier_values": "== 1",
+            },
+            {
+                "layer_name": "soft_barrier",
+                "barrier_values": "== 1",
+                "barrier_importance": 1,
+            },
+        ],
+        "ignore_invalid_costs": False,
+    }
+    results = list(
+        RouteFinder(
+            zarr_fp=layered_fp,
+            cost_function=json.dumps(cost_definition),
+            route_definitions=[(7, [(0, 0), (2, 0)], [(0, 4), (2, 4)])],
+            algorithm=algorithm,
+        )
+    )
+
+    assert len(results) == 1
+    route_id, solutions = results[0]
+    assert route_id == 7
+    assert len(solutions) == 2
+
+    solutions_by_start = {
+        tuple(solution[0][0]): solution for solution in solutions
+    }
+
+    top_solution = solutions_by_start[(0, 0)]
+    assert top_solution[0][-1] == (0, 4)
+    assert top_solution[1] > 0
+    assert top_solution[2] == ["soft_barrier"]
+    if len(top_solution) > 3:
+        assert top_solution[3] == [1]
+
+    bottom_solution = solutions_by_start[(2, 0)]
+    assert bottom_solution[0][-1] == (2, 4)
+    assert bottom_solution[1] > 0
+    assert bottom_solution[2] == []
+    if len(bottom_solution) > 3:
+        assert bottom_solution[3] == []
 
 
 @pytest.mark.parametrize(
