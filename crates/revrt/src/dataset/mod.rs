@@ -17,6 +17,7 @@
 mod lazy_subset;
 #[cfg(test)]
 pub(crate) mod samples;
+mod swap;
 
 use std::iter;
 use std::path::PathBuf;
@@ -24,7 +25,7 @@ use std::sync::{Arc, RwLock};
 
 use tracing::{debug, info, trace, warn};
 use zarrs::array::codec::CodecOptions;
-use zarrs::array::{ChunkCache, ChunkCacheDecodedLruSizeLimit, ChunkGrid};
+use zarrs::array::{ChunkCache, ChunkCacheDecodedLruSizeLimit};
 use zarrs::storage::{
     ListableStorageTraits, ReadableListableStorage, ReadableWritableListableStorage,
 };
@@ -33,6 +34,7 @@ use crate::ArrayIndex;
 use crate::cost::CostFunction;
 use crate::error::{Error, Result};
 pub(crate) use lazy_subset::LazySubset;
+use swap::{cumulative_soft_barrier_mask_name, initialize_swap, inspect_source_layout};
 
 #[derive(Debug, Clone, Copy)]
 struct CacheBudgets {
@@ -115,85 +117,13 @@ impl Dataset {
         let cost_function = cost_function.without_barriers();
         let filesystem =
             zarrs::filesystem::FilesystemStore::new(path).expect("could not open filesystem store");
-        let source = std::sync::Arc::new(filesystem);
-
-        // ==== Create the swap dataset ====
-        let swap: ReadableWritableListableStorage = std::sync::Arc::new(
-            zarrs::filesystem::FilesystemStore::new(swap_fp)
-                .expect("could not open filesystem store"),
-        );
-
-        trace!("Creating a new group for the cost dataset");
-        zarrs::group::GroupBuilder::new()
-            .build(swap.clone(), "/")?
-            .store_metadata()?;
-
-        let entries = source
-            .list()
-            .expect("failed to list variables in source dataset");
-        let first_entry_opt = entries
-            .into_iter()
-            .map(|entry| entry.to_string())
-            .find(|entry| {
-                let name = entry.split('/').next().unwrap_or("").to_ascii_lowercase();
-                // Skip coordinate axes when selecting a representative variable for cost storage.
-                const EXCLUDES: [&str; 6] =
-                    ["latitude", "longitude", "band", "x", "y", "spatial_ref"];
-                !name.ends_with(".json") && !EXCLUDES.iter().any(|needle| name == *needle)
-            });
-        let first_entry = match first_entry_opt {
-            Some(e) => e,
-            None => {
-                return Err(Error::IO(std::io::Error::other(format!(
-                    "no non-coordinate variables found in source dataset: {:?}",
-                    source.list().ok()
-                ))));
-            }
-        };
-
-        // Skip coordinate axes when selecting a representative variable for cost storage.
-        let varname = match first_entry.split('/').next() {
-            Some(name) => name,
-            None => {
-                return Err(Error::IO(std::io::Error::other(
-                    "Could not determine any variable names from source dataset",
-                )));
-            }
-        };
-        debug!("Using '{}' to determine shape of cost data", varname);
-        let tmp = zarrs::array::Array::open(source.clone(), &format!("/{varname}"))?;
-        let shape = tmp.shape();
-        if shape.len() < 3 {
-            return Err(Error::InvalidDatasetShape {
-                variable: varname.to_string(),
-                min_rank: 3,
-                shape: shape.to_vec(),
-            });
-        }
-        let grid_nrows = shape[1];
-        let grid_ncols = shape[2];
-        let chunk_grid = tmp.chunk_grid();
-        debug!("Chunk grid info: {:?}", &chunk_grid);
-
-        add_layer_to_data("cost_invariant", chunk_grid, &swap)?;
-        add_layer_to_data("cost", chunk_grid, &swap)?;
-        add_bool_layer_to_data("hard_barrier_mask", chunk_grid, &swap)?;
-        for retry_state in 0..=soft_barrier_groups.len() {
-            add_bool_layer_to_data(
-                &cumulative_soft_barrier_mask_name(retry_state),
-                chunk_grid,
-                &swap,
-            )?;
-        }
-
-        let cost_chunk_idx = ndarray::Array2::from_elem(
-            (
-                tmp.chunk_grid_shape()[1] as usize,
-                tmp.chunk_grid_shape()[2] as usize,
-            ),
-            false,
-        )
-        .into();
+        let source: ReadableListableStorage = std::sync::Arc::new(filesystem);
+        let source_layout = inspect_source_layout(&source)?;
+        let initialized_swap = initialize_swap(swap_fp, &source_layout, soft_barrier_groups.len())?;
+        let swap = initialized_swap.storage;
+        let cost_chunk_idx = initialized_swap.cost_chunk_idx.into();
+        let grid_nrows = source_layout.grid_nrows;
+        let grid_ncols = source_layout.grid_ncols;
 
         if cache_size < 1_000_000 {
             warn!("Cache size smaller than 1MB");
@@ -725,10 +655,6 @@ fn distribute_cache_budgets(cache_size: u64, soft_barrier_cache_count: usize) ->
     }
 }
 
-fn cumulative_soft_barrier_mask_name(retry_state: usize) -> String {
-    format!("soft_barrier_mask_retry_{retry_state}")
-}
-
 fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD<bool> {
     ndarray::ArrayD::<bool>::from_elem(
         ndarray::IxDyn(
@@ -763,66 +689,6 @@ fn combine_barrier_layers_for_subset(
     }
 
     Some(output)
-}
-
-fn add_layer_to_data(
-    layer_name: &str,
-    chunk_shape: &ChunkGrid,
-    swap: &ReadableWritableListableStorage,
-) -> Result<()> {
-    trace!("Creating an empty {} array", layer_name);
-    let dataset_path = format!("/{layer_name}");
-    let mut builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
-        chunk_shape.clone(),
-        zarrs::array::DataType::Float32,
-        zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
-    );
-
-    let built = builder
-        .dimension_names(["band", "y", "x"].into())
-        .build(swap.clone(), &dataset_path)?;
-    built.store_metadata()?;
-
-    let array = zarrs::array::Array::open(swap.clone(), &dataset_path)?;
-    trace!("'{}' shape: {:?}", layer_name, array.shape().to_vec());
-    trace!("'{}' chunk shape: {:?}", layer_name, array.chunk_grid());
-
-    trace!(
-        "Dataset contents after '{}' creation: {:?}",
-        layer_name,
-        swap.list()?
-    );
-    Ok(())
-}
-
-fn add_bool_layer_to_data(
-    layer_name: &str,
-    chunk_shape: &ChunkGrid,
-    swap: &ReadableWritableListableStorage,
-) -> Result<()> {
-    trace!("Creating an empty {} array", layer_name);
-    let dataset_path = format!("/{layer_name}");
-    let mut builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
-        chunk_shape.clone(),
-        zarrs::array::DataType::Bool,
-        zarrs::array::FillValue::from(false),
-    );
-
-    let built = builder
-        .dimension_names(["band", "y", "x"].into())
-        .build(swap.clone(), &dataset_path)?;
-    built.store_metadata()?;
-
-    let array = zarrs::array::Array::open(swap.clone(), &dataset_path)?;
-    trace!("'{}' shape: {:?}", layer_name, array.shape().to_vec());
-    trace!("'{}' chunk shape: {:?}", layer_name, array.chunk_grid());
-
-    trace!(
-        "Dataset contents after '{}' creation: {:?}",
-        layer_name,
-        swap.list()?
-    );
-    Ok(())
 }
 
 #[cfg(test)]
