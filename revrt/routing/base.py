@@ -781,6 +781,9 @@ class BatchRouteProcessor:
 
     def _route_results(self, routing_layer_out_fp=None):
         """Generator yielding route results from Rust computations"""
+        if not self.route_definitions:
+            return
+
         logger.debug(
             "Setting memory limit to %.2f GB for Rust computations",
             self.mem_limit_gb,
