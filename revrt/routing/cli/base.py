@@ -144,10 +144,11 @@ class RouteToDefinitionConverter(ABC):
             )
             route_cl = self._update_cl(polarity, voltage)
             route_fl = self._update_fl(polarity, voltage)
+            route_bl = self.barrier_layers
             route_definitions, route_attrs = (
                 self._convert_to_route_definitions(routes)
             )
-            yield route_cl, route_fl, route_definitions, route_attrs
+            yield route_cl, route_fl, route_bl, route_definitions, route_attrs
 
     @property
     def _paths_to_compute(self):
@@ -222,11 +223,14 @@ def run_lcp(  # noqa
         routes_to_compute.num_routes,
     )
     for route_batch in routes_to_compute:
-        route_cl, route_fl, route_definitions, route_attrs = route_batch
+        route_cl, route_fl, route_bl, route_definitions, route_attrs = (
+            route_batch
+        )
         scenario = RoutingScenario(
             cost_fpath=cost_fpath,
             cost_layers=route_cl,
             friction_layers=route_fl,
+            barrier_layers=route_bl,
             tracked_layers=tracked_layers,
             cost_multiplier_layer=cost_multiplier_layer,
             cost_multiplier_scalar=cost_multiplier_scalar,
@@ -249,6 +253,7 @@ def run_lcp(  # noqa
             job_name=job_name,
             route_cl=route_cl,
             route_fl=route_fl,
+            route_bl=route_bl,
         )
 
         with rl_mover as routing_layer_out_fp:
