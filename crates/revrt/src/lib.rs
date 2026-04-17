@@ -225,6 +225,43 @@ mod tests {
         assert_eq!((ei, ej), expected_endpoint);
     }
 
+    #[test]
+    fn explicit_barrier_layers_block_routing() {
+        let store = dataset::samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(dataset::samples::LayerConfig::constant("cost", 1.0))
+            .layer(dataset::samples::LayerConfig::new(
+                "barrier",
+                dataset::samples::FillStrategy::Values(vec![
+                    1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+                ]),
+            ))
+            .build()
+            .unwrap();
+        let store_path = store.path();
+
+        let cost_function = CostFunction::from_json(
+            r#"{
+                "cost_layers": [{"layer_name": "cost"}],
+                "barrier_layers": [{
+                    "layer_name": "barrier",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0
+                }],
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let mut simulation = Routing::new(store_path, cost_function, 1_000, "dijkstra").unwrap();
+        let start = vec![ArrayIndex { i: 1, j: 1 }];
+        let end = vec![ArrayIndex { i: 0, j: 0 }];
+
+        let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
+
+        assert!(solutions.is_empty());
+    }
+
     #[test_case((1, 1), vec![(1, 3), (3, 1)], 1., "astar"; "horizontal and vertical astar")]
     #[test_case((3, 3), vec![(3, 5), (1, 1), (3, 1)], 1., "astar"; "horizontal astar")]
     #[test_case((3, 3), vec![(5, 3), (5, 5), (1, 3)], 1., "astar"; "vertical astar")]
