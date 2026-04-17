@@ -12,22 +12,34 @@ use crate::ArrayIndex;
 use crate::error::{Error, Result};
 
 #[derive(Debug, Clone, Copy)]
+/// Cache sizes assigned to each neighborhood reader dataset
 struct CacheBudgets {
+    /// Cache budget for the primary cost array
     per_cost_cache: u64,
+    /// Cache budget for the hard barrier mask
     hard_barrier_cache: u64,
+    /// Cache budget for each cumulative soft barrier mask
     per_soft_barrier_cache: u64,
 }
 
+/// Cached access to derived 3x3 neighborhoods from the swap dataset
 pub(super) struct NeighborhoodReader {
+    /// Decoded chunk cache for the main per-cell routing cost
     cost_cache: ChunkCacheDecodedLruSizeLimit,
+    /// Decoded chunk cache for invariant movement costs
     cost_invariant_cache: ChunkCacheDecodedLruSizeLimit,
+    /// Decoded chunk cache for the hard barrier mask
     hard_barrier_cache: ChunkCacheDecodedLruSizeLimit,
+    /// Decoded chunk caches for cumulative soft barrier masks by retry state
     cumulative_soft_barrier_caches: Vec<ChunkCacheDecodedLruSizeLimit>,
+    /// Number of rows in the routing grid
     grid_nrows: u64,
+    /// Number of columns in the routing grid
     grid_ncols: u64,
 }
 
 impl NeighborhoodReader {
+    /// Open cached readers for the derived swap arrays
     pub(super) fn open(
         swap: ReadableWritableListableStorage,
         cache_size: u64,
@@ -84,6 +96,12 @@ impl NeighborhoodReader {
         })
     }
 
+    /// Read the valid 3x3 neighborhood movement costs around an index
+    ///
+    /// The returned costs combine the directional cost surface, the
+    /// invariant movement penalty, diagonal scaling, and optional hard
+    /// barrier filtering. If the center cell is itself a hard barrier,
+    /// an empty vector is returned.
     pub(super) fn get_3x3<F>(
         &self,
         index: &ArrayIndex,
@@ -160,6 +178,7 @@ impl NeighborhoodReader {
         cost_to_neighbors
     }
 
+    /// Return soft barrier cells in the 3x3 neighborhood for a retry state
     pub(super) fn get_3x3_soft_barrier_cells<F>(
         &self,
         index: &ArrayIndex,
@@ -176,10 +195,15 @@ impl NeighborhoodReader {
         )
     }
 
+    /// Return the grid shape backing this reader as `(rows, cols)`
     pub(super) fn grid_shape(&self) -> (u64, u64) {
         (self.grid_nrows, self.grid_ncols)
     }
 
+    /// Build the row and column ranges for a clipped 3x3 neighborhood
+    ///
+    /// The returned subset includes the leading band dimension expected by
+    /// the derived swap arrays.
     pub(super) fn neighborhood_subset(
         &self,
         index: &ArrayIndex,
@@ -217,6 +241,10 @@ impl NeighborhoodReader {
         (i_range, j_range, subset)
     }
 
+    /// Read cost values for every cell in a neighborhood subset
+    ///
+    /// When `is_invariant` is true, values are read from the invariant cost
+    /// array. Otherwise values are read from the primary cost array.
     pub(super) fn get_neighbor_costs(
         &self,
         i_range: std::ops::Range<u64>,
@@ -253,6 +281,7 @@ impl NeighborhoodReader {
         neighbor_costs
     }
 
+    /// Read barrier cells from a cached boolean neighborhood mask
     fn get_3x3_cached_barrier_cells<F>(
         &self,
         index: &ArrayIndex,
@@ -282,6 +311,16 @@ impl NeighborhoodReader {
     }
 }
 
+/// Split the requested cache size across all neighborhood reader caches
+///
+/// One third of `cache_size` is assigned to each of the two cost caches,
+/// with a minimum of 1 byte per cache. The remaining budget is then split
+/// in half: one half goes to the hard barrier cache and the other half is
+/// reserved for all cumulative soft barrier caches. The soft barrier share
+/// is divided evenly across `soft_barrier_cache_count`, again with a
+/// minimum of 1 byte per cache. Saturating subtraction is used for the
+/// remainder calculations so very small cache sizes still produce valid
+/// nonzero budgets.
 fn distribute_cache_budgets(cache_size: u64, soft_barrier_cache_count: usize) -> CacheBudgets {
     let per_cost_cache = (cache_size / 3).max(1);
     let remaining_cache = cache_size.saturating_sub(2 * per_cost_cache).max(1);
