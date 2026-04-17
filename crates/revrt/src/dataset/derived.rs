@@ -307,13 +307,203 @@ fn combine_barrier_layers_for_subset(
 mod tests {
     use std::sync::Arc;
 
+    use ndarray::{ArrayD, IxDyn};
+    use tempfile::TempDir;
     use zarrs::array::Array;
     use zarrs::array_subset::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
+    use zarrs::storage::ReadableListableStorage;
 
     use super::*;
-    use crate::dataset::samples;
+    use crate::dataset::samples::{FillStrategy, LayerConfig, ZarrTestBuilder};
     use crate::dataset::swap::{initialize_swap, inspect_source_layout};
+
+    fn hard_barrier_a(_band: u64, row: u64, col: u64) -> f32 {
+        if row == 0 && col == 0 { 1.0 } else { 0.0 }
+    }
+
+    fn hard_barrier_b(_band: u64, row: u64, col: u64) -> f32 {
+        if row == 0 && col == 1 { 1.0 } else { 0.0 }
+    }
+
+    fn soft_barrier_low(_band: u64, row: u64, col: u64) -> f32 {
+        if row == 1 && col == 0 { 1.0 } else { 0.0 }
+    }
+
+    fn soft_barrier_high(_band: u64, row: u64, col: u64) -> f32 {
+        if row == 1 && col == 1 { 1.0 } else { 0.0 }
+    }
+
+    fn make_source_store() -> (TempDir, ReadableListableStorage) {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(1, 4, 4)
+            .chunks(1, 2, 2)
+            .layer(LayerConfig::constant("cost_length", 2.0))
+            .layer(LayerConfig::constant("cost_invariant_src", 3.0))
+            .layer(LayerConfig::new(
+                "hard_barrier_a",
+                FillStrategy::Custom(hard_barrier_a),
+            ))
+            .layer(LayerConfig::new(
+                "hard_barrier_b",
+                FillStrategy::Custom(hard_barrier_b),
+            ))
+            .layer(LayerConfig::new(
+                "soft_barrier_low",
+                FillStrategy::Custom(soft_barrier_low),
+            ))
+            .layer(LayerConfig::new(
+                "soft_barrier_high",
+                FillStrategy::Custom(soft_barrier_high),
+            ))
+            .build()
+            .unwrap();
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(source_tmp.path()).unwrap());
+
+        (source_tmp, source)
+    }
+
+    fn read_subset_values<T: zarrs::array::ElementOwned + Clone>(
+        store: &zarrs::storage::ReadableWritableListableStorage,
+        path: &str,
+        subset: &ArraySubset,
+    ) -> Vec<T> {
+        zarrs::array::Array::open(store.clone(), path)
+            .unwrap()
+            .retrieve_array_subset_elements(subset)
+            .unwrap()
+    }
+
+    #[test]
+    fn empty_bool_mask_matches_subset_shape() {
+        let subset = ArraySubset::new_with_start_shape(vec![0, 1, 2], vec![1, 2, 3]).unwrap();
+
+        let result = empty_bool_mask(&subset);
+
+        assert_eq!(result.shape(), &[1, 2, 3]);
+        assert!(result.iter().all(|value| !value));
+    }
+
+    #[test]
+    fn combine_barrier_layers_returns_none_for_empty_input() {
+        let (_source_tmp, source) = make_source_store();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = LazySubset::<f32>::new(source, subset.clone());
+
+        let result = combine_barrier_layers_for_subset(&[], &mut features, &subset);
+
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn combine_barrier_layers_ors_masks_for_subset() {
+        let (_source_tmp, source) = make_source_store();
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = LazySubset::<f32>::new(source.clone(), subset.clone());
+        let cost_function = CostFunction::from_json(
+            r#"{
+                "cost_layers": [{"layer_name": "cost_length"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "hard_barrier_a",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0
+                    },
+                    {
+                        "layer_name": "hard_barrier_b",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0
+                    }
+                ]
+            }"#,
+        )
+        .unwrap();
+        let layers = cost_function.hard_barrier_layers();
+
+        let result = combine_barrier_layers_for_subset(&layers, &mut features, &subset).unwrap();
+
+        assert_eq!(
+            result,
+            ArrayD::from_shape_vec(IxDyn(&[1, 2, 2]), vec![true, true, false, false],).unwrap(),
+        );
+    }
+
+    #[test]
+    fn materialize_chunk_writes_costs_and_barrier_masks() {
+        let (_source_tmp, source) = make_source_store();
+        let cost_function = CostFunction::from_json(
+            r#"{
+                "cost_layers": [
+                    {"layer_name": "cost_length"},
+                    {
+                        "layer_name": "cost_invariant_src",
+                        "is_invariant": true
+                    }
+                ],
+                "barrier_layers": [
+                    {
+                        "layer_name": "hard_barrier_a",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0
+                    },
+                    {
+                        "layer_name": "hard_barrier_b",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0
+                    },
+                    {
+                        "layer_name": "soft_barrier_low",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0,
+                        "barrier_importance": 1
+                    },
+                    {
+                        "layer_name": "soft_barrier_high",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0,
+                        "barrier_importance": 2
+                    }
+                ]
+            }"#,
+        )
+        .unwrap();
+        let layout = super::super::swap::inspect_source_layout(&source).unwrap();
+        let swap_tmp = TempDir::new().unwrap();
+        let swap = super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2).unwrap();
+        let writer = DerivedDataWriter::new(source, swap.clone(), cost_function);
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+
+        assert_eq!(writer.hard_barrier_layers().len(), 2);
+        assert_eq!(writer.soft_barrier_group_count(), 2);
+
+        writer.materialize_chunk(0, 0);
+
+        assert_eq!(
+            read_subset_values::<f32>(&swap, "/cost", &subset),
+            vec![2.0, 2.0, 2.0, 2.0],
+        );
+        assert_eq!(
+            read_subset_values::<f32>(&swap, "/cost_invariant", &subset),
+            vec![3.0, 3.0, 3.0, 3.0],
+        );
+        assert_eq!(
+            read_subset_values::<bool>(&swap, "/hard_barrier_mask", &subset),
+            vec![true, true, false, false],
+        );
+        assert_eq!(
+            read_subset_values::<bool>(&swap, "/soft_barrier_mask_retry_0", &subset),
+            vec![false, false, true, true],
+        );
+        assert_eq!(
+            read_subset_values::<bool>(&swap, "/soft_barrier_mask_retry_1", &subset),
+            vec![false, false, false, true],
+        );
+        assert_eq!(
+            read_subset_values::<bool>(&swap, "/soft_barrier_mask_retry_2", &subset),
+            vec![false, false, false, false],
+        );
+    }
 
     #[test]
     fn materialize_chunk_extracts_hard_barriers_and_preserves_costs() {
@@ -330,13 +520,13 @@ mod tests {
         }
         "#;
 
-        let source_dir = samples::ZarrTestBuilder::new()
+        let source_dir = ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
             .chunks(1, 3, 3)
-            .layer(samples::LayerConfig::sequential("A", 1))
-            .layer(samples::LayerConfig::new(
+            .layer(LayerConfig::sequential("A", 1))
+            .layer(LayerConfig::new(
                 "B",
-                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]),
+                FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]),
             ))
             .build()
             .expect("Error creating test zarr");
