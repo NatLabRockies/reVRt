@@ -90,17 +90,6 @@ impl Scenario {
         Ok(Self { dataset, features })
     }
 
-    /// Retrieve the local 3x3 neighborhood costs around a position.
-    ///
-    /// # Arguments
-    /// `position`: Grid index at the center of the neighborhood query.
-    ///
-    /// # Returns
-    /// Neighbor positions and their floating-point traversal costs.
-    pub(super) fn get_3x3(&self, position: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
-        self.dataset.get_3x3(position)
-    }
-
     /// Return retry-aware successor cells for a routing attempt.
     ///
     /// The returned successors exclude non-finite or non-positive costs and
@@ -121,7 +110,7 @@ impl Scenario {
         position: &ArrayIndex,
         dropped_soft_groups: usize,
     ) -> Vec<(ArrayIndex, u64)> {
-        let neighbors = self.get_3x3(position);
+        let neighbors = self.dataset.get_3x3(position);
         let soft_barrier_cells: HashSet<_> = self
             .dataset
             .get_3x3_soft_barrier_cells(position, dropped_soft_groups)
