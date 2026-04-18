@@ -2197,6 +2197,79 @@ def test_soft_barrier_retry_returns_route_with_metadata(
     assert route["dropped_barrier_layers"] == '["layer_4"]'
 
 
+def test_soft_barrier_start_point_retries_and_records_metadata(
+    sample_layered_data, tmp_path
+):
+    """Routes starting on a soft barrier succeed after retry"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_2"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "==1",
+                "barrier_importance": 1,
+            }
+        ],
+        ignore_invalid_costs=False,
+        algorithm="dijkstra",
+    )
+
+    out_csv = tmp_path / "routes.csv"
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 3)], [(1, 5)]),
+        ],
+    )
+    route_computer.process(out_fp=out_csv, save_paths=False)
+
+    output = pd.read_csv(out_csv)
+    assert len(output) == 1
+    route = output.iloc[0]
+    assert route["start_row"] == 1
+    assert route["start_col"] == 3
+    assert route["end_row"] == 1
+    assert route["end_col"] == 5
+    assert route["dropped_barrier_layers"] == '["layer_4"]'
+
+
+def test_soft_barrier_retry_exhaustion_returns_no_route(
+    sample_layered_data, assert_message_was_logged, tmp_path
+):
+    """Routing reports no solution after exhausting soft barrier retries"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_7"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "==1",
+                "barrier_importance": 1,
+            }
+        ],
+        ignore_invalid_costs=True,
+        algorithm="dijkstra",
+    )
+
+    out_csv = tmp_path / "routes.csv"
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(4, 0)], [(4, 5)]),
+        ],
+    )
+    route_computer.process(out_fp=out_csv, save_paths=False)
+
+    assert_message_was_logged(
+        "Unable to find route from [(4, 0)] to any of [(4, 5)]",
+        "ERROR",
+    )
+    assert not out_csv.exists()
+
+
 def test_skip_failed_routes_preserves_per_solution_retry_metadata(
     sample_layered_data,
 ):

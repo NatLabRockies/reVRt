@@ -345,6 +345,87 @@ def test_route_finder_retries_soft_barriers_layered_file(tmp_path, algorithm):
         "bidirectional-long-range-dijkstra",
     ],
 )
+def test_route_finder_drops_multiple_soft_barrier_groups_layered_file(
+    tmp_path, algorithm
+):
+    """Layered-file routing drops soft barriers in importance order"""
+
+    layered_fp = _write_layers_to_layered_file(
+        tmp_path,
+        {
+            "test_costs": np.ones((1, 3, 5), dtype=np.float32),
+            "soft_barrier_low": np.array(
+                [
+                    [
+                        [0, 0, 1, 0, 0],
+                        [0, 0, 1, 0, 0],
+                        [0, 0, 1, 0, 0],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+            "soft_barrier_high": np.array(
+                [
+                    [
+                        [0, 0, 0, 1, 0],
+                        [0, 0, 0, 1, 0],
+                        [0, 0, 0, 1, 0],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+        },
+    )
+
+    cost_definition = {
+        "cost_layers": [{"layer_name": "test_costs"}],
+        "barrier_layers": [
+            {
+                "layer_name": "soft_barrier_low",
+                "barrier_values": "== 1",
+                "barrier_importance": 1,
+            },
+            {
+                "layer_name": "soft_barrier_high",
+                "barrier_values": "== 1",
+                "barrier_importance": 2,
+            },
+        ],
+        "ignore_invalid_costs": False,
+    }
+    results = list(
+        RouteFinder(
+            zarr_fp=layered_fp,
+            cost_function=json.dumps(cost_definition),
+            route_definitions=[(9, [(1, 0)], [(1, 4)])],
+            algorithm=algorithm,
+        )
+    )
+
+    assert len(results) == 1
+    route_id, solutions = results[0]
+    assert route_id == 9
+    assert len(solutions) == 1
+
+    solution = solutions[0]
+    assert solution[0][0] == (1, 0)
+    assert solution[0][-1] == (1, 4)
+    assert solution[1] > 0
+    assert solution[2] == ["soft_barrier_low", "soft_barrier_high"]
+    if len(solution) > 3:
+        assert solution[3] == [1, 2]
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "astar",
+        "dijkstra",
+        "long-range-astar",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
+)
 def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
     tmp_path, algorithm
 ):
