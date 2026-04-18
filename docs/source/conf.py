@@ -381,6 +381,7 @@ nitpick_ignore = [
 ] + [
     ("py:obj", f"revrt.models.cost_layers.{cl}.{meth}")
     for cl in [
+        "BarrierLayer",
         "DryCosts",
         "RangeConfig",
         "Rasterize",
