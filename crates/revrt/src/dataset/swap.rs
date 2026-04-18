@@ -45,9 +45,11 @@ pub(super) struct SourceLayout {
 /// A `SourceLayout` describing the representative array's grid and chunking,
 /// which is then reused when creating swap arrays.
 pub(super) fn inspect_source_layout(source: &ReadableListableStorage) -> Result<SourceLayout> {
-    let entries = source
-        .list()
-        .expect("failed to list variables in source dataset");
+    let entries = source.list().map_err(|err| {
+        Error::IO(std::io::Error::other(format!(
+            "failed to list variables in source dataset: {err}"
+        )))
+    })?;
     let first_entry_opt = entries
         .into_iter()
         .map(|entry| entry.to_string())
@@ -122,8 +124,11 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
     soft_barrier_group_count: usize,
 ) -> Result<ReadableWritableListableStorage> {
     let swap: ReadableWritableListableStorage = std::sync::Arc::new(
-        zarrs::filesystem::FilesystemStore::new(swap_path)
-            .expect("could not open filesystem store"),
+        zarrs::filesystem::FilesystemStore::new(swap_path).map_err(|error| {
+            Error::IO(std::io::Error::other(format!(
+                "could not open filesystem store: {error}"
+            )))
+        })?,
     );
 
     debug!("Creating a new group for the cost dataset");
@@ -142,8 +147,14 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
         )?;
     }
 
-    debug!("Swap dataset contents: {:?}", swap.list().unwrap());
-    debug!("Swap dataset size: {:?}", swap.size().unwrap());
+    match swap.list() {
+        Ok(list) => debug!("Swap dataset contents: {:?}", list),
+        Err(error) => trace!("Could not inspect swap dataset contents: {error}"),
+    }
+    match swap.size() {
+        Ok(size) => debug!("Swap dataset size: {:?}", size),
+        Err(error) => trace!("Could not inspect swap dataset size: {error}"),
+    }
 
     Ok(swap)
 }

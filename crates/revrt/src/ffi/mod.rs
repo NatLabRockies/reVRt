@@ -168,10 +168,14 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// Returns
 /// -------
 /// list of tuple
-///     List of path routing results. Each result is a tuple
-///     where the first element is a list of points that the
-///     route goes through and the second element is the final
-///     route cost.
+///     List of path routing results. Each result is a tuple where the first
+///     element is a list of points that the route goes through, the
+///     second element is the final route cost, and the third element is
+///     a list containing the names of any soft barriers dropped to obtain
+///     that specific path. The result list will contain multiple tuples if
+///     the path definition had multiple starting points. An empty list will
+///     be returned if no paths were found from any of the starting points to
+///     any of the ending points (even with soft barriers dropped).
 #[pyfunction]
 #[pyo3(signature = (zarr_fp, cost_function, start, end, algorithm="long_range_dijkstra", routing_layer_out_fp=None, mem_limit_bytes=250_000_000, log_level=None))]
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
@@ -255,17 +259,16 @@ fn find_paths(
 ///     A tuple representing the route finding result for a single
 ///     path definition. The first element is the route definition ID
 ///     (as given in the input) and the second element is a list of path
-///     routing results. Each result is a tuple where the first element
-///     is a list of points that the route goes through and the second
-///     element is the final route cost. The third and fourth elements of
-///     each routing result are lists containing the names and importance
-///     ranks of any soft barriers dropped to obtain that specific path.
-///     The result list will contain multiple tuples if the path definition
-///     had multiple starting points. An empty list will be returned if no
-///     paths were found from any of the starting points to any of the
-///     ending points. This generator will yield one tuple per path
-///     definition. Order is not guaranteed, so use the route ID input to
-///     match results to inputs.
+///     routing results. Each routing result is a tuple where the first
+///     element is a list of points that the route goes through, the
+///     second element is the final route cost, and the third element is
+///     a list containing the names of any soft barriers dropped to obtain
+///     that specific path. The result list will contain multiple tuples if
+///     the path definition had multiple starting points. An empty list will
+///     be returned if no paths were found from any of the starting points to
+///     any of the ending points (even with soft barriers dropped). This
+///     generator will yield one tuple per path definition. Order is not
+///     guaranteed, so use the route ID input to match results to inputs.
 #[pyclass]
 struct RouteFinder {
     /// Path to the Zarr file containing the cost layers

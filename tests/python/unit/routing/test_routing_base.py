@@ -2048,18 +2048,18 @@ def test_invalid_barrier_values_raise(sample_layered_data):
     """Barrier layers reject malformed comparison expressions"""
 
     with pytest.raises(ValueError, match="Barrier values must use"):
-        RoutingScenario(
+        __ = RoutingScenario(
             cost_fpath=sample_layered_data,
             cost_layers=[{"layer_name": "layer_1"}],
             barrier_layers=[{"layer_name": "layer_4", "barrier_values": "~1"}],
-        ).cost_function_json()
+        ).cost_function_json
 
 
 def test_barrier_importance_must_be_positive(sample_layered_data):
     """Barrier layers reject non-positive soft barrier ranks"""
 
     with pytest.raises(ValueError, match="positive integer"):
-        RoutingScenario(
+        __ = RoutingScenario(
             cost_fpath=sample_layered_data,
             cost_layers=[{"layer_name": "layer_1"}],
             barrier_layers=[
@@ -2069,7 +2069,7 @@ def test_barrier_importance_must_be_positive(sample_layered_data):
                     "barrier_importance": 0,
                 }
             ],
-        ).cost_function_json()
+        ).cost_function_json
 
 
 def test_explicit_barriers_remain_hard(sample_layered_data):
