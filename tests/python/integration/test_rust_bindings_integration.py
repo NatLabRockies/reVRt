@@ -146,7 +146,8 @@ def test_find_paths_respects_hard_barrier_layered_file(tmp_path):
         "barrier_layers": [
             {
                 "layer_name": "test_barrier",
-                "barrier_values": "== 1",
+                "barrier_operator": "eq",
+                "barrier_threshold": 1,
             }
         ],
         "ignore_invalid_costs": False,
@@ -186,7 +187,8 @@ def test_find_paths_respects_not_equal_barrier_layered_file(tmp_path):
         "barrier_layers": [
             {
                 "layer_name": "test_barrier",
-                "barrier_values": "!= 0",
+                "barrier_operator": "ne",
+                "barrier_threshold": 0,
             }
         ],
         "ignore_invalid_costs": False,
@@ -332,11 +334,13 @@ def test_route_finder_retries_soft_barriers_layered_file(tmp_path, algorithm):
         "barrier_layers": [
             {
                 "layer_name": "hard_barrier",
-                "barrier_values": "== 1",
+                "barrier_operator": "eq",
+                "barrier_threshold": 1,
             },
             {
                 "layer_name": "soft_barrier",
-                "barrier_values": "== 1",
+                "barrier_operator": "eq",
+                "barrier_threshold": 1,
                 "barrier_importance": 1,
             },
         ],
@@ -422,12 +426,14 @@ def test_route_finder_drops_multiple_soft_barrier_groups_layered_file(
         "barrier_layers": [
             {
                 "layer_name": "soft_barrier_low",
-                "barrier_values": "== 1",
+                "barrier_operator": "eq",
+                "barrier_threshold": 1,
                 "barrier_importance": 1,
             },
             {
                 "layer_name": "soft_barrier_high",
-                "barrier_values": "== 1",
+                "barrier_operator": "eq",
+                "barrier_threshold": 1,
                 "barrier_importance": 2,
             },
         ],
