@@ -12,10 +12,11 @@ from revrt.exceptions import revrtConfigurationError
 
 
 _BARRIER_VALUE_PATTERN = re.compile(
-    r"^\s*(>=|<=|==|>|<)\s*"
+    r"^\s*(!=|>=|<=|==|>|<)\s*"
     r"(-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*$"
 )
 _BARRIER_OPERATOR_MAP = {
+    "!=": "ne",
     ">": "gt",
     ">=": "ge",
     "<": "lt",
@@ -182,7 +183,7 @@ def parse_barrier_values(barrier_values):
     if match is None:
         msg = (
             "Barrier values must use one of the supported comparison "
-            "operators ('>', '>=', '<', '<=', '==') followed by a "
+            "operators ('==', '!=', '>', '>=', '<', '<=') followed by a "
             f"number. Got: {barrier_values!r}"
         )
         raise revrtConfigurationError(msg)

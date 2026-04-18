@@ -345,6 +345,8 @@ class RoutingLayerManager:
             return layer_data < threshold
         if operator == "le":
             return layer_data <= threshold
+        if operator == "ne":
+            return layer_data != threshold
         if operator == "eq":
             return layer_data == threshold
 

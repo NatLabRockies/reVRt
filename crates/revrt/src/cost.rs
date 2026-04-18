@@ -41,6 +41,8 @@ pub(crate) struct CostFunction {
 
 #[derive(Clone, Copy, Debug, serde::Deserialize)]
 pub(crate) enum BarrierOperator {
+    #[serde(rename = "ne")]
+    NotEqual,
     #[serde(rename = "gt")]
     GreaterThan,
     #[serde(rename = "ge")]
@@ -333,6 +335,7 @@ pub(crate) fn build_single_barrier_layer(
         .expect("Barrier layer not found in features");
 
     barrier_values.mapv(|value| match layer.barrier_operator {
+        BarrierOperator::NotEqual => value != layer.barrier_threshold,
         BarrierOperator::GreaterThan => value > layer.barrier_threshold,
         BarrierOperator::GreaterThanOrEqual => value >= layer.barrier_threshold,
         BarrierOperator::LessThan => value < layer.barrier_threshold,
@@ -417,6 +420,7 @@ mod test_builder {
 mod test {
     use super::*;
     use crate::dataset::{make_lazy_subset_for_tests, samples};
+    use ndarray::ArrayD;
     use std::sync::Arc;
     use zarrs::array_subset::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
@@ -459,6 +463,35 @@ mod test {
         assert_eq!(cost.cost_layers[4].multiplier_layer, None);
         assert_eq!(cost.cost_layers[4].multiplier_scalar, Some(100.0));
         assert_eq!(cost.cost_layers[4].is_invariant, Some(true));
+    }
+
+    #[test]
+    fn test_build_single_barrier_layer_supports_not_equal() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::new(
+                "barrier",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 2.0, 0.0]),
+            ))
+            .build()
+            .expect("Failed to create barrier zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let layer = BarrierLayer {
+            layer_name: "barrier".to_string(),
+            barrier_operator: BarrierOperator::NotEqual,
+            barrier_threshold: 0.0,
+            barrier_importance: None,
+        };
+
+        let barrier = build_single_barrier_layer(&layer, &mut features);
+
+        assert_eq!(
+            barrier,
+            ArrayD::from_shape_vec(IxDyn(&[1, 2, 2]), vec![false, true, true, false]).unwrap()
+        );
     }
 
     #[test]

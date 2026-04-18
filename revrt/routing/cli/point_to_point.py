@@ -280,12 +280,13 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
                     barrier cells.
                 - ``"barrier_values"``: (REQUIRED) Comparison expression
                     defining which pixel values act as barriers.
-                    Supported operators are ``">"``, ``">="``, ``"<"``,
-                    ``"<="``, and ``"=="``, followed by a numeric
-                    threshold. For example, ``">=15"`` marks all pixels
-                    with values greater than or equal to ``15`` as
-                    barriers, and ``"==1"`` marks pixels equal to ``1``
-                    as barriers.
+                    Supported operators are ``"=="``, ``"!="``, ``">"``,
+                    ``">="``, ``"<"``, and ``"<="``, followed by a
+                    numeric threshold. For example, ``">=15"`` marks
+                    pixels with values greater than or equal to ``15``
+                    as barriers, ``"==1"`` marks pixels equal to ``1``
+                    as barriers, and ``"!=0"`` marks every non-zero
+                    pixel as a barrier.
                 - ``"barrier_importance"``: (OPTIONAL) Positive integer
                     ranking used to define a soft barrier. When a route
                     cannot be found, reVRt will iteratively drop the

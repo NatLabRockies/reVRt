@@ -167,9 +167,10 @@ as described below).
 ### Building barrier layers
 Barrier layers are geospatial layers just like costs or frictions that are
 paired with a definition of what values should act as the barrier (the standard
-comparison operators are allowed: ``>``, ``>=``, ``<``, ``<=``, ``==``). Any
-pixel with a value that satisfies the comparison operator will be treated as a
-barrier that cannot be crossed by a route. For example, this configuration:
+comparison operators are allowed: ``==``, ``!=``, ``>``, ``>=``, ``<``, ``<=``).
+Any pixel with a value that satisfies the comparison operator will be
+treated as a barrier that cannot be crossed by a route. For example, this
+configuration:
 
 ```json5
 {"layer_name": "slope", "barrier_values": ">=15"}
@@ -178,6 +179,9 @@ barrier that cannot be crossed by a route. For example, this configuration:
 would tell the routing algorithm that any pixels with a value {math}`\ge 15`
 in the ``slope`` layer should be completely avoided. As with all the other
 layers, you can specify multiple barriers to be considered during routing:
+
+Using ``"!=0"`` is also valid when you want every non-zero pixel in a layer to
+act as a barrier.
 
 ```json5
 "barrier_layers": [

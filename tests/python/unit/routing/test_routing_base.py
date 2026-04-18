@@ -2018,6 +2018,32 @@ def test_barrier_layers_are_normalized_for_rust(sample_layered_data):
     ]
 
 
+def test_barrier_layers_normalize_not_equal_for_rust(sample_layered_data):
+    """Barrier layers normalize the not-equal operator for Rust"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "!=0",
+                "barrier_importance": 1,
+            }
+        ],
+    )
+
+    cost_function = json.loads(scenario.cost_function_json)
+    assert cost_function["barrier_layers"] == [
+        {
+            "layer_name": "layer_4",
+            "barrier_operator": "ne",
+            "barrier_threshold": 0.0,
+            "barrier_importance": 1,
+        }
+    ]
+
+
 def test_invalid_barrier_values_raise(sample_layered_data):
     """Barrier layers reject malformed comparison expressions"""
 
@@ -2053,6 +2079,31 @@ def test_explicit_barriers_remain_hard(sample_layered_data):
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_2"}],
         barrier_layers=[{"layer_name": "layer_4", "barrier_values": "==1"}],
+        ignore_invalid_costs=False,
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        barrier_value = (
+            routing_layers.final_routing_layer.isel(y=0, x=3).compute().item()
+        )
+        free_value = (
+            routing_layers.final_routing_layer.isel(y=0, x=2).compute().item()
+        )
+    finally:
+        routing_layers.close()
+
+    assert np.isnan(barrier_value)
+    assert free_value > 0
+
+
+def test_not_equal_barriers_remain_hard(sample_layered_data):
+    """Not-equal barriers stay impassable even with soft invalid costs"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_2"}],
+        barrier_layers=[{"layer_name": "layer_4", "barrier_values": "!=0"}],
         ignore_invalid_costs=False,
     )
 

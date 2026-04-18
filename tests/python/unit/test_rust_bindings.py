@@ -100,7 +100,8 @@ def test_find_paths_respects_explicit_barrier_layers(tmp_path):
         "barrier_layers": [
             {
                 "layer_name": "test_barrier",
-                "barrier_values": "== 1",
+                "barrier_operator": "eq",
+                "barrier_threshold": 1,
             }
         ],
         "ignore_invalid_costs": False,
@@ -115,23 +116,36 @@ def test_find_paths_respects_explicit_barrier_layers(tmp_path):
     assert results == []
 
 
-def test_find_paths_rejects_invalid_barrier_values(tmp_path):
-    """find_paths returns a validation error for malformed barriers"""
+def test_find_paths_respects_not_equal_barrier_layers(tmp_path):
+    """find_paths treats not-equal barrier layers as impassable"""
 
-    da = xr.DataArray(
-        np.ones((1, 2, 2), dtype=np.float32),
+    cost_layer = xr.DataArray(
+        np.ones((1, 3, 3), dtype=np.float32),
+        dims=("band", "y", "x"),
+    )
+    barrier_layer = xr.DataArray(
+        np.array(
+            [
+                [
+                    [1, 1, 1],
+                    [1, 0, 1],
+                    [1, 1, 1],
+                ]
+            ],
+            dtype=np.float32,
+        ),
         dims=("band", "y", "x"),
     )
 
-    test_cost_fp = tmp_path / "test_invalid_barrier.zarr"
-    ds = xr.Dataset({"test_costs": da, "test_barrier": da})
+    test_cost_fp = tmp_path / "test_barrier_ne.zarr"
+    ds = xr.Dataset({"test_costs": cost_layer, "test_barrier": barrier_layer})
     for layer_name in ds.data_vars:
         ds[layer_name].encoding = {
             "fill_value": 1_000.0,
             "_FillValue": 1_000.0,
         }
 
-    ds.chunk({"x": 2, "y": 2}).to_zarr(
+    ds.chunk({"x": 3, "y": 3}).to_zarr(
         test_cost_fp, mode="w", zarr_format=3, consolidated=False
     )
 
@@ -140,18 +154,20 @@ def test_find_paths_rejects_invalid_barrier_values(tmp_path):
         "barrier_layers": [
             {
                 "layer_name": "test_barrier",
-                "barrier_values": "~1",
+                "barrier_operator": "ne",
+                "barrier_threshold": 1,
             }
         ],
+        "ignore_invalid_costs": False,
     }
+    results = find_paths(
+        zarr_fp=test_cost_fp,
+        cost_function=json.dumps(cost_definition),
+        start=[(1, 1)],
+        end=[(0, 0)],
+    )
 
-    with pytest.raises(ValueError, match="Barrier values must use"):
-        find_paths(
-            zarr_fp=test_cost_fp,
-            cost_function=json.dumps(cost_definition),
-            start=[(0, 0)],
-            end=[(1, 1)],
-        )
+    assert results == []
 
 
 @pytest.mark.parametrize(
@@ -529,6 +545,77 @@ def test_route_finder_tracks_dropped_barriers_per_start_point(tmp_path):
     assert bottom_path[-1] == (2, 4)
     assert bottom_cost > 0
     assert bottom_layers == []
+
+
+def test_route_finder_retries_not_equal_soft_barriers(tmp_path):
+    """RouteFinder retries soft barriers defined with not-equal"""
+
+    cost_layer = xr.DataArray(
+        np.ones((1, 3, 5), dtype=np.float32),
+        dims=("band", "y", "x"),
+    )
+    soft_barrier = xr.DataArray(
+        np.array(
+            [
+                [
+                    [0, 0, 1, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                ]
+            ],
+            dtype=np.float32,
+        ),
+        dims=("band", "y", "x"),
+    )
+
+    test_cost_fp = tmp_path / "retry_ne.zarr"
+    ds = xr.Dataset(
+        {
+            "test_costs": cost_layer,
+            "soft_barrier": soft_barrier,
+        }
+    )
+    for layer_name in ds.data_vars:
+        ds[layer_name].encoding = {
+            "fill_value": 1_000.0,
+            "_FillValue": 1_000.0,
+        }
+
+    ds.chunk({"x": 5, "y": 3}).to_zarr(
+        test_cost_fp, mode="w", zarr_format=3, consolidated=False
+    )
+
+    cost_definition = {
+        "cost_layers": [{"layer_name": "test_costs"}],
+        "barrier_layers": [
+            {
+                "layer_name": "soft_barrier",
+                "barrier_operator": "ne",
+                "barrier_threshold": 1,
+                "barrier_importance": 1,
+            },
+        ],
+        "ignore_invalid_costs": False,
+    }
+    results = list(
+        RouteFinder(
+            zarr_fp=test_cost_fp,
+            cost_function=json.dumps(cost_definition),
+            route_definitions=[(11, [(0, 0)], [(0, 4)])],
+            algorithm="dijkstra",
+        )
+    )
+
+    assert len(results) == 1
+    route_id, solutions = results[0]
+    assert route_id == 11
+    assert len(solutions) == 1
+
+    path, cost, dropped_layers = solutions[0]
+    assert path[0] == (0, 0)
+    assert path[-1] == (0, 4)
+    assert cost > 0
+    assert dropped_layers == ["soft_barrier"]
 
 
 @pytest.mark.parametrize(

@@ -161,6 +161,46 @@ def test_find_paths_respects_hard_barrier_layered_file(tmp_path):
     assert results == []
 
 
+def test_find_paths_respects_not_equal_barrier_layered_file(tmp_path):
+    """Test that not-equal barriers block routing for layered-file inputs"""
+
+    layered_fp = _write_layers_to_layered_file(
+        tmp_path,
+        {
+            "test_costs": np.ones((1, 3, 3), dtype=np.float32),
+            "test_barrier": np.array(
+                [
+                    [
+                        [1, 1, 1],
+                        [1, 0, 1],
+                        [1, 1, 1],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+        },
+    )
+
+    cost_definition = {
+        "cost_layers": [{"layer_name": "test_costs"}],
+        "barrier_layers": [
+            {
+                "layer_name": "test_barrier",
+                "barrier_values": "!= 0",
+            }
+        ],
+        "ignore_invalid_costs": False,
+    }
+    results = find_paths(
+        zarr_fp=layered_fp,
+        cost_function=json.dumps(cost_definition),
+        start=[(1, 1)],
+        end=[(0, 0)],
+    )
+
+    assert results == []
+
+
 @pytest.mark.parametrize(
     "algorithm",
     [
