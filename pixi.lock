@@ -17570,8 +17570,8 @@ packages:
   requires_python: '>=3.9'
 - pypi: ./
   name: nlr-revrt
-  version: 0.5.0
-  sha256: f4d73973c42cadf38446a13b2e67e4919ccb2cc324250020eb621585d3e75587
+  version: 0.6.0
+  sha256: c0c2d72376d07134dbd2e63a8bad7cb1c487969f14655b2b49f9912866e2e128
   requires_dist:
   - affine>=2.4.0,<3
   - dask>=2026.3.0,<2027
