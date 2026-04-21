@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776206650913,
+  "lastUpdate": 1776736831095,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -8735,6 +8735,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 381265439,
             "range": "± 7092104",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c564ecd4bc1e6a4c1276f518261268ce1b1a59b2",
+          "message": "Update tracked layers to match cost inputs (#257)\n\n* Add tracked layer docs\n\n* Update docs\n\n* Update logic for tracked layers\n\n* Add tests",
+          "timestamp": "2026-04-20T19:46:48-06:00",
+          "tree_id": "d699d32024444756bd1a8e8231d25e98ee7bc3f3",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/c564ecd4bc1e6a4c1276f518261268ce1b1a59b2"
+        },
+        "date": 1776736830317,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 68883488,
+            "range": "± 1217746",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 74332499,
+            "range": "± 11557675",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 99487418,
+            "range": "± 1696841",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 146434271,
+            "range": "± 13229956",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 596813817,
+            "range": "± 17245627",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 148956646,
+            "range": "± 1649986",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 153354856,
+            "range": "± 812024",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 165817675,
+            "range": "± 740380",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 207238306,
+            "range": "± 1227792",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 362215159,
+            "range": "± 4462097",
             "unit": "ns/iter"
           }
         ]
