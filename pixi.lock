@@ -17811,7 +17811,7 @@ packages:
 - pypi: ./
   name: nlr-revrt
   version: 0.5.0
-  sha256: 6984c7f9d60dfab2b64473d9dc71141017f0e8ff8f6f40b3e20eb612a3e48e86
+  sha256: 41cf3d048e7786cdb6a20e7029da7247f3388355f3857e85c0da84bff3a27f79
   requires_dist:
   - affine>=2.4.0,<3
   - dask>=2026.3.0,<2027
@@ -17864,7 +17864,7 @@ packages:
   - build>=1.4.3,<2 ; extra == 'build'
   - pkginfo>=1.12.1.2,<2 ; extra == 'build'
   - twine>=6.2.0,<7 ; extra == 'build'
-  requires_python: '>=3.11'
+  requires_python: '>=3.12'
 - pypi: https://files.pythonhosted.org/packages/0a/08/b83b94a2b10ee7d27dddff4812a188e6669e520dafccb590613a90fa9d76/nlr_rex-0.5.0-py3-none-any.whl
   name: nlr-rex
   version: 0.5.0
