@@ -223,6 +223,23 @@ def _validated_config(**config_dict):
     return config
 
 
+def _create_lf_if_not_exists(lf_fp, template_file, create_kwargs):
+    """Create layered file if it doesn't already exist"""
+    lf_handler = LayeredFile(fp=lf_fp)
+    if lf_handler.fp.exists():
+        return lf_handler
+
+    create_kwargs = create_kwargs or {}
+    create_kwargs.pop("template_file", None)
+    logger.info(
+        "%s not found. Creating new layered file with kwargs:\n%r",
+        lf_handler.fp,
+        create_kwargs,
+    )
+    lf_handler.create_new(template_file=template_file, **create_kwargs)
+    return lf_handler
+
+
 def _load_masks(config, lf_handler):
     """Load masks based on config file"""
     masks = Masks(
