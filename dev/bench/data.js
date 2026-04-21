@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776739546214,
+  "lastUpdate": 1776804350744,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -9155,6 +9155,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 359042379,
             "range": "± 7360352",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fcee3dc520d748534496083275f163853f298290",
+          "message": "Add various cleanup (#262)\n\n* Specify crs\n\n* Open file before iterating in chunks in case of exception\n\n* Fix tests\n\n* Add helper method\n\n* Track client instance and close it when done\n\n* Track client and close when done\n\n* Minor update\n\n* Add `transform_xy`\n\n* Add import\n\n* Use point geometry\n\n* Add `pytest.warns` guards\n\n* Use non-zero center\n\n* Use new utility function\n\n* Update `region_mapper`\n\n* Use new utility function\n\n* Update to avoid warnings\n\n* Update deps\n\n* Update docstring\n\n* Update deps\n\n* No eager load\n\n* Try fix docs\n\n* Update deps\n\n* Fix docs build\n\n* Drop support for python 3.11\n\n* Bump rasterio\n\n* Add names for jobs\n\n* Don't tox test Python 3.14 yet",
+          "timestamp": "2026-04-21T14:34:40-06:00",
+          "tree_id": "47be51b9267c2b7ce069151d526fb8e1ec7101f2",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/fcee3dc520d748534496083275f163853f298290"
+        },
+        "date": 1776804349920,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 68405446,
+            "range": "± 1629665",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 93225190,
+            "range": "± 2659775",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 99940681,
+            "range": "± 1867329",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 146776012,
+            "range": "± 6567786",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 597747480,
+            "range": "± 11641889",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 150236138,
+            "range": "± 2060070",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 155520482,
+            "range": "± 1475013",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 167511565,
+            "range": "± 1416421",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 209313431,
+            "range": "± 1734173",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 362756326,
+            "range": "± 4641999",
             "unit": "ns/iter"
           }
         ]
