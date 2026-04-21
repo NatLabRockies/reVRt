@@ -394,26 +394,25 @@ class RoutePostProcessor:
     def _collect_csv_files(self):
         """Collect CSV files into a single output file"""
         for data_fp in self._next_file_to_process():
-            for chunk_idx, df in enumerate(
-                pd.read_csv(
-                    data_fp,
-                    chunksize=self.chunk_size,  # cspell:disable-line
-                )
-            ):
-                logger.debug("\t\t- Processing CSV chunk %d", chunk_idx)
-                if len(df) == 0:
-                    continue
+            with pd.read_csv(
+                data_fp,
+                chunksize=self.chunk_size,  # cspell:disable-line
+            ) as reader:
+                for chunk_idx, df in enumerate(reader):
+                    logger.debug("\t\t- Processing CSV chunk %d", chunk_idx)
+                    if len(df) == 0:
+                        continue
 
-                if self.length_mult_kind:
-                    df = _apply_length_mult(df, self.length_mult_kind)
+                    if self.length_mult_kind:
+                        df = _apply_length_mult(df, self.length_mult_kind)
 
-                if self.min_line_length > 0:
-                    df = _apply_min_length_floor(df, self.min_line_length)
+                    if self.min_line_length > 0:
+                        df = _apply_min_length_floor(df, self.min_line_length)
 
-                if self.cost_fpath or self.features_fpath:
-                    df = self._merge_transmission_features(df)
+                    if self.cost_fpath or self.features_fpath:
+                        df = self._merge_transmission_features(df)
 
-                self.writer.save(df)
+                    self.writer.save(df)
 
     def _handle_chunk_file(self, chunk_fp):
         """Handle chunk file after collection step"""
