@@ -796,7 +796,8 @@ def test_start_point_on_barrier_returns_no_route(
             ([(3, 1)], [(2, 6)]),
         ],
     )
-    route_computer.process(out_fp=out_csv, save_paths=False)
+    with pytest.warns(revrtWarning, match="invalid"):
+        route_computer.process(out_fp=out_csv, save_paths=False)
 
     assert_message_was_logged(
         "One or more of the start points have an invalid cost (must be > 0): "
@@ -834,7 +835,8 @@ def test_invalid_start_point_logged(
             ([(1, 1), (0, 3)], [(2, 6)]),
         ],
     )
-    route_computer.process(out_fp=out_csv, save_paths=False)
+    with pytest.warns(revrtWarning, match="invalid cost"):
+        route_computer.process(out_fp=out_csv, save_paths=False)
 
     assert_message_was_logged(
         "One or more of the start points have an invalid cost (must be > 0): "
@@ -879,7 +881,8 @@ def test_invalid_start_point_explicitly_allowed(
             ([(1, 1), (0, 3), (10000, 10000)], [(2, 6), (20000, 20000)]),
         ],
     )
-    route_computer.process(out_fp=out_csv, save_paths=False)
+    with pytest.warns(revrtWarning, match="out of bounds"):
+        route_computer.process(out_fp=out_csv, save_paths=False)
 
     assert_message_was_logged(
         "One or more of the start points are out of bounds for an array of "
@@ -938,7 +941,8 @@ def test_some_endpoints_include_barriers_but_one_valid(
             ([(1, 1)], [(0, 3), (2, 6)]),
         ],
     )
-    route_computer.process(out_fp=out_csv, save_paths=False)
+    with pytest.warns(revrtWarning, match="invalid cost"):
+        route_computer.process(out_fp=out_csv, save_paths=False)
 
     output = pd.read_csv(out_csv)
     assert len(output) == 1
@@ -973,7 +977,8 @@ def test_all_endpoints_are_barriers_returns_no_route(
             ([(1, 1)], [(0, 3), (0, 7)]),
         ],
     )
-    route_computer.process(out_fp=out_csv, save_paths=False)
+    with pytest.warns(revrtWarning, match="valid cost"):
+        route_computer.process(out_fp=out_csv, save_paths=False)
 
     assert_message_was_logged(
         "None of the end points have a valid cost (must be > 0): "
@@ -1005,7 +1010,8 @@ def test_bad_start_index_returns_no_route(
             ([(10000, 10000)], [(0, 3), (0, 7)]),
         ],
     )
-    route_computer.process(out_fp=out_csv, save_paths=False)
+    with pytest.warns(revrtWarning, match=r"[(10000, 10000)]"):
+        route_computer.process(out_fp=out_csv, save_paths=False)
 
     assert_message_was_logged(
         "One or more of the start points are out of bounds for an array of "
@@ -1037,7 +1043,8 @@ def test_bad_end_index_returns_no_route(
             ([(1, 1)], [(10000, 10000)]),
         ],
     )
-    route_computer.process(out_fp=out_csv, save_paths=False)
+    with pytest.warns(revrtWarning, match="end points"):
+        route_computer.process(out_fp=out_csv, save_paths=False)
 
     assert_message_was_logged(
         "One or more of the end points are out of bounds for an array of "
@@ -1073,7 +1080,8 @@ def test_bad_index_skipped(
             ([(10000, 10000), (1, 1)], [(0, 3), (2, 6), (20000, 20000)]),
         ],
     )
-    route_computer.process(out_fp=out_csv, save_paths=False)
+    with pytest.warns(revrtWarning, match="Dropping these"):
+        route_computer.process(out_fp=out_csv, save_paths=False)
 
     assert_message_was_logged(
         "One or more of the start points are out of bounds for an array of "

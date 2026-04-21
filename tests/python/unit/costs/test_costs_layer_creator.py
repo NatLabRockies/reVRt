@@ -238,19 +238,22 @@ def test_bins(builder_instance):
     config = LayerBuildConfig(
         extent="wet+", bins=[RangeConfig(min=1, max=5, value=4)]
     )
-    result = builder_instance._process_raster_data(data, config)
+    with pytest.warns(revrtWarning, match="Gap detected"):
+        result = builder_instance._process_raster_data(data, config)
     assert (result == np.array([[4, 4, 0], [4, 0, 0], [0, 0, 0]])).all()
 
     config = LayerBuildConfig(
         extent="dry+", bins=[RangeConfig(min=5, max=9, value=5)]
     )
-    result = builder_instance._process_raster_data(data, config)
+    with pytest.warns(revrtWarning, match="Gap detected"):
+        result = builder_instance._process_raster_data(data, config)
     assert (result == np.array([[0, 0, 0], [0, 5, 5], [0, 5, 0]])).all()
 
     config = LayerBuildConfig(
         extent="all", bins=[RangeConfig(min=2, max=9, value=5)]
     )
-    result = builder_instance._process_raster_data(data, config)
+    with pytest.warns(revrtWarning, match="Gap detected"):
+        result = builder_instance._process_raster_data(data, config)
     assert (result == np.array([[0, 5, 5], [5, 5, 5], [5, 5, 0]])).all()
 
 
@@ -264,7 +267,8 @@ def test_complex_bins(builder_instance):
             RangeConfig(min=4, max=10, value=10),
         ],
     )
-    result = builder_instance._process_raster_data(data, config)
+    with pytest.warns(revrtWarning):
+        result = builder_instance._process_raster_data(data, config)
     assert (result == np.array([[4, 4, 0], [14, 10, 0], [10, 10, 0]])).all()
 
     config = LayerBuildConfig(
@@ -274,7 +278,8 @@ def test_complex_bins(builder_instance):
             RangeConfig(min=4, max=9, value=1),
         ],
     )
-    result = builder_instance._process_raster_data(data, config)
+    with pytest.warns(revrtWarning):
+        result = builder_instance._process_raster_data(data, config)
     assert (result == np.array([[5, 5, 5], [6, 6, 1], [1, 1, 0]])).all()
 
 
@@ -330,7 +335,8 @@ def test_bin_config_sanity_checking(builder_instance, tiff_layers_for_testing):
         RangeConfig(min=2, max=5, value=4),
     ]
     good_config = LayerBuildConfig(extent="all", bins=bin_config)
-    builder_instance._process_raster_layer(layer_fn, good_config)
+    with pytest.warns(revrtWarning, match="Gap detected"):
+        builder_instance._process_raster_layer(layer_fn, good_config)
 
 
 def test_bin_config_warns_full_range(
