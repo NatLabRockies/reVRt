@@ -169,10 +169,13 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
         "Using dask config:\n%s", json.dumps(dask.config.config, indent=4)
     )
 
+    client = None
     lock = None
     if max_workers != 1:
         client = dask.distributed.Client(
-            n_workers=max_workers, memory_limit=memory_limit_per_worker
+            n_workers=max_workers,
+            memory_limit=memory_limit_per_worker,
+            dashboard_address=None,
         )
         logger.info(
             "Dask client created with %s workers and %r memory limit per "
@@ -180,37 +183,31 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
             max_workers,
             memory_limit_per_worker,
         )
-        logger.info("Dashboard link: %s", client.dashboard_link)
-        lock = dask.distributed.Lock("rioxarray-write", client=client)
+        lock = dask.distributed.Lock("rioxarray-write")
 
-    lf_handler = LayeredFile(fp=config.routing_file)
-    if not lf_handler.fp.exists():
-        create_kwargs = create_kwargs or {}
-        create_kwargs.pop("template_file", None)
-        logger.info(
-            "%s not found. Creating new layered file with kwargs:\n%r",
-            lf_handler.fp,
-            create_kwargs,
-        )
-        lf_handler.create_new(
-            template_file=config.template_file, **create_kwargs
+    try:
+        lf_handler = _create_lf_if_not_exists(
+            config.routing_file, config.template_file, create_kwargs
         )
 
-    masks = _load_masks(config, lf_handler)
+        masks = _load_masks(config, lf_handler)
 
-    builder = LayerCreator(
-        lf_handler,
-        masks,
-        input_layer_dir=config.input_layer_dir,
-        output_tiff_dir=config.output_tiff_dir,
-    )
-    _build_layers(config, builder, lf_handler, lock=lock)
+        builder = LayerCreator(
+            lf_handler,
+            masks,
+            input_layer_dir=config.input_layer_dir,
+            output_tiff_dir=config.output_tiff_dir,
+        )
+        _build_layers(config, builder, lf_handler, lock=lock)
 
-    if config.dry_costs is not None:
-        _build_dry_costs(config, masks, lf_handler, lock=lock)
+        if config.dry_costs is not None:
+            _build_dry_costs(config, masks, lf_handler, lock=lock)
 
-    if config.merge_friction_and_barriers is not None:
-        _combine_friction_and_barriers(config, lf_handler, lock=lock)
+        if config.merge_friction_and_barriers is not None:
+            _combine_friction_and_barriers(config, lf_handler, lock=lock)
+    finally:
+        if client is not None:
+            client.close()
 
 
 def _validated_config(**config_dict):
