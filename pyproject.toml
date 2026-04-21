@@ -42,7 +42,7 @@ dependencies = [
   "pydantic>=2.13.3,<3",
   "python-slugify>=8.0.4,<9",
   "NLR-gaps>=0.9.2,<0.10",
-  "rasterio>=1.4.3,<2",
+  "rasterio>=1.5.0,<2",
   "rioxarray>=0.22.0,<0.23",
   "shapely>=2.1.2,<3",
   "xarray>=2026.4.0,<2027",
@@ -268,7 +268,7 @@ numpy = ">=2.4.3,<3"
 odc-geo = ">=0.5.1,<0.6"
 pydantic = ">=2.13.3,<3"
 python-slugify = ">=8.0.4,<9"
-rasterio = ">=1.4.3,<2"
+rasterio = ">=1.5.0,<2"
 rioxarray = ">=0.22.0,<0.23"
 shapely = ">=2.1.2,<3"
 xarray = ">=2026.4.0,<2027"
