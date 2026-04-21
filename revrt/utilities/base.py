@@ -522,8 +522,7 @@ def transform_xy(src_crs, dst_crs, x, y):
         be any valid CRS string or dictionary that can be parsed by
         pyproj.CRS.
     x, y : iterable
-        Iterables of x and y coordinates to transform. Will be cast to
-        lists before transformation.
+        Iterables of x and y coordinates to transform.
 
     Returns
     -------
@@ -532,7 +531,7 @@ def transform_xy(src_crs, dst_crs, x, y):
         destination CRS.
     """
     transformer = Transformer.from_crs(src_crs, dst_crs, always_xy=True)
-    out_x, out_y = transformer.transform(list(x), list(y))
+    out_x, out_y = transformer.transform(x, y)
     return np.asarray(out_x), np.asarray(out_y)
 
 
