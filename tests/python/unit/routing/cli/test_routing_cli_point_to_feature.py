@@ -233,7 +233,9 @@ def test_compute_lcp_routes_creates_csv_output(point_feature_dataset):
 
     out_dir = point_feature_dataset["tmp_path"] / "csv_outputs"
     transmission_config = {"row_width": {"138": 1.0}}
-    tracked_layers = {"tie_line_multipliers": "max"}
+    tracked_layers = [
+        {"layer_name": "tie_line_multipliers", "agg_method": "max"}
+    ]
 
     csv_path = compute_lcp_routes(
         cost_fpath=point_feature_dataset["cost_fp"],

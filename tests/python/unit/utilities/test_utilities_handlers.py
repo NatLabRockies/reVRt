@@ -352,7 +352,7 @@ def test_create_new_file_from_zarr(
     ):
         assert np.allclose(ds_truth["longitude"], ds_test["longitude"])
         assert np.allclose(ds_truth["latitude"], ds_test["latitude"])
-        assert ds_truth.dims == ds_test.dims
+        assert ds_truth.sizes == ds_test.sizes
         assert set(ds_truth.coords) == set(ds_test.coords)
 
         _validate_top_level_ds_props(ds_test, transform)

@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import geopandas as gpd
-from pyproj import Transformer
 
 from revrt.exceptions import (
     revrtFileExistsError,
@@ -30,6 +29,7 @@ from revrt.utilities.base import (
     delete_data_file,
     elapsed_time_as_str,
     expand_dim_if_needed,
+    transform_xy,
     log_mem,
     TRANSFORM_ATOL,
 )
@@ -1029,8 +1029,9 @@ def _save_ds_as_zarr_with_encodings(out_ds, chunk_x, chunk_y, out_fp):
 def _proj_to_lon_lat(xx_block, yy_block, src):
     """Block-wise transform to lon/lat; returns array shape [2, y, x]"""
     # create transformer inside the block to avoid pickling issues
-    tr = Transformer.from_crs(src, "EPSG:4326", always_xy=True)
-    lon, lat = tr.transform(xx_block.ravel(), yy_block.ravel())
+    lon, lat = transform_xy(
+        src, "EPSG:4326", xx_block.ravel(), yy_block.ravel()
+    )
     out = np.empty(
         (2, functools.reduce(operator.mul, xx_block.shape)), dtype="float32"
     )

@@ -412,11 +412,25 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         soft barriers to be combined in the same routing run. Multiple
         entries may reference the same layer with different
         ``"barrier_values"`` definitions. By default, ``None``.
-    tracked_layers : dict, optional
-        Dictionary mapping layer names to strings, where the strings are
-        dask aggregation methods (similar to what numpy has) that
-        should be applied to the layer along the LCP to be included as a
-        characterization column in the output. By default, ``None``.
+    tracked_layers : list, optional
+        List of dictionaries defining layers to characterize along the
+        computed route. Each dictionary must contain:
+
+            - "layer_name": (REQUIRED) Name of layer in the layered
+              file to aggregate along the route.
+            - "agg_method": (REQUIRED) Name of the ``dask.array``
+              aggregation function to apply to the sampled route
+              values, such as ``"sum"``, ``"mean"``, or ``"max"``.
+            - "multiplier_layer": (OPTIONAL) Name of layer in the
+              layered file containing spatially explicit multipliers
+              to apply before aggregation. Default is ``None``.
+            - "multiplier_scalar": (OPTIONAL) Scalar multiplier to
+              apply before aggregation. Default is ``1``.
+
+        These inputs mirror the scaling behavior used by cost layers,
+        but tracked layers do not contribute to routing costs. They are
+        only summarized for output characterization.
+        By default, ``None``.
     cost_multiplier_layer : str, optional
         Name of the spatial multiplier layer applied to final costs.
         By default, ``None``.

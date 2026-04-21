@@ -15,7 +15,7 @@ benchmarkable transmission paths suitable for reV/reVX workflows or
 standalone analysis.
 
 ## 2. Tech Stack Overview
-- Python ≥ 3.11 for orchestration, layer management, and CLI surfaces.
+- Python ≥ 3.12 for orchestration, layer management, and CLI surfaces.
 - Rust 2024 edition (workspace toolchain ≥ 1.87) for routing algorithms and
   PyO3 bindings built with Maturin.
 - Environment management: **Pixi** with feature-based environments (`dev`,

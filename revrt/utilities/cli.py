@@ -11,10 +11,12 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import geopandas as gpd
+from pyproj import Transformer
 from shapely.geometry import Point, LineString
+from shapely.ops import transform as shapely_transform
 from gaps.cli import CLICommandFromClass, CLICommandFromFunction
 
-from revrt.utilities.base import region_mapper
+from revrt.utilities.base import region_mapper, transform_xy
 from revrt.utilities.handlers import (
     IncrementalWriter,
     LayeredFile,
@@ -122,7 +124,8 @@ def convert_pois_to_lines(poi_csv_f, template_f, out_f):
 
     pts = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.Long, df.Lat))
     pts = pts.set_crs("EPSG:4326")
-    pts = pts.to_crs(crs)
+    x, y = transform_xy("EPSG:4326", crs, df.Long, df.Lat)
+    pts = pts.set_geometry(gpd.points_from_xy(x, y), crs=crs)
 
     # Convert points to short lines
     new_geom = []
@@ -227,7 +230,7 @@ def map_ss_to_rr(
     )
 
     map_func = region_mapper(regions, region_identifier_column)
-    centroids = substations.centroid
+    centroids = _geometry_centroids(substations)
     substations[region_identifier_column] = centroids.apply(map_func)
 
     logger.info("Calculating min/max voltage for each substation...")
@@ -431,8 +434,8 @@ def add_rr_to_nn(
     else:
         crs = gpd.read_file(crs_template_file).crs
 
-    network_nodes = network_nodes.to_crs(crs)
-    regions = gpd.read_file(regions_fpath).to_crs(crs)
+    network_nodes = _safe_to_crs(network_nodes, crs)
+    regions = _safe_to_crs(gpd.read_file(regions_fpath), crs)
     if region_identifier_column in network_nodes:
         msg = (
             f"Network nodes file {str(network_nodes_fpath)!r} was specified "
@@ -443,13 +446,51 @@ def add_rr_to_nn(
         return
 
     logger.info("Adding regions to network nodes...")
-    centroids = network_nodes.centroid
+    centroids = _geometry_centroids(network_nodes)
     map_func = region_mapper(regions, region_identifier_column)
     network_nodes[region_identifier_column] = centroids.apply(map_func)
 
     out_fpath = Path(out_fpath).with_suffix(".gpkg")
     logger.info("Writing updated network node data to %s", out_fpath)
     network_nodes.to_file(out_fpath, driver="GPKG")
+
+
+def _safe_to_crs(features, crs):
+    """Project a GeoDataFrame while avoiding single-feature warnings"""
+
+    if features.crs is None or crs is None or features.crs == crs:
+        return features
+
+    if len(features) != 1:
+        return features.to_crs(crs)
+
+    transformer = Transformer.from_crs(features.crs, crs, always_xy=True)
+    geometry = features.geometry.apply(
+        lambda geom: shapely_transform(transformer.transform, geom)
+    )
+    return features.set_geometry(geometry, crs=crs)
+
+
+def _geometry_centroids(features):
+    """Return centroids without geographic CRS warnings"""
+
+    if features.crs is None or not features.crs.is_geographic:
+        return features.geometry.centroid
+
+    projected_crs = features.estimate_utm_crs() or "EPSG:3857"
+    projected = _safe_to_crs(features, projected_crs)
+    centroids = projected.geometry.centroid
+
+    if len(projected) != 1:
+        return centroids.to_crs(features.crs)
+
+    transformer = Transformer.from_crs(
+        projected_crs, features.crs, always_xy=True
+    )
+    geometry = centroids.apply(
+        lambda geom: shapely_transform(transformer.transform, geom)
+    )
+    return geometry.set_crs(features.crs, allow_override=True)
 
 
 layers_to_file_command = CLICommandFromClass(

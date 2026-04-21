@@ -10,6 +10,7 @@ import xarray as xr
 from shapely.geometry import LineString, Point, Polygon
 
 from revrt.exceptions import revrtValueError
+from revrt.warn import revrtWarning
 from revrt.routing.cli.build_route_table import (
     _check_output_filepaths,
     _make_points,
@@ -100,12 +101,13 @@ def test_map_to_costs_filters_out_of_bounds(cost_metadata):
         }
     )
 
-    mapped = map_to_costs(
-        routes,
-        cost_metadata["crs"],
-        cost_metadata["transform"],
-        cost_metadata["shape"],
-    )
+    with pytest.warns(revrtWarning, match="outside of the cost domain"):
+        mapped = map_to_costs(
+            routes,
+            cost_metadata["crs"],
+            cost_metadata["transform"],
+            cost_metadata["shape"],
+        )
 
     assert {"start_row", "start_col", "end_row", "end_col"}.issubset(
         mapped.columns
