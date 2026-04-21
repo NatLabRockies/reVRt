@@ -13,6 +13,7 @@ import numpy as np
 import xarray as xr
 from pyproj import Transformer
 from rasterio.warp import Resampling
+from shapely.ops import transform as shapely_transform
 
 from revrt.exceptions import (
     revrtFileNotFoundError,
@@ -500,10 +501,12 @@ def region_mapper(regions, region_identifier_column):
         have a `region_identifier_column` column which uniquely
         identifies the region, as well as a geometry for each region.
     """
+    projected_regions, project_point = _get_point_transform(regions)
 
     def _map_region(point):
         """Find the region ID for the input point."""
-        idx = regions.distance(point).sort_values().index[0]
+        point = project_point(point)
+        idx = projected_regions.distance(point).sort_values().index[0]
         return regions.loc[idx, region_identifier_column]
 
     return _map_region
@@ -656,3 +659,20 @@ def _compute_half_width_using_voltages(
         return -1
 
     return routes[row_width_key].map(get_half_width)
+
+
+def _get_point_transform(regions):
+    """Get function to transform points to region CRS if needed"""
+    if regions.crs is None or not regions.crs.is_geographic:
+        return regions, lambda point: point
+
+    projected_crs = regions.estimate_utm_crs() or "EPSG:3857"
+    projected_regions = regions.to_crs(projected_crs)
+    transformer = Transformer.from_crs(
+        regions.crs, projected_crs, always_xy=True
+    )
+
+    def project_point(point):
+        return shapely_transform(transformer.transform, point)
+
+    return projected_regions, project_point
