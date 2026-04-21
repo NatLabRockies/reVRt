@@ -665,13 +665,20 @@ def test_tracked_layers(
         ],
         out_dir=tmp_path,
         job_name="test_route_to_features",
-        tracked_layers={
-            "layer1": "sum",
-            "layer2": "max",
-            "layer3": "min",
-            "layer4": "dne",
-            "layer5": "mean",
-        },
+        tracked_layers=[
+            {
+                "layer_name": "layer1",
+                "multiplier_scalar": 2,
+                "agg_method": "sum",
+            },
+            {
+                "layer_name": "layer2",
+                "multiplier_layer": "layer4",
+                "agg_method": "max",
+            },
+            {"layer_name": "layer3", "agg_method": "min"},
+            {"layer_name": "layer5", "agg_method": "dne"},
+        ],
         save_paths=True,
     )
 
@@ -683,12 +690,12 @@ def test_tracked_layers(
     assert "layer1_sum" in test
     assert "layer2_max" in test
     assert "layer3_min" not in test
-    assert "layer4_dne" not in test
-    assert "layer5_mean" in test
+    assert "layer5_dne" not in test
 
-    assert (test["layer1_sum"] <= test["length_km"] / 90 * 1000 + 1).all()
-    assert np.allclose(test["layer2_max"], 2)
-    assert np.allclose(test["layer5_mean"], 1)
+    assert (
+        test["layer1_sum"] <= 2 * (test["length_km"] / 90 * 1000 + 1)
+    ).all()
+    assert np.allclose(test["layer2_max"], 8)
 
 
 @pytest.mark.parametrize("save_paths", [False, True])

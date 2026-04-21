@@ -56,9 +56,12 @@ class RoutingScenario:
         friction_layers : list, optional
             List of dictionaries defining layers that influence routing
             but are excluded from reports.
-        tracked_layers : dict, optional
-            Layers to summarize along the path, mapped to aggregation
-            names.
+        tracked_layers : list, optional
+            List of dictionaries defining layers to summarize along the
+            route after applying optional multiplier inputs. Each
+            dictionary must include ``"layer_name"`` and
+            ``"agg_method"`` keys, and may also include
+            ``"multiplier_layer"`` and ``"multiplier_scalar"``.
         cost_multiplier_layer : str, optional
             Layer name providing spatial multipliers for total cost.
         cost_multiplier_scalar : int or float, optional
@@ -80,7 +83,7 @@ class RoutingScenario:
         self.cost_fpath = cost_fpath
         self.cost_layers = cost_layers
         self.friction_layers = friction_layers or []
-        self.tracked_layers = tracked_layers or {}
+        self.tracked_layers = tracked_layers or []
         self.cost_multiplier_layer = cost_multiplier_layer
         self.cost_multiplier_scalar = cost_multiplier_scalar
         self.ignore_invalid_costs = ignore_invalid_costs
@@ -213,7 +216,7 @@ class RoutingLayerManager:
         for layer_info in self.routing_scenario.cost_layers:
             layer_name = layer_info["layer_name"]
             is_li = layer_info.get("is_invariant", False)
-            cost = self._extract_and_scale_cost_layer(layer_info)
+            cost = self._extract_and_scale_layer(layer_info)
             cost.values = da.where(cost > 0, cost, 0)
 
             if layer_info.get("include_in_final_cost", True):
@@ -271,7 +274,7 @@ class RoutingLayerManager:
             self.final_routing_layer,
         )
 
-    def _extract_and_scale_cost_layer(self, layer_info):
+    def _extract_and_scale_layer(self, layer_info):
         """Extract layer based on name and scale according to input"""
         cost = self._extract_layer(layer_info["layer_name"])
 
@@ -304,10 +307,18 @@ class RoutingLayerManager:
 
     def _build_tracked_layers(self):
         """Build out a dictionary of tracked layers"""
-        for (
-            tracked_layer,
-            method,
-        ) in self.routing_scenario.tracked_layers.items():
+        for tracked_layer_info in self.routing_scenario.tracked_layers:
+            tracked_layer = tracked_layer_info["layer_name"]
+            method = tracked_layer_info.get("agg_method")
+
+            if method is None:
+                msg = (
+                    f"Tracked layer {tracked_layer!r} must specify an "
+                    "'agg_method' key! Skipping..."
+                )
+                warn(msg, revrtWarning)
+                continue
+
             if getattr(da, method, None) is None:
                 msg = (
                     f"Did not find method {method!r} in dask.array! "
@@ -325,9 +336,7 @@ class RoutingLayerManager:
                 warn(msg, revrtWarning)
                 continue
 
-            layer = (
-                self._layer_fh[tracked_layer].isel(band=0).astype(np.float32)
-            )
+            layer = self._extract_and_scale_layer(tracked_layer_info)
             self.tracked_layers.append(
                 CharacterizedLayer(tracked_layer, layer, agg_method=method)
             )

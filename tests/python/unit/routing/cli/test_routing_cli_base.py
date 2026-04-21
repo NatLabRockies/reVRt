@@ -198,7 +198,7 @@ def test_run_lcp_with_save_paths_filters_existing_routes(
         out_fp=out_fp,
         routes_to_compute=routes_to_compute,
         cost_multiplier_scalar=1,
-        tracked_layers={"layer_3": "max"},
+        tracked_layers=[{"layer_name": "layer_3", "agg_method": "max"}],
         ignore_invalid_costs=True,
     )
 
