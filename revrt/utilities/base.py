@@ -527,7 +527,7 @@ def transform_xy(src_crs, dst_crs, x, y):
 
     Returns
     -------
-    x, y : np.ndarray
+    x, y : ndarray
         Numpy arrays of transformed x and y coordinates in the
         destination CRS.
     """
