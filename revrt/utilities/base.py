@@ -508,6 +508,30 @@ def region_mapper(regions, region_identifier_column):
     return _map_region
 
 
+def transform_xy(src_crs, dst_crs, x, y):
+    """Transform coordinate iterables between coordinate systems
+
+    Parameters
+    ----------
+    src_crs, dst_crs : str or dict
+        Source and destination coordinate reference systems. These can
+        be any valid CRS string or dictionary that can be parsed by
+        pyproj.CRS.
+    x, y : iterable
+        Iterables of x and y coordinates to transform. Will be cast to
+        lists before transformation.
+
+    Returns
+    -------
+    x, y : np.ndarray
+        Numpy arrays of transformed x and y coordinates in the
+        destination CRS.
+    """
+    transformer = Transformer.from_crs(src_crs, dst_crs, always_xy=True)
+    out_x, out_y = transformer.transform(list(x), list(y))
+    return np.asarray(out_x), np.asarray(out_y)
+
+
 def log_mem(log_level="DEBUG"):
     """Log the memory usage to the input logger object
 
