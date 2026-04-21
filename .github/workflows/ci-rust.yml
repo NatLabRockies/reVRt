@@ -12,7 +12,7 @@ on:
 
 jobs:
   check:
-    name: Check
+    name: Rust Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -39,7 +39,7 @@ jobs:
   lints:
     # Only run tests if code looks OK
     needs: check
-    name: Lints
+    name: Rust Lints
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -70,6 +70,7 @@ jobs:
   test:
     # Only run tests if code looks OK
     needs: check
+    name: Rust Tests
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

@@ -188,11 +188,14 @@ def _route_characterizations_from_config(
         max_workers,
         memory_limit_per_worker,
     )
+    client = None
     parallel = False
     if max_workers != 1:
         parallel = True
         client = Client(
-            n_workers=max_workers, memory_limit=memory_limit_per_worker
+            n_workers=max_workers,
+            memory_limit=memory_limit_per_worker,
+            dashboard_address=None,
         )
         logger.info(
             "Dask client created with %s workers and %s memory limit per "
@@ -200,15 +203,19 @@ def _route_characterizations_from_config(
             max_workers,
             memory_limit_per_worker,
         )
-        logger.info("Dashboard link: %s", client.dashboard_link)
 
-    out_data = buffered_route_characterizations(
-        row_widths=_row_widths,
-        row_width_ranges=_row_width_ranges,
-        parallel=parallel,
-        **_stat_kwargs,
-    )
-    out_data.to_csv(out_fp, index=False)
+    try:
+        out_data = buffered_route_characterizations(
+            row_widths=_row_widths,
+            row_width_ranges=_row_width_ranges,
+            parallel=parallel,
+            **_stat_kwargs,
+        )
+        out_data.to_csv(out_fp, index=False)
+    finally:
+        if client is not None:
+            client.close()
+
     return str(out_fp)
 
 

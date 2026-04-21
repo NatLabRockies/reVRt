@@ -19,6 +19,7 @@ from revrt.constants import BARRIER_H5_LAYER_NAME
 from revrt.costs.cli import build_masks, build_routing_layers
 from revrt.costs.masks import Masks
 from revrt.exceptions import revrtConfigurationError
+from revrt.warn import revrtWarning
 from revrt.utilities import LayeredFile
 
 
@@ -460,7 +461,8 @@ def test_build_dry_only(
         },
     }
 
-    build_routing_layers(**config)
+    with pytest.warns(revrtWarning, match="Dry mask not found"):
+        build_routing_layers(**config)
 
     assert test_fp.exists()
     assert out_tiff_dir.exists()

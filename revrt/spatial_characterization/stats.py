@@ -511,10 +511,12 @@ def _fractional_stats(
     returned_value_pixel_count_dict = defaultdict(float)
     returned_value_pixel_area_dict = defaultdict(float)
     pixel_area = _compute_pixel_area(window_transform)
+    window_array = np.asarray(window_array)
+    valid_mask = (window_array != nodata) & (~np.isnan(window_array))
 
     raster_shapes = rasterio.features.shapes(
         window_array,
-        mask=((window_array != nodata) & (~np.isnan(window_array))),
+        mask=valid_mask,
         connectivity=4,
         transform=window_transform,
     )

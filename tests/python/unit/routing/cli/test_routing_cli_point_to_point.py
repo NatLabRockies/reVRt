@@ -341,7 +341,8 @@ def test_route_generator_existing_routes_gpkg(tmp_path):
             "polarity": ["unknown"],
             "voltage": ["unknown"],
             "geometry": [Point(0, 0)],
-        }
+        },
+        crs="EPSG:4326",
     )
     gdf.to_file(gpkg_fp, driver="GPKG")
 
