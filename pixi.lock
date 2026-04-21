@@ -17791,7 +17791,7 @@ packages:
 - pypi: ./
   name: nlr-revrt
   version: 0.5.0
-  sha256: a1a784d64492a544c4eda3f0bed2464ece54cfe38e73a3c536301a978e6823b9
+  sha256: 4e8d194ce94ef4214bbbc59789e44589beccd3226740c72875c473404a7ffd24
   requires_dist:
   - affine>=2.4.0,<3
   - dask>=2026.3.0,<2027

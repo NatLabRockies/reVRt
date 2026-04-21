@@ -274,9 +274,6 @@ shapely = ">=2.1.2,<3"
 xarray = ">=2026.4.0,<2027"
 zarr = ">=3.1.6,<4"
 
-# for gaps
-packaging = ">=26.1,<27"
-
 [tool.pixi.feature.dev.dependencies]
 contextily = ">=1.7.0,<2"
 datashader = ">=0.19.0,<0.20"
