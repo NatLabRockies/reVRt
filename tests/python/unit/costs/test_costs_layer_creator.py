@@ -36,7 +36,7 @@ def tiff_layers_for_testing(tmp_path_factory):
 
     width = height = 3
     cell_size = 1
-    x0 = y0 = 0
+    x0, y0 = 10, 10
     transform = from_origin(x0, y0, cell_size, cell_size)
 
     layers = {
@@ -568,7 +568,8 @@ def test_cost_binning_results(builder_instance):
         RangeConfig(min=4, max=8, value=3),
     ]
     config = LayerBuildConfig(extent="all", bins=bins)
-    output = builder_instance._process_raster_data(data, config)
+    with pytest.warns(revrtWarning, match="Gap detected"):
+        output = builder_instance._process_raster_data(data, config)
     assert (output == np.array([[0, 2, 2], [3, 3, 3], [3, 0, 0]])).all()
 
     data = np.array([[-600, -400, -50], [-700, -250, 70], [-500, -150, -70]])
