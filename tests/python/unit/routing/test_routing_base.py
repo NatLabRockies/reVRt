@@ -731,11 +731,11 @@ def test_routing_with_tracked_layers(sample_layered_data, tmp_path, algorithm):
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
-        tracked_layers={
-            "layer_1": "mean",
-            "layer_2": "max",
-            "layer_3": "min",
-        },
+        tracked_layers=[
+            {"layer_name": "layer_1", "agg_method": "mean"},
+            {"layer_name": "layer_2", "agg_method": "max"},
+            {"layer_name": "layer_3", "agg_method": "min"},
+        ],
         algorithm=algorithm,
     )
 
@@ -761,6 +761,42 @@ def test_routing_with_tracked_layers(sample_layered_data, tmp_path, algorithm):
     assert route["layer_1_mean"] == pytest.approx(1.5)
     assert route["layer_2_max"] == pytest.approx(1.0)
     assert route["layer_3_min"] == pytest.approx(2.0)
+
+
+def test_tracked_layers_apply_multiplier_scalar_and_layer(
+    sample_layered_data,
+):
+    """Tracked layer aggregates use scaled values before aggregation"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        tracked_layers=[
+            {
+                "layer_name": "layer_1",
+                "multiplier_scalar": 2,
+                "agg_method": "max",
+            },
+            {
+                "layer_name": "layer_2",
+                "multiplier_layer": "layer_3",
+                "agg_method": "mean",
+            },
+        ],
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        result = RouteMetrics(
+            routing_layers,
+            route=[(1, 1), (2, 1)],
+            optimized_objective=0.0,
+        ).compute()
+
+        assert result["layer_1_max"] == pytest.approx(2.0)
+        assert result["layer_2_mean"] == pytest.approx(4.0)
+    finally:
+        routing_layers.close()
 
 
 @pytest.mark.parametrize("use_friction", [True, False])
@@ -1359,10 +1395,11 @@ def test_tracked_layers_invalid_configs_warn(
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
-        tracked_layers={
-            "layer_1": "does_not_exist",
-            "missing_layer": "mean",
-        },
+        tracked_layers=[
+            {"layer_name": "layer_1", "agg_method": "does_not_exist"},
+            {"layer_name": "missing_layer", "agg_method": "mean"},
+            {"layer_name": "layer_2"},
+        ],
     )
 
     with pytest.warns(revrtWarning) as warning_record:
@@ -1370,10 +1407,35 @@ def test_tracked_layers_invalid_configs_warn(
 
     assert_message_was_logged("Did not find layer", "WARNING")
     assert_message_was_logged("Did not find method", "WARNING")
+    assert_message_was_logged("must specify an 'agg_method' key", "WARNING")
 
     try:
-        assert len(warning_record) == 2
+        assert len(warning_record) == 3
     finally:
+        routing_layers.close()
+
+
+def test_tracked_layer_missing_multiplier_layer_raises_key_error(
+    sample_layered_data,
+):
+    """Tracked layers raise when referenced multiplier layers are missing"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        tracked_layers=[
+            {
+                "layer_name": "layer_1",
+                "multiplier_layer": "missing_layer",
+                "agg_method": "mean",
+            }
+        ],
+    )
+
+    with pytest.raises(
+        revrtKeyError, match="Did not find layer 'missing_layer' in cost file"
+    ):
+        routing_layers = RoutingLayerManager(scenario).build()
         routing_layers.close()
 
 
