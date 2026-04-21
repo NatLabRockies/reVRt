@@ -175,7 +175,7 @@ class PointToFeatureMapper:
             logger.debug("\t- Final number of points: %d", len(points))
 
         map_func = region_mapper(self._regions, self._rid_column)
-        points[self._rid_column] = points.centroid.apply(map_func)
+        points[self._rid_column] = points.geometry.apply(map_func)
         return points
 
     def _clip_to_point(self, point, radius=None, expand_radius=True):
