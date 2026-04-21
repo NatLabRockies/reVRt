@@ -17791,7 +17791,7 @@ packages:
 - pypi: ./
   name: nlr-revrt
   version: 0.5.0
-  sha256: 4e8d194ce94ef4214bbbc59789e44589beccd3226740c72875c473404a7ffd24
+  sha256: b449b8d62957274f708589d8e9e43baba734a5875bed763efaa93001921051a7
   requires_dist:
   - affine>=2.4.0,<3
   - dask>=2026.3.0,<2027
@@ -17803,7 +17803,7 @@ packages:
   - pydantic>=2.13.3,<3
   - python-slugify>=8.0.4,<9
   - nlr-gaps>=0.9.2,<0.10
-  - rasterio>=1.5.0,<2
+  - rasterio>=1.4.3,<2
   - rioxarray>=0.22.0,<0.23
   - shapely>=2.1.2,<3
   - xarray>=2026.4.0,<2027
