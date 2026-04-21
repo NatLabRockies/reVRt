@@ -14,7 +14,7 @@ import geopandas as gpd
 from shapely.geometry import Point, LineString
 from gaps.cli import CLICommandFromClass, CLICommandFromFunction
 
-from revrt.utilities.base import region_mapper
+from revrt.utilities.base import region_mapper, transform_xy
 from revrt.utilities.handlers import (
     IncrementalWriter,
     LayeredFile,
@@ -122,7 +122,8 @@ def convert_pois_to_lines(poi_csv_f, template_f, out_f):
 
     pts = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.Long, df.Lat))
     pts = pts.set_crs("EPSG:4326")
-    pts = pts.to_crs(crs)
+    x, y = transform_xy("EPSG:4326", crs, df.Long, df.Lat)
+    pts = pts.set_geometry(gpd.points_from_xy(x, y), crs=crs)
 
     # Convert points to short lines
     new_geom = []
