@@ -12,7 +12,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 from revrt.warn import revrtWarning
-from revrt.utilities.base import region_mapper
+from revrt.utilities.base import region_mapper, transform_xy
 from revrt.utilities.handlers import IncrementalWriter
 from revrt.exceptions import revrtValueError, revrtRuntimeError
 
@@ -373,12 +373,7 @@ def make_rev_sc_points(excl_rows, excl_cols, crs, transform, resolution=128):
     )
     geo = [Point(xy) for xy in zip(x, y, strict=True)]
     sc_points = gpd.GeoDataFrame(sc_points, crs=crs, geometry=geo)
-    lat, lon = list(
-        zip(
-            *((p.y, p.x) for p in sc_points.to_crs("EPSG:4326").geometry),
-            strict=True,
-        )
-    )
+    lon, lat = transform_xy(crs, "EPSG:4326", x, y)
     sc_points["latitude"] = lat
     sc_points["longitude"] = lon
     return gpd.GeoDataFrame(sc_points, crs=crs, geometry=geo)
@@ -517,13 +512,8 @@ def filter_points_outside_cost_domain(route_table, shape):
 
 def _transform_lat_lon_to_row_col(transform, cost_crs, lat, lon):
     """Convert WGS84 coordinates to cost grid row and column arrays"""
-    feats = gpd.GeoDataFrame(
-        geometry=[Point(*p) for p in zip(lon, lat, strict=True)]
-    )
-    coords = feats.set_crs("EPSG:4326").to_crs(cost_crs)["geometry"].centroid
-    row, col = rasterio.transform.rowcol(
-        transform, coords.x.values, coords.y.values
-    )
+    x, y = transform_xy("EPSG:4326", cost_crs, lon, lat)
+    row, col = rasterio.transform.rowcol(transform, x, y)
     row = np.array(row)
     col = np.array(col)
     return row, col
