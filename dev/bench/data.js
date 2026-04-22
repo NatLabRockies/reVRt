@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776804350744,
+  "lastUpdate": 1776876655514,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -9239,6 +9239,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 362756326,
             "range": "± 4641999",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f024d7497516eb1124c2dac9e3a13e444df4c2fd",
+          "message": "Add support for barriers (#256)\n\n* Define barrier array type\n\n* Allow barrier inputs in cost function\n\n* Add `BarrierOperator` enum\n\n* Add `BarrierLayer` struct\n\n* Rename field\n\n* New methods\n\n* Update docstring\n\n* Add `build_single_barrier_layer`\n\n* Docs\n\n* Add `dropped_barrier_layers` as a field in solution\n\n* Add func to record dropped barriers\n\n* Add helper methods for tests\n\n* Docs\n\n* Add test\n\n* Update initializer\n\n* Add funcs to compute barrier layers from cost function\n\n* Add `add_bool_layer_to_data` func\n\n* Add tests\n\n* Add `neighborhood_subset` function\n\n* Add functions to get barrier subset\n\n* Add more helper methods\n\n* Add hard barrier avoidance logic in get 3x3\n\n* Move swap initialization to separate module\n\n* MInor refactor\n\n* Rename field\n\n* Refactor\n\n* Docs\n\n* Add tests\n\n* Docs\n\n* Add tests\n\n* Add tests\n\n* Add tests\n\n* Move tests\n\n* Minor refactor\n\n* Refactor\n\n* Minor refactor\n\n* Minor refactor\n\n* Scenario now uses soft barriers\n\n* Docs\n\n* Update routing to support barriers\n\n* Update python interface\n\n* Add `BarrierLayer` model\n\n* Pass barrier layers down\n\n* Fix order\n\n* Use barrier layers to compute hash\n\n* Add barrier layers as config input\n\n* Add barrier layer as input\n\n* Pass through barrier layer input\n\n* Add new input\n\n* Add logic to build barrier mask\n\n* Catch and report dropped barrier layers\n\n* Add minor assert\n\n* Fix tests\n\n* Use a revrt error\n\n* Exit early if no routes\n\n* Add barrier tests\n\n* Add test for barriers\n\n* Add barrier tests\n\n* Add tests\n\n* Add support for !=\n\n* Remove unused function\n\n* Fix a star logic\n\n* Fix docs\n\n* Bump Python version\n\n* Bump rust version\n\n* PR comments\n\n* Fix outdated tests\n\n* Update lockfile\n\n* Add labels\n\n* Fix tags\n\n* Fix docs",
+          "timestamp": "2026-04-22T10:32:31-06:00",
+          "tree_id": "a5f515ef05e1341d6cd7549f5aa4c940235788da",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/f024d7497516eb1124c2dac9e3a13e444df4c2fd"
+        },
+        "date": 1776876654702,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 92042714,
+            "range": "± 1113027",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 159583290,
+            "range": "± 1680343",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 134421546,
+            "range": "± 2719128",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 201985850,
+            "range": "± 2379624",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 783432336,
+            "range": "± 16196483",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 149765841,
+            "range": "± 1074216",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 156524116,
+            "range": "± 1122820",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 174244548,
+            "range": "± 981185",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 232918143,
+            "range": "± 1796405",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 451119334,
+            "range": "± 5465240",
             "unit": "ns/iter"
           }
         ]
