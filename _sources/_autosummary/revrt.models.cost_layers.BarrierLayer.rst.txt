@@ -1,0 +1,37 @@
+revrt.models.cost\_layers.BarrierLayer
+======================================
+
+.. currentmodule:: revrt.models.cost_layers
+
+.. autoclass:: BarrierLayer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BarrierLayer.to_routing_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BarrierLayer.model_computed_fields
+      ~BarrierLayer.model_config
+      ~BarrierLayer.model_extra
+      ~BarrierLayer.model_fields
+      ~BarrierLayer.model_fields_set
+      ~BarrierLayer.layer_name
+      ~BarrierLayer.barrier_values
+      ~BarrierLayer.barrier_importance
+   
+   

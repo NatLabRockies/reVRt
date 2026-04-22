@@ -158,6 +158,61 @@ everything to determine the final friction layer. After the aggregation, all
 friction values are clamped to be {math}`\gt -1`, such that friction can
 never create invalid cost values in the cost layer.
 
+## Tracked Layers
+Tracked layers do not influence which route is selected. Instead, they
+sample values along the chosen route and aggregate those values into
+extra output columns. This makes them useful for characterizing the
+selected route with statistics that you want to inspect later.
+
+### Building tracked layers
+Tracked layers use the same transformation inputs as cost layers for
+scaling, but replace cost-report controls with a required aggregation
+method:
+
+```json5
+"tracked_layers": [
+        {
+                "layer_name": "land_use_score",
+                "multiplier_layer": "county_adjustment",
+                "multiplier_scalar": 1.1,
+                "agg_method": "mean"
+        },
+        {
+                "layer_name": "wetland_mask",
+                "agg_method": "sum"
+        }
+]
+```
+
+Each tracked layer definition must contain:
+
+- ``"layer_name"``: The layer to sample along the chosen route.
+- ``"agg_method"``: The ``dask.array`` aggregation to apply to the
+    sampled values, such as ``"sum"``, ``"mean"``, ``"min"``, or
+    ``"max"``.
+
+Tracked layers may also contain:
+
+- ``"multiplier_layer"``: A spatial multiplier layer applied before
+    aggregation.
+- ``"multiplier_scalar"``: A scalar multiplier applied before
+    aggregation.
+
+This means tracked layers now follow the same pre-aggregation scaling
+rules as cost layers. The difference is that tracked layers are only
+reported in the output and never contribute to the routing objective.
+
+### Tracked layer outputs
+Each tracked layer produces a single output column named from the layer
+and aggregation method, such as ``land_use_score_mean`` or
+``wetland_mask_sum``.
+
+If the configured aggregation method does not exist in ``dask.array``,
+``reVRt`` emits a warning and skips that tracked layer. If the tracked
+layer itself is missing from the layered file, ``reVRt`` also warns and
+skips it. Missing referenced multiplier layers still raise an error,
+just like they do for cost layers.
+
 ## Barrier Layers
 Barrier layers represent pixels that routes must not cross. Unlike frictions,
 which can be crossed with a great penalty, barrier pixels will block a route
@@ -167,9 +222,10 @@ as described below).
 ### Building barrier layers
 Barrier layers are geospatial layers just like costs or frictions that are
 paired with a definition of what values should act as the barrier (the standard
-comparison operators are allowed: ``>``, ``>=``, ``<``, ``<=``, ``==``). Any
-pixel with a value that satisfies the comparison operator will be treated as a
-barrier that cannot be crossed by a route. For example, this configuration:
+comparison operators are allowed: ``==``, ``!=``, ``>``, ``>=``, ``<``, ``<=``).
+Any pixel with a value that satisfies the comparison operator will be
+treated as a barrier that cannot be crossed by a route. For example, this
+configuration:
 
 ```json5
 {"layer_name": "slope", "barrier_values": ">=15"}
@@ -178,6 +234,9 @@ barrier that cannot be crossed by a route. For example, this configuration:
 would tell the routing algorithm that any pixels with a value {math}`\ge 15`
 in the ``slope`` layer should be completely avoided. As with all the other
 layers, you can specify multiple barriers to be considered during routing:
+
+Using ``"!=0"`` is also valid when you want every non-zero pixel in a layer to
+act as a barrier.
 
 ```json5
 "barrier_layers": [

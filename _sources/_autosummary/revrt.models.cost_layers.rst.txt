@@ -18,6 +18,13 @@ revrt.models.cost\_layers
 
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      parse_barrier_values
+   
    
 
    
@@ -28,6 +35,7 @@ revrt.models.cost\_layers
       :toctree:
       :template: custom-class-template.rst
    
+      BarrierLayer
       DryCosts
       IsoMultipliers
       LandUseMultipliers
