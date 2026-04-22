@@ -11,6 +11,7 @@ use crate::error::Result;
 
 /// A multi-dimensional array representing cost data
 type CostArray = ndarray::Array<f32, ndarray::Dim<ndarray::IxDynImpl>>;
+type BarrierArray = ndarray::Array<bool, ndarray::Dim<ndarray::IxDynImpl>>;
 
 /// Large friction value to use for invalid costs that can be routed through
 const HIGH_FRICTION_INVALID_COST: f32 = 1e10;
@@ -24,6 +25,7 @@ fn true_option() -> bool {
 ///
 /// `cost_layers`: A collection of cost layers with equal weight.
 /// `friction_layers`: A collection of friction layers that scale the cost layer.
+/// `barrier_layers`: A collection of layers that create impassable cells.
 /// `ignore_invalid_costs`: If true, cells with <=0 or NaN costs are skipped completely.
 ///
 /// This was based on the original transmission router and is composed of
@@ -31,9 +33,26 @@ fn true_option() -> bool {
 pub(crate) struct CostFunction {
     cost_layers: Vec<CostLayer>,
     friction_layers: Option<Vec<FrictionLayer>>,
+    barrier_layers: Option<Vec<BarrierLayer>>,
     /// Option to completely ignore <=0 cost cells
     #[serde(default = "true_option")]
     pub(crate) ignore_invalid_costs: bool,
+}
+
+#[derive(Clone, Copy, Debug, serde::Deserialize)]
+pub(crate) enum BarrierOperator {
+    #[serde(rename = "ne")]
+    NotEqual,
+    #[serde(rename = "gt")]
+    GreaterThan,
+    #[serde(rename = "ge")]
+    GreaterThanOrEqual,
+    #[serde(rename = "lt")]
+    LessThan,
+    #[serde(rename = "le")]
+    LessThanOrEqual,
+    #[serde(rename = "eq")]
+    Equal,
 }
 
 #[derive(Builder, Clone, Debug, serde::Deserialize)]
@@ -77,6 +96,24 @@ struct FrictionLayer {
     multiplier_scalar: Option<f32>,
 }
 
+#[derive(Clone, Debug, serde::Deserialize)]
+pub(crate) struct BarrierLayer {
+    layer_name: String,
+    barrier_operator: BarrierOperator,
+    barrier_threshold: f32,
+    barrier_importance: Option<u32>,
+}
+
+impl BarrierLayer {
+    pub(crate) fn layer_name(&self) -> &str {
+        &self.layer_name
+    }
+
+    pub(crate) fn importance(&self) -> Option<u32> {
+        self.barrier_importance
+    }
+}
+
 impl CostFunction {
     /// Create a new cost function from a JSON string (reVX format)
     ///
@@ -89,15 +126,64 @@ impl CostFunction {
     ///
     /// The JSON pattern used by reVX was the following:
     /// ```json
-    /// {"cost_layers": [
-    ///   {"layer_name": "A"},
-    ///   {"layer_name": "A", "multiplier_scalar": 2, "multiplier_layer": "B"}
-    ///   ]}
+    /// {
+    ///   "cost_layers": [
+    ///     {"layer_name": "A"},
+    ///     {
+    ///       "layer_name": "A",
+    ///       "multiplier_scalar": 2,
+    ///       "multiplier_layer": "B"
+    ///     }
+    ///   ],
+    ///   "barrier_layers": [
+    ///     {
+    ///       "layer_name": "barrier_mask",
+    ///       "barrier_operator": "eq",
+    ///       "barrier_threshold": 1.0
+    ///     }
+    ///   ]
+    /// }
     /// ```
     pub(super) fn from_json(json: &str) -> Result<Self> {
         trace!("Parsing cost definition from json: {}", json);
         let cost = serde_json::from_str(json).unwrap();
         Ok(cost)
+    }
+
+    /// Return a copy of this cost function with all barrier layers removed.
+    pub(crate) fn without_barriers(&self) -> Self {
+        let mut cost_function = self.clone();
+        cost_function.barrier_layers = None;
+        cost_function
+    }
+
+    /// Collect all barrier layers that act as hard barriers.
+    ///
+    /// Hard barriers are layers with no assigned importance, so they are
+    /// always treated as impassable.
+    pub(crate) fn hard_barrier_layers(&self) -> Vec<BarrierLayer> {
+        self.barrier_layers
+            .clone()
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|layer| layer.importance().is_none())
+            .collect()
+    }
+
+    /// Group soft barrier layers by their importance.
+    ///
+    /// Only layers with an assigned importance are included in the output,
+    /// and the returned groups are ordered by importance.
+    pub(crate) fn soft_barrier_groups(&self) -> Vec<(u32, Vec<BarrierLayer>)> {
+        let mut groups = std::collections::BTreeMap::<u32, Vec<BarrierLayer>>::new();
+
+        for layer in self.barrier_layers.clone().unwrap_or_default() {
+            if let Some(importance) = layer.importance() {
+                groups.entry(importance).or_default().push(layer);
+            }
+        }
+
+        groups.into_iter().collect()
     }
 
     /// Calculate the cost from a given collection of input features
@@ -238,6 +324,26 @@ fn build_single_friction_layer(layer: &FrictionLayer, features: &mut LazySubset<
     friction
 }
 
+pub(crate) fn build_single_barrier_layer(
+    layer: &BarrierLayer,
+    features: &mut LazySubset<f32>,
+) -> BarrierArray {
+    trace!("Building barrier layer: {:?}", layer);
+
+    let barrier_values = features
+        .get(&layer.layer_name)
+        .expect("Barrier layer not found in features");
+
+    barrier_values.mapv(|value| match layer.barrier_operator {
+        BarrierOperator::NotEqual => value != layer.barrier_threshold,
+        BarrierOperator::GreaterThan => value > layer.barrier_threshold,
+        BarrierOperator::GreaterThanOrEqual => value >= layer.barrier_threshold,
+        BarrierOperator::LessThan => value < layer.barrier_threshold,
+        BarrierOperator::LessThanOrEqual => value <= layer.barrier_threshold,
+        BarrierOperator::Equal => value == layer.barrier_threshold,
+    })
+}
+
 fn reduce_layers(data: Vec<CostArray>) -> CostArray {
     let views: Vec<_> = data.iter().map(|a| a.view()).collect();
     let stack = stack(Axis(0), &views).unwrap();
@@ -314,6 +420,7 @@ mod test_builder {
 mod test {
     use super::*;
     use crate::dataset::{make_lazy_subset_for_tests, samples};
+    use ndarray::ArrayD;
     use std::sync::Arc;
     use zarrs::array_subset::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
@@ -356,6 +463,35 @@ mod test {
         assert_eq!(cost.cost_layers[4].multiplier_layer, None);
         assert_eq!(cost.cost_layers[4].multiplier_scalar, Some(100.0));
         assert_eq!(cost.cost_layers[4].is_invariant, Some(true));
+    }
+
+    #[test]
+    fn test_build_single_barrier_layer_supports_not_equal() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::new(
+                "barrier",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 2.0, 0.0]),
+            ))
+            .build()
+            .expect("Failed to create barrier zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let layer = BarrierLayer {
+            layer_name: "barrier".to_string(),
+            barrier_operator: BarrierOperator::NotEqual,
+            barrier_threshold: 0.0,
+            barrier_importance: None,
+        };
+
+        let barrier = build_single_barrier_layer(&layer, &mut features);
+
+        assert_eq!(
+            barrier,
+            ArrayD::from_shape_vec(IxDyn(&[1, 2, 2]), vec![false, true, true, false]).unwrap()
+        );
     }
 
     #[test]

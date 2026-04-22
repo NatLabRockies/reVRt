@@ -206,14 +206,14 @@ impl FrontierOnlySearchState {
         }
 
         let next_cost = from_cost.saturating_add(u64::from(edge_cost));
+        let estimated_cost = estimate_total_cost(neighbor, next_cost);
         let should_update = self
             .best_node_costs
             .get(&neighbor_slot)
-            .map(|current_best| next_cost < current_best.cost)
+            .map(|current_best| estimated_cost < current_best.estimated_cost)
             .unwrap_or(true);
 
         if should_update {
-            let estimated_cost = estimate_total_cost(neighbor, next_cost);
             self.best_node_costs.insert(
                 neighbor_slot,
                 BestNodeCost {

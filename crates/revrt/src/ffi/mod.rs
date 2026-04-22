@@ -13,7 +13,7 @@ use crate::{ArrayIndex, RevrtRoutingSolutions, Solution, resolve, resolve_genera
 
 type PyRoutePoint = (u64, u64);
 type PyPossibleRouteNodes = Vec<PyRoutePoint>;
-type PyRouteResult = (Vec<PyRoutePoint>, f32);
+type PyRouteResult = (Vec<PyRoutePoint>, f32, Vec<String>);
 type PyRoutingSolutions = Vec<PyRouteResult>;
 type PyRouteYield = PyResult<Option<(u32, PyRoutingSolutions)>>;
 type PyRouteDefinition = (u32, PyPossibleRouteNodes, PyPossibleRouteNodes);
@@ -37,9 +37,13 @@ impl From<&PyRouteDefinition> for RouteDefinition {
 
 impl From<Solution<ArrayIndex, f32>> for PyRouteResult {
     fn from(solution: Solution<ArrayIndex, f32>) -> Self {
-        let Solution { route, total_cost } = solution;
+        let Solution {
+            route,
+            total_cost,
+            dropped_barrier_layers,
+        } = solution;
         let path = route.into_iter().map(Into::into).collect();
-        (path, total_cost)
+        (path, total_cost, dropped_barrier_layers)
     }
 }
 
@@ -126,9 +130,9 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// cost_function : str
 ///     JSON string representation of the cost function. The following
 ///     keys are allowed in the cost function: "cost_layers",
-///     "friction_layers", and "ignore_invalid_costs". See the
-///     documentation of the cost function for details on each of these
-///     inputs.
+///     "friction_layers", "barrier_layers", and
+///     "ignore_invalid_costs". See the documentation of the cost
+///     function for details on each of these inputs.
 /// start : list of tuple
 ///     List of two-tuples containing non-negative integers representing
 ///     the indices in the array for the pixel from which routing should
@@ -164,10 +168,14 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// Returns
 /// -------
 /// list of tuple
-///     List of path routing results. Each result is a tuple
-///     where the first element is a list of points that the
-///     route goes through and the second element is the final
-///     route cost.
+///     List of path routing results. Each result is a tuple where the first
+///     element is a list of points that the route goes through, the
+///     second element is the final route cost, and the third element is
+///     a list containing the names of any soft barriers dropped to obtain
+///     that specific path. The result list will contain multiple tuples if
+///     the path definition had multiple starting points. An empty list will
+///     be returned if no paths were found from any of the starting points to
+///     any of the ending points (even with soft barriers dropped).
 #[pyfunction]
 #[pyo3(signature = (zarr_fp, cost_function, start, end, algorithm="long_range_dijkstra", routing_layer_out_fp=None, mem_limit_bytes=250_000_000, log_level=None))]
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
@@ -209,9 +217,9 @@ fn find_paths(
 /// cost_function : str
 ///     JSON string representation of the cost function. The following
 ///     keys are allowed in the cost function: "cost_layers",
-///     "friction_layers", and "ignore_invalid_costs". See the
-///     documentation of the cost function for details on each of these
-///     inputs.
+///     "friction_layers", "barrier_layers", and
+///     "ignore_invalid_costs". See the documentation of the cost
+///     function for details on each of these inputs.
 /// route_definitions : list of tuple
 ///     List of tuples containing path definitions. Each path definition
 ///     tuple should be of the form (int, list, list). The int input is
@@ -251,14 +259,16 @@ fn find_paths(
 ///     A tuple representing the route finding result for a single
 ///     path definition. The first element is the route definition ID
 ///     (as given in the input) and the second element is a list of path
-///     routing results. Each result is a tuple where the first element
-///     is a list of points that the route goes through and the second
-///     element is the final route cost. The result list will contain
-///     multiple tuples if the path definition had multiple starting points.
-///     An empty list will be returned if no paths were found from any of
-///     the starting points to any of the ending points. This generator
-///     will yield one tuple per path definition. Order is not guaranteed,
-///     so use the route ID input to match results to inputs.
+///     routing results. Each routing result is a tuple where the first
+///     element is a list of points that the route goes through, the
+///     second element is the final route cost, and the third element is
+///     a list containing the names of any soft barriers dropped to obtain
+///     that specific path. The result list will contain multiple tuples if
+///     the path definition had multiple starting points. An empty list will
+///     be returned if no paths were found from any of the starting points to
+///     any of the ending points (even with soft barriers dropped). This
+///     generator will yield one tuple per path definition. Order is not
+///     guaranteed, so use the route ID input to match results to inputs.
 #[pyclass]
 struct RouteFinder {
     /// Path to the Zarr file containing the cost layers

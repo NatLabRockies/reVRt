@@ -1,70 +1,74 @@
 //! Source Dataset Access
 //!
-//! This module focus on accessing the input features data that are used by
-//! the cost function.
+//! This module manages access to the input feature data used during routing.
 //!
-//! We are currently based on Zarr but we might move this to a generalized
-//! backend on the future to access different data formats.
+//! It is built around Zarr-backed source arrays together with a temporary
+//! swap dataset that stores derived cost and barrier layers. The public
+//! surface of the module focuses on opening datasets, materializing derived
+//! chunks on demand, and returning 3x3 neighborhoods suitable for routing.
 //!
-//! The main benefits of using Zarr in the moment are the natural support
-//! to concurrent access to multiple chunks, async support, rich metadata,
-//! and up to a 20x factor on size reduction (mostly due to efficient
-//! compression and constant values within the same chunk).
+//! Zarr is currently a good fit because it supports concurrent chunk access,
+//! rich metadata, and efficient compression for large raster-like grids.
 //!
-//! Note: This is currently in a transition state. The initial prototype
-//! included the cost function, which was removed to the `Scenario` level.
+//! Note: This module is still in a transition state. The initial prototype
+//! included the cost function directly here, but cost-function ownership was
+//! moved up to the `Scenario` level.
 
+mod derived;
 mod lazy_subset;
+mod reader;
 #[cfg(test)]
 pub(crate) mod samples;
+mod swap;
 
-use std::iter;
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
 
-use tracing::{debug, info, trace, warn};
-use zarrs::array::codec::CodecOptions;
-use zarrs::array::{ChunkCache, ChunkCacheDecodedLruSizeLimit, ChunkGrid};
-use zarrs::storage::{
-    ListableStorageTraits, ReadableListableStorage, ReadableWritableListableStorage,
-};
+use tracing::{debug, info, trace};
+use zarrs::storage::ReadableListableStorage;
 
 use crate::ArrayIndex;
-use crate::cost::CostFunction;
-use crate::error::{Error, Result};
+use crate::cost::{BarrierLayer, CostFunction};
+use crate::error::Result;
+use derived::DerivedDataWriter;
 pub(crate) use lazy_subset::LazySubset;
+use reader::NeighborhoodReader;
+use swap::{initialize_swap, inspect_source_layout};
 
-/// Manages the features datasets and calculated total cost
+/// Manage source features together with derived swap-backed routing data.
+///
+/// A `Dataset` owns access to the original feature store, the temporary swap
+/// dataset, the chunk-materialization state, and the cached readers used to
+/// serve routing neighborhoods. Derived arrays are created lazily, chunk by
+/// chunk, the first time a neighborhood read requires them.
 pub(super) struct Dataset {
-    /// A Zarr storages with the features
+    /// Zarr storage containing the original feature arrays.
+    #[allow(dead_code)]
     source: ReadableListableStorage,
-    // Silly way to keep the tmp path alive
+    /// Temporary directory backing the swap dataset when one is auto-created.
+    ///
+    /// This is stored only to keep the directory alive for the lifetime of
+    /// the dataset handle.
     #[allow(dead_code)]
     cost_path: Option<tempfile::TempDir>,
-    /// Variables used to define cost
-    /// Minimalist solution for the cost calculation. In the future
-    /// it will be modified to include weights and other types of
-    /// relations such as operations between features.
-    /// At this point it just allows custom variables names and the
-    /// cost is calculated from multiple variables.
-    // cost_variables: Vec<String>,
-    /// Storage for the calculated cost
-    swap: ReadableWritableListableStorage,
-    /// Index of cost chunks already calculated
-    cost_chunk_idx: RwLock<ndarray::Array2<bool>>,
-    /// Custom cost function definition
-    cost_function: CostFunction,
-    /// Cache for decoded cost chunks shared across calls
-    cost_cache: ChunkCacheDecodedLruSizeLimit,
-    /// Cache for decoded invariant cost chunks shared across calls
-    cost_invariant_cache: ChunkCacheDecodedLruSizeLimit,
-    /// Number of rows in the routing grid
-    grid_nrows: u64,
-    /// Number of columns in the routing grid
-    grid_ncols: u64,
+    /// Derived-data materializer responsible for chunk tracking and writes.
+    derived_data_writer: DerivedDataWriter,
+    /// Reader responsible for cached neighborhood access to derived data.
+    neighborhood_reader: NeighborhoodReader,
+    /// Shape of the source routing grid as `(rows, cols)`.
+    pub(super) grid_shape: (u64, u64),
 }
 
 impl Dataset {
+    /// Open a dataset using an automatically managed temporary swap directory.
+    ///
+    /// # Arguments
+    /// `path`: Filesystem path to the source Zarr dataset.
+    /// `cost_function`: Cost function definition used to derive cost and
+    ///                  barrier arrays.
+    /// `cache_size`: Total cache budget, in bytes, for neighborhood readers.
+    ///
+    /// # Returns
+    /// A `Dataset` backed by the source store and a new temporary swap store.
     pub(super) fn open<P: AsRef<std::path::Path>>(
         path: P,
         cost_function: CostFunction,
@@ -79,6 +83,17 @@ impl Dataset {
         Ok(dataset)
     }
 
+    /// Open a dataset using an existing or caller-provided swap path.
+    ///
+    /// # Arguments
+    /// `path`: Filesystem path to the source Zarr dataset.
+    /// `cost_function`: Cost function definition used to derive cost and
+    ///                  barrier arrays.
+    /// `cache_size`: Total cache budget, in bytes, for neighborhood readers.
+    /// `swap_fp`: Filesystem path where the swap dataset should be created.
+    ///
+    /// # Returns
+    /// A `Dataset` backed by the source store and the specified swap path.
     pub(super) fn open_with_swap<P: AsRef<std::path::Path>>(
         path: P,
         cost_function: CostFunction,
@@ -88,6 +103,21 @@ impl Dataset {
         Self::open_with_path(path, cost_function, cache_size, swap_fp)
     }
 
+    /// Open a dataset using the provided swap path and initialize internals.
+    ///
+    /// This helper inspects the source layout, initializes the swap dataset,
+    /// prepares chunk-derivation tracking, and builds the cached neighborhood
+    /// readers.
+    ///
+    /// # Arguments
+    /// `path`: Filesystem path to the source Zarr dataset.
+    /// `cost_function`: Cost function definition used to derive cost and
+    ///                  barrier arrays.
+    /// `cache_size`: Total cache budget, in bytes, for neighborhood readers.
+    /// `swap_fp`: Filesystem path where the swap dataset should be created.
+    ///
+    /// # Returns
+    /// A fully initialized `Dataset` ready to serve routing neighborhoods.
     fn open_with_path<P: AsRef<std::path::Path>>(
         path: P,
         cost_function: CostFunction,
@@ -95,386 +125,98 @@ impl Dataset {
         swap_fp: PathBuf,
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
+        let soft_barrier_group_count = cost_function.soft_barrier_groups().len();
+
         let filesystem =
             zarrs::filesystem::FilesystemStore::new(path).expect("could not open filesystem store");
-        let source = std::sync::Arc::new(filesystem);
+        let source: ReadableListableStorage = std::sync::Arc::new(filesystem);
 
-        // ==== Create the swap dataset ====
-        let swap: ReadableWritableListableStorage = std::sync::Arc::new(
-            zarrs::filesystem::FilesystemStore::new(swap_fp)
-                .expect("could not open filesystem store"),
-        );
+        let source_layout = inspect_source_layout(&source)?;
+        let swap = initialize_swap(swap_fp, &source_layout, soft_barrier_group_count)?;
 
-        trace!("Creating a new group for the cost dataset");
-        zarrs::group::GroupBuilder::new()
-            .build(swap.clone(), "/")?
-            .store_metadata()?;
+        let derived_data_writer =
+            DerivedDataWriter::new(&source_layout, source.clone(), swap.clone(), cost_function);
 
-        let entries = source
-            .list()
-            .expect("failed to list variables in source dataset");
-        let first_entry_opt = entries
-            .into_iter()
-            .map(|entry| entry.to_string())
-            .find(|entry| {
-                let name = entry.split('/').next().unwrap_or("").to_ascii_lowercase();
-                // Skip coordinate axes when selecting a representative variable for cost storage.
-                const EXCLUDES: [&str; 6] =
-                    ["latitude", "longitude", "band", "x", "y", "spatial_ref"];
-                !name.ends_with(".json") && !EXCLUDES.iter().any(|needle| name == *needle)
-            });
-        let first_entry = match first_entry_opt {
-            Some(e) => e,
-            None => {
-                return Err(Error::IO(std::io::Error::other(format!(
-                    "no non-coordinate variables found in source dataset: {:?}",
-                    source.list().ok()
-                ))));
-            }
-        };
-
-        // Skip coordinate axes when selecting a representative variable for cost storage.
-        let varname = match first_entry.split('/').next() {
-            Some(name) => name,
-            None => {
-                return Err(Error::IO(std::io::Error::other(
-                    "Could not determine any variable names from source dataset",
-                )));
-            }
-        };
-        debug!("Using '{}' to determine shape of cost data", varname);
-        let tmp = zarrs::array::Array::open(source.clone(), &format!("/{varname}"))?;
-        let shape = tmp.shape();
-        if shape.len() < 3 {
-            return Err(Error::InvalidDatasetShape {
-                variable: varname.to_string(),
-                min_rank: 3,
-                shape: shape.to_vec(),
-            });
-        }
-        let grid_nrows = shape[1];
-        let grid_ncols = shape[2];
-        let chunk_grid = tmp.chunk_grid();
-        debug!("Chunk grid info: {:?}", &chunk_grid);
-
-        add_layer_to_data("cost_invariant", chunk_grid, &swap)?;
-        add_layer_to_data("cost", chunk_grid, &swap)?;
-
-        let cost_chunk_idx = ndarray::Array2::from_elem(
-            (
-                tmp.chunk_grid_shape()[1] as usize,
-                tmp.chunk_grid_shape()[2] as usize,
-            ),
-            false,
-        )
-        .into();
-
-        if cache_size < 1_000_000 {
-            warn!("Cache size smaller than 1MB");
-        }
-        debug!("Creating cache with size {}MB", cache_size / 1_000_000);
-        // TODO: tune cache_size against typical chunk sizes
-        // (e.g. chunk_bytes * hot_chunks * safety_factor)
-        let cost_array_readable =
-            Arc::new(zarrs::array::Array::open(swap.clone(), "/cost")?.readable());
-        let cost_invariant_array_readable =
-            Arc::new(zarrs::array::Array::open(swap.clone(), "/cost_invariant")?.readable());
-        let cost_cache =
-            ChunkCacheDecodedLruSizeLimit::new(cost_array_readable.clone(), cache_size / 2);
-        let cost_invariant_cache = ChunkCacheDecodedLruSizeLimit::new(
-            cost_invariant_array_readable.clone(),
-            cache_size / 2,
-        );
+        let neighborhood_reader = NeighborhoodReader::open(
+            swap.clone(),
+            cache_size,
+            soft_barrier_group_count,
+            source_layout,
+        )?;
+        let grid_shape = neighborhood_reader.grid_shape();
 
         trace!("Dataset opened successfully");
         Ok(Self {
             source,
             cost_path: None,
-            swap,
-            cost_chunk_idx,
-            cost_function,
-            cost_cache,
-            cost_invariant_cache,
-            grid_nrows,
-            grid_ncols,
+            derived_data_writer,
+            neighborhood_reader,
+            grid_shape,
         })
     }
 
-    fn calculate_chunk_cost(&self, ci: u64, cj: u64) {
-        trace!("Creating a LazySubset for ({}, {})", ci, cj);
-
-        // cost variable is stored in the swap dataset
-        let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
-        // Get the subset according to cost's chunk
-        let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
-        let mut data = LazySubset::<f32>::new(self.source.clone(), subset);
-
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, true);
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, false);
-    }
-
-    fn calculate_chunk_cost_single_layer(
-        &self,
-        ci: u64,
-        cj: u64,
-        subset: &mut LazySubset<f32>,
-        is_invariant: bool,
-    ) {
-        let output;
-        let layer_name;
-        if is_invariant {
-            trace!("Calculating invariant cost for chunk ({}, {})", ci, cj);
-            output = self.cost_function.compute(subset, true);
-            layer_name = "/cost_invariant";
-        } else {
-            trace!(
-                "Calculating length-dependent cost for chunk ({}, {})",
-                ci, cj
-            );
-            output = self.cost_function.compute(subset, false);
-            layer_name = "/cost";
-        }
-
-        trace!("Cost function: {:?}", self.cost_function);
-
-        let cost = zarrs::array::Array::open(self.swap.clone(), layer_name).unwrap();
-        cost.store_metadata().unwrap();
-        let chunk_indices: Vec<u64> = vec![0, ci, cj];
-        trace!("Storing chunk at {:?}", chunk_indices);
-        let chunk_subset =
-            &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
-        trace!("Target chunk subset: {:?}", chunk_subset);
-        cost.store_chunks_ndarray(chunk_subset, output).unwrap();
-    }
-
+    /// Return reachable movement costs in the 3x3 neighborhood of an index.
+    ///
+    /// Derived data is materialized on demand for the needed swap chunks
+    /// before the neighborhood is read.
+    ///
+    /// # Arguments
+    /// `index`: Center cell whose 3x3 neighborhood should be queried.
+    ///
+    /// # Returns
+    /// A vector of neighboring indices paired with movement costs from the
+    /// center cell.
     pub(super) fn get_3x3(&self, index: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
-        let &ArrayIndex { i, j } = index;
-
-        trace!("Getting 3x3 neighborhood for (i={}, j={})", i, j);
-
-        trace!("Cost dataset contents: {:?}", self.swap.list().unwrap());
-        trace!("Cost dataset size: {:?}", self.swap.size().unwrap());
-
-        trace!("Opening cost dataset via cache");
-        let cost_array = self.cost_cache.array();
-        trace!("Cost dataset with shape: {:?}", cost_array.shape());
-
-        // Cutting off the edges for now.
-        let shape = cost_array.shape();
-        debug_assert!(!shape.contains(&0));
-
-        let max_i = shape[1] - 1;
-        let max_j = shape[2] - 1;
-
-        let i_range = match i {
-            0 if max_i == 0 => 0..1,
-            0 => 0..2,
-            _ if i == max_i => i - 1..i + 1,
-            _ => i - 1..i + 2,
-        };
-        let j_range = match j {
-            0 if max_j == 0 => 0..1,
-            0 => 0..2,
-            _ if j == max_j => j - 1..j + 1,
-            _ => j - 1..j + 2,
-        };
-
-        // Capture the 3x3 neighborhood
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-            0..1,
-            i_range.clone(),
-            j_range.clone(),
-        ]);
-        trace!("Cost subset: {:?}", subset);
-
-        // Find the chunks that intersect the subset
-        let chunks = &cost_array.chunks_in_array_subset(&subset).unwrap().unwrap();
-        trace!("Cost chunks: {:?}", chunks);
-        trace!(
-            "Cost subset extends to {:?} chunks",
-            chunks.num_elements_usize()
-        );
-
-        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
-            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
-                trace!(
-                    "Checking if cost for chunk ({}, {}) has been calculated",
-                    ci, cj
-                );
-                if self.cost_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
-                    trace!("Cost for chunk ({}, {}) already calculated", ci, cj);
-                } else {
-                    debug!("Requesting write lock for cost_chunk_idx ({}, {})", ci, cj);
-                    let mut chunk_idx = self
-                        .cost_chunk_idx
-                        .write()
-                        .expect("Failed to acquire write lock");
-                    debug!("Acquired write lock for cost_chunk_idx ({}, {})", ci, cj);
-                    if chunk_idx[[ci as usize, cj as usize]] {
-                        trace!(
-                            "Cost for chunk ({}, {}) already calculated while waiting for the lock",
-                            ci, cj
-                        );
-                    } else {
-                        self.calculate_chunk_cost(ci, cj);
-                        chunk_idx[[ci as usize, cj as usize]] = true;
-                        debug!(
-                            "Recorded chunk ({}, {}) as calculated. Total number of computed chunks: {}",
-                            ci,
-                            cj,
-                            chunk_idx.iter().filter(|&&value| value).count()
-                        );
-                    }
-                    debug!("Released write lock for cost_chunk_idx ({}, {})", ci, cj);
-                }
-            }
-        }
-
-        let neighbors = self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, false);
-        let invariant_neighbors = self.get_neighbor_costs(i_range, j_range, &subset, true);
-
-        /*
-         * The transition between two gridpoint centers is along half the distance
-         * on the original gridpoint, plus half the distance to the target gridpoint
-         * (center). Therefore, the transition cost is the average between the origin
-         * gridpoint cost and the target gridpoint cost.
-         * Note that the same principle is valid for diagonals, it is still the average
-         * of both values, but we have to scale for the longer distance along the
-         * diagonal, thus a sqrt(2) factor along the diagonals.
-         */
-
-        // Extract the origin point.
-        let center = neighbors
-            .iter()
-            .find(|((ir, jr), _)| *ir == i && *jr == j)
-            .map(|((ir, jr), v)| {
-                if v.is_nan() {
-                    ((ir, jr), &0_f32) // NaN's don't contribute to cost
-                } else {
-                    ((ir, jr), v)
-                }
-            })
-            .unwrap();
-        trace!("Center point: {:?}", center);
-
-        // Calculate the average with center point (half grid + other half grid).
-        // Also, apply the diagonal factor for the extra distance.
-        // Finally, add any invariant costs.
-        let cost_to_neighbors = neighbors
-            .iter()
-            .zip(invariant_neighbors.iter())
-            .filter(|(((ir, jr), v), _)| !(v.is_nan() || *ir == i && *jr == j)) // no center point and only valid costs
-            .map(|(((ir, jr), v), ((inv_ir, inv_jr), inv_cost))| {
-                debug_assert_eq!((ir, jr), (inv_ir, inv_jr));
-                ((ir, jr), 0.5 * (v + center.1), inv_cost)
-            })
-            .map(|((ir, jr), v, inv_cost)| {
-                let scaled = if *ir != i && *jr != j {
-                    // Diagonal factor for longer distance (hypotenuse)
-                    v * f32::sqrt(2.0)
-                } else {
-                    v
-                };
-                (ArrayIndex { i: *ir, j: *jr }, scaled + inv_cost)
-            })
-            .collect::<Vec<_>>();
-
-        trace!("Neighbors {:?}", cost_to_neighbors);
-
-        cost_to_neighbors
-
-        /*
-        let mut data = array
-            .load_chunks_ndarray(&zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]))
-            .unwrap();
-        data[[x as usize, y as usize]] = 0.0;
-        array
-            .store_chunks_ndarray(
-                &zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]),
-                data,
-            )
-            .unwrap();
-        */
+        self.neighborhood_reader
+            .get_3x3(index, &self.derived_data_writer)
     }
 
-    fn get_neighbor_costs(
+    /// Return soft-barrier cells in the 3x3 neighborhood of an index.
+    ///
+    /// The number of dropped soft groups is clamped to the available retry
+    /// states before the matching cumulative soft barrier mask is queried.
+    ///
+    /// # Arguments
+    /// `index`: Center cell whose 3x3 neighborhood should be queried.
+    /// `dropped_soft_groups`: Number of soft barrier groups that have already
+    ///                        been relaxed for the current retry state.
+    ///
+    /// # Returns
+    /// A vector of neighborhood cells that remain soft barriers for the
+    /// selected retry state.
+    pub(super) fn get_3x3_soft_barrier_cells(
         &self,
-        i_range: std::ops::Range<u64>,
-        j_range: std::ops::Range<u64>,
-        subset: &zarrs::array_subset::ArraySubset,
-        is_invariant: bool,
-    ) -> Vec<((u64, u64), f32)> {
-        trace!("Opening cost dataset (is_invariant={})", is_invariant);
-
-        let cache = if is_invariant {
-            &self.cost_invariant_cache
-        } else {
-            &self.cost_cache
-        };
-        let cost_array = cache.array();
-        trace!(
-            "Cost dataset (is_invariant={}) with shape: {:?}",
-            is_invariant,
-            cost_array.shape()
-        );
-
-        // Retrieve the 3x3 neighborhood values
-        let cost_values: Vec<f32> = cache
-            .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
-            .unwrap();
-
-        trace!("Read values {:?}", cost_values);
-
-        // Match the indices
-        let neighbor_costs = i_range
-            .flat_map(|e| iter::repeat(e).zip(j_range.clone()))
-            .zip(cost_values)
-            .collect();
-
-        trace!("Neighbors {:?}", neighbor_costs);
-        neighbor_costs
+        index: &ArrayIndex,
+        dropped_soft_groups: usize,
+    ) -> Vec<ArrayIndex> {
+        let retry_state =
+            dropped_soft_groups.min(self.derived_data_writer.soft_barrier_groups.len());
+        self.neighborhood_reader.get_3x3_soft_barrier_cells(
+            index,
+            retry_state,
+            &self.derived_data_writer,
+        )
     }
 
-    pub(super) fn grid_shape(&self) -> (u64, u64) {
-        (self.grid_nrows, self.grid_ncols)
+    /// Return the number of soft barrier importance groups.
+    ///
+    /// # Returns
+    /// The count of retry-state groups that can be progressively dropped
+    /// during routing retries.
+    pub(super) fn soft_barrier_groups(&self) -> &Vec<(u32, Vec<BarrierLayer>)> {
+        &self.derived_data_writer.soft_barrier_groups
     }
-}
-
-fn add_layer_to_data(
-    layer_name: &str,
-    chunk_shape: &ChunkGrid,
-    swap: &ReadableWritableListableStorage,
-) -> Result<()> {
-    trace!("Creating an empty {} array", layer_name);
-    let dataset_path = format!("/{layer_name}");
-    let mut builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
-        chunk_shape.clone(),
-        zarrs::array::DataType::Float32,
-        zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
-    );
-
-    let built = builder
-        .dimension_names(["band", "y", "x"].into())
-        .build(swap.clone(), &dataset_path)?;
-    built.store_metadata()?;
-
-    let array = zarrs::array::Array::open(swap.clone(), &dataset_path)?;
-    trace!("'{}' shape: {:?}", layer_name, array.shape().to_vec());
-    trace!("'{}' chunk shape: {:?}", layer_name, array.chunk_grid());
-
-    trace!(
-        "Dataset contents after '{}' creation: {:?}",
-        layer_name,
-        swap.list()?
-    );
-    Ok(())
 }
 
 #[cfg(test)]
-/// Make a LazySubset from a source and array subset to be used in tests
+/// Construct a `LazySubset` helper for tests.
+///
+/// # Arguments
+/// `source`: Source dataset storage to read from lazily.
+/// `subset`: Array subset that bounds the lazy view.
 ///
 /// # Returns
-/// An initialized LazySubset<f32> instance.
+/// An initialized `LazySubset<f32>` instance.
 pub(crate) fn make_lazy_subset_for_tests(
     source: ReadableListableStorage,
     subset: zarrs::array_subset::ArraySubset,
@@ -485,6 +227,7 @@ pub(crate) fn make_lazy_subset_for_tests(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::error::Error;
     use std::f32::consts::SQRT_2;
     use std::sync::Arc;
     use test_case::test_case;
@@ -989,5 +732,184 @@ mod tests {
                 diff
             );
         }
+    }
+
+    #[test]
+    fn test_get_3x3_keeps_explicit_barriers_out_of_cached_costs() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0
+                }
+            ]
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::sequential("A", 1))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let cost_function = CostFunction::from_json(json).unwrap();
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+
+        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        assert_eq!(
+            results,
+            vec![
+                (ArrayIndex { i: 0, j: 0 }, 3.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex { i: 0, j: 2 }, 4.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex { i: 2, j: 0 }, 6.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex { i: 2, j: 2 }, 7.0 * std::f32::consts::SQRT_2),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_explicit_barriers_do_not_modify_cached_costs_when_invalid_costs_are_soft() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 1
+                }
+            ],
+            "ignore_invalid_costs": false
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("A", 1.0))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let cost_function = CostFunction::from_json(json).unwrap();
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+
+        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        assert_eq!(results.len(), 8);
+    }
+
+    #[test]
+    fn test_cumulative_soft_barrier_masks_follow_retry_state() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 1
+                },
+                {
+                    "layer_name": "C",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 2
+                }
+            ]
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("A", 1.0))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            ))
+            .layer(samples::LayerConfig::new(
+                "C",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
+            .expect("Error opening dataset");
+
+        let center = ArrayIndex { i: 1, j: 1 };
+        dataset.get_3x3(&center);
+
+        assert_eq!(
+            dataset.get_3x3_soft_barrier_cells(&center, 0),
+            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
+        );
+        assert_eq!(
+            dataset.get_3x3_soft_barrier_cells(&center, 1),
+            vec![ArrayIndex { i: 0, j: 1 }]
+        );
+        assert!(dataset.get_3x3_soft_barrier_cells(&center, 2).is_empty());
+        assert!(dataset.get_3x3_soft_barrier_cells(&center, 99).is_empty());
+    }
+
+    #[test]
+    fn test_cumulative_soft_barrier_masks_or_tied_importance_groups() {
+        let json = r#"
+        {
+            "cost_layers": [{"layer_name": "A"}],
+            "barrier_layers": [
+                {
+                    "layer_name": "B",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 1
+                },
+                {
+                    "layer_name": "C",
+                    "barrier_operator": "eq",
+                    "barrier_threshold": 1.0,
+                    "barrier_importance": 1
+                }
+            ]
+        }
+        "#;
+
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("A", 1.0))
+            .layer(samples::LayerConfig::new(
+                "B",
+                samples::FillStrategy::Values(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            ))
+            .layer(samples::LayerConfig::new(
+                "C",
+                samples::FillStrategy::Values(vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            ))
+            .build()
+            .expect("Error creating test zarr");
+        let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
+            .expect("Error opening dataset");
+
+        let center = ArrayIndex { i: 1, j: 1 };
+        dataset.get_3x3(&center);
+
+        assert_eq!(
+            dataset.get_3x3_soft_barrier_cells(&center, 0),
+            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
+        );
+        assert!(dataset.get_3x3_soft_barrier_cells(&center, 1).is_empty());
     }
 }

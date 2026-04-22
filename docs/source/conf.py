@@ -15,7 +15,6 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath("../../"))
 
 # -- Project information -----------------------------------------------------
@@ -382,6 +381,7 @@ nitpick_ignore = [
 ] + [
     ("py:obj", f"revrt.models.cost_layers.{cl}.{meth}")
     for cl in [
+        "BarrierLayer",
         "DryCosts",
         "RangeConfig",
         "Rasterize",

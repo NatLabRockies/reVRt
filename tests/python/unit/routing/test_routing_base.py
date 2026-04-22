@@ -1,5 +1,6 @@
 """reVrt tests for routing one point to many endpoints"""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -2054,6 +2055,143 @@ def test_friction_layer_requires_mask(sample_layered_data):
         routing_layers.close()
 
 
+def test_barrier_layers_are_normalized_for_rust(sample_layered_data):
+    """Barrier layers are passed through for Rust-side parsing"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "==1",
+                "barrier_importance": 2,
+            },
+            {"layer_name": "layer_6", "barrier_values": "<0"},
+        ],
+    )
+
+    cost_function = json.loads(scenario.cost_function_json)
+    assert cost_function["barrier_layers"] == [
+        {
+            "layer_name": "layer_4",
+            "barrier_operator": "eq",
+            "barrier_threshold": 1.0,
+            "barrier_importance": 2,
+        },
+        {
+            "layer_name": "layer_6",
+            "barrier_operator": "lt",
+            "barrier_threshold": 0,
+            "barrier_importance": None,
+        },
+    ]
+
+
+def test_barrier_layers_normalize_not_equal_for_rust(sample_layered_data):
+    """Barrier layers normalize the not-equal operator for Rust"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "!=0",
+                "barrier_importance": 1,
+            }
+        ],
+    )
+
+    cost_function = json.loads(scenario.cost_function_json)
+    assert cost_function["barrier_layers"] == [
+        {
+            "layer_name": "layer_4",
+            "barrier_operator": "ne",
+            "barrier_threshold": 0.0,
+            "barrier_importance": 1,
+        }
+    ]
+
+
+def test_invalid_barrier_values_raise(sample_layered_data):
+    """Barrier layers reject malformed comparison expressions"""
+
+    with pytest.raises(ValueError, match="Barrier values must use"):
+        __ = RoutingScenario(
+            cost_fpath=sample_layered_data,
+            cost_layers=[{"layer_name": "layer_1"}],
+            barrier_layers=[{"layer_name": "layer_4", "barrier_values": "~1"}],
+        ).cost_function_json
+
+
+def test_barrier_importance_must_be_positive(sample_layered_data):
+    """Barrier layers reject non-positive soft barrier ranks"""
+
+    with pytest.raises(ValueError, match="positive integer"):
+        __ = RoutingScenario(
+            cost_fpath=sample_layered_data,
+            cost_layers=[{"layer_name": "layer_1"}],
+            barrier_layers=[
+                {
+                    "layer_name": "layer_4",
+                    "barrier_values": "==1",
+                    "barrier_importance": 0,
+                }
+            ],
+        ).cost_function_json
+
+
+def test_explicit_barriers_remain_hard(sample_layered_data):
+    """Explicit barriers stay impassable even with soft invalid costs"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_2"}],
+        barrier_layers=[{"layer_name": "layer_4", "barrier_values": "==1"}],
+        ignore_invalid_costs=False,
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        barrier_value = (
+            routing_layers.final_routing_layer.isel(y=0, x=3).compute().item()
+        )
+        free_value = (
+            routing_layers.final_routing_layer.isel(y=0, x=2).compute().item()
+        )
+    finally:
+        routing_layers.close()
+
+    assert np.isnan(barrier_value)
+    assert free_value > 0
+
+
+def test_not_equal_barriers_remain_hard(sample_layered_data):
+    """Not-equal barriers stay impassable even with soft invalid costs"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_2"}],
+        barrier_layers=[{"layer_name": "layer_4", "barrier_values": "!=0"}],
+        ignore_invalid_costs=False,
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        barrier_value = (
+            routing_layers.final_routing_layer.isel(y=0, x=3).compute().item()
+        )
+        free_value = (
+            routing_layers.final_routing_layer.isel(y=0, x=2).compute().item()
+        )
+    finally:
+        routing_layers.close()
+
+    assert np.isnan(barrier_value)
+    assert free_value > 0
+
+
 def test_soft_barrier_setting_controls_barrier_value(sample_layered_data):
     """Soft barriers convert impassable cells to large positive costs"""
 
@@ -2085,6 +2223,228 @@ def test_soft_barrier_setting_controls_barrier_value(sample_layered_data):
         assert soft_value > abs(hard_value)
     finally:
         soft_layers.close()
+
+
+def test_explicit_barrier_blocks_route_even_with_soft_invalid_costs(
+    sample_layered_data, tmp_path
+):
+    """Explicit barriers block routes regardless of invalid cost setting"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_2"}],
+        barrier_layers=[{"layer_name": "layer_4", "barrier_values": "==1"}],
+        ignore_invalid_costs=False,
+        algorithm="dijkstra",
+    )
+
+    out_csv = tmp_path / "routes.csv"
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 1)], [(1, 5)]),
+        ],
+    )
+    route_computer.process(out_fp=out_csv, save_paths=False)
+
+    assert not out_csv.exists()
+
+
+def test_soft_barrier_points_remain_valid_for_retry(sample_layered_data):
+    """Soft barriers do not invalidate Python-side route endpoints"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_2"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "==1",
+                "barrier_importance": 1,
+            },
+            {
+                "layer_name": "layer_5",
+                "barrier_values": "==1",
+                "barrier_importance": 1,
+            },
+        ],
+        ignore_invalid_costs=False,
+    )
+
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 1)], [(1, 5)]),
+        ],
+    )
+    try:
+        assert route_computer._validate_start_points([(0, 3)]) == [(0, 3)]
+        assert route_computer._validate_end_points([(0, 3)]) == [(0, 3)]
+    finally:
+        route_computer._reset_routing_layers()
+
+
+def test_soft_barrier_retry_returns_route_with_metadata(
+    sample_layered_data, tmp_path
+):
+    """Soft barrier retries drop ranked barriers and record metadata"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_2"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "==1",
+                "barrier_importance": 1,
+            }
+        ],
+        ignore_invalid_costs=False,
+        algorithm="dijkstra",
+    )
+
+    out_csv = tmp_path / "routes.csv"
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 1)], [(1, 5)]),
+        ],
+    )
+    route_computer.process(out_fp=out_csv, save_paths=False)
+
+    output = pd.read_csv(out_csv)
+    assert len(output) == 1
+    route = output.iloc[0]
+    assert route["dropped_barrier_layers"] == '["layer_4"]'
+
+
+def test_soft_barrier_start_point_retries_and_records_metadata(
+    sample_layered_data, tmp_path
+):
+    """Routes starting on a soft barrier succeed after retry"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_2"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "==1",
+                "barrier_importance": 1,
+            }
+        ],
+        ignore_invalid_costs=False,
+        algorithm="dijkstra",
+    )
+
+    out_csv = tmp_path / "routes.csv"
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 3)], [(1, 5)]),
+        ],
+    )
+    route_computer.process(out_fp=out_csv, save_paths=False)
+
+    output = pd.read_csv(out_csv)
+    assert len(output) == 1
+    route = output.iloc[0]
+    assert route["start_row"] == 1
+    assert route["start_col"] == 3
+    assert route["end_row"] == 1
+    assert route["end_col"] == 5
+    assert route["dropped_barrier_layers"] == '["layer_4"]'
+
+
+def test_soft_barrier_retry_exhaustion_returns_no_route(
+    sample_layered_data, assert_message_was_logged, tmp_path
+):
+    """Routing reports no solution after exhausting soft barrier retries"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_7"}],
+        barrier_layers=[
+            {
+                "layer_name": "layer_4",
+                "barrier_values": "==1",
+                "barrier_importance": 1,
+            }
+        ],
+        ignore_invalid_costs=True,
+        algorithm="dijkstra",
+    )
+
+    out_csv = tmp_path / "routes.csv"
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(4, 0)], [(4, 5)]),
+        ],
+    )
+    route_computer.process(out_fp=out_csv, save_paths=False)
+
+    assert_message_was_logged(
+        "Unable to find route from [(4, 0)] to any of [(4, 5)]",
+        "ERROR",
+    )
+    assert not out_csv.exists()
+
+
+def test_skip_failed_routes_preserves_per_solution_retry_metadata(
+    sample_layered_data,
+):
+    """Batch routing applies dropped barrier metadata per solution"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        cost_layers=[{"layer_name": "layer_1"}],
+        algorithm="dijkstra",
+    )
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            (13, [(1, 1), (1, 2)], [(2, 6)]),
+        ],
+        route_attrs={
+            (13, (1, 2)): {"route_type": "secondary"},
+        },
+    )
+
+    routed = list(
+        route_computer._skip_failed_routes(
+            [
+                (
+                    13,
+                    [
+                        (
+                            [(1, 1), (2, 2), (2, 6)],
+                            10.0,
+                            [],
+                        ),
+                        (
+                            [(1, 2), (2, 3), (2, 6)],
+                            12.0,
+                            ["layer_4"],
+                        ),
+                    ],
+                )
+            ]
+        )
+    )
+
+    assert len(routed) == 2
+
+    first_indices, first_objective, first_attrs = routed[0]
+    assert first_indices[0] == (1, 1)
+    assert first_objective == pytest.approx(10.0)
+    assert first_attrs["dropped_barrier_layers"] == "[]"
+
+    second_indices, second_objective, second_attrs = routed[1]
+    assert second_indices[0] == (1, 2)
+    assert second_objective == pytest.approx(12.0)
+    assert second_attrs["route_type"] == "secondary"
+    assert second_attrs["dropped_barrier_layers"] == '["layer_4"]'
 
 
 @pytest.mark.parametrize("ignore_invalid_costs", [True, False])

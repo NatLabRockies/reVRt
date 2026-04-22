@@ -17,6 +17,7 @@ from shapely.geometry import Point
 from shapely.geometry.linestring import LineString
 
 from revrt import RouteFinder, simplify_using_slopes
+from revrt.models.cost_layers import BarrierLayer
 from revrt.utilities.handlers import IncrementalWriter
 from revrt.exceptions import (
     revrtKeyError,
@@ -39,6 +40,7 @@ class RoutingScenario:
         cost_layers,
         friction_layers=None,
         tracked_layers=None,
+        barrier_layers=None,
         cost_multiplier_layer=None,
         cost_multiplier_scalar=1,
         ignore_invalid_costs=True,
@@ -62,6 +64,9 @@ class RoutingScenario:
             dictionary must include ``"layer_name"`` and
             ``"agg_method"`` keys, and may also include
             ``"multiplier_layer"`` and ``"multiplier_scalar"``.
+        barrier_layers : list, optional
+            List of dictionaries defining explicit hard or soft
+            barriers in the routing surface.
         cost_multiplier_layer : str, optional
             Layer name providing spatial multipliers for total cost.
         cost_multiplier_scalar : int or float, optional
@@ -83,6 +88,7 @@ class RoutingScenario:
         self.cost_fpath = cost_fpath
         self.cost_layers = cost_layers
         self.friction_layers = friction_layers or []
+        self.barrier_layers = barrier_layers or []
         self.tracked_layers = tracked_layers or []
         self.cost_multiplier_layer = cost_multiplier_layer
         self.cost_multiplier_scalar = cost_multiplier_scalar
@@ -94,6 +100,7 @@ class RoutingScenario:
             "RoutingScenario:"
             f"\n\t- cost_layers: {self.cost_layers}"
             f"\n\t- friction_layers: {self.friction_layers}"
+            f"\n\t- barrier_layers: {self.barrier_layers}"
             f"\n\t- cost_multiplier_layer: {self.cost_multiplier_layer}"
             f"\n\t- cost_multiplier_scalar: {self.cost_multiplier_scalar}"
             f"\n\t- algorithm: {self.algorithm}"
@@ -106,6 +113,7 @@ class RoutingScenario:
             {
                 "cost_layers": list(self._cost_layers_for_rust()),
                 "friction_layers": list(self._friction_layers_for_rust()),
+                "barrier_layers": list(self._barrier_layers_for_rust()),
                 "ignore_invalid_costs": self.ignore_invalid_costs,
             }
         )
@@ -137,6 +145,11 @@ class RoutingScenario:
 
             out_layer.pop("include_in_report", None)
             yield out_layer
+
+    def _barrier_layers_for_rust(self):
+        """Barrier layers formatted for Rust ingestion"""
+        for layer in self.barrier_layers:
+            yield BarrierLayer(**layer).to_routing_dict()
 
 
 class RoutingLayerManager:
@@ -171,6 +184,7 @@ class RoutingLayerManager:
         self.li_cost = None
         self.untracked_cost = None
         self.final_routing_layer = None
+        self.barrier_mask = None
 
     def __repr__(self):
         return f"RoutingLayerManager for {self.routing_scenario!r}"
@@ -267,11 +281,17 @@ class RoutingLayerManager:
         frictions = da.where(frictions <= -1, -1.0 + 1e-7, frictions)
         self.final_routing_layer *= 1 + frictions
         self.final_routing_layer += self.li_cost
+        self.barrier_mask = self._build_barrier_mask()
 
         self.final_routing_layer.values = da.where(
             self.final_routing_layer <= 0,
             -1 if self.routing_scenario.ignore_invalid_costs else 1e10,
             self.final_routing_layer,
+        )
+        self.final_routing_layer.values = da.where(
+            self.barrier_mask,
+            da.nan,
+            self.final_routing_layer.values,
         )
 
     def _extract_and_scale_layer(self, layer_info):
@@ -299,6 +319,45 @@ class RoutingLayerManager:
         cost = self._extract_layer(mask_layer_name)
         cost *= layer_info.get("multiplier_scalar", 1)
         return cost
+
+    def _build_barrier_mask(self):
+        """Build a mask for always-active explicit barriers"""
+        barrier_mask = da.zeros(self._full_shape, dtype=bool)
+        for layer_info in self._iter_hard_barrier_layers():
+            barrier_mask |= self._extract_barrier_layer(layer_info)
+        return barrier_mask
+
+    def _iter_hard_barrier_layers(self):
+        """Yield barrier layers without retry importance"""
+        for layer_info in self.routing_scenario.barrier_layers:
+            if layer_info.get("barrier_importance") is None:
+                yield BarrierLayer(**layer_info).to_routing_dict()
+
+    def _extract_barrier_layer(self, layer_info):
+        """Extract one barrier layer mask from the layered file"""
+        layer = self._extract_layer(layer_info["layer_name"])
+        layer_data = getattr(layer, "data", layer)
+        threshold = layer_info["barrier_threshold"]
+        operator = layer_info["barrier_operator"]
+
+        if operator == "gt":
+            return layer_data > threshold
+        if operator == "ge":
+            return layer_data >= threshold
+        if operator == "lt":
+            return layer_data < threshold
+        if operator == "le":
+            return layer_data <= threshold
+        if operator == "ne":
+            return layer_data != threshold
+        if operator == "eq":
+            return layer_data == threshold
+
+        msg = (
+            "Did not recognize barrier operator "
+            f"{operator!r} for layer {layer_info['layer_name']!r}"
+        )
+        raise revrtKeyError(msg)
 
     def _extract_layer(self, layer_name):
         """Extract layer based on name"""
@@ -733,6 +792,9 @@ class BatchRouteProcessor:
 
     def _route_results(self, routing_layer_out_fp=None):
         """Generator yielding route results from Rust computations"""
+        if not self.route_definitions:
+            return
+
         logger.debug(
             "Setting memory limit to %.2f GB for Rust computations",
             self.mem_limit_gb,
@@ -819,9 +881,12 @@ class BatchRouteProcessor:
                     start_points,
                     end_points,
                 )
-                for indices, optimized_objective in solutions:
+                for indices, optimized_objective, dbl in solutions:
                     attrs_key = (route_id, indices[0])
-                    attrs = self.route_attrs.get(attrs_key, self.default_attrs)
+                    attrs = {
+                        **self.route_attrs.get(attrs_key, self.default_attrs),
+                        "dropped_barrier_layers": json.dumps(dbl),
+                    }
                     yield indices, optimized_objective, attrs
 
                 time_elapsed = f"{(time.monotonic() - ts) / 60:.2f} minute(s)"
