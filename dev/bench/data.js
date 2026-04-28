@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776876655514,
+  "lastUpdate": 1777397266848,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -9323,6 +9323,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 451119334,
             "range": "± 5465240",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7932730da23fd41ce94aa2ae053bcb6b5c837102",
+          "message": "Build(deps): Bump pypa/gh-action-pypi-publish from 1.13.0 to 1.14.0 (#263)\n\nBumps [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) from 1.13.0 to 1.14.0.\n- [Release notes](https://github.com/pypa/gh-action-pypi-publish/releases)\n- [Commits](https://github.com/pypa/gh-action-pypi-publish/compare/ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e...cef221092ed1bacb1cc03d23a2d87d1d172e277b)\n\n---\nupdated-dependencies:\n- dependency-name: pypa/gh-action-pypi-publish\n  dependency-version: 1.14.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-28T11:16:27-06:00",
+          "tree_id": "67097b9de9cf43cbff28ab727882efe462021d7d",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/7932730da23fd41ce94aa2ae053bcb6b5c837102"
+        },
+        "date": 1777397265608,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 81364365,
+            "range": "± 5915452",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 52964401,
+            "range": "± 2954313",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 125589827,
+            "range": "± 6223762",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 179666926,
+            "range": "± 7232256",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 573160892,
+            "range": "± 33351093",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 87257770,
+            "range": "± 2002665",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 90665767,
+            "range": "± 1908024",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 104137673,
+            "range": "± 3058685",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 154171024,
+            "range": "± 9696950",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 324746060,
+            "range": "± 29808011",
             "unit": "ns/iter"
           }
         ]
