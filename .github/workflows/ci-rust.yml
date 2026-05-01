@@ -86,6 +86,10 @@ jobs:
             override: true
             profile: minimal
 
+      - name: Set up MSVC developer command prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@2aab19cf98f91ca6c56b2bd8a7b22219a1394f7d # v1.13.0
+
       - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
         with:
           pixi-version: v0.63.2

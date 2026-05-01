@@ -112,6 +112,10 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+      - name: Set up MSVC developer command prompt
+        uses: ilammy/msvc-dev-cmd@2aab19cf98f91ca6c56b2bd8a7b22219a1394f7d # v1.13.0
+        with:
+          arch: ${{ matrix.platform.target }}
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: 3.x
