@@ -47,7 +47,7 @@ dependencies = [
   "rioxarray>=0.22.0,<0.23",
   "shapely>=2.1.2,<3",
   "xarray>=2026.4.0,<2027",
-  "zarr>=3.1.6,<4",
+  "zarr>=3.2.0,<4",
 ]
 
 [project.optional-dependencies]
@@ -277,7 +277,7 @@ rasterio = ">=1.5.0,<2"
 rioxarray = ">=0.22.0,<0.23"
 shapely = ">=2.1.2,<3"
 xarray = ">=2026.4.0,<2027"
-zarr = ">=3.1.6,<4"
+zarr = ">=3.2.0,<4"
 
 [tool.pixi.feature.dev.dependencies]
 contextily = ">=1.7.0,<2"

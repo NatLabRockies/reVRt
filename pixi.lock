@@ -18924,7 +18924,7 @@ packages:
 - pypi: ./
   name: nlr-revrt
   version: 0.6.0
-  sha256: 5260f3755f3657d67d1eb60370b53c57d98a4de63a061fc9df021f6881d30c60
+  sha256: 4228db7019437351f57b5536dfdf2a0965d22a2e77f5ce238feb51b0b445c5ac
   requires_dist:
   - affine>=2.4.0,<3
   - dask>=2026.3.0,<2027
@@ -18941,7 +18941,7 @@ packages:
   - rioxarray>=0.22.0,<0.23
   - shapely>=2.1.2,<3
   - xarray>=2026.4.0,<2027
-  - zarr>=3.1.6,<4
+  - zarr>=3.2.0,<4
   - contextily>=1.7.0,<2 ; extra == 'dev'
   - datashader>=0.19.0,<0.20 ; extra == 'dev'
   - geoviews>=1.15.1,<2 ; extra == 'dev'
