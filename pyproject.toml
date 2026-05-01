@@ -256,6 +256,9 @@ NLR-reVRt = { path = ".", editable = true }
 
 [tool.pixi.dependencies]
 # system
+c-compiler = ">=1.11.0,<2"
+cxx-compiler = ">=1.11.0,<2"
+pkg-config = ">=0.29.2,<1"
 python = ">=3.12"
 rust = ">=1.94.0,<1.95"
 # package
