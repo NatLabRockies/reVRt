@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777397266848,
+  "lastUpdate": 1777757645020,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -9407,6 +9407,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 324746060,
             "range": "± 29808011",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e9d248c39cf3987f69331e5576c1b000810bc8c",
+          "message": "Update deps (#264)\n\n* Add deps required for install from scratch\n\nCo-authored-by: Copilot <copilot@github.com>\n\n* Add pandas and update all deps\n\n* Update zarr version\n\n* Try fix windows builds\n\nCo-authored-by: Copilot <copilot@github.com>\n\n* Update hash\n\nCo-authored-by: Copilot <copilot@github.com>\n\n---------\n\nCo-authored-by: Copilot <copilot@github.com>",
+          "timestamp": "2026-05-02T15:21:05-06:00",
+          "tree_id": "b458d0865a93ba7f4f87a1cfd4ba293af55dc3de",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/6e9d248c39cf3987f69331e5576c1b000810bc8c"
+        },
+        "date": 1777757643657,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 90689794,
+            "range": "± 681046",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 87890967,
+            "range": "± 707324",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 133532471,
+            "range": "± 2487613",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 200365915,
+            "range": "± 2520539",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 778314814,
+            "range": "± 14666088",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 148812938,
+            "range": "± 2100879",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 155563284,
+            "range": "± 711542",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 172944337,
+            "range": "± 1324919",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 230910716,
+            "range": "± 2163368",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 445916219,
+            "range": "± 7118056",
             "unit": "ns/iter"
           }
         ]
