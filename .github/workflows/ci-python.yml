@@ -72,7 +72,7 @@ jobs:
 
     - name: Set up MSVC developer command prompt
       if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@2aab19cf98f91ca6c56b2bd8a7b22219a1394f7d # v1.13.0
+      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
     - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
       with:
@@ -105,7 +105,7 @@ jobs:
 
     - name: Set up MSVC developer command prompt
       if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@2aab19cf98f91ca6c56b2bd8a7b22219a1394f7d # v1.13.0
+      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
     - uses: prefix-dev/setup-pixi@1b2de7f3351f171c8b4dfeb558c639cb58ed4ec0 # v0.9.5
       with:
@@ -141,7 +141,7 @@ jobs:
 
     - name: Set up MSVC developer command prompt
       if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@2aab19cf98f91ca6c56b2bd8a7b22219a1394f7d # v1.13.0
+      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0

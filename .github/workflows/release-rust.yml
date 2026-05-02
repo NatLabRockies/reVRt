@@ -133,7 +133,7 @@ jobs:
 
     - name: Set up MSVC developer command prompt
       if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@2aab19cf98f91ca6c56b2bd8a7b22219a1394f7d # v1.13.0
+      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
     - name: Install required dependencies
       shell: bash
