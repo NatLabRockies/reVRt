@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778267151032,
+  "lastUpdate": 1778366161875,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -9575,6 +9575,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 468627125,
             "range": "± 9588406",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0128d4c454fc39abb4ce8673940bd960fe95eba0",
+          "message": "Build(deps): Bump github/codeql-action from 4.35.2 to 4.35.3 (#265)\n\n* Build(deps): Bump github/codeql-action from 4.35.2 to 4.35.3\n\nBumps [github/codeql-action](https://github.com/github/codeql-action) from 4.35.2 to 4.35.3.\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/95e58e9a2cdfd71adc6e0353d5c52f41a045d225...e46ed2cbd01164d986452f91f178727624ae40d7)\n\n---\nupdated-dependencies:\n- dependency-name: github/codeql-action\n  dependency-version: 4.35.3\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\n\n* Update CodeQL action version to v4.35.3\n\n* Update CodeQL Action version to v4.35.3\n\n---------\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Guilherme Castelão <guilherme@castelao.net>",
+          "timestamp": "2026-05-09T16:19:18-06:00",
+          "tree_id": "fb8eda51ef93bf0e35ee9b0eab9da51ba3d824ef",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/0128d4c454fc39abb4ce8673940bd960fe95eba0"
+        },
+        "date": 1778366161035,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 91224517,
+            "range": "± 763595",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 80181394,
+            "range": "± 537017",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 133278619,
+            "range": "± 2621367",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 200633973,
+            "range": "± 2498561",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 778489672,
+            "range": "± 9540229",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 149485971,
+            "range": "± 3440956",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 156420295,
+            "range": "± 865420",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 172572712,
+            "range": "± 1293806",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 231373460,
+            "range": "± 1691522",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 446854719,
+            "range": "± 3808571",
             "unit": "ns/iter"
           }
         ]
