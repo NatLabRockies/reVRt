@@ -132,12 +132,12 @@ mod test {
     #[test]
     fn equal_integers() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5,
             estimated_cost: 10,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 5,
             estimated_cost: 10,
         };
@@ -148,12 +148,12 @@ mod test {
     /// Order of estimated_cost leads to the comparison.
     fn gt_integer() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 3,
             estimated_cost: 10,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 5,
             estimated_cost: 7,
         };
@@ -163,12 +163,12 @@ mod test {
     #[test]
     fn cost_gt_integer() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5,
             estimated_cost: 10,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 3,
             estimated_cost: 10,
         };
@@ -178,12 +178,12 @@ mod test {
     #[test]
     fn estimated_gt_integer() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 3,
             estimated_cost: 10,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 3,
             estimated_cost: 7,
         };
@@ -193,12 +193,12 @@ mod test {
     #[test]
     fn equal_floats() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5.0,
             estimated_cost: 10.0,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 5.0,
             estimated_cost: 10.0,
         };
@@ -208,12 +208,12 @@ mod test {
     #[test]
     fn gt_float() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 3.0,
             estimated_cost: 10.0,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 5.0,
             estimated_cost: 7.0,
         };
@@ -223,12 +223,12 @@ mod test {
     #[test]
     fn cost_gt_float() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5.0,
             estimated_cost: 10.0,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 3.0,
             estimated_cost: 10.0,
         };
@@ -239,57 +239,57 @@ mod test {
     fn binary_heap_integer() {
         let mut heap = std::collections::BinaryHeap::new();
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5,
             estimated_cost: 10,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(1, 0),
+            index: ArrayIndex::new_ij(1, 0),
             cost: 3,
             estimated_cost: 10,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 1),
+            index: ArrayIndex::new_ij(0, 1),
             cost: 3,
             estimated_cost: 12,
         });
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(1, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 1));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(1, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 1));
     }
 
     #[test]
     fn binary_heap_float() {
         let mut heap = std::collections::BinaryHeap::new();
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5.0,
             estimated_cost: 10.0,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(1, 0),
+            index: ArrayIndex::new_ij(1, 0),
             cost: 3.0,
             estimated_cost: 10.0,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 1),
+            index: ArrayIndex::new_ij(0, 1),
             cost: 3.0,
             estimated_cost: 12.0,
         });
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(1, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 1));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(1, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 1));
     }
 
     #[test]
     fn order_u64() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5_u64,
             estimated_cost: 10_u64,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 3_u64,
             estimated_cost: 10_u64,
         };
@@ -301,12 +301,12 @@ mod test {
     #[test]
     fn order_i32() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 3_i32,
             estimated_cost: 10_i32,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 5_i32,
             estimated_cost: 7_i32,
         };
@@ -318,12 +318,12 @@ mod test {
     #[test]
     fn order_i64() {
         let a = NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5_i64,
             estimated_cost: 10_i64,
         };
         let b = NodeCost {
-            index: ArrayIndex::new(1, 1),
+            index: ArrayIndex::new_ij(1, 1),
             cost: 3_i64,
             estimated_cost: 10_i64,
         };
@@ -336,71 +336,71 @@ mod test {
     fn binary_heap_u64() {
         let mut heap = std::collections::BinaryHeap::new();
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5_u64,
             estimated_cost: 10_u64,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(1, 0),
+            index: ArrayIndex::new_ij(1, 0),
             cost: 3_u64,
             estimated_cost: 10_u64,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 1),
+            index: ArrayIndex::new_ij(0, 1),
             cost: 3_u64,
             estimated_cost: 12_u64,
         });
 
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(1, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 1));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(1, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 1));
     }
 
     #[test]
     fn binary_heap_i32() {
         let mut heap = std::collections::BinaryHeap::new();
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5_i32,
             estimated_cost: 10_i32,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(1, 0),
+            index: ArrayIndex::new_ij(1, 0),
             cost: 3_i32,
             estimated_cost: 10_i32,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 1),
+            index: ArrayIndex::new_ij(0, 1),
             cost: 3_i32,
             estimated_cost: 12_i32,
         });
 
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(1, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 1));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(1, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 1));
     }
 
     #[test]
     fn binary_heap_i64() {
         let mut heap = std::collections::BinaryHeap::new();
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 0),
+            index: ArrayIndex::new_ij(0, 0),
             cost: 5_i64,
             estimated_cost: 10_i64,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(1, 0),
+            index: ArrayIndex::new_ij(1, 0),
             cost: 3_i64,
             estimated_cost: 10_i64,
         });
         heap.push(NodeCost {
-            index: ArrayIndex::new(0, 1),
+            index: ArrayIndex::new_ij(0, 1),
             cost: 3_i64,
             estimated_cost: 12_i64,
         });
 
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(1, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 0));
-        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new(0, 1));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(1, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 0));
+        assert_eq!(heap.pop().unwrap().index, ArrayIndex::new_ij(0, 1));
     }
 }

@@ -130,54 +130,66 @@ mod tests {
     /// Adding the first node to an empty network
     fn first_node() {
         let mut network = Network::new();
-        let id = network.add_node(ArrayIndex::new(10, 10), 0, None);
+        let id = network.add_node(ArrayIndex::new_ij(10, 10), 0, None);
         assert_eq!(id, 0);
-        assert!(network.nodes.contains_key(&ArrayIndex::new(10, 10)));
+        assert!(network.nodes.contains_key(&ArrayIndex::new_ij(10, 10)));
 
         let next = network.pop().unwrap();
-        assert_eq!(next.position, ArrayIndex::new(10, 10));
+        assert_eq!(next.position, ArrayIndex::new_ij(10, 10));
     }
 
     #[test]
     fn test_add_sequence_of_nodes() {
         let mut network = Network::new();
         // First node
-        let id1 = network.add_node(ArrayIndex::new(10, 10), 0, None);
+        let id1 = network.add_node(ArrayIndex::new_ij(10, 10), 0, None);
         // Next node
-        let id2 = network.add_node(ArrayIndex::new(9, 9), 3, Some(ArrayIndex::new(10, 10)));
+        let id2 = network.add_node(
+            ArrayIndex::new_ij(9, 9),
+            3,
+            Some(ArrayIndex::new_ij(10, 10)),
+        );
         assert_eq!(id1, 0);
         assert_eq!(id2, 1);
-        assert!(network.nodes.contains_key(&ArrayIndex::new(10, 10)));
-        assert!(network.nodes.contains_key(&ArrayIndex::new(9, 9)));
+        assert!(network.nodes.contains_key(&ArrayIndex::new_ij(10, 10)));
+        assert!(network.nodes.contains_key(&ArrayIndex::new_ij(9, 9)));
     }
 
     #[test]
     fn retrieve_cheapest_node() {
         let mut network = Network::new();
-        network.add_node(ArrayIndex::new(10, 10), 100, None);
-        network.add_node(ArrayIndex::new(9, 9), 50, None);
-        network.add_node(ArrayIndex::new(8, 8), 75, None);
+        network.add_node(ArrayIndex::new_ij(10, 10), 100, None);
+        network.add_node(ArrayIndex::new_ij(9, 9), 50, None);
+        network.add_node(ArrayIndex::new_ij(8, 8), 75, None);
 
         let next = network.pop().unwrap();
-        assert_eq!(next.position, ArrayIndex::new(9, 9));
+        assert_eq!(next.position, ArrayIndex::new_ij(9, 9));
         assert_eq!(next.cost, 50);
     }
 
     #[test]
     fn multiple_edges_to_node() {
         let mut network = Network::new();
-        network.add_node(ArrayIndex::new(10, 10), 10, None);
-        network.add_node(ArrayIndex::new(11, 11), 11, None);
-        network.add_node(ArrayIndex::new(9, 9), 13, Some(ArrayIndex::new(10, 10)));
-        network.add_node(ArrayIndex::new(9, 9), 12, Some(ArrayIndex::new(11, 11)));
+        network.add_node(ArrayIndex::new_ij(10, 10), 10, None);
+        network.add_node(ArrayIndex::new_ij(11, 11), 11, None);
+        network.add_node(
+            ArrayIndex::new_ij(9, 9),
+            13,
+            Some(ArrayIndex::new_ij(10, 10)),
+        );
+        network.add_node(
+            ArrayIndex::new_ij(9, 9),
+            12,
+            Some(ArrayIndex::new_ij(11, 11)),
+        );
 
         assert_eq!(network.nodes.len(), 3);
-        assert!(network.nodes.contains_key(&ArrayIndex::new(9, 9)));
-        let node = network.nodes.get(&ArrayIndex::new(9, 9)).unwrap();
+        assert!(network.nodes.contains_key(&ArrayIndex::new_ij(9, 9)));
+        let node = network.nodes.get(&ArrayIndex::new_ij(9, 9)).unwrap();
         assert_eq!(node.edges.len(), 2);
-        assert!(node.edges.contains_key(&ArrayIndex::new(10, 10)));
-        assert_eq!(node.edges[&ArrayIndex::new(10, 10)].cost, 13);
-        assert!(node.edges.contains_key(&ArrayIndex::new(11, 11)));
-        assert_eq!(node.edges[&ArrayIndex::new(11, 11)].cost, 12);
+        assert!(node.edges.contains_key(&ArrayIndex::new_ij(10, 10)));
+        assert_eq!(node.edges[&ArrayIndex::new_ij(10, 10)].cost, 13);
+        assert!(node.edges.contains_key(&ArrayIndex::new_ij(11, 11)));
+        assert_eq!(node.edges[&ArrayIndex::new_ij(11, 11)].cost, 12);
     }
 }

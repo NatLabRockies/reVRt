@@ -244,7 +244,7 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
+        let test_points = [ArrayIndex::new_ij(3, 1), ArrayIndex::new_ij(2, 2)];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
         for point in test_points {
             let results = dataset.get_3x3(&point);
@@ -253,9 +253,9 @@ mod tests {
             assert!(
                 !results
                     .iter()
-                    .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                    .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
             );
-            let ArrayIndex { i: ci, j: cj } = point;
+            let ArrayIndex { i: ci, j: cj, .. } = point;
             let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                 0..1,
                 ci..(ci + 1),
@@ -265,7 +265,7 @@ mod tests {
                 .retrieve_array_subset_elements(&center_subset)
                 .expect("Error reading zarr data")[0];
 
-            for (ArrayIndex { i, j }, val) in results {
+            for (ArrayIndex { i, j, .. }, val) in results {
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
@@ -338,12 +338,12 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
+        let test_points = [ArrayIndex::new_ij(3, 1), ArrayIndex::new_ij(2, 2)];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
         for point in test_points {
             let results = dataset.get_3x3(&point);
 
-            for (ArrayIndex { i, j }, val) in results {
+            for (ArrayIndex { i, j, .. }, val) in results {
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
@@ -365,7 +365,7 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
+        let test_points = [ArrayIndex::new_ij(3, 1), ArrayIndex::new_ij(2, 2)];
         let array_a = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
         let array_b = zarrs::array::Array::open(dataset.source.clone(), "/B").unwrap();
         let array_c = zarrs::array::Array::open(dataset.source.clone(), "/C").unwrap();
@@ -376,9 +376,9 @@ mod tests {
             assert!(
                 !results
                     .iter()
-                    .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                    .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
             );
-            let ArrayIndex { i: ci, j: cj } = point;
+            let ArrayIndex { i: ci, j: cj, .. } = point;
             let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                 0..1,
                 ci..(ci + 1),
@@ -397,7 +397,7 @@ mod tests {
             let center_cost: f32 =
                 center_a + center_b * 100. + center_a * center_b + center_c * center_a * 2.;
 
-            for (ArrayIndex { i, j }, val) in results {
+            for (ArrayIndex { i, j, .. }, val) in results {
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
@@ -450,13 +450,13 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 0, j: 0 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(0, 0));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
             !results
                 .iter()
-                .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
         );
 
         assert_eq!(results, vec![]);
@@ -473,20 +473,20 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
             !results
                 .iter()
-                .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
         );
 
         assert_eq!(
             results,
             expected_output
                 .into_iter()
-                .map(|(i, j, v)| (ArrayIndex { i, j }, v))
+                .map(|(i, j, v)| (ArrayIndex::new_ij(i, j), v))
                 .collect::<Vec<_>>()
         );
     }
@@ -510,20 +510,20 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
             !results
                 .iter()
-                .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
         );
 
         assert_eq!(
             results,
             expected_output
                 .into_iter()
-                .map(|(i, j, v)| (ArrayIndex { i, j }, v))
+                .map(|(i, j, v)| (ArrayIndex::new_ij(i, j), v))
                 .collect::<Vec<_>>()
         );
     }
@@ -550,20 +550,20 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
             !results
                 .iter()
-                .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
         );
 
         assert_eq!(
             results,
             expected_output
                 .into_iter()
-                .map(|(i, j, v)| (ArrayIndex { i, j }, v))
+                .map(|(i, j, v)| (ArrayIndex::new_ij(i, j), v))
                 .collect::<Vec<_>>()
         );
     }
@@ -596,7 +596,7 @@ mod tests {
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         // Request center neighbors
-        let point = ArrayIndex { i: 1, j: 1 };
+        let point = ArrayIndex::new_ij(1, 1);
         let results = dataset.get_3x3(&point);
 
         // Build expected results: for each neighbor (excluding center),
@@ -637,7 +637,7 @@ mod tests {
                 let total_before = averaged + c_n;
                 let friction = b_n * 0.5_f32;
                 let expected_val = total_before * (1.0_f32 + friction);
-                expected.push((ArrayIndex { i: ir, j: jr }, expected_val));
+                expected.push((ArrayIndex::new_ij(ir, jr), expected_val));
             }
         }
 
@@ -676,7 +676,7 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
         assert!(
             results.is_empty(),
             "Found data with `ignore_invalid_costs=true`"
@@ -698,7 +698,7 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
         assert_eq!(results.len(), 8);
 
         let mut expected: Vec<(ArrayIndex, f32)> = vec![];
@@ -712,7 +712,7 @@ mod tests {
                 if ir != 1 && jr != 1 {
                     averaged *= std::f32::consts::SQRT_2;
                 }
-                expected.push((ArrayIndex { i: ir, j: jr }, averaged));
+                expected.push((ArrayIndex::new_ij(ir, jr), averaged));
             }
         }
 
@@ -763,14 +763,14 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
         assert_eq!(
             results,
             vec![
-                (ArrayIndex { i: 0, j: 0 }, 3.0 * std::f32::consts::SQRT_2),
-                (ArrayIndex { i: 0, j: 2 }, 4.0 * std::f32::consts::SQRT_2),
-                (ArrayIndex { i: 2, j: 0 }, 6.0 * std::f32::consts::SQRT_2),
-                (ArrayIndex { i: 2, j: 2 }, 7.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex::new_ij(0, 0), 3.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex::new_ij(0, 2), 4.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex::new_ij(2, 0), 6.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex::new_ij(2, 2), 7.0 * std::f32::consts::SQRT_2),
             ]
         );
     }
@@ -806,7 +806,7 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
         assert_eq!(results.len(), 8);
     }
 
@@ -849,16 +849,16 @@ mod tests {
         let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
             .expect("Error opening dataset");
 
-        let center = ArrayIndex { i: 1, j: 1 };
+        let center = ArrayIndex::new_ij(1, 1);
         dataset.get_3x3(&center);
 
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 0),
-            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
+            vec![ArrayIndex::new_ij(0, 1), ArrayIndex::new_ij(1, 0)]
         );
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 1),
-            vec![ArrayIndex { i: 0, j: 1 }]
+            vec![ArrayIndex::new_ij(0, 1)]
         );
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 2).is_empty());
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 99).is_empty());
@@ -903,12 +903,12 @@ mod tests {
         let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
             .expect("Error opening dataset");
 
-        let center = ArrayIndex { i: 1, j: 1 };
+        let center = ArrayIndex::new_ij(1, 1);
         dataset.get_3x3(&center);
 
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 0),
-            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
+            vec![ArrayIndex::new_ij(0, 1), ArrayIndex::new_ij(1, 0)]
         );
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 1).is_empty());
     }

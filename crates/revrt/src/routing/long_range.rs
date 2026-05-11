@@ -147,8 +147,8 @@ mod tests {
 
     #[test]
     fn bounded_astar_finds_shortest_path() {
-        let start = ArrayIndex::new(0, 0);
-        let goal = ArrayIndex::new(2, 2);
+        let start = ArrayIndex::new_ij(0, 0);
+        let goal = ArrayIndex::new_ij(2, 2);
 
         let ans = long_range_astar(
             &start,
@@ -156,16 +156,16 @@ mod tests {
             |p: &ArrayIndex| {
                 let mut out = Vec::new();
                 if p.i < 2 {
-                    out.push((ArrayIndex::new(p.i + 1, p.j), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i + 1, p.j), 1_u64));
                 }
                 if p.j < 2 {
-                    out.push((ArrayIndex::new(p.i, p.j + 1), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i, p.j + 1), 1_u64));
                 }
                 out
             },
             |p| *p == goal,
             2 * 1024 * 1024,
-            (3, 3),
+            (3, 3, 1),
         )
         .unwrap();
 
@@ -176,24 +176,24 @@ mod tests {
 
     #[test]
     fn bounded_finds_shortest_path() {
-        let start = ArrayIndex::new(0, 0);
-        let goal = ArrayIndex::new(2, 2);
+        let start = ArrayIndex::new_ij(0, 0);
+        let goal = ArrayIndex::new_ij(2, 2);
 
         let ans = long_range_dijkstra(
             &start,
             |p: &ArrayIndex| {
                 let mut out = Vec::new();
                 if p.i < 2 {
-                    out.push((ArrayIndex::new(p.i + 1, p.j), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i + 1, p.j), 1_u64));
                 }
                 if p.j < 2 {
-                    out.push((ArrayIndex::new(p.i, p.j + 1), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i, p.j + 1), 1_u64));
                 }
                 out
             },
             |p| *p == goal,
             2 * 1024 * 1024 * 1024,
-            (3, 3),
+            (3, 3, 1),
         )
         .unwrap();
 
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn bounded_astar_rejects_missing_goals() {
-        let start = ArrayIndex::new(0, 0);
+        let start = ArrayIndex::new_ij(0, 0);
 
         let ans = long_range_astar(
             &start,
@@ -212,7 +212,7 @@ mod tests {
             |_p: &ArrayIndex| Vec::<(ArrayIndex, u64)>::new(),
             |_p| false,
             2 * 1024 * 1024,
-            (1, 1),
+            (1, 1, 1),
         );
 
         assert!(ans.is_none());
@@ -220,8 +220,8 @@ mod tests {
 
     #[test]
     fn bounded_astar_returns_zero_cost_when_start_is_goal() {
-        let start = ArrayIndex::new(0, 0);
-        let goals = vec![start.clone(), ArrayIndex::new(1, 1)];
+        let start = ArrayIndex::new_ij(0, 0);
+        let goals = vec![start.clone(), ArrayIndex::new_ij(1, 1)];
 
         let ans = long_range_astar(
             &start,
@@ -229,7 +229,7 @@ mod tests {
             |_p: &ArrayIndex| Vec::<(ArrayIndex, u64)>::new(),
             |_p| false,
             2 * 1024 * 1024,
-            (2, 2),
+            (2, 2, 1),
         )
         .unwrap();
 
@@ -239,14 +239,14 @@ mod tests {
 
     #[test]
     fn bounded_rejects_too_small_budget() {
-        let start = ArrayIndex::new(0, 0);
+        let start = ArrayIndex::new_ij(0, 0);
 
         let ans = long_range_dijkstra(
             &start,
             |_p: &ArrayIndex| Vec::<(ArrayIndex, u64)>::new(),
             |_p| false,
             1024,
-            (1, 1),
+            (1, 1, 1),
         );
 
         assert!(ans.is_none());
@@ -254,8 +254,8 @@ mod tests {
 
     #[test]
     fn bidirectional_bounded_finds_shortest_path_to_any_goal() {
-        let start = ArrayIndex::new(0, 0);
-        let goals = vec![ArrayIndex::new(2, 2), ArrayIndex::new(0, 2)];
+        let start = ArrayIndex::new_ij(0, 0);
+        let goals = vec![ArrayIndex::new_ij(2, 2), ArrayIndex::new_ij(0, 2)];
 
         let ans = bidirectional_long_range_dijkstra(
             &start,
@@ -263,33 +263,33 @@ mod tests {
             |p: &ArrayIndex| {
                 let mut out = Vec::new();
                 if p.i < 2 {
-                    out.push((ArrayIndex::new(p.i + 1, p.j), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i + 1, p.j), 1_u64));
                 }
                 if p.j < 2 {
-                    out.push((ArrayIndex::new(p.i, p.j + 1), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i, p.j + 1), 1_u64));
                 }
                 out
             },
             2 * 1024 * 1024,
-            (3, 3),
+            (3, 3, 1),
         )
         .unwrap();
 
         assert_eq!(ans.1, 2_u64);
         assert_eq!(ans.0.first(), Some(&start));
-        assert_eq!(ans.0.last(), Some(&ArrayIndex::new(0, 2)));
+        assert_eq!(ans.0.last(), Some(&ArrayIndex::new_ij(0, 2)));
     }
 
     #[test]
     fn bidirectional_bounded_rejects_missing_goals() {
-        let start = ArrayIndex::new(0, 0);
+        let start = ArrayIndex::new_ij(0, 0);
 
         let ans = bidirectional_long_range_dijkstra(
             &start,
             &[],
             |_p: &ArrayIndex| Vec::<(ArrayIndex, u64)>::new(),
             2 * 1024 * 1024,
-            (1, 1),
+            (1, 1, 1),
         );
 
         assert!(ans.is_none());

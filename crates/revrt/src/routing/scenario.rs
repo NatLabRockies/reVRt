@@ -325,7 +325,7 @@ mod tests {
         .unwrap();
         let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
 
-        let start = ArrayIndex { i: 1, j: 1 };
+        let start = ArrayIndex::new_ij(1, 1);
         let initial_successors = scenario.successors_for_attempt(&start, 0);
         let retry_one_successors = scenario.successors_for_attempt(&start, 1);
         let retry_two_successors = scenario.successors_for_attempt(&start, 2);
@@ -334,32 +334,32 @@ mod tests {
         assert!(
             !initial_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
         assert!(
             !initial_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
         assert!(
             retry_one_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
         assert!(
             !retry_one_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
         assert!(
             retry_two_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
         assert!(
             retry_two_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
     }
 
@@ -396,12 +396,12 @@ mod tests {
 
         assert!(
             scenario
-                .successors_for_attempt(&ArrayIndex { i: 1, j: 1 }, 0)
+                .successors_for_attempt(&ArrayIndex::new_ij(1, 1), 0)
                 .is_empty()
         );
         assert!(
             !scenario
-                .successors_for_attempt(&ArrayIndex { i: 1, j: 1 }, 1)
+                .successors_for_attempt(&ArrayIndex::new_ij(1, 1), 1)
                 .is_empty()
         );
     }

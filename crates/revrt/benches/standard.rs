@@ -103,8 +103,8 @@ fn standard_ones(c: &mut Criterion) {
         b.iter(|| {
             bench_minimalist(
                 black_box(features_path.clone()),
-                black_box(vec![ArrayIndex::new(20, 50)]),
-                black_box(vec![ArrayIndex::new(5, 50)]),
+                black_box(vec![ArrayIndex::new_ij(20, 50)]),
+                black_box(vec![ArrayIndex::new_ij(5, 50)]),
             )
         })
     });
@@ -118,8 +118,8 @@ fn standard_random(c: &mut Criterion) {
         b.iter(|| {
             bench_minimalist(
                 black_box(features_path.clone()),
-                black_box(vec![ArrayIndex::new(20, 50)]),
-                black_box(vec![ArrayIndex::new(5, 50)]),
+                black_box(vec![ArrayIndex::new_ij(20, 50)]),
+                black_box(vec![ArrayIndex::new_ij(5, 50)]),
             )
         })
     });
@@ -135,10 +135,10 @@ fn multiple_near_routes(c: &mut Criterion) {
                 black_box(features_path.clone()),
                 black_box(
                     (19..=22)
-                        .flat_map(|row| (48..=51).map(move |col| ArrayIndex::new(row, col)))
+                        .flat_map(|row| (48..=51).map(move |col| ArrayIndex::new_ij(row, col)))
                         .collect::<Vec<_>>(),
                 ),
-                black_box(vec![ArrayIndex::new(10, 50)]),
+                black_box(vec![ArrayIndex::new_ij(10, 50)]),
             )
         })
     });
@@ -158,11 +158,11 @@ fn multiple_spread_routes(c: &mut Criterion) {
                         .flat_map(|row| {
                             (40..=60)
                                 .step_by(5)
-                                .map(move |col| ArrayIndex::new(row, col))
+                                .map(move |col| ArrayIndex::new_ij(row, col))
                         })
                         .collect::<Vec<_>>(),
                 ),
-                black_box(vec![ArrayIndex::new(50, 50)]),
+                black_box(vec![ArrayIndex::new_ij(50, 50)]),
             )
         })
     });
@@ -176,8 +176,8 @@ fn single_chunk(c: &mut Criterion) {
         b.iter(|| {
             bench_minimalist(
                 black_box(features_path.clone()),
-                black_box(vec![ArrayIndex::new(20, 50)]),
-                black_box(vec![ArrayIndex::new(5, 50)]),
+                black_box(vec![ArrayIndex::new_ij(20, 50)]),
+                black_box(vec![ArrayIndex::new_ij(5, 50)]),
             )
         })
     });
@@ -199,8 +199,8 @@ fn range_distance(c: &mut Criterion) {
                 b.iter(|| {
                     bench_minimalist(
                         black_box(features_path.clone()),
-                        black_box(vec![ArrayIndex::new(X0 + distance, 50)]),
-                        black_box(vec![ArrayIndex::new(X0, 50)]),
+                        black_box(vec![ArrayIndex::new_ij(X0 + distance, 50)]),
+                        black_box(vec![ArrayIndex::new_ij(X0, 50)]),
                     )
                 })
             },

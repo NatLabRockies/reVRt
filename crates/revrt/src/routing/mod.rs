@@ -306,8 +306,8 @@ mod tests {
         .unwrap();
         let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
         let algorithm = Algorithm::from_selection(AlgorithmType::Dijkstra, 8 * 1024 * 1024);
-        let start = [ArrayIndex::new(0, 0), ArrayIndex::new(2, 0)];
-        let end = [ArrayIndex::new(0, 4), ArrayIndex::new(2, 4)];
+        let start = [ArrayIndex::new_ij(0, 0), ArrayIndex::new_ij(2, 0)];
+        let end = [ArrayIndex::new_ij(0, 4), ArrayIndex::new_ij(2, 4)];
 
         let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
 
@@ -315,9 +315,9 @@ mod tests {
 
         let top_solution = result
             .iter()
-            .find(|solution| solution.route().first() == Some(&ArrayIndex::new(0, 0)))
+            .find(|solution| solution.route().first() == Some(&ArrayIndex::new_ij(0, 0)))
             .unwrap();
-        assert_eq!(top_solution.route().last(), Some(&ArrayIndex::new(0, 4)));
+        assert_eq!(top_solution.route().last(), Some(&ArrayIndex::new_ij(0, 4)));
         assert_eq!(
             top_solution.dropped_barrier_layers(),
             &vec!["soft_barrier".to_string()]
@@ -325,9 +325,12 @@ mod tests {
 
         let bottom_solution = result
             .iter()
-            .find(|solution| solution.route().first() == Some(&ArrayIndex::new(2, 0)))
+            .find(|solution| solution.route().first() == Some(&ArrayIndex::new_ij(2, 0)))
             .unwrap();
-        assert_eq!(bottom_solution.route().last(), Some(&ArrayIndex::new(2, 4)));
+        assert_eq!(
+            bottom_solution.route().last(),
+            Some(&ArrayIndex::new_ij(2, 4))
+        );
         assert!(bottom_solution.dropped_barrier_layers().is_empty());
     }
 }

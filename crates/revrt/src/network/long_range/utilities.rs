@@ -32,8 +32,9 @@ impl GridIndexer {
     pub(super) fn index_of(&self, slot: usize) -> ArrayIndex {
         let linear = slot as u64;
         ArrayIndex {
-            i: linear / self.ncols,
-            j: linear % self.ncols,
+            i: planar / self.ncols,
+            j: planar % self.ncols,
+            option,
         }
     }
 
@@ -82,10 +83,10 @@ mod tests {
     fn grid_indexer_round_trip() {
         let grid = GridIndexer::new(7, 9).unwrap();
         let sample = [
-            ArrayIndex::new(0, 0),
-            ArrayIndex::new(1, 4),
-            ArrayIndex::new(3, 8),
-            ArrayIndex::new(6, 7),
+            ArrayIndex::new_ij(0, 0),
+            ArrayIndex::new_ij(1, 4),
+            ArrayIndex::new_ij(3, 8),
+            ArrayIndex::new_ij(6, 7),
         ];
 
         for index in sample {
@@ -106,11 +107,11 @@ mod tests {
     fn grid_indexer_slot_of_rejects_out_of_bounds_indices() {
         let grid = GridIndexer::new(3, 4).unwrap();
 
-        assert_eq!(grid.slot_of(&ArrayIndex::new(0, 0)), Some(0));
-        assert_eq!(grid.slot_of(&ArrayIndex::new(2, 3)), Some(11));
-        assert_eq!(grid.slot_of(&ArrayIndex::new(3, 0)), None);
-        assert_eq!(grid.slot_of(&ArrayIndex::new(0, 4)), None);
-        assert_eq!(grid.slot_of(&ArrayIndex::new(9, 9)), None);
+        assert_eq!(grid.slot_of(&ArrayIndex::new_ij(0, 0)), Some(0));
+        assert_eq!(grid.slot_of(&ArrayIndex::new_ij(2, 3)), Some(11));
+        assert_eq!(grid.slot_of(&ArrayIndex::new_ij(3, 0)), None);
+        assert_eq!(grid.slot_of(&ArrayIndex::new_ij(0, 4)), None);
+        assert_eq!(grid.slot_of(&ArrayIndex::new_ij(9, 9)), None);
     }
 
     #[test]

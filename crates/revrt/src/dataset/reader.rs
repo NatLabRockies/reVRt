@@ -263,7 +263,11 @@ impl NeighborhoodReader {
             .zip(barrier_values)
         {
             if is_barrier {
-                barrier_cells.push(ArrayIndex { i: ir, j: jr });
+                barrier_cells.push(ArrayIndex {
+                    i: ir,
+                    j: jr,
+                    option: index.option,
+                });
             }
         }
 
@@ -482,7 +486,7 @@ mod tests {
     ) {
         let reader = reader_for_grid(grid_nrows, grid_ncols);
 
-        let (i_range, j_range, subset) = reader.neighborhood_subset(&ArrayIndex { i, j });
+        let (i_range, j_range, subset) = reader.neighborhood_subset(&ArrayIndex::new_ij(i, j));
 
         assert_eq!(i_range, expected_i_range.clone());
         assert_eq!(j_range, expected_j_range.clone());
@@ -507,19 +511,19 @@ mod tests {
         );
 
         let neighbors = fixture.reader.get_3x3(
-            &ArrayIndex { i: 1, j: 1 },
+            &ArrayIndex::new_ij(1, 1),
             &NoOpMaterializer {
                 has_hard_barriers: true,
             },
         );
 
         let expected = [
-            (ArrayIndex { i: 0, j: 0 }, 3.0 * SQRT_2 + 1.0),
-            (ArrayIndex { i: 0, j: 2 }, 4.0 * SQRT_2 + 1.0),
-            (ArrayIndex { i: 1, j: 0 }, 5.5),
-            (ArrayIndex { i: 2, j: 0 }, 6.0 * SQRT_2 + 1.0),
-            (ArrayIndex { i: 2, j: 1 }, 7.5),
-            (ArrayIndex { i: 2, j: 2 }, 7.0 * SQRT_2 + 1.0),
+            (ArrayIndex::new_ij(0, 0), 3.0 * SQRT_2 + 1.0),
+            (ArrayIndex::new_ij(0, 2), 4.0 * SQRT_2 + 1.0),
+            (ArrayIndex::new_ij(1, 0), 5.5),
+            (ArrayIndex::new_ij(2, 0), 6.0 * SQRT_2 + 1.0),
+            (ArrayIndex::new_ij(2, 1), 7.5),
+            (ArrayIndex::new_ij(2, 2), 7.0 * SQRT_2 + 1.0),
         ];
 
         assert_eq!(neighbors.len(), expected.len());
@@ -542,7 +546,7 @@ mod tests {
         );
 
         let neighbors = fixture.reader.get_3x3(
-            &ArrayIndex { i: 1, j: 1 },
+            &ArrayIndex::new_ij(1, 1),
             &NoOpMaterializer {
                 has_hard_barriers: true,
             },
@@ -560,7 +564,7 @@ mod tests {
             vec![false; 9],
             vec![false; 9],
         );
-        let index = ArrayIndex { i: 1, j: 1 };
+        let index = ArrayIndex::new_ij(1, 1);
 
         let (i_range, j_range, subset) = fixture.reader.neighborhood_subset(&index);
         let raw_costs = fixture
@@ -591,10 +595,10 @@ mod tests {
         assert_eq!(
             neighbors,
             vec![
-                (ArrayIndex { i: 0, j: 0 }, 3.0 * SQRT_2),
-                (ArrayIndex { i: 0, j: 2 }, 4.0 * SQRT_2),
-                (ArrayIndex { i: 2, j: 0 }, 6.0 * SQRT_2),
-                (ArrayIndex { i: 2, j: 2 }, 7.0 * SQRT_2),
+                (ArrayIndex::new_ij(0, 0), 3.0 * SQRT_2),
+                (ArrayIndex::new_ij(0, 2), 4.0 * SQRT_2),
+                (ArrayIndex::new_ij(2, 0), 6.0 * SQRT_2),
+                (ArrayIndex::new_ij(2, 2), 7.0 * SQRT_2),
             ]
         );
     }
@@ -610,14 +614,14 @@ mod tests {
         );
 
         let retry_zero = fixture.reader.get_3x3_soft_barrier_cells(
-            &ArrayIndex { i: 1, j: 1 },
+            &ArrayIndex::new_ij(1, 1),
             0,
             &NoOpMaterializer {
                 has_hard_barriers: false,
             },
         );
         let retry_one = fixture.reader.get_3x3_soft_barrier_cells(
-            &ArrayIndex { i: 1, j: 1 },
+            &ArrayIndex::new_ij(1, 1),
             1,
             &NoOpMaterializer {
                 has_hard_barriers: false,
@@ -626,7 +630,7 @@ mod tests {
 
         assert_eq!(
             retry_zero,
-            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 2, j: 0 }]
+            vec![ArrayIndex::new_ij(0, 1), ArrayIndex::new_ij(2, 0)]
         );
         assert_eq!(
             retry_one,
