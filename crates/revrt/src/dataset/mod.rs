@@ -54,8 +54,8 @@ pub(super) struct Dataset {
     derived_data_writer: DerivedDataWriter,
     /// Reader responsible for cached neighborhood access to derived data.
     neighborhood_reader: NeighborhoodReader,
-    /// Shape of the source routing grid as `(rows, cols)`.
-    pub(super) grid_shape: (u64, u64),
+    /// Shape of the source routing grid as `(rows, cols, options)`.
+    pub(super) grid_shape: (u64, u64, u32),
 }
 
 impl Dataset {

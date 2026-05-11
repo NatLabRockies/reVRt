@@ -278,8 +278,8 @@ impl NeighborhoodReader {
     ///
     /// # Returns
     /// The routing grid dimensions recorded when the reader was opened.
-    pub(super) fn grid_shape(&self) -> (u64, u64) {
-        (self.grid_nrows, self.grid_ncols)
+    pub(super) fn grid_shape(&self) -> (u64, u64, u32) {
+        (self.grid_nrows, self.grid_ncols, self.grid_noptions)
     }
 
     /// Build the row and column ranges for a clipped 3x3 neighborhood.
@@ -301,9 +301,10 @@ impl NeighborhoodReader {
         std::ops::Range<u64>,
         zarrs::array_subset::ArraySubset,
     ) {
-        let &ArrayIndex { i, j } = index;
+        let &ArrayIndex { i, j, option } = index;
         debug_assert!(self.grid_nrows > 0);
         debug_assert!(self.grid_ncols > 0);
+        debug_assert!(option < self.grid_noptions);
 
         let max_i = self.grid_nrows - 1;
         let max_j = self.grid_ncols - 1;

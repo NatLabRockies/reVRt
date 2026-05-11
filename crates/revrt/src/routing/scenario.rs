@@ -167,8 +167,8 @@ impl Scenario {
     /// Return the scenario grid dimensions.
     ///
     /// # Returns
-    /// Tuple of `(rows, cols)` describing the routing grid shape.
-    pub(super) fn grid_shape(&self) -> (u64, u64) {
+    /// Tuple of `(rows, cols, options)` describing the routing grid shape.
+    pub(super) fn grid_shape(&self) -> (u64, u64, u32) {
         self.dataset.grid_shape
     }
 }

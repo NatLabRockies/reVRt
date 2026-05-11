@@ -122,7 +122,7 @@ impl Algorithm {
         goals: &[ArrayIndex],
         successors: FN,
         success: FS,
-        grid_shape: (u64, u64),
+        grid_shape: (u64, u64, u32),
     ) -> Option<Solution<ArrayIndex, f32>>
     //) -> Option<Solution<I, C>>
     where

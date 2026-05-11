@@ -54,7 +54,7 @@ impl FrontierOnlySearchState {
     pub(crate) fn new(
         start: &ArrayIndex,
         memory_budget_bytes: u64,
-        grid_shape: (u64, u64),
+        grid_shape: (u64, u64, u32),
     ) -> Option<Self> {
         Self::new_many(std::slice::from_ref(start), memory_budget_bytes, grid_shape)
     }
@@ -62,7 +62,7 @@ impl FrontierOnlySearchState {
     pub(crate) fn new_many(
         starts: &[ArrayIndex],
         memory_budget_bytes: u64,
-        grid_shape: (u64, u64),
+        grid_shape: (u64, u64, u32),
     ) -> Option<Self> {
         let grid = GridIndexer::new(grid_shape.0, grid_shape.1)?;
 
@@ -328,7 +328,7 @@ impl BidirectionalSearchState {
         start: &ArrayIndex,
         goals: &[ArrayIndex],
         memory_budget_bytes: u64,
-        grid_shape: (u64, u64),
+        grid_shape: (u64, u64, u32),
     ) -> Option<Self> {
         let per_direction_budget = (memory_budget_bytes / 2).max(1);
 

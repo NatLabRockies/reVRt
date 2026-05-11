@@ -18,7 +18,7 @@ pub(super) fn long_range_astar<C, FN, IN, FS>(
     mut successors: FN,
     mut success: FS,
     memory_budget_bytes: u64,
-    grid_shape: (u64, u64),
+    grid_shape: (u64, u64, u32),
 ) -> Option<(Vec<ArrayIndex>, C)>
 where
     C: Zero + Ord + Copy,
@@ -74,7 +74,7 @@ pub(super) fn long_range_dijkstra<C, FN, IN, FS>(
     mut successors: FN,
     mut success: FS,
     memory_budget_bytes: u64,
-    grid_shape: (u64, u64),
+    grid_shape: (u64, u64, u32),
 ) -> Option<(Vec<ArrayIndex>, C)>
 where
     C: Zero + Ord + Copy,
@@ -112,7 +112,7 @@ pub(super) fn bidirectional_long_range_dijkstra<C, FN, IN>(
     goals: &[ArrayIndex],
     successors: FN,
     memory_budget_bytes: u64,
-    grid_shape: (u64, u64),
+    grid_shape: (u64, u64, u32),
 ) -> Option<(Vec<ArrayIndex>, C)>
 where
     C: Zero + Ord + Copy,
