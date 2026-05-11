@@ -220,30 +220,30 @@ mod tests {
         .unwrap();
         let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
 
-        let start = ArrayIndex { i: 1, j: 1 };
+        let start = ArrayIndex::new_ij(1, 1);
         let initial_successors = scenario.successors_for_attempt(&start, 0);
         let relaxed_successors = scenario.successors_for_attempt(&start, 1);
 
         assert!(
             !initial_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
         assert!(
             !initial_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
 
         assert!(
             !relaxed_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
         assert!(
             relaxed_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
     }
 
@@ -277,7 +277,7 @@ mod tests {
         .unwrap();
         let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
 
-        let successors = scenario.successors_for_attempt(&ArrayIndex { i: 1, j: 1 }, 0);
+        let successors = scenario.successors_for_attempt(&ArrayIndex::new_ij(1, 1), 0);
 
         assert!(successors.is_empty());
     }
