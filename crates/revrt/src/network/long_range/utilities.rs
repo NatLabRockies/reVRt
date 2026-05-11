@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn grid_indexer_round_trip() {
-        let grid = GridIndexer::new(7, 9).unwrap();
+        let grid = GridIndexer::new(7, 9, 1).unwrap();
         let sample = [
             ArrayIndex::new_ij(0, 0),
             ArrayIndex::new_ij(1, 4),
@@ -97,15 +97,15 @@ mod tests {
 
     #[test]
     fn grid_indexer_rejects_zero_dimensions_and_overflow() {
-        assert!(GridIndexer::new(0, 4).is_none());
-        assert!(GridIndexer::new(4, 0).is_none());
-        assert!(GridIndexer::new(0, 0).is_none());
-        assert!(GridIndexer::new(u64::MAX, 2).is_none());
+        assert!(GridIndexer::new(0, 4, 1).is_none());
+        assert!(GridIndexer::new(4, 0, 1).is_none());
+        assert!(GridIndexer::new(0, 0, 1).is_none());
+        assert!(GridIndexer::new(u64::MAX, 2, 1).is_none());
     }
 
     #[test]
     fn grid_indexer_slot_of_rejects_out_of_bounds_indices() {
-        let grid = GridIndexer::new(3, 4).unwrap();
+        let grid = GridIndexer::new(3, 4, 1).unwrap();
 
         assert_eq!(grid.slot_of(&ArrayIndex::new_ij(0, 0)), Some(0));
         assert_eq!(grid.slot_of(&ArrayIndex::new_ij(2, 3)), Some(11));
@@ -116,9 +116,9 @@ mod tests {
 
     #[test]
     fn grid_indexer_finalized_bits_size_matches_cell_count() {
-        let single = GridIndexer::new(1, 1).unwrap();
-        let full_byte = GridIndexer::new(2, 4).unwrap();
-        let partial_byte = GridIndexer::new(3, 3).unwrap();
+        let single = GridIndexer::new(1, 1, 1).unwrap();
+        let full_byte = GridIndexer::new(2, 4, 1).unwrap();
+        let partial_byte = GridIndexer::new(3, 3, 1).unwrap();
 
         assert_eq!(single.new_finalized_bits().unwrap().bits.len(), 1);
         assert_eq!(full_byte.new_finalized_bits().unwrap().bits.len(), 1);

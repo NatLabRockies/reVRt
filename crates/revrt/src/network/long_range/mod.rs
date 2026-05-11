@@ -64,7 +64,7 @@ impl FrontierOnlySearchState {
         memory_budget_bytes: u64,
         grid_shape: (u64, u64, u32),
     ) -> Option<Self> {
-        let grid = GridIndexer::new(grid_shape.0, grid_shape.1)?;
+        let grid = GridIndexer::new(grid_shape.0, grid_shape.1, grid_shape.2)?;
 
         let mut state = Self {
             grid,
