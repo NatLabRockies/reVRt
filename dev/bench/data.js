@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778366161875,
+  "lastUpdate": 1778603614029,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -9659,6 +9659,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 446854719,
             "range": "± 3808571",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7fb8a9c386b8fd170fc51b13fd83c5bd7ab23a9b",
+          "message": "Build(deps): Bump benchmark-action/github-action-benchmark (#268)\n\nBumps [benchmark-action/github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark) from 1.22.0 to 1.22.1.\n- [Release notes](https://github.com/benchmark-action/github-action-benchmark/releases)\n- [Changelog](https://github.com/benchmark-action/github-action-benchmark/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/benchmark-action/github-action-benchmark/compare/a60cea5bc7b49e15c1f58f411161f99e0df48372...52576c92bccf6ac60c8223ec7eb2565637cae9ba)\n\n---\nupdated-dependencies:\n- dependency-name: benchmark-action/github-action-benchmark\n  dependency-version: 1.22.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-12T09:43:01-06:00",
+          "tree_id": "9209cf5ee4d8a8937f1cd6ae56fd8521d59ad1ed",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/7fb8a9c386b8fd170fc51b13fd83c5bd7ab23a9b"
+        },
+        "date": 1778603613054,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 93151663,
+            "range": "± 1091180",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 104090771,
+            "range": "± 1116192",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 135298057,
+            "range": "± 2738973",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 203578413,
+            "range": "± 2698439",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 797856687,
+            "range": "± 12551778",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 152448430,
+            "range": "± 3063614",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 159216205,
+            "range": "± 700896",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 176746833,
+            "range": "± 1484132",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 235853416,
+            "range": "± 2063679",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 456658549,
+            "range": "± 4603668",
             "unit": "ns/iter"
           }
         ]
