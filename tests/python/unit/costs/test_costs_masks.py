@@ -2,10 +2,12 @@
 
 from pathlib import Path
 
+import dask.array as da
 import pytest
 import numpy as np
 import geopandas as gpd
 import rioxarray
+import xarray as xr
 from shapely.geometry import box
 from shapely.ops import unary_union
 from rasterio.enums import Resampling
@@ -294,6 +296,39 @@ def test_load_resets_cached_combined_masks(tmp_path):
             ]
         ),
     )
+
+
+def test_load_mask_lazy_dask_binary_mask(tmp_path, monkeypatch):
+    """Test _load_mask accepts lazy Dask-backed binary mask data"""
+    mask_fp = tmp_path / Masks.LAND_MASK_FNAME
+    mask_fp.touch()
+
+    masks = Masks(
+        shape=(2, 2),
+        crs="EPSG:5070",
+        transform=Affine.identity(),
+        masks_dir=tmp_path,
+    )
+
+    raster = xr.DataArray(
+        da.from_array(
+            np.array([[0, 1], [1, 0]], dtype=np.uint8),
+            chunks=(1, 1),
+        ),
+        dims=("y", "x"),
+        name="reproject-test",
+    )
+
+    monkeypatch.setattr(
+        "revrt.costs.masks.load_data_using_layer_file_profile",
+        lambda *_args, **_kwargs: raster,
+    )
+
+    loaded_mask = masks._load_mask(
+        Masks.LAND_MASK_FNAME, tmp_path / "layer_file.zarr", validate=True
+    )
+
+    assert np.array_equal(loaded_mask, np.array([[0, 1], [1, 0]], dtype=bool))
 
 
 def test_loading_masks_with_different_crs(tmp_path):

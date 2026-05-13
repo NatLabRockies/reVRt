@@ -191,7 +191,7 @@ class Masks:
         self._dry_plus_mask = None
         self._wet_plus_mask = None
 
-    def load(self, layer_fp):
+    def load(self, layer_fp, validate=False):
         """Load the mask layers from GeoTIFFs
 
         Parameters
@@ -200,6 +200,11 @@ class Masks:
             Path to :class:`~revrt.utilities.handlers.LayeredFile` on
             disk for which masks were created. The masks will be of the
             same shape/crs/transform as this file.
+        validate : bool, optional
+            Whether to validate that loaded masks have appropriate
+            values. This breaks the lazy (Dask) loading of the masks, so
+            it is not recommended use if you know your masks are valid.
+            By default, ``False``.
 
         Notes
         -----
@@ -207,15 +212,19 @@ class Masks:
         was run previously. Mask files must be in the current directory.
         """
         logger.debug("Loading masks")
-        self._dry_mask = self._load_mask(self.LAND_MASK_FNAME, layer_fp)
-        self._wet_mask = self._load_mask(self.OFFSHORE_MASK_FNAME, layer_fp)
+        self._dry_mask = self._load_mask(
+            self.LAND_MASK_FNAME, layer_fp, validate
+        )
+        self._wet_mask = self._load_mask(
+            self.OFFSHORE_MASK_FNAME, layer_fp, validate
+        )
         self._landfall_mask = self._load_mask(
-            self.LANDFALL_MASK_FNAME, layer_fp
+            self.LANDFALL_MASK_FNAME, layer_fp, validate
         )
         self._clear_combined_mask_cache()
         logger.debug("Successfully loaded wet, dry, and landfall masks")
 
-    def _load_mask(self, fname, layer_fp):
+    def _load_mask(self, fname, layer_fp, validate=False):
         """Load mask from GeoTIFF with sanity checking"""
         full_fname = self._masks_dir / fname
 
@@ -230,20 +239,24 @@ class Masks:
             layer_fp, full_fname, band_index=0
         )
 
-        if raster.max() != 1:  # pragma: no cover
-            msg = (
-                f"Maximum value in mask file {fname} is {raster.max()} but"
-                " should be 1. Mask file appears to be corrupt. Please "
-                "recreate it."
-            )
-            raise revrtValueError(msg)
+        if validate:
+            raster_max = raster.max().compute().item()
+            raster_min = raster.min().compute().item()
 
-        if raster.min() != 0:  # pragma: no cover
-            msg = (
-                f"Minimum value in mask file {fname} is {raster.min()} but"
-                " should be 0. Mask file appears to be corrupt. Please "
-                "recreate it."
-            )
-            raise revrtValueError(msg)
+            if raster_max != 1:  # pragma: no cover
+                msg = (
+                    f"Maximum value in mask file {fname} is {raster_max} but"
+                    " should be 1. Mask file appears to be corrupt. Please "
+                    "recreate it."
+                )
+                raise revrtValueError(msg)
+
+            if raster_min != 0:  # pragma: no cover
+                msg = (
+                    f"Minimum value in mask file {fname} is {raster_min} but"
+                    " should be 0. Mask file appears to be corrupt. Please "
+                    "recreate it."
+                )
+                raise revrtValueError(msg)
 
         return raster == 1
