@@ -239,6 +239,63 @@ def test_loading_basic_masks(tmp_path):
     assert new_masks.wet_plus_mask.dtype == bool
 
 
+def test_load_resets_cached_combined_masks(tmp_path):
+    """Test load refreshes cached combined masks from existing files"""
+    land_mask_fp = tmp_path / "test_basic_shape_mask.gpkg"
+    layer_file_fp = tmp_path / "test_masks_layer_file.zarr"
+    basic_shape = gpd.GeoDataFrame(
+        geometry=[unary_union([box(0, -10, 10, 0), box(5, 0, 10, 5)])],
+        crs="ESRI:102008",
+    )
+    basic_shape.to_file(land_mask_fp, driver="GPKG")
+
+    masks = Masks(
+        shape=(5, 6),
+        crs="ESRI:102008",
+        transform=Affine(5.0, 0.0, -12.5, 0.0, -5.0, 12.5),
+        masks_dir=tmp_path,
+    )
+
+    masks._dry_mask = np.zeros((5, 6), dtype=bool)
+    masks._wet_mask = np.zeros((5, 6), dtype=bool)
+    masks._landfall_mask = np.zeros((5, 6), dtype=bool)
+
+    assert not masks.dry_plus_mask.any()
+    assert not masks.wet_plus_mask.any()
+
+    masks.create(land_mask_fp, save_tiff=True, reproject_vector=False)
+
+    lf = LayeredFile(layer_file_fp)
+    lf.create_new(tmp_path / Masks.LANDFALL_MASK_FNAME)
+
+    masks.load(layer_file_fp)
+
+    assert np.allclose(
+        masks.dry_plus_mask,
+        np.array(
+            [
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 0],
+                [0, 0, 1, 1, 1, 0],
+                [0, 0, 1, 1, 1, 0],
+                [0, 0, 1, 1, 1, 0],
+            ]
+        ),
+    )
+    assert np.allclose(
+        masks.wet_plus_mask,
+        np.array(
+            [
+                [1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 0, 1, 1],
+                [1, 1, 1, 1, 1, 1],
+            ]
+        ),
+    )
+
+
 def test_loading_masks_with_different_crs(tmp_path):
     """Test loading masks when mask files use a different CRS"""
     land_mask_fp = tmp_path / "test_basic_shape_mask.gpkg"

@@ -160,6 +160,7 @@ class Masks:
         # XOR landfall and raw land to get all land cells except
         # landfall cells
         self._dry_mask = np.logical_xor(self.landfall_mask, raw_land_mask)
+        self._clear_combined_mask_cache()
 
         logger.debug("Created all masks")
 
@@ -185,6 +186,11 @@ class Masks:
             lock=lock,
         )
 
+    def _clear_combined_mask_cache(self):
+        """Clear cached masks derived from base mask layers"""
+        self._dry_plus_mask = None
+        self._wet_plus_mask = None
+
     def load(self, layer_fp):
         """Load the mask layers from GeoTIFFs
 
@@ -206,6 +212,7 @@ class Masks:
         self._landfall_mask = self._load_mask(
             self.LANDFALL_MASK_FNAME, layer_fp
         )
+        self._clear_combined_mask_cache()
         logger.debug("Successfully loaded wet, dry, and landfall masks")
 
     def _load_mask(self, fname, layer_fp):
