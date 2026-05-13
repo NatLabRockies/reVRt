@@ -3,6 +3,7 @@
 import shutil
 import psutil
 import logging
+import contextlib
 from pathlib import Path
 from warnings import warn
 
@@ -633,6 +634,10 @@ def _crs_match(first_crs, second_crs):
     """Return whether two CRS definitions are semantically equivalent"""
     if first_crs is None or second_crs is None:
         return first_crs == second_crs
+
+    with contextlib.suppress(AttributeError):
+        if first_crs.equals(second_crs, ignore_axis_order=True):
+            return True
 
     first_crs = CRS.from_user_input(first_crs)
     second_crs = CRS.from_user_input(second_crs)
