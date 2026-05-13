@@ -21,7 +21,7 @@ from revrt.warn import revrtWarning
 
 logger = logging.getLogger(__name__)
 TIFF_EXTENSIONS = {".tif", ".tiff"}
-SHP_EXTENSIONS = {".shp", ".gpkg"}
+SHP_EXTENSIONS = {".shp", ".gpkg", ".geojson"}
 
 
 class LayerCreator(BaseLayerCreator):
