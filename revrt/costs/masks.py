@@ -203,8 +203,8 @@ class Masks:
         validate : bool, optional
             Whether to validate that loaded masks have appropriate
             values. This breaks the lazy (Dask) loading of the masks, so
-            it is not recommended use if you know your masks are valid.
-            By default, ``False``.
+            it is not recommended to use this if you know your masks are
+            valid. By default, ``False``.
 
         Notes
         -----

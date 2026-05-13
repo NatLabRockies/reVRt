@@ -159,8 +159,8 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     validate_masks : bool, optional
         Whether to validate that any loaded masks have appropriate
         values. This breaks the lazy (Dask) loading of the masks, so it
-        is not recommended use if you know your masks are valid.
-        By default, ``False``.
+        it is not recommended to use this if you know your masks are
+        valid. By default, ``False``.
     max_workers : int, optional
         Number of parallel workers to use for file creation. If ``None``
         or >1, processing is performed in parallel using Dask.
