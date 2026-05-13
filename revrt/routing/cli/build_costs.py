@@ -15,6 +15,16 @@ logger = logging.getLogger(__name__)
 def build_routing_layer(lcp_config_fp, out_dir, polarity=None, voltage=None):
     """Build out the routing layers used by reVRt
 
+    Given an LCP config file, build out the routing layers used by
+    ``reVRt``. The routing layers include the aggregated cost layer and
+    the final routing layer that is used for computing routes. The
+    layers that are created and added to the file are determined based
+    on the input config file. The config file can specify three types of
+    actions: building custom layers, building dry cost layers, and
+    merging friction and barriers. At least one of these actions must be
+    specified in the config file. See the documentation for more details
+    on each type of action.
+
     Parameters
     ----------
     lcp_config_fp : path-like

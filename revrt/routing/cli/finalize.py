@@ -352,6 +352,12 @@ class RoutePostProcessor:
     def process(self):
         """Merge and post-process routes files into a single file
 
+        This function collects together multiple LCP routing output
+        files into a single file and applies any specified
+        post-processing steps, which include simplifying geometries,
+        applying length multipliers, applying a minimum length floor,
+        and merging in transmission feature attributes.
+
         Raises
         ------
         revrtFileNotFoundError

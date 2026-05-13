@@ -40,6 +40,17 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
 ):
     """Create a route table mapping points to nearest features
 
+    This table is used as an input to the routing step, which computes
+    the least cost path from each point to its mapped feature. The
+    points can be defined by an input csv file or generated from a given
+    reV supply curve resolution. The features are defined by an input
+    vector file. The points can be optionally clipped to regions defined
+    by an input vector file, which limits the features they can be
+    mapped to. The output route table contains the row and column index
+    of the point (in the cost raster) and the ID of the feature it maps
+    to. The mapped features are also output as a separate file that
+    contains the same feature IDs for linking to the route table.
+
     Parameters
     ----------
     cost_fpath : path-like

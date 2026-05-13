@@ -32,6 +32,8 @@ logger = logging.getLogger(__name__)
 def layers_from_file(fp, _out_layer_dir, layers=None, profile_kwargs=None):
     """Extract layers from a layered file on disk
 
+    Layers are output as individual GeoTIFF files.
+
     Parameters
     ----------
     fp : path-like

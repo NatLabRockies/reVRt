@@ -37,6 +37,14 @@ def build_masks(
 ):
     """Build masks from land vector file
 
+    Masks are used in the cost layer creation step to determine where
+    costs should be applied (e.g. wet vs dry). The land mask is the base
+    mask that is created by rasterizing the input land vector file. The
+    landfall mask is derived from the land mask and is a one pixel width
+    line at the shore. The offshore mask is derived from the land mask
+    and is the inverse of the land mask (i.e. all non-land cells are
+    offshore).
+
     Parameters
     ----------
     land_mask_shp_fp : path-like
@@ -91,11 +99,22 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     layers=None,
     dry_costs=None,
     merge_friction_and_barriers=None,
+    validate_masks=False,
     max_workers=1,
     memory_limit_per_worker="auto",
     create_kwargs=None,
 ):
     """Create costs, barriers, and frictions from a config file
+
+    This function creates cost layers file that is ultimately used to
+    compute routes between points. The layers that are created and added
+    to the file are determined based on the input config file. If the
+    layered file does not already exist, it will be created based on the
+    provided template file. The config file can specify three types of
+    actions: building custom layers, building dry cost layers, and
+    merging friction and barriers. At least one of these actions must be
+    specified in the config file. See the documentation for more details
+    on each type of action.
 
     You can re-run this function on an existing file to add new layers
     without overwriting existing layers or needing to change your
@@ -137,6 +156,11 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
         the layered costs file. At least one of `layers`, `dry_costs`,
         or `merge_friction_and_barriers` must be defined.
         By default, ``None``
+    validate_masks : bool, optional
+        Whether to validate that any loaded masks have appropriate
+        values. This breaks the lazy (Dask) loading of the masks, so it
+        is not recommended use if you know your masks are valid.
+        By default, ``False``.
     max_workers : int, optional
         Number of parallel workers to use for file creation. If ``None``
         or >1, processing is performed in parallel using Dask.
@@ -190,7 +214,7 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
             config.routing_file, config.template_file, create_kwargs
         )
 
-        masks = _load_masks(config, lf_handler)
+        masks = _load_masks(config, lf_handler, validate_masks=validate_masks)
 
         builder = LayerCreator(
             lf_handler,
@@ -237,7 +261,7 @@ def _create_lf_if_not_exists(lf_fp, template_file, create_kwargs):
     return lf_handler
 
 
-def _load_masks(config, lf_handler):
+def _load_masks(config, lf_handler, validate_masks=False):
     """Load masks based on config file"""
     masks = Masks(
         shape=lf_handler.shape,
@@ -253,7 +277,7 @@ def _load_masks(config, lf_handler):
         lc.extent != ALL for bc in build_configs for lc in bc.values()
     )
     if need_masks:
-        masks.load(lf_handler.fp)
+        masks.load(lf_handler.fp, validate_masks)
 
     return masks
 
