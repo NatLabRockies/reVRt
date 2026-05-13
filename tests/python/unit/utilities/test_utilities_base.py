@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 import xarray as xr
 import geopandas as gpd
+from rasterio.crs import CRS
 from shapely.geometry import box, LineString, Point
 
 from revrt.utilities import (
@@ -290,6 +291,44 @@ def test_check_geotiff_equivalent_crs_wkt():
         'AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],'
         'AXIS["Northing",NORTH]]'
     )
+    assert _crs_match(layered_file_crs, geotiff_crs)
+
+
+def test_check_geotiff_equivalent_rasterio_crs_roundtrip():
+    """Test CRS matching accepts rasterio round-trip differences"""
+    layered_file_crs = CRS.from_wkt(
+        'PROJCS["unknown",GEOGCS["unknown",'
+        'DATUM["Unknown_based_on_GRS80_ellipsoid",'
+        'SPHEROID["GRS 1980",6378137,298.257222101004,'
+        'AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0]],'
+        'PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,'
+        'AUTHORITY["EPSG","9122"]]],'
+        'PROJECTION["Transverse_Mercator"],'
+        'PARAMETER["latitude_of_origin",41.0833333333333],'
+        'PARAMETER["central_meridian",-71.5],'
+        'PARAMETER["scale_factor",0.99999375],'
+        'PARAMETER["false_easting",100000],'
+        'PARAMETER["false_northing",0],UNIT["metre",1,'
+        'AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],'
+        'AXIS["Northing",NORTH]]'
+    )
+    geotiff_crs = CRS.from_wkt(
+        'PROJCS["unknown",GEOGCS["unknown",'
+        'DATUM["Unknown_based_on_GRS80_ellipsoid",'
+        'SPHEROID["GRS 1980",6378137,298.257222101004,'
+        'AUTHORITY["EPSG","7019"]]],PRIMEM["Greenwich",0],'
+        'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],'
+        'PROJECTION["Transverse_Mercator"],'
+        'PARAMETER["latitude_of_origin",41.0833333333333],'
+        'PARAMETER["central_meridian",-71.5],'
+        'PARAMETER["scale_factor",0.99999375],'
+        'PARAMETER["false_easting",100000],'
+        'PARAMETER["false_northing",0],UNIT["metre",1,'
+        'AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],'
+        'AXIS["Northing",NORTH]]'
+    )
+
+    assert layered_file_crs.equals(geotiff_crs)
     assert _crs_match(layered_file_crs, geotiff_crs)
 
 
