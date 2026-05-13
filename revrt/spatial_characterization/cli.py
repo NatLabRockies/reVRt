@@ -199,9 +199,10 @@ def _route_characterizations_from_config(
         )
         logger.info(
             "Dask client created with %s workers and %s memory limit per "
-            "worker",
+            "worker.\nDashboard link: %s",
             max_workers,
             memory_limit_per_worker,
+            client.dashboard_link,
         )
 
     try:

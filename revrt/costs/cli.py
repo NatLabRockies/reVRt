@@ -202,10 +202,11 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
             dashboard_address=None,
         )
         logger.info(
-            "Dask client created with %s workers and %r memory limit per "
-            "worker",
+            "Dask client created with %s workers and %s memory limit per "
+            "worker.\nDashboard link: %s",
             max_workers,
             memory_limit_per_worker,
+            client.dashboard_link,
         )
         lock = dask.distributed.Lock("rioxarray-write")
 
