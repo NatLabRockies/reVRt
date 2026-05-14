@@ -2,8 +2,6 @@
 
 import logging
 from math import ceil
-from functools import lru_cache
-
 import rasterio
 import geopandas as gpd
 
@@ -11,12 +9,6 @@ from revrt.constants import DEFAULT_DTYPE
 
 
 logger = logging.getLogger(__name__)
-
-
-@lru_cache(maxsize=8)
-def _cached_file_read(fp):
-    """Not sure if this is actually needed, but porting from reVX"""
-    return gpd.read_file(fp)
 
 
 def rasterize_shape_file(
@@ -65,7 +57,7 @@ def rasterize_shape_file(
     array-like
         Rasterized vector data
     """
-    gdf = _cached_file_read(fname)
+    gdf = gpd.read_file(fname)
 
     if dest_crs is not None:
         logger.debug("Reprojecting vector")
