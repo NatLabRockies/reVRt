@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def log_time(message, log_level=logging.INFO, hours=False):
+def log_time(message, log_level=logging.INFO):
     """Log the time taken to execute a block of code
 
     Parameters
@@ -29,11 +29,29 @@ def log_time(message, log_level=logging.INFO, hours=False):
         yield
     finally:
         end_time = time.monotonic()
-        elapsed_time = (end_time - start_time) / 60
-        time_unit = "minute(s)"
-        if hours:
-            elapsed_time /= 60
-            time_unit = "hour(s)"
-
-        msg = f"{message} completed in {elapsed_time:.2f} {time_unit}"
+        elapsed_time = elapsed_time_as_str(end_time - start_time)
+        msg = f"{message} completed in {elapsed_time}"
         logger.log(log_level, msg)
+
+
+def elapsed_time_as_str(seconds_elapsed):
+    """Format elapsed time into human readable string
+
+    Parameters
+    ----------
+    seconds_elapsed : int
+        Number of seconds that should be represented in string form.
+
+    Returns
+    -------
+    str
+        Human-readable string representing the number of elapsed
+        seconds.
+    """
+    days, seconds = divmod(int(seconds_elapsed), 24 * 3600)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    time_str = f"{hours:d}:{minutes:02d}:{seconds:02d}"
+    if days:
+        time_str = f"{days:,d} day{'s' if abs(days) != 1 else ''}, {time_str}"
+    return time_str

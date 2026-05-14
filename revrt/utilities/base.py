@@ -563,29 +563,6 @@ def log_mem(log_level="DEBUG"):
     return msg
 
 
-def elapsed_time_as_str(seconds_elapsed):
-    """Format elapsed time into human readable string
-
-    Parameters
-    ----------
-    seconds_elapsed : int
-        Number of seconds that should be represented in string form.
-
-    Returns
-    -------
-    str
-        Human-readable string representing the number of elapsed
-        seconds.
-    """
-    days, seconds = divmod(int(seconds_elapsed), 24 * 3600)
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    time_str = f"{hours:d}:{minutes:02d}:{seconds:02d}"
-    if days:
-        time_str = f"{days:,d} day{'s' if abs(days) != 1 else ''}, {time_str}"
-    return time_str
-
-
 def features_to_route_table(features):
     """Convert features GDF into route start/end point table
 

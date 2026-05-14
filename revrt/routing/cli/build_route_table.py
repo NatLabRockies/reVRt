@@ -1,6 +1,5 @@
 """reVRt build route table to features CLI command"""
 
-import time
 import logging
 from pathlib import Path
 from warnings import warn
@@ -15,6 +14,7 @@ from revrt.routing.utilities import (
     make_rev_sc_points,
     points_csv_to_geo_dataframe,
 )
+from revrt.utilities.timing import log_time
 from revrt.exceptions import revrtValueError
 from revrt.warn import revrtWarning
 
@@ -133,57 +133,55 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     list of path-like
         Path to route table output file and mapped feature output file.
     """
-    start_time = time.time()
+    with log_time("Building point-to-feature routing table"):
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+        feature_out_fp, route_table_out_fp = _check_output_filepaths(
+            out_dir, feature_out_fp, route_table_out_fp
+        )
 
-    feature_out_fp, route_table_out_fp = _check_output_filepaths(
-        out_dir, feature_out_fp, route_table_out_fp
-    )
+        logger.debug("Cost input: %r", cost_fpath)
+        logger.debug("Features input: %r", features_fpath)
+        logger.debug("Output directory: %r", out_dir)
 
-    logger.debug("Cost input: %r", cost_fpath)
-    logger.debug("Features input: %r", features_fpath)
-    logger.debug("Output directory: %r", out_dir)
+        regions = None
+        if regions_fpath is not None:
+            regions = gpd.read_file(regions_fpath)
 
-    regions = None
-    if regions_fpath is not None:
-        regions = gpd.read_file(regions_fpath)
+        with xr.open_dataset(
+            cost_fpath, consolidated=False, engine="zarr"
+        ) as ds:
+            crs = ds.rio.crs
+            cost_shape = ds.rio.height, ds.rio.width
+            transform = ds.rio.transform()
 
-    with xr.open_dataset(cost_fpath, consolidated=False, engine="zarr") as ds:
-        crs = ds.rio.crs
-        cost_shape = ds.rio.height, ds.rio.width
-        transform = ds.rio.transform()
+        points = _make_points(
+            crs,
+            transform,
+            cost_shape,
+            points_fpath=points_fpath,
+            resolution=resolution,
+        )
 
-    points = _make_points(
-        crs,
-        transform,
-        cost_shape,
-        points_fpath=points_fpath,
-        resolution=resolution,
-    )
-
-    mapper = PointToFeatureMapper(
-        crs,
-        features_fpath,
-        regions,
-        region_identifier_column=region_identifier_column,
-        connection_identifier_column=connection_identifier_column,
-    )
-    route_table = mapper.map_points(
-        points,
-        feature_out_fp,
-        radius=radius,
-        expand_radius=expand_radius,
-        clip_points_to_regions=clip_points_to_regions,
-        batch_size=batch_size,
-    )
-    route_table.drop(columns="geometry").to_csv(
-        route_table_out_fp, index=False
-    )
-
-    elapsed_time = (time.time() - start_time) / 60
-    logger.info("Processing took %.2f minutes", elapsed_time)
+        mapper = PointToFeatureMapper(
+            crs,
+            features_fpath,
+            regions,
+            region_identifier_column=region_identifier_column,
+            connection_identifier_column=connection_identifier_column,
+        )
+        route_table = mapper.map_points(
+            points,
+            feature_out_fp,
+            radius=radius,
+            expand_radius=expand_radius,
+            clip_points_to_regions=clip_points_to_regions,
+            batch_size=batch_size,
+        )
+        route_table.drop(columns="geometry").to_csv(
+            route_table_out_fp, index=False
+        )
 
     return [str(route_table_out_fp), str(feature_out_fp)]
 

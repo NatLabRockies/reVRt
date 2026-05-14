@@ -2,10 +2,12 @@
 
 import logging
 from math import ceil
+
 import rasterio
 import geopandas as gpd
 
 from revrt.constants import DEFAULT_DTYPE
+from revrt.utilities.timing import log_time
 
 
 logger = logging.getLogger(__name__)
@@ -63,18 +65,18 @@ def rasterize_shape_file(
         logger.debug("Reprojecting vector")
         gdf = gdf.to_crs(crs=dest_crs)
 
-    logger.debug("Rasterizing %s", fname)
-    return rasterize(
-        gdf,
-        width,
-        height,
-        transform,
-        buffer_dist=buffer_dist,
-        all_touched=all_touched,
-        burn_value=burn_value,
-        boundary_only=boundary_only,
-        dtype=dtype,
-    )
+    with log_time(f"Rasterization of {fname}"):
+        return rasterize(
+            gdf,
+            width,
+            height,
+            transform,
+            buffer_dist=buffer_dist,
+            all_touched=all_touched,
+            burn_value=burn_value,
+            boundary_only=boundary_only,
+            dtype=dtype,
+        )
 
 
 def rasterize(
@@ -129,16 +131,17 @@ def rasterize(
         logger.debug("%d features after removing empty features.", len(gdf))
 
     logger.debug("Rasterizing %d shapes", len(gdf))
-    return rasterio.features.rasterize(
-        list(gdf.boundary if boundary_only else gdf.geometry),
-        out_shape=(height, width),
-        fill=0,
-        out=None,
-        transform=transform,
-        all_touched=all_touched,
-        default_value=burn_value,
-        dtype=dtype,
-    )
+    with log_time("Rasterization of shapes"):
+        return rasterio.features.rasterize(
+            list(gdf.boundary if boundary_only else gdf.geometry),
+            out_shape=(height, width),
+            fill=0,
+            out=None,
+            transform=transform,
+            all_touched=all_touched,
+            default_value=burn_value,
+            dtype=dtype,
+        )
 
 
 def integer_dimension_window(bounds, transform):

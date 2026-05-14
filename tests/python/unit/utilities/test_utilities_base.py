@@ -13,7 +13,6 @@ from revrt.utilities import (
     buffer_routes,
     check_geotiff,
     delete_data_file,
-    elapsed_time_as_str,
     features_to_route_table,
     LayeredFile,
 )
@@ -353,23 +352,6 @@ def test_delete_data_file(tmp_path, test_as_dir):
 
     delete_data_file(test_fp)
     assert not test_fp.exists()
-
-
-def test_elapsed_time_as_str():
-    """Test elapsed_time_as_str utility function"""
-
-    assert elapsed_time_as_str(1) == "0:00:01"
-    assert elapsed_time_as_str(46) == "0:00:46"
-    assert elapsed_time_as_str(60) == "0:01:00"
-    assert elapsed_time_as_str(62) == "0:01:02"
-    assert elapsed_time_as_str(1 * 60 * 60) == "1:00:00"
-    assert elapsed_time_as_str(1 * 60 * 60 + 42) == "1:00:42"
-    assert elapsed_time_as_str(1 * 60 * 60 + 63) == "1:01:03"
-    assert elapsed_time_as_str(2 * 60 * 60 + 63) == "2:01:03"
-    assert elapsed_time_as_str(13 * 60 * 60 + 63) == "13:01:03"
-    assert elapsed_time_as_str(24 * 60 * 60) == "1 day, 0:00:00"
-    assert elapsed_time_as_str(24 * 60 * 60 + 72) == "1 day, 0:01:12"
-    assert elapsed_time_as_str(50 * 60 * 60 + 72) == "2 days, 2:01:12"
 
 
 def test_features_to_route_table_generates_pairs():

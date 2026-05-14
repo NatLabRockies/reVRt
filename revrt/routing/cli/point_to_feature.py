@@ -1,6 +1,5 @@
 """reVRt point-to-feature routing CLI command"""
 
-import time
 import logging
 from pathlib import Path
 from warnings import warn
@@ -16,6 +15,7 @@ from revrt.routing.cli.base import (
     split_routes,
     RouteToDefinitionConverter,
 )
+from revrt.utilities.timing import log_time
 from revrt.routing.utilities import map_to_costs
 from revrt.costs.config import parse_config
 from revrt.utilities.raster import integer_dimension_window
@@ -509,58 +509,53 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         Helper function to build a routing table for points mapped to
         features.
     """
+    with log_time("LCP processing"):
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-    start_time = time.time()
+        logger.debug("Tracked layers input: %r", tracked_layers)
+        logger.debug("Transmission config input: %r", transmission_config)
 
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+        transmission_config = parse_config(config=transmission_config)
 
-    logger.debug("Tracked layers input: %r", tracked_layers)
-    logger.debug("Transmission config input: %r", transmission_config)
+        route_points = route_points_subset(
+            route_table_fpath, split_params=_split_params
+        )
+        if len(route_points) == 0:
+            logger.info("No routes to process!")
+            return None
 
-    transmission_config = parse_config(config=transmission_config)
+        out_fp = (
+            out_dir / f"{job_name}.gpkg"
+            if save_paths
+            else out_dir / f"{job_name}.csv"
+        )
 
-    route_points = route_points_subset(
-        route_table_fpath, split_params=_split_params
-    )
-    if len(route_points) == 0:
-        logger.info("No routes to process!")
-        return None
+        routes_to_compute = PointToFeatureRouteDefinitionConverter(
+            cost_fpath=cost_fpath,
+            route_points=route_points,
+            features_fpath=features_fpath,
+            out_fp=out_fp,
+            cost_layers=cost_layers,
+            friction_layers=friction_layers,
+            barrier_layers=barrier_layers,
+            transmission_config=transmission_config,
+            connection_identifier_column=connection_identifier_column,
+        )
 
-    out_fp = (
-        out_dir / f"{job_name}.gpkg"
-        if save_paths
-        else out_dir / f"{job_name}.csv"
-    )
-
-    routes_to_compute = PointToFeatureRouteDefinitionConverter(
-        cost_fpath=cost_fpath,
-        route_points=route_points,
-        features_fpath=features_fpath,
-        out_fp=out_fp,
-        cost_layers=cost_layers,
-        friction_layers=friction_layers,
-        barrier_layers=barrier_layers,
-        transmission_config=transmission_config,
-        connection_identifier_column=connection_identifier_column,
-    )
-
-    run_lcp(
-        cost_fpath,
-        out_fp=out_fp,
-        routes_to_compute=routes_to_compute,
-        job_name=job_name,
-        cost_multiplier_layer=cost_multiplier_layer,
-        cost_multiplier_scalar=cost_multiplier_scalar,
-        tracked_layers=tracked_layers,
-        ignore_invalid_costs=ignore_invalid_costs,
-        user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
-        save_routing_layer=save_routing_layer,
-        algorithm=algorithm,
-    )
-
-    elapsed_time = (time.time() - start_time) / 60
-    logger.info("Processing took %.2f minutes", elapsed_time)
+        run_lcp(
+            cost_fpath,
+            out_fp=out_fp,
+            routes_to_compute=routes_to_compute,
+            job_name=job_name,
+            cost_multiplier_layer=cost_multiplier_layer,
+            cost_multiplier_scalar=cost_multiplier_scalar,
+            tracked_layers=tracked_layers,
+            ignore_invalid_costs=ignore_invalid_costs,
+            user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
+            save_routing_layer=save_routing_layer,
+            algorithm=algorithm,
+        )
 
     return str(out_fp)
 

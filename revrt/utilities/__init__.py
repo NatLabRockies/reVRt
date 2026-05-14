@@ -4,7 +4,6 @@ from .base import (
     buffer_routes,
     check_geotiff,
     delete_data_file,
-    elapsed_time_as_str,
     expand_dim_if_needed,
     file_full_path,
     load_data_using_layer_file_profile,
@@ -20,5 +19,5 @@ from .handlers import (
     num_feats_in_gpkg,
     gpkg_crs,
 )
-from .timing import log_time
+from .timing import log_time, elapsed_time_as_str
 from .raster import rasterize, rasterize_shape_file, integer_dimension_window
