@@ -136,7 +136,7 @@ def rasterize(
         gdf = gdf[~gdf.is_empty]  # Negative buffer may result in empty feats
         logger.debug("%d features after removing empty features.", len(gdf))
 
-    logger.debug("Rasterizing shapes")
+    logger.debug("Rasterizing %d shapes", len(gdf))
     return rasterio.features.rasterize(
         list(gdf.boundary if boundary_only else gdf.geometry),
         out_shape=(height, width),
