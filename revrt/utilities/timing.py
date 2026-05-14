@@ -30,7 +30,7 @@ def log_time(message, log_level=logging.INFO):
     finally:
         end_time = time.monotonic()
         elapsed_time = elapsed_time_as_str(end_time - start_time)
-        msg = f"{message} completed in {elapsed_time}"
+        msg = f"{message} executed in {elapsed_time}"
         logger.log(log_level, msg)
 
 

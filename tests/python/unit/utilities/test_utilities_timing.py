@@ -11,10 +11,10 @@ from revrt.utilities import timing, elapsed_time_as_str
 @pytest.mark.parametrize(
     ("end_time", "expected"),
     [
-        (11.0, "routing completed in 0:00:01"),
-        (130.0, "routing completed in 0:02:00"),
-        (7210.0, "routing completed in 2:00:00"),
-        (86482.0, "routing completed in 1 day, 0:01:12"),
+        (11.0, "routing executed in 0:00:01"),
+        (130.0, "routing executed in 0:02:00"),
+        (7210.0, "routing executed in 2:00:00"),
+        (86482.0, "routing executed in 1 day, 0:01:12"),
     ],
 )
 def test_log_time_logs_elapsed_time(caplog, monkeypatch, end_time, expected):
@@ -45,7 +45,7 @@ def test_log_time_uses_requested_log_level(caplog, monkeypatch):
         pass
 
     assert [(record.levelno, record.message) for record in caplog.records] == [
-        (logging.DEBUG, "routing completed in 0:00:01"),
+        (logging.DEBUG, "routing executed in 0:00:01"),
     ]
 
 
@@ -63,7 +63,7 @@ def test_log_time_logs_when_block_raises(caplog, monkeypatch):
     ):
         raise RuntimeError(msg)
 
-    assert caplog.messages == ["routing completed in 0:00:01"]
+    assert caplog.messages == ["routing executed in 0:00:01"]
 
 
 def test_elapsed_time_as_str():
