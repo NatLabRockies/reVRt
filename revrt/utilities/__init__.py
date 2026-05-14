@@ -20,3 +20,5 @@ from .handlers import (
     num_feats_in_gpkg,
     gpkg_crs,
 )
+from .timing import log_time
+from .raster import rasterize, rasterize_shape_file, integer_dimension_window
