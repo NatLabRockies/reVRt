@@ -564,7 +564,7 @@ def log_mem(log_level="DEBUG"):
     return msg
 
 
-def log_array_backend(fname, data, stage):
+def log_array_backend(fname, data, kind):
     """Log backend information for layer data
 
     Parameters
@@ -577,9 +577,9 @@ def log_array_backend(fname, data, stage):
         Dask-backed. Other objects are logged using their concrete type
         name, along with any ``dtype`` and ``shape`` attributes if
         present.
-    stage : str
-        Short label describing the processing stage of the layer, such
-        as ``"processed"`` or ``"lazy reload"``.
+    kind : str
+        Short label describing the kind of the layer, such as
+        ``"processed"`` or ``"lazy reload"``.
     """
     if isinstance(data, xr.DataArray):
         backend = data.data
@@ -602,7 +602,7 @@ def log_array_backend(fname, data, stage):
 
     logger.debug(
         "%s layer %s is %s-backed (%s) with dtype %s, and shape %s",
-        stage,
+        kind,
         fname,
         storage,
         backend_name,
