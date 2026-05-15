@@ -11,7 +11,7 @@ from revrt.routing.cli.base import (
     split_routes,
     RouteToDefinitionConverter,
 )
-from revrt.utilities.timing import log_time
+from revrt.utilities.timing import log_runtime
 from revrt.routing.utilities import map_to_costs
 from revrt.costs.config import parse_config
 
@@ -388,7 +388,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         Compute LCP routes between points and features.
     """
 
-    with log_time("LCP processing"):
+    with log_runtime("LCP processing"):
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
 

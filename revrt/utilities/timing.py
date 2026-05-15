@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def log_time(message, log_level=logging.INFO):
-    """Log the time taken to execute a block of code
+def log_runtime(message, log_level=logging.INFO):
+    """Log the time taken to run a block of code
 
     Parameters
     ----------

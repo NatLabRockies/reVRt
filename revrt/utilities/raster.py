@@ -7,7 +7,7 @@ import rasterio
 import geopandas as gpd
 
 from revrt.constants import DEFAULT_DTYPE
-from revrt.utilities.timing import log_time
+from revrt.utilities.timing import log_runtime
 
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ def rasterize_shape_file(
         logger.debug("Reprojecting vector")
         gdf = gdf.to_crs(crs=dest_crs)
 
-    with log_time(f"Rasterization of {fname}"):
+    with log_runtime(f"Rasterization of {fname}"):
         return rasterize(
             gdf,
             width,
@@ -131,7 +131,7 @@ def rasterize(
         logger.debug("%d features after removing empty features.", len(gdf))
 
     logger.debug("Rasterizing %d shapes", len(gdf))
-    with log_time("Rasterization of shapes"):
+    with log_runtime("Rasterization of shapes"):
         return rasterio.features.rasterize(
             list(gdf.boundary if boundary_only else gdf.geometry),
             out_shape=(height, width),

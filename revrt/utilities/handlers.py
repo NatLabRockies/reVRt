@@ -31,7 +31,7 @@ from revrt.utilities.base import (
     log_mem,
     TRANSFORM_ATOL,
 )
-from revrt.utilities.timing import log_time
+from revrt.utilities.timing import log_runtime
 from revrt.warn import revrtWarning
 
 
@@ -286,7 +286,7 @@ class LayeredFile:
         _validate_template(template_file)
 
         logger.debug("\t- Initializing %s from %s", self.fp, template_file)
-        with log_time(f"Layered file creation ({self.fp})"):
+        with log_runtime(f"Layered file creation ({self.fp})"):
             try:
                 _init_zarr_file_from_template(
                     template_file,
@@ -370,7 +370,7 @@ class LayeredFile:
             raise revrtFileNotFoundError(msg)
 
         logger.info("Writing layer %s to %s", layer_name, self.fp)
-        with log_time(f"Writing layer {layer_name} to {self.fp}"):
+        with log_runtime(f"Writing layer {layer_name} to {self.fp}"):
             self._check_for_existing_layer(layer_name, overwrite)
 
             values = expand_dim_if_needed(values)
@@ -517,7 +517,7 @@ class LayeredFile:
             self.fp,
             geotiff,
         )
-        with log_time(f"Writing GeoTIFF to {geotiff}"):
+        with log_runtime(f"Writing GeoTIFF to {geotiff}"):
             if check_tiff:
                 logger.debug("\t- Checking %s against %s", geotiff, self.fp)
                 check_geotiff(self.fp, geotiff, transform_atol=TRANSFORM_ATOL)

@@ -14,7 +14,7 @@ from revrt.routing.utilities import (
     make_rev_sc_points,
     points_csv_to_geo_dataframe,
 )
-from revrt.utilities.timing import log_time
+from revrt.utilities.timing import log_runtime
 from revrt.exceptions import revrtValueError
 from revrt.warn import revrtWarning
 
@@ -133,7 +133,7 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     list of path-like
         Path to route table output file and mapped feature output file.
     """
-    with log_time("Building point-to-feature routing table"):
+    with log_runtime("Building point-to-feature routing table"):
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
 

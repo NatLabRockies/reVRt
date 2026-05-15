@@ -19,5 +19,5 @@ from .handlers import (
     num_feats_in_gpkg,
     gpkg_crs,
 )
-from .timing import log_time, elapsed_time_as_str
+from .timing import log_runtime, elapsed_time_as_str
 from .raster import rasterize, rasterize_shape_file, integer_dimension_window
