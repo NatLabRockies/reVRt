@@ -19,6 +19,8 @@ from revrt.utilities import (
     LayeredFile,
     load_data_using_layer_file_profile,
     save_data_using_layer_file_profile,
+    dask_performance_report,
+    log_runtime,
 )
 from revrt.exceptions import revrtAttributeError, revrtConfigurationError
 from revrt.warn import revrtWarning
@@ -103,6 +105,7 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     max_workers=1,
     memory_limit_per_worker="auto",
     create_kwargs=None,
+    log_directory=None,
 ):
     """Create costs, barriers, and frictions from a config file
 
@@ -178,6 +181,9 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
         :meth:`~revrt.utilities.handlers.LayeredFile.create_new` when
         creating a new layered file. Do not include ``template_file``;
         it will be ignored. By default, ``None``.
+    log_directory : path-like, optional
+        Directory to save Dask performance reports in. If ``None``, Dask
+        performance reports will not be generated. By default, ``None``.
     """
     config = _validated_config(
         routing_file=routing_file,
@@ -203,36 +209,54 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
         )
         logger.info(
             "Dask client created with %s workers and %s memory limit per "
-            "worker.\nDashboard link: %s",
+            "worker",
             max_workers,
             memory_limit_per_worker,
-            client.dashboard_link,
         )
         lock = dask.distributed.Lock("rioxarray-write")
 
     try:
-        lf_handler = _create_lf_if_not_exists(
-            config.routing_file, config.template_file, create_kwargs
-        )
+        with (
+            dask_performance_report(
+                "build_routing_layers", out_dir=log_directory
+            ),
+            log_runtime("Building routing layers"),
+        ):
+            _build_routing_layers(
+                config,
+                lock,
+                validate_masks=validate_masks,
+                create_kwargs=create_kwargs,
+            )
 
-        masks = _load_masks(config, lf_handler, validate_masks=validate_masks)
-
-        builder = LayerCreator(
-            lf_handler,
-            masks,
-            input_layer_dir=config.input_layer_dir,
-            output_tiff_dir=config.output_tiff_dir,
-        )
-        _build_layers(config, builder, lf_handler, lock=lock)
-
-        if config.dry_costs is not None:
-            _build_dry_costs(config, masks, lf_handler, lock=lock)
-
-        if config.merge_friction_and_barriers is not None:
-            _combine_friction_and_barriers(config, lf_handler, lock=lock)
     finally:
         if client is not None:
             client.close()
+
+
+def _build_routing_layers(
+    config, lock, validate_masks=False, create_kwargs=None
+):
+    """Build routing layers based on config file"""
+    lf_handler = _create_lf_if_not_exists(
+        config.routing_file, config.template_file, create_kwargs
+    )
+
+    masks = _load_masks(config, lf_handler, validate_masks=validate_masks)
+
+    builder = LayerCreator(
+        lf_handler,
+        masks,
+        input_layer_dir=config.input_layer_dir,
+        output_tiff_dir=config.output_tiff_dir,
+    )
+    _build_layers(config, builder, lf_handler, lock=lock)
+
+    if config.dry_costs is not None:
+        _build_dry_costs(config, masks, lf_handler, lock=lock)
+
+    if config.merge_friction_and_barriers is not None:
+        _combine_friction_and_barriers(config, lf_handler, lock=lock)
 
 
 def _validated_config(**config_dict):

@@ -432,7 +432,7 @@ def test_log_array_backend_reports_xarray_storage(
 ):
     """log_array_backend reports backend details for xarray inputs"""
 
-    with caplog.at_level(logging.DEBUG, logger="revrt.utilities.base"):
+    with caplog.at_level(logging.DEBUG, logger="revrt.utilities.monitoring"):
         log_array_backend("test_layer", data, kind="processed")
 
     assert caplog.messages == [

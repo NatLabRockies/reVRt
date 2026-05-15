@@ -1,7 +1,6 @@
 """Base reVRt utilities"""
 
 import shutil
-import psutil
 import logging
 import contextlib
 from pathlib import Path
@@ -12,7 +11,6 @@ import odc.geo.xr
 import pandas as pd
 import numpy as np
 import xarray as xr
-import dask.array as da
 from pyproj import CRS, Transformer
 from rasterio.warp import Resampling
 from shapely.ops import transform as shapely_transform
@@ -535,80 +533,6 @@ def transform_xy(src_crs, dst_crs, x, y):
     transformer = Transformer.from_crs(src_crs, dst_crs, always_xy=True)
     out_x, out_y = transformer.transform(x, y)
     return np.asarray(out_x), np.asarray(out_y)
-
-
-def log_mem(log_level="DEBUG"):
-    """Log the memory usage to the input logger object
-
-    Parameters
-    ----------
-    log_level : str, default="DEBUG"
-        Logging level to use. Can be any valid log level string, such
-        as  DEBUG or INFO for different log levels for this log message.
-        By default, ``"DEBUG"``.
-
-    Returns
-    -------
-    msg : str
-        Memory utilization log message string.
-    """
-    mem = psutil.virtual_memory()
-    msg = (
-        f"Memory utilization is {mem.used / (1024.0**3):.3f} GB "
-        f"out of {mem.total / (1024.0**3):.3f} GB total "
-        f"({mem.used / mem.total:.1%} used)"
-    )
-    log_level = logging.getLevelNamesMapping().get(log_level.upper(), "DEBUG")
-    logger.log(log_level, msg)
-
-    return msg
-
-
-def log_array_backend(fname, data, kind):
-    """Log backend information for layer data
-
-    Parameters
-    ----------
-    fname : str or path-like
-        Layer name or source identifier to include in the log message.
-    data : xarray.DataArray, dask.array.Array, numpy.ndarray, or object
-        Data object to inspect. For xarray inputs, the underlying array
-        backend is checked to determine whether the data are NumPy- or
-        Dask-backed. Other objects are logged using their concrete type
-        name, along with any ``dtype`` and ``shape`` attributes if
-        present.
-    kind : str
-        Short label describing the kind of the layer, such as
-        ``"processed"`` or ``"lazy reload"``.
-    """
-    if isinstance(data, xr.DataArray):
-        backend = data.data
-        backend_name = type(backend).__name__
-        if isinstance(backend, da.Array):
-            storage = "Dask"
-        elif isinstance(backend, np.ndarray):
-            storage = "NumPy"
-        else:
-            storage = backend_name
-    elif isinstance(data, da.Array):
-        storage = "Dask"
-        backend_name = type(data).__name__
-    elif isinstance(data, np.ndarray):
-        storage = "NumPy"
-        backend_name = type(data).__name__
-    else:
-        storage = type(data).__name__
-        backend_name = storage
-
-    logger.debug(
-        "%s layer %s is %s-backed (%s) with dtype %s, and shape %s",
-        kind,
-        fname,
-        storage,
-        backend_name,
-        getattr(data, "dtype", None),
-        getattr(data, "shape", None),
-    )
 
 
 def features_to_route_table(features):

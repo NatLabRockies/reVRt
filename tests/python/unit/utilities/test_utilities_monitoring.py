@@ -1,11 +1,11 @@
-"""Tests for timing utilities"""
+"""Tests for monitoring utilities"""
 
 from pathlib import Path
 import logging
 
 import pytest
 
-from revrt.utilities import timing, elapsed_time_as_str
+from revrt.utilities import monitoring, elapsed_time_as_str
 
 
 @pytest.mark.parametrize(
@@ -23,11 +23,11 @@ def test_log_runtime_logs_elapsed_time(
     """Test that log_runtime logs elapsed time with the formatted duration"""
 
     times = iter([10.0, end_time])
-    monkeypatch.setattr(timing.time, "monotonic", lambda: next(times))
+    monkeypatch.setattr(monitoring.time, "monotonic", lambda: next(times))
 
     with (
-        caplog.at_level(logging.INFO, logger=timing.logger.name),
-        timing.log_runtime("routing"),
+        caplog.at_level(logging.INFO, logger=monitoring.logger.name),
+        monitoring.log_runtime("routing"),
     ):
         pass
 
@@ -38,11 +38,11 @@ def test_log_runtime_uses_requested_log_level(caplog, monkeypatch):
     """Test that log_runtime emits at the requested logging level"""
 
     times = iter([10.0, 11.0])
-    monkeypatch.setattr(timing.time, "monotonic", lambda: next(times))
+    monkeypatch.setattr(monitoring.time, "monotonic", lambda: next(times))
 
     with (
-        caplog.at_level(logging.DEBUG, logger=timing.logger.name),
-        timing.log_runtime("routing", log_level=logging.DEBUG),
+        caplog.at_level(logging.DEBUG, logger=monitoring.logger.name),
+        monitoring.log_runtime("routing", log_level=logging.DEBUG),
     ):
         pass
 
@@ -55,13 +55,13 @@ def test_log_runtime_logs_when_block_raises(caplog, monkeypatch):
     """Test that log_runtime still logs elapsed time if the block raises"""
 
     times = iter([10.0, 11.0])
-    monkeypatch.setattr(timing.time, "monotonic", lambda: next(times))
+    monkeypatch.setattr(monitoring.time, "monotonic", lambda: next(times))
 
     msg = "A test error"
     with (
-        caplog.at_level(logging.INFO, logger=timing.logger.name),
+        caplog.at_level(logging.INFO, logger=monitoring.logger.name),
         pytest.raises(RuntimeError, match=msg),
-        timing.log_runtime("routing"),
+        monitoring.log_runtime("routing"),
     ):
         raise RuntimeError(msg)
 

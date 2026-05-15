@@ -15,8 +15,8 @@ from revrt.utilities import (
     save_data_using_layer_file_profile,
     log_mem,
     log_array_backend,
+    rasterize_shape_file,
 )
-from revrt.utilities.raster import rasterize_shape_file
 from revrt.constants import DEFAULT_DTYPE, ALL, METERS_IN_MILE
 from revrt.exceptions import revrtAttributeError, revrtValueError
 from revrt.warn import revrtWarning

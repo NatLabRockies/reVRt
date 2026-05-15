@@ -14,7 +14,7 @@ from revrt.routing.utilities import (
     make_rev_sc_points,
     points_csv_to_geo_dataframe,
 )
-from revrt.utilities.timing import log_runtime
+from revrt.utilities.monitoring import log_runtime
 from revrt.exceptions import revrtValueError
 from revrt.warn import revrtWarning
 

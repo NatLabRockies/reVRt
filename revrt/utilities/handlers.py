@@ -28,10 +28,9 @@ from revrt.utilities.base import (
     delete_data_file,
     expand_dim_if_needed,
     transform_xy,
-    log_mem,
     TRANSFORM_ATOL,
 )
-from revrt.utilities.timing import log_runtime
+from revrt.utilities.monitoring import log_mem, log_runtime
 from revrt.warn import revrtWarning
 
 

@@ -19,7 +19,7 @@ from shapely.geometry.linestring import LineString
 from revrt import RouteFinder, simplify_using_slopes
 from revrt.models.cost_layers import BarrierLayer
 from revrt.utilities.handlers import IncrementalWriter
-from revrt.utilities.timing import log_runtime
+from revrt.utilities.monitoring import log_runtime
 from revrt.exceptions import (
     revrtKeyError,
     revrtLeastCostPathNotFoundError,

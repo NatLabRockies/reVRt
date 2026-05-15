@@ -11,7 +11,7 @@ from gaps.config import load_config
 from gaps.cli import CLICommandFromFunction
 
 from revrt.spatial_characterization.zonal import ZonalStats
-from revrt.utilities import buffer_routes
+from revrt.utilities import buffer_routes, dask_performance_report, log_runtime
 
 
 logger = logging.getLogger(__name__)
@@ -150,6 +150,7 @@ def _route_characterizations_from_config(
     max_workers=1,
     tag=None,
     memory_limit_per_worker="auto",
+    log_directory=None,
 ):
     """Compute route characterizations/statistics
 
@@ -168,6 +169,9 @@ def _route_characterizations_from_config(
         used *per worker*. If a string giving a number  of bytes (like
         "1GiB"), that amount is used *per worker*. If an int, that
         number of bytes is used *per worker*. By default, ``"auto"``
+    log_directory : path-like, optional
+        Directory to save Dask performance reports in. If ``None``, Dask
+        performance reports will not be generated. By default, ``None``.
     """
     tag = tag or ""
     _stat_kwargs.setdefault("route_fp", _default_route_fp)
@@ -199,20 +203,25 @@ def _route_characterizations_from_config(
         )
         logger.info(
             "Dask client created with %s workers and %s memory limit per "
-            "worker.\nDashboard link: %s",
+            "worker",
             max_workers,
             memory_limit_per_worker,
-            client.dashboard_link,
         )
 
     try:
-        out_data = buffered_route_characterizations(
-            row_widths=_row_widths,
-            row_width_ranges=_row_width_ranges,
-            parallel=parallel,
-            **_stat_kwargs,
-        )
-        out_data.to_csv(out_fp, index=False)
+        with (
+            dask_performance_report(
+                "route_characterizations", out_dir=log_directory
+            ),
+            log_runtime("Characterizing routes"),
+        ):
+            out_data = buffered_route_characterizations(
+                row_widths=_row_widths,
+                row_width_ranges=_row_width_ranges,
+                parallel=parallel,
+                **_stat_kwargs,
+            )
+            out_data.to_csv(out_fp, index=False)
     finally:
         if client is not None:
             client.close()

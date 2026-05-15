@@ -9,7 +9,7 @@ import geopandas as gpd
 from shapely.geometry import box
 
 from revrt.constants import DEFAULT_DTYPE
-from revrt.utilities.timing import log_runtime
+from revrt.utilities.monitoring import log_runtime
 
 
 logger = logging.getLogger(__name__)
