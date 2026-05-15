@@ -12,6 +12,7 @@ import odc.geo.xr
 import pandas as pd
 import numpy as np
 import xarray as xr
+import dask.array as da
 from pyproj import CRS, Transformer
 from rasterio.warp import Resampling
 from shapely.ops import transform as shapely_transform
@@ -561,6 +562,53 @@ def log_mem(log_level="DEBUG"):
     logger.log(log_level, msg)
 
     return msg
+
+
+def log_array_backend(fname, data, stage):
+    """Log backend information for layer data
+
+    Parameters
+    ----------
+    fname : str or path-like
+        Layer name or source identifier to include in the log message.
+    data : xarray.DataArray, dask.array.Array, numpy.ndarray, or object
+        Data object to inspect. For xarray inputs, the underlying array
+        backend is checked to determine whether the data are NumPy- or
+        Dask-backed. Other objects are logged using their concrete type
+        name, along with any ``dtype`` and ``shape`` attributes if
+        present.
+    stage : str
+        Short label describing the processing stage of the layer, such
+        as ``"processed"`` or ``"lazy reload"``.
+    """
+    if isinstance(data, xr.DataArray):
+        backend = data.data
+        backend_name = type(backend).__name__
+        if isinstance(backend, da.Array):
+            storage = "Dask"
+        elif isinstance(backend, np.ndarray):
+            storage = "NumPy"
+        else:
+            storage = backend_name
+    elif isinstance(data, da.Array):
+        storage = "Dask"
+        backend_name = type(data).__name__
+    elif isinstance(data, np.ndarray):
+        storage = "NumPy"
+        backend_name = type(data).__name__
+    else:
+        storage = type(data).__name__
+        backend_name = storage
+
+    logger.debug(
+        "%s layer %s is %s-backed (%s) with dtype %s, and shape %s",
+        stage,
+        fname,
+        storage,
+        backend_name,
+        getattr(data, "dtype", None),
+        getattr(data, "shape", None),
+    )
 
 
 def features_to_route_table(features):

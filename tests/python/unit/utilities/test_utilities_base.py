@@ -1,10 +1,12 @@
 """Tests for base reVRt utilities"""
 
+import logging
 from pathlib import Path
 
 import pytest
 import numpy as np
 import xarray as xr
+import dask.array as da
 import geopandas as gpd
 from rasterio.crs import CRS
 from shapely.geometry import box, LineString, Point
@@ -15,6 +17,7 @@ from revrt.utilities import (
     delete_data_file,
     features_to_route_table,
     LayeredFile,
+    log_array_backend,
 )
 from revrt.utilities.base import _crs_match
 from revrt.exceptions import revrtProfileCheckError, revrtValueError
@@ -398,6 +401,47 @@ def test_features_to_route_table_generates_pairs():
         assert row.start_lon == pytest.approx(start_lon)
         assert row.end_lat == pytest.approx(end_lat)
         assert row.end_lon == pytest.approx(end_lon)
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_storage", "expected_backend"),
+    [
+        (
+            xr.DataArray(
+                np.arange(6, dtype=np.int16).reshape((2, 3)),
+                dims=("y", "x"),
+            ),
+            "NumPy",
+            "ndarray",
+        ),
+        (
+            xr.DataArray(
+                da.from_array(
+                    np.arange(6, dtype=np.int16).reshape((2, 3)),
+                    chunks=(1, 3),
+                ),
+                dims=("y", "x"),
+            ),
+            "Dask",
+            "Array",
+        ),
+    ],
+)
+def test_log_array_backend_reports_xarray_storage(
+    caplog, data, expected_storage, expected_backend
+):
+    """log_array_backend reports backend details for xarray inputs"""
+
+    with caplog.at_level(logging.DEBUG, logger="revrt.utilities.base"):
+        log_array_backend("test_layer", data, stage="processed")
+
+    assert caplog.messages == [
+        (
+            "processed layer test_layer is "
+            f"{expected_storage}-backed ({expected_backend}) "
+            f"with dtype {data.dtype}, and shape {data.shape}"
+        )
+    ]
 
 
 if __name__ == "__main__":

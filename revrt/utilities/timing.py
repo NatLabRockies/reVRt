@@ -16,7 +16,7 @@ def log_runtime(message, log_level=logging.INFO):
     message : str
         Message to log with the time taken. The time taken will be
         appended to this message.
-    log_level : int, default=logging.INFO
+    log_level : int, default="INFO"
         Logging level to use for the message.
         By default, ``logging.INFO``.
     hours : bool, default=False
