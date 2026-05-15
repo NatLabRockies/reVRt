@@ -169,3 +169,39 @@ def integer_dimension_window(bounds, transform):
         max(1, ceil(window.width)) + 1,
         max(1, ceil(window.height)) + 1,
     )
+
+
+def simplify_shapes(gdf, transform):
+    """Simplify geometries to half of the raster cell size
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        GeoDataFrame containing the geometries to simplify.
+    transform : affine.Affine
+        Affine transform used to derive the raster cell size.
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        Input ``gdf`` with simplified geometries and empty features
+        removed.
+    """
+    tolerance = _simplify_tolerance(transform)
+    logger.debug(
+        "Simplifying %d shape(s) with tolerance %s", len(gdf), tolerance
+    )
+    gdf.geometry = gdf.geometry.simplify(
+        tolerance,
+        preserve_topology=True,
+    )
+    gdf = gdf[~gdf.is_empty]
+    logger.debug("%d shapes remain after simplification", len(gdf))
+    return gdf
+
+
+def _simplify_tolerance(transform):
+    """Return simplification tolerance from the raster cell size"""
+    x_res = hypot(transform.a, transform.b)
+    y_res = hypot(transform.d, transform.e)
+    return max(x_res, y_res) * 0.5

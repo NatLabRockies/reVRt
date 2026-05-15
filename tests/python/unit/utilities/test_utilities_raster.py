@@ -13,6 +13,8 @@ from rasterio.windows import from_bounds
 from revrt.utilities.raster import (
     integer_dimension_window,
     rasterize_shape_file,
+    simplify_shapes,
+    _simplify_tolerance,
 )
 
 
@@ -159,6 +161,29 @@ def test_rasterize_with_reproject(tmp_path):
     assert out.max() == 0
     assert out.min() == 0
     assert out.sum() == 0
+
+
+def test_simplify_tolerance_uses_half_cell_size():
+    """Simplification tolerance is half of the largest raster cell size"""
+    transform = Affine(4.0, 0.0, 0.0, 0.0, -6.0, 0.0)
+
+    assert _simplify_tolerance(transform) == pytest.approx(3.0)
+
+
+def test_simplify_shapes_returns_copy_and_drops_empty_geometries():
+    """simplify_shapes returns a simplified copy without empty shapes"""
+    gdf = gpd.GeoDataFrame(
+        geometry=[
+            LineString([(0, 0), (1, 0.5), (2, 0)]),
+            GeometryCollection(),
+        ],
+        crs="ESRI:102008",
+    )
+
+    simplified = simplify_shapes(gdf, Affine(2.0, 0.0, 0.0, 0.0, -2.0, 0.0))
+
+    assert len(simplified) == 1
+    assert simplified.geometry.iloc[0].equals(LineString([(0, 0), (2, 0)]))
 
 
 def test_integer_dimension_window_rounds_offsets():
