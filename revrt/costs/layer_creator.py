@@ -367,6 +367,7 @@ class LayerCreator(BaseLayerCreator):
                 layer_dirs=[self.input_layer_dir, self.output_tiff_dir],
                 band_index=0,
             )
+            temp = _backend_array(temp)
 
             if config.extent == ALL:
                 fi += temp
@@ -462,3 +463,11 @@ def _validate_bin_continuity(bins):
             warn(msg, revrtWarning)
 
         last_max = input_bin.max
+
+
+def _backend_array(data):
+    """Return the NumPy/Dask backing array for accumulation"""
+    if isinstance(data, xr.DataArray):
+        return data.data
+
+    return data
