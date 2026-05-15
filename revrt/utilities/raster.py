@@ -13,7 +13,7 @@ from revrt.utilities.timing import log_runtime
 logger = logging.getLogger(__name__)
 
 
-def rasterize_shape_file(
+def rasterize_shape_file(  # noqa: PLR0913, PLR0917
     fname,
     width,
     height,
@@ -23,6 +23,7 @@ def rasterize_shape_file(
     dest_crs=None,
     burn_value=1,
     boundary_only=False,
+    simply_before_rasterize=False,
     dtype=DEFAULT_DTYPE,
 ):
     """Rasterize a vector layer
@@ -51,6 +52,9 @@ def rasterize_shape_file(
     boundary_only : bool, default=False
         If ``True``, rasterize boundary of vector.
         By default, ``False``.
+    simply_before_rasterize : bool, default=False
+        If ``True``, simplify geometries to half of the raster cell size
+        before rasterization. By default, ``False``.
     dtype : np.dtype, default="float32"
         Datatype to use. By default, ``float32``.
 
@@ -75,6 +79,7 @@ def rasterize_shape_file(
             all_touched=all_touched,
             burn_value=burn_value,
             boundary_only=boundary_only,
+            simply_before_rasterize=simply_before_rasterize,
             dtype=dtype,
         )
 
@@ -88,6 +93,7 @@ def rasterize(
     all_touched=False,
     burn_value=1,
     boundary_only=False,
+    simply_before_rasterize=False,
     dtype=DEFAULT_DTYPE,
 ):
     """Rasterize a vector layer
@@ -113,6 +119,9 @@ def rasterize(
     boundary_only : bool, default=False
         If ``True``, rasterize boundary of vector.
         By default, ``False``.
+    simply_before_rasterize : bool, default=False
+        If ``True``, simplify geometries to half of the raster cell size
+        before rasterization. By default, ``False``.
     dtype : np.dtype, default="float32"
         Datatype to use. By default, ``float32``.
 
@@ -121,6 +130,9 @@ def rasterize(
     array-like
         Rasterized vector data
     """
+
+    if simply_before_rasterize:
+        gdf = simplify_shapes(gdf, transform)
 
     if buffer_dist is not None:
         gdf = gdf.copy()
