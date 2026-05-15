@@ -346,6 +346,7 @@ class LayerCreator(BaseLayerCreator):
             all_touched=config.rasterize.all_touched,
             tile_size=config.rasterize.tile_size,
             simply_before_rasterize=config.rasterize.simply_before_rasterize,
+            fill=config.rasterize.fill,
             dtype=vector_dtype,
             **kwargs,
         )

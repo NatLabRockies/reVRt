@@ -140,6 +140,12 @@ class Rasterize(BaseModel, extra="forbid"):
     rasterization. By default, ``False``.
     """
 
+    fill: float | int | None = 0
+    """Value used to fill raster cells not burned by vector
+
+    If None, uses np.nan. By default, ``0``.
+    """
+
 
 class LayerBuildConfig(BaseModel, extra="forbid"):
     """Friction and barrier layers config model

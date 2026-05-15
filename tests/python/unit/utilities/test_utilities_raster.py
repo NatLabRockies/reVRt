@@ -189,6 +189,91 @@ def test_rasterize_shape_file_uses_tiles(tmp_path, tile_size):
     assert np.array_equal(out, np.ones((4, 4), dtype="uint8"))
 
 
+def test_rasterize_shape_file_uses_nan_fill_when_fill_is_none(tmp_path):
+    """Rasterization uses NaN for untouched cells when fill is None"""
+    land_mask_fp = tmp_path / "test_shape_mask_nan_fill.gpkg"
+    basic_shape = gpd.GeoDataFrame(
+        geometry=[box(0, 0, 6, 6)], crs="ESRI:102008"
+    )
+    basic_shape.to_file(land_mask_fp, driver="GPKG")
+
+    out = rasterize_shape_file(
+        land_mask_fp,
+        width=4,
+        height=4,
+        transform=Affine(3.0, 0.0, 0.0, 0.0, -3.0, 12.0),
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="float32",
+        fill=None,
+    )
+
+    assert out.dtype == np.dtype("float32")
+    assert np.array_equal(
+        np.isnan(out),
+        np.array(
+            [
+                [True, True, True, True],
+                [True, True, True, True],
+                [False, False, True, True],
+                [False, False, True, True],
+            ]
+        ),
+    )
+    assert np.array_equal(
+        np.nan_to_num(out, nan=0.0),
+        np.array(
+            [
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 0.0, 0.0],
+                [1.0, 1.0, 0.0, 0.0],
+            ],
+            dtype="float32",
+        ),
+    )
+
+
+def test_rasterize_shape_file_uses_explicit_fill_value(tmp_path):
+    """Rasterization uses the provided fill value for untouched cells"""
+    land_mask_fp = tmp_path / "test_shape_mask_fill_value.gpkg"
+    basic_shape = gpd.GeoDataFrame(
+        geometry=[box(0, 0, 6, 6)], crs="ESRI:102008"
+    )
+    basic_shape.to_file(land_mask_fp, driver="GPKG")
+
+    out = rasterize_shape_file(
+        land_mask_fp,
+        width=4,
+        height=4,
+        transform=Affine(3.0, 0.0, 0.0, 0.0, -3.0, 12.0),
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="int16",
+        fill=7,
+    )
+
+    assert out.dtype == np.dtype("int16")
+    assert np.array_equal(
+        out,
+        np.array(
+            [
+                [7, 7, 7, 7],
+                [7, 7, 7, 7],
+                [1, 1, 7, 7],
+                [1, 1, 7, 7],
+            ],
+            dtype="int16",
+        ),
+    )
+
+
 def test_simplify_tolerance_uses_half_cell_size():
     """Simplification tolerance is half of the largest raster cell size"""
     transform = Affine(4.0, 0.0, 0.0, 0.0, -6.0, 0.0)

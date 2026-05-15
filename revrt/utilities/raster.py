@@ -30,6 +30,7 @@ def rasterize_shape_file(  # noqa: PLR0913, PLR0917
     boundary_only=False,
     simply_before_rasterize=False,
     dtype=DEFAULT_DTYPE,
+    fill=0,
 ):
     """Rasterize a vector layer
 
@@ -65,6 +66,9 @@ def rasterize_shape_file(  # noqa: PLR0913, PLR0917
         before rasterization. By default, ``False``.
     dtype : np.dtype, default="float32"
         Datatype to use. By default, ``float32``.
+    fill : int, float, or None, default=0
+        Value used to fill raster cells not burned by vector. If None,
+        uses np.nan. By default, ``0``.
 
     Returns
     -------
@@ -90,6 +94,7 @@ def rasterize_shape_file(  # noqa: PLR0913, PLR0917
             boundary_only=boundary_only,
             simply_before_rasterize=simply_before_rasterize,
             dtype=dtype,
+            fill=fill,
         )
 
 
@@ -105,6 +110,7 @@ def rasterize(  # noqa: PLR0913, PLR0917
     boundary_only=False,
     simply_before_rasterize=False,
     dtype=DEFAULT_DTYPE,
+    fill=0,
 ):
     """Rasterize a vector layer
 
@@ -137,6 +143,9 @@ def rasterize(  # noqa: PLR0913, PLR0917
         before rasterization. By default, ``False``.
     dtype : np.dtype, default="float32"
         Datatype to use. By default, ``float32``.
+    fill : int, float, or None, default=0
+        Value used to fill raster cells not burned by vector. If None,
+        uses np.nan. By default, ``0``.
 
     Returns
     -------
@@ -167,6 +176,7 @@ def rasterize(  # noqa: PLR0913, PLR0917
             burn_value=burn_value,
             boundary_only=boundary_only,
             dtype=dtype,
+            fill=fill,
         )
 
 
@@ -233,10 +243,13 @@ def _tile_rasterize(
     burn_value,
     boundary_only,
     dtype,
+    fill,
 ):
     """Rasterize shapes window by window into a preallocated array"""
     out = np.zeros((height, width), dtype=dtype)
     shapes = gdf.boundary if boundary_only else gdf.geometry
+    if fill is None:
+        fill = np.nan
 
     for window in _iter_tile_windows(width, height, tile_size=int(tile_size)):
         bounds = rasterio.windows.bounds(window, transform)
@@ -254,7 +267,7 @@ def _tile_rasterize(
         out[*window.toslices()] = rasterio.features.rasterize(
             tile_shapes,
             out_shape=(window.height, window.width),
-            fill=0,
+            fill=fill,
             out=None,
             transform=rasterio.windows.transform(window, transform),
             all_touched=all_touched,
