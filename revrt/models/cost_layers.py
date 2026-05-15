@@ -113,8 +113,8 @@ class RangeConfig(BaseModel, extra="forbid"):
 class Rasterize(BaseModel, extra="forbid"):
     """Config to rasterize a vector layer and apply a value to it"""
 
-    value: float
-    """Value to burn in to raster"""
+    value: float | str
+    """Value or source column name to burn in to raster"""
 
     buffer: float | None = None
     """Value to buffer by (can be negative)"""

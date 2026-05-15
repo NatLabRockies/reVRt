@@ -9,6 +9,7 @@ import geopandas as gpd
 from shapely.geometry import box
 
 from revrt.constants import DEFAULT_DTYPE
+from revrt.exceptions import revrtValueError
 from revrt.utilities.monitoring import log_runtime
 
 
@@ -56,8 +57,10 @@ def rasterize_shape_file(  # noqa: PLR0913, PLR0917
     reproject_vector : bool, default=True
         Reproject CRS of vector to match template raster if ``True``.
         By default, ``True``.
-    burn_value : int or float, default=1
-        Value used to burn vectors into raster. By default, ``1``.
+    burn_value : int, float, or str, default=1
+        Value used to burn vectors into raster, or the name of a
+        column containing per-feature values to burn.
+        By default, ``1``.
     boundary_only : bool, default=False
         If ``True``, rasterize boundary of vector.
         By default, ``False``.
@@ -133,8 +136,10 @@ def rasterize(  # noqa: PLR0913, PLR0917
     all_touched : bool, default=False
         Set all cells touched by vector to 1. False results in less
         cells being set to 1. By default, ``False``.
-    burn_value : int or float, default=1
-        Value used to burn vectors into raster. By default, ``1``.
+    burn_value : int, float, or str, default=1
+        Value used to burn vectors into raster, or the name of a
+        column containing per-feature values to burn.
+        By default, ``1``.
     boundary_only : bool, default=False
         If ``True``, rasterize boundary of vector.
         By default, ``False``.
@@ -173,7 +178,7 @@ def rasterize(  # noqa: PLR0913, PLR0917
             transform,
             tile_size or DEFAULT_RASTERIZE_TILE_SIZE,
             all_touched=all_touched,
-            burn_value=burn_value,
+            burn_value=_resolve_burn_values(gdf, burn_value),
             boundary_only=boundary_only,
             dtype=dtype,
             fill=fill,
@@ -248,8 +253,7 @@ def _tile_rasterize(
     """Rasterize shapes window by window into a preallocated array"""
     out = np.zeros((height, width), dtype=dtype)
     shapes = gdf.boundary if boundary_only else gdf.geometry
-    if fill is None:
-        fill = np.nan
+    use_feature_values = hasattr(burn_value, "loc")
 
     for window in _iter_tile_windows(width, height, tile_size=int(tile_size)):
         bounds = rasterio.windows.bounds(window, transform)
@@ -264,15 +268,24 @@ def _tile_rasterize(
         if tile_shapes.empty:
             continue
 
+        rasterize_kwargs = {
+            "out_shape": (window.height, window.width),
+            "fill": np.nan if fill is None else fill,
+            "out": None,
+            "transform": rasterio.windows.transform(window, transform),
+            "all_touched": all_touched,
+            "dtype": dtype,
+        }
+        if use_feature_values:
+            tile_values = burn_value.loc[tile_shapes.index]
+            rasterize_shapes = zip(tile_shapes, tile_values, strict=True)
+        else:
+            rasterize_shapes = tile_shapes
+            rasterize_kwargs["default_value"] = burn_value
+
         out[*window.toslices()] = rasterio.features.rasterize(
-            tile_shapes,
-            out_shape=(window.height, window.width),
-            fill=fill,
-            out=None,
-            transform=rasterio.windows.transform(window, transform),
-            all_touched=all_touched,
-            default_value=burn_value,
-            dtype=dtype,
+            rasterize_shapes,
+            **rasterize_kwargs,
         )
 
     return out
@@ -294,3 +307,19 @@ def _simplify_tolerance(transform):
     x_res = hypot(transform.a, transform.b)
     y_res = hypot(transform.d, transform.e)
     return max(x_res, y_res) * 0.5
+
+
+def _resolve_burn_values(gdf, burn_value):
+    """Resolve scalar or column-based burn values for rasterization"""
+    if not isinstance(burn_value, str):
+        return burn_value
+
+    if burn_value not in gdf.columns:
+        msg = (
+            "Rasterize value column "
+            f"{burn_value!r} was not found in vector data. "
+            f"Available columns: {sorted(gdf.columns)!r}"
+        )
+        raise revrtValueError(msg)
+
+    return gdf[burn_value]
