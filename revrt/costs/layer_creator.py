@@ -344,6 +344,8 @@ class LayerCreator(BaseLayerCreator):
             buffer_dist=config.rasterize.buffer,
             burn_value=config.rasterize.value,
             all_touched=config.rasterize.all_touched,
+            tile_size=config.rasterize.tile_size,
+            simply_before_rasterize=config.rasterize.simply_before_rasterize,
             dtype=vector_dtype,
             **kwargs,
         )

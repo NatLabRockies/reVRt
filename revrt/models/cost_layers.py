@@ -125,6 +125,21 @@ class Rasterize(BaseModel, extra="forbid"):
     all_touched: bool = False
     """Rasterize all cells touched by vector if ``True``"""
 
+    tile_size: int | None = None
+    """Tile size to use for rasterization
+
+    If not specified, a default value of 2048 will be used.
+    """
+
+    simply_before_rasterize: bool = False
+    """Simplify geometries before rasterization if ``True``
+
+    Geometries are simplified to half of the raster cell size when this
+    is ``True``. This can help speed up rasterization and reduce memory
+    usage for very complex vectors, but may result in less accurate
+    rasterization. By default, ``False``.
+    """
+
 
 class LayerBuildConfig(BaseModel, extra="forbid"):
     """Friction and barrier layers config model
