@@ -219,7 +219,7 @@ def run_lcp(  # noqa
         routes_to_compute.num_routes,
     )
 
-    with log_runtime(f"Routing for {routes_to_compute.num_routes:d,} points"):
+    with log_runtime(f"Routing for {routes_to_compute.num_routes:,d} points"):
         _run_all_lcp_batches(
             cost_fpath=cost_fpath,
             out_fp=out_fp,
