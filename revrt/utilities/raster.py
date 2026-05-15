@@ -1,8 +1,9 @@
 """reVRt rasterization utilities"""
 
 import logging
-from math import ceil
+from math import ceil, hypot
 
+import numpy as np
 import rasterio
 import geopandas as gpd
 
