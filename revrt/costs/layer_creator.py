@@ -302,6 +302,14 @@ class LayerCreator(BaseLayerCreator):
             kwargs["dest_crs"] = self._io_handler.profile["crs"]
 
         fname = file_full_path(fname, self.input_layer_dir)
+        vector_dtype = _vector_raster_dtype(
+            config.rasterize.value, self._dtype
+        )
+        logger.debug(
+            "Rasterizing vector %s using intermediate dtype %s",
+            fname,
+            vector_dtype,
+        )
         temp = rasterize_shape_file(
             fname,
             buffer_dist=config.rasterize.buffer,
@@ -463,6 +471,25 @@ def _validate_bin_continuity(bins):
             warn(msg, revrtWarning)
 
         last_max = input_bin.max
+
+
+def _vector_raster_dtype(burn_value, default_dtype):
+    """Choose a compact dtype for vector rasterization"""
+    try:
+        scalar = float(burn_value)
+    except (TypeError, ValueError):
+        return default_dtype
+
+    if not np.isfinite(scalar) or not scalar.is_integer():
+        return default_dtype
+
+    dtype = np.result_type(
+        np.min_scalar_type(0), np.min_scalar_type(int(scalar))
+    )
+    if np.issubdtype(dtype, np.bool_):
+        return "uint8"
+
+    return np.dtype(dtype).name
 
 
 def _backend_array(data):
