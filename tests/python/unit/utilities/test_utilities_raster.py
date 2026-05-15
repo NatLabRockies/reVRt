@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import numpy as np
 import geopandas as gpd
-from shapely.geometry import box
+from shapely.geometry import GeometryCollection, LineString, box
 from shapely.ops import unary_union
 from rasterio.transform import Affine
 from rasterio.windows import from_bounds
@@ -161,6 +161,32 @@ def test_rasterize_with_reproject(tmp_path):
     assert out.max() == 0
     assert out.min() == 0
     assert out.sum() == 0
+
+
+@pytest.mark.parametrize("tile_size", [None, 2, 2048])
+def test_rasterize_shape_file_uses_tiles(tmp_path, tile_size):
+    """Rasterization is stable when forced to use multiple tiles"""
+    land_mask_fp = tmp_path / "test_tiled_shape_mask.gpkg"
+    basic_shape = gpd.GeoDataFrame(
+        geometry=[box(0, 0, 12, 12)], crs="ESRI:102008"
+    )
+    basic_shape.to_file(land_mask_fp, driver="GPKG")
+
+    out = rasterize_shape_file(
+        land_mask_fp,
+        width=4,
+        height=4,
+        transform=Affine(3.0, 0.0, 0.0, 0.0, -3.0, 12.0),
+        tile_size=tile_size,
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="uint8",
+    )
+
+    assert np.array_equal(out, np.ones((4, 4), dtype="uint8"))
 
 
 def test_simplify_tolerance_uses_half_cell_size():

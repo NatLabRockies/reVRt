@@ -6,12 +6,15 @@ from math import ceil, hypot
 import numpy as np
 import rasterio
 import geopandas as gpd
+from shapely.geometry import box
 
 from revrt.constants import DEFAULT_DTYPE
 from revrt.utilities.timing import log_runtime
 
 
 logger = logging.getLogger(__name__)
+DEFAULT_RASTERIZE_TILE_SIZE = 2048
+"""int: Default tile size to use for rasterization"""
 
 
 def rasterize_shape_file(  # noqa: PLR0913, PLR0917
@@ -19,6 +22,7 @@ def rasterize_shape_file(  # noqa: PLR0913, PLR0917
     width,
     height,
     transform,
+    tile_size=None,
     buffer_dist=None,
     all_touched=False,
     dest_crs=None,
@@ -39,6 +43,9 @@ def rasterize_shape_file(  # noqa: PLR0913, PLR0917
         Height of output raster.
     transform : affine.Affine
         Affine transform for output raster.
+    tile_size : int, optional
+        Size of tiles to use for rasterization. If None, uses a default
+        tile size. By default, ``None``.
     buffer_dist : float, optional
         Distance to buffer features in fname by. Same units as the
         template raster. By default, ``None``.
@@ -76,6 +83,7 @@ def rasterize_shape_file(  # noqa: PLR0913, PLR0917
             width,
             height,
             transform,
+            tile_size=tile_size,
             buffer_dist=buffer_dist,
             all_touched=all_touched,
             burn_value=burn_value,
@@ -85,11 +93,12 @@ def rasterize_shape_file(  # noqa: PLR0913, PLR0917
         )
 
 
-def rasterize(
+def rasterize(  # noqa: PLR0913, PLR0917
     gdf,
     width,
     height,
     transform,
+    tile_size=None,
     buffer_dist=None,
     all_touched=False,
     burn_value=1,
@@ -109,6 +118,9 @@ def rasterize(
         Height of output raster.
     transform : affine.Affine
         Affine transform for output raster.
+    tile_size : int, optional
+        Size of tiles to use for rasterization. If None, uses a default
+        tile size. By default, ``None``.
     buffer_dist : float, optional
         Distance to buffer features in fname by. Same units as the
         template raster. By default, ``None``.
@@ -143,16 +155,17 @@ def rasterize(
         gdf = gdf[~gdf.is_empty]  # Negative buffer may result in empty feats
         logger.debug("%d features after removing empty features.", len(gdf))
 
-    logger.debug("Rasterizing %d shapes", len(gdf))
-    with log_runtime("Rasterization of shapes"):
-        return rasterio.features.rasterize(
-            list(gdf.boundary if boundary_only else gdf.geometry),
-            out_shape=(height, width),
-            fill=0,
-            out=None,
-            transform=transform,
+    logger.debug("Rasterizing %d shape(s)", len(gdf))
+    with log_runtime("Rasterization of shape(s)"):
+        return _tile_rasterize(
+            gdf,
+            width,
+            height,
+            transform,
+            tile_size or DEFAULT_RASTERIZE_TILE_SIZE,
             all_touched=all_touched,
-            default_value=burn_value,
+            burn_value=burn_value,
+            boundary_only=boundary_only,
             dtype=dtype,
         )
 
@@ -204,13 +217,63 @@ def simplify_shapes(gdf, transform):
     logger.debug(
         "Simplifying %d shape(s) with tolerance %s", len(gdf), tolerance
     )
-    gdf.geometry = gdf.geometry.simplify(
-        tolerance,
-        preserve_topology=True,
-    )
+    gdf.geometry = gdf.geometry.simplify(tolerance, preserve_topology=True)
     gdf = gdf[~gdf.is_empty]
-    logger.debug("%d shapes remain after simplification", len(gdf))
+    logger.debug("%d shape(s) remain after simplification", len(gdf))
     return gdf
+
+
+def _tile_rasterize(
+    gdf,
+    width,
+    height,
+    transform,
+    tile_size,
+    all_touched,
+    burn_value,
+    boundary_only,
+    dtype,
+):
+    """Rasterize shapes window by window into a preallocated array"""
+    out = np.zeros((height, width), dtype=dtype)
+    shapes = gdf.boundary if boundary_only else gdf.geometry
+
+    for window in _iter_tile_windows(width, height, tile_size=int(tile_size)):
+        bounds = rasterio.windows.bounds(window, transform)
+        tile_geom = box(*bounds)
+        intersects = shapes.intersects(tile_geom)
+
+        if not intersects.any():
+            continue
+
+        tile_shapes = shapes.loc[intersects].intersection(tile_geom)
+        tile_shapes = tile_shapes[~tile_shapes.is_empty]
+        if tile_shapes.empty:
+            continue
+
+        out[*window.toslices()] = rasterio.features.rasterize(
+            tile_shapes,
+            out_shape=(window.height, window.width),
+            fill=0,
+            out=None,
+            transform=rasterio.windows.transform(window, transform),
+            all_touched=all_touched,
+            default_value=burn_value,
+            dtype=dtype,
+        )
+
+    return out
+
+
+def _iter_tile_windows(width, height, tile_size):
+    """Yield raster windows covering the full output extent"""
+    for row_off in range(0, height, tile_size):
+        win_height = min(tile_size, height - row_off)
+        for col_off in range(0, width, tile_size):
+            win_width = min(tile_size, width - col_off)
+            yield rasterio.windows.Window(
+                col_off, row_off, win_width, win_height
+            )
 
 
 def _simplify_tolerance(transform):
