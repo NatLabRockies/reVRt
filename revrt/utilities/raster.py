@@ -295,6 +295,9 @@ def _tile_rasterize(
 
 def _iter_tile_windows(width, height, tile_size):
     """Yield raster windows covering the full output extent"""
+    num_iterations = ceil(width / tile_size) * ceil(height / tile_size)
+    progress_markers = _tile_window_progress_markers(num_iterations)
+    ind = 0
     for row_off in range(0, height, tile_size):
         win_height = min(tile_size, height - row_off)
         for col_off in range(0, width, tile_size):
@@ -302,6 +305,25 @@ def _iter_tile_windows(width, height, tile_size):
             yield rasterio.windows.Window(
                 col_off, row_off, win_width, win_height
             )
+            ind += 1
+            progress = progress_markers.get(ind)
+            if progress_markers.get(ind) is not None:
+                logger.debug(
+                    "Rasterized %d of %d tiles (%d%%)",
+                    ind,
+                    num_iterations,
+                    progress,
+                )
+
+
+def _tile_window_progress_markers(num_iterations):
+    """Return milestone percentages keyed by tile-window count"""
+    progress_markers = {}
+    for progress in (25, 50, 75, 100):
+        marker = ceil(num_iterations * progress / 100)
+        progress_markers[marker] = progress
+
+    return progress_markers
 
 
 def _simplify_tolerance(transform):

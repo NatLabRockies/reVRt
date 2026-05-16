@@ -15,6 +15,7 @@ from revrt.utilities.raster import (
     integer_dimension_window,
     rasterize_shape_file,
     simplify_shapes,
+    _iter_tile_windows,
     _simplify_tolerance,
 )
 
@@ -188,6 +189,20 @@ def test_rasterize_shape_file_uses_tiles(tmp_path, tile_size):
     )
 
     assert np.array_equal(out, np.ones((4, 4), dtype="uint8"))
+
+
+def test_iter_tile_windows_logs_quarter_progress(caplog):
+    """Tile-window logging only emits quarter-progress milestones"""
+    with caplog.at_level("DEBUG", logger="revrt.utilities.raster"):
+        windows = list(_iter_tile_windows(width=4, height=4, tile_size=2))
+
+    assert len(windows) == 4
+    assert [record.message for record in caplog.records] == [
+        "Rasterized 1 of 4 tiles (25%)",
+        "Rasterized 2 of 4 tiles (50%)",
+        "Rasterized 3 of 4 tiles (75%)",
+        "Rasterized 4 of 4 tiles (100%)",
+    ]
 
 
 def test_rasterize_shape_file_uses_nan_fill_when_fill_is_none(tmp_path):
