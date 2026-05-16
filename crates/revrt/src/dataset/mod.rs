@@ -23,7 +23,9 @@ mod swap;
 
 use std::path::PathBuf;
 
+use num_traits::AsPrimitive;
 use tracing::{debug, info, trace};
+use zarrs::array::{Array, DataType, ElementOwned};
 use zarrs::storage::ReadableListableStorage;
 
 use crate::ArrayIndex;
@@ -208,6 +210,28 @@ impl Dataset {
             .get_cell_cost(index, &self.derived_data_writer)
     }
 
+    /// Return a single source-layer cell as `f32` for the requested index.
+    pub(super) fn get_source_cell_value(
+        &self,
+        layer_name: &str,
+        index: &ArrayIndex,
+    ) -> Option<f32> {
+        let array = Array::open(self.source.clone(), &format!("/{layer_name}")).ok()?;
+        let subset = match array.shape().len() {
+            2 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                index.i..(index.i + 1),
+                index.j..(index.j + 1),
+            ]),
+            3 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                u64::from(index.option)..(u64::from(index.option) + 1),
+                index.i..(index.i + 1),
+                index.j..(index.j + 1),
+            ]),
+            _ => return None,
+        };
+        read_source_cell_as_f32(&array, &subset)
+    }
+
     /// Return the number of soft barrier importance groups.
     ///
     /// # Returns
@@ -216,6 +240,44 @@ impl Dataset {
     pub(super) fn soft_barrier_groups(&self) -> &Vec<(u32, Vec<BarrierLayer>)> {
         &self.derived_data_writer.soft_barrier_groups
     }
+}
+
+fn read_source_cell_as_f32<TStorage>(
+    array: &Array<TStorage>,
+    subset: &zarrs::array_subset::ArraySubset,
+) -> Option<f32>
+where
+    TStorage: ?Sized + zarrs::storage::ReadableListableStorageTraits + 'static,
+{
+    match array.data_type() {
+        DataType::Float32 => read_typed_cell::<f32, _>(array, subset),
+        DataType::Float64 => read_typed_cell::<f64, _>(array, subset),
+        DataType::Int8 => read_typed_cell::<i8, _>(array, subset),
+        DataType::Int16 => read_typed_cell::<i16, _>(array, subset),
+        DataType::Int32 => read_typed_cell::<i32, _>(array, subset),
+        DataType::Int64 => read_typed_cell::<i64, _>(array, subset),
+        DataType::UInt8 => read_typed_cell::<u8, _>(array, subset),
+        DataType::UInt16 => read_typed_cell::<u16, _>(array, subset),
+        DataType::UInt32 => read_typed_cell::<u32, _>(array, subset),
+        DataType::UInt64 => read_typed_cell::<u64, _>(array, subset),
+        _ => None,
+    }
+}
+
+fn read_typed_cell<T, TStorage>(
+    array: &Array<TStorage>,
+    subset: &zarrs::array_subset::ArraySubset,
+) -> Option<f32>
+where
+    T: ElementOwned + Clone + AsPrimitive<f32>,
+    TStorage: ?Sized + zarrs::storage::ReadableListableStorageTraits + 'static,
+{
+    array
+        .retrieve_array_subset_elements::<T>(subset)
+        .ok()?
+        .into_iter()
+        .next()
+        .map(|value| value.as_())
 }
 
 #[cfg(test)]
