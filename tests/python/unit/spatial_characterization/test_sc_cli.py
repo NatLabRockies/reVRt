@@ -250,6 +250,51 @@ def test_buffered_route_characterizations_with_multiplier(
     )
 
 
+def test_buffered_route_characterizations_strips_required_path_whitespace(
+    cli_runner, cli_error_message, tmp_cwd, sample_raster
+):
+    """Route characterization strips whitespace on required paths"""
+
+    raster_fp = tmp_cwd / "test_whitespace.tif"
+    zones_fp = tmp_cwd / "test_whitespace.gpkg"
+
+    zones = gpd.GeoDataFrame(
+        {"id": [1], "A": ["a"]},
+        geometry=[box(-5, -5, 5, 5)],
+    )
+    zones = zones.set_crs(sample_raster.attrs["crs"])
+
+    sample_raster.rio.to_raster(raster_fp)
+    zones.to_file(zones_fp, driver="GPKG")
+
+    config = {
+        "layers": {
+            "geotiff_fp": f"  {raster_fp}  ",
+            "route_fp": f"\n{zones_fp}\t",
+            "row_width_key": "id",
+            "stats": "*",
+        },
+        "row_widths": {"1": 200},
+    }
+    config_fp = tmp_cwd / "config_whitespace.json"
+    config_fp.write_text(json.dumps(config))
+
+    result = cli_runner.invoke(
+        main, ["route-characterization", "-c", config_fp.as_posix()]
+    )
+    msg = f"Failed with error {cli_error_message(result)}"
+    assert result.exit_code == 0, msg
+
+    out_files = sorted(tmp_cwd.glob("*.csv"))
+    assert len(out_files) == 1
+    out_fp = out_files[0]
+    assert out_fp.name == "characterized_test_whitespace_test_whitespace.csv"
+
+    out_stats = pd.read_csv(out_fp)
+
+    assert len(out_stats) == 1
+
+
 def test_buffered_route_characterizations_percentile(tmp_path, sample_raster):
     """Test running percentile stats"""
     raster_fp = tmp_path / "test.tif"

@@ -584,7 +584,13 @@ def strip_path_keys(config, keys_to_fix):
     for key in keys_to_fix:
         value = config.get(key)
         if isinstance(value, str):
-            config[key] = value.strip()
+            value = value.strip()
+            for token in (r"\n", r"\r", r"\t"):
+                while value.startswith(token):
+                    value = value[len(token) :].lstrip()
+                while value.endswith(token):
+                    value = value[: -len(token)].rstrip()
+            config[key] = value
     return config
 
 
