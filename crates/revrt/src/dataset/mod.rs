@@ -211,6 +211,7 @@ impl Dataset {
     }
 
     /// Return a single source-layer cell as `f32` for the requested index.
+    /// Useful for reading non-cost (i.e. not derived) features
     pub(super) fn get_source_cell_value(
         &self,
         layer_name: &str,
