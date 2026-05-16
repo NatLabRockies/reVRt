@@ -4,33 +4,41 @@ use crate::ArrayIndex;
 pub(super) struct GridIndexer {
     nrows: u64,
     ncols: u64,
+    noptions: u32,
     total_cells: u64,
 }
 
 impl GridIndexer {
-    pub(super) fn new(nrows: u64, ncols: u64) -> Option<Self> {
-        if nrows == 0 || ncols == 0 {
+    pub(super) fn new(nrows: u64, ncols: u64, noptions: u32) -> Option<Self> {
+        if nrows == 0 || ncols == 0 || noptions == 0 {
             return None;
         }
-        let total_cells = nrows.checked_mul(ncols)?;
+        let total_cells = nrows.checked_mul(ncols)?.checked_mul(u64::from(noptions))?;
         Some(Self {
             nrows,
             ncols,
+            noptions,
             total_cells,
         })
     }
 
     pub(super) fn slot_of(&self, index: &ArrayIndex) -> Option<usize> {
-        if index.i >= self.nrows || index.j >= self.ncols {
+        if index.i >= self.nrows || index.j >= self.ncols || index.option >= self.noptions {
             return None;
         }
 
-        let linear = index.i.checked_mul(self.ncols)?.checked_add(index.j)?;
+        let planar = index.i.checked_mul(self.ncols)?.checked_add(index.j)?;
+        let linear = planar
+            .checked_mul(u64::from(self.noptions))?
+            .checked_add(u64::from(index.option))?;
         usize::try_from(linear).ok()
     }
 
     pub(super) fn index_of(&self, slot: usize) -> ArrayIndex {
         let linear = slot as u64;
+        let option = (linear % u64::from(self.noptions)) as u32;
+        let planar = linear / u64::from(self.noptions);
+
         ArrayIndex {
             i: planar / self.ncols,
             j: planar % self.ncols,
@@ -123,6 +131,98 @@ mod tests {
         assert_eq!(single.new_finalized_bits().unwrap().bits.len(), 1);
         assert_eq!(full_byte.new_finalized_bits().unwrap().bits.len(), 1);
         assert_eq!(partial_byte.new_finalized_bits().unwrap().bits.len(), 2);
+    }
+
+    #[test]
+    fn grid_indexer_round_trip_with_options() {
+        let grid = GridIndexer::new(7, 9, 3).unwrap();
+        let sample = [
+            ArrayIndex {
+                i: 0,
+                j: 0,
+                option: 0,
+            },
+            ArrayIndex {
+                i: 1,
+                j: 4,
+                option: 1,
+            },
+            ArrayIndex {
+                i: 3,
+                j: 8,
+                option: 2,
+            },
+            ArrayIndex {
+                i: 6,
+                j: 7,
+                option: 0,
+            },
+        ];
+
+        for index in sample {
+            let slot = grid.slot_of(&index).unwrap();
+            assert_eq!(grid.index_of(slot), index);
+        }
+    }
+
+    #[test]
+    fn grid_indexer_rejects_invalid_option_dimensions_and_overflow() {
+        assert!(GridIndexer::new(0, 4, 2).is_none());
+        assert!(GridIndexer::new(4, 0, 2).is_none());
+        assert!(GridIndexer::new(4, 4, 0).is_none());
+        assert!(GridIndexer::new(u64::MAX, 2, 2).is_none());
+    }
+
+    #[test]
+    fn grid_indexer_slot_of_rejects_out_of_bounds_indices_with_options() {
+        let grid = GridIndexer::new(3, 4, 2).unwrap();
+
+        assert_eq!(
+            grid.slot_of(&ArrayIndex {
+                i: 0,
+                j: 0,
+                option: 0
+            }),
+            Some(0)
+        );
+        assert_eq!(
+            grid.slot_of(&ArrayIndex {
+                i: 2,
+                j: 3,
+                option: 1
+            }),
+            Some(23)
+        );
+        assert_eq!(
+            grid.slot_of(&ArrayIndex {
+                i: 3,
+                j: 0,
+                option: 0
+            }),
+            None
+        );
+        assert_eq!(
+            grid.slot_of(&ArrayIndex {
+                i: 0,
+                j: 4,
+                option: 0
+            }),
+            None
+        );
+        assert_eq!(
+            grid.slot_of(&ArrayIndex {
+                i: 0,
+                j: 0,
+                option: 2
+            }),
+            None
+        );
+    }
+
+    #[test]
+    fn grid_indexer_finalized_bits_size_matches_cell_count_with_options() {
+        let grid = GridIndexer::new(2, 4, 3).unwrap();
+        assert_eq!(grid.new_finalized_bits().unwrap().bits.len(), 3);
     }
 
     #[test]
