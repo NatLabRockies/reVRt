@@ -287,7 +287,52 @@ impl DerivedDataReader {
         barrier_cells
     }
 
-    /// Return the grid shape backing this reader as `(rows, cols)`.
+    /// Return the center-cell entry cost for a single option state.
+    ///
+    /// The returned value includes the length-dependent center-cell cost and
+    /// the invariant adders for the destination option. Hard barriers and
+    /// invalid costs return `None`.
+    pub(super) fn get_cell_cost(
+        &self,
+        index: &ArrayIndex,
+        data_materializer: &impl DerivedDataMaterializer,
+    ) -> Option<f32> {
+        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            u64::from(index.option)..u64::from(index.option) + 1,
+            index.i..index.i + 1,
+            index.j..index.j + 1,
+        ]);
+        let cost_array = self.cost_cache.array();
+        data_materializer.ensure_derived_data_for_subset(&cost_array, &subset);
+
+        let cost = self
+            .cost_cache
+            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+            .ok()?
+            .into_iter()
+            .next()?;
+        let is_hard_barrier = data_materializer.has_hard_barriers()
+            && self
+                .hard_barrier_cache
+                .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
+                .ok()?
+                .into_iter()
+                .next()?;
+
+        if is_hard_barrier || cost.is_nan() || cost <= 0.0 {
+            None
+        } else {
+            let invariant = self
+                .cost_invariant_cache
+                .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+                .ok()?
+                .into_iter()
+                .next()?;
+            Some(cost + invariant)
+        }
+    }
+
+    /// Return the grid shape backing this reader as `(rows, cols, options)`.
     ///
     /// # Returns
     /// The routing grid dimensions recorded when the reader was opened.
