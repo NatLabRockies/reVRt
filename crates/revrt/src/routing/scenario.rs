@@ -164,6 +164,34 @@ impl Scenario {
         dropped_barrier_layers
     }
 
+    /// Resolve the driver multiplier for a cell state.
+    ///
+    /// # Arguments
+    /// `position`: Grid index whose routing option and source-layer values
+    ///             should be evaluated against the configured driver rules.
+    ///
+    /// # Returns
+    /// The multiplier for the state's routing option, or `None` when that
+    /// option is excluded at the given position.
+    fn driver_multiplier(&self, position: &ArrayIndex) -> Option<f32> {
+        self.driver_rules.multiplier(position.option, |layer_name| {
+            self.dataset.get_source_cell_value(layer_name, position)
+        })
+    }
+
+    /// Return the integer-encoded cost of changing routing options.
+    ///
+    /// # Arguments
+    /// `from_option`: Source routing option index.
+    /// `to_option`: Destination routing option index.
+    ///
+    /// # Returns
+    /// The configured transition cost between the two options, converted to
+    /// the internal integer routing-cost representation.
+    fn transition_cost(&self, from_option: u32, to_option: u32) -> u64 {
+        cost_as_u64(self.transition_costs.cost(from_option, to_option))
+    }
+
     /// Return the scenario grid dimensions.
     ///
     /// # Returns
