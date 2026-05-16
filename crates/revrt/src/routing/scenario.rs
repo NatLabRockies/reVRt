@@ -164,6 +164,47 @@ impl Scenario {
         dropped_barrier_layers
     }
 
+    /// Return the routing states allowed at a grid position.
+    ///
+    /// # Arguments
+    /// `position`: Grid position whose routing options should be checked.
+    /// `dropped_soft_groups`: Number of lowest-importance soft barrier
+    ///                        groups that should be ignored for this retry.
+    ///
+    /// # Returns
+    /// All routing-option states at the given cell that are not blocked by
+    /// active soft barriers, hard barriers, or driver exclusions.
+    pub(super) fn allowed_states_at(
+        &self,
+        position: &ArrayIndex,
+        dropped_soft_groups: usize,
+    ) -> Vec<ArrayIndex> {
+        let (_, _, noptions) = self.grid_shape();
+
+        (0..noptions)
+            .filter_map(|option| {
+                let candidate = ArrayIndex {
+                    i: position.i,
+                    j: position.j,
+                    option,
+                };
+                let soft_barrier_cells: HashSet<_> = self
+                    .dataset
+                    .get_3x3_soft_barrier_cells(&candidate, dropped_soft_groups)
+                    .into_iter()
+                    .collect();
+                if soft_barrier_cells.contains(&candidate) {
+                    return None;
+                }
+
+                self.dataset
+                    .get_cell_cost(&candidate) // checks for hard barriers
+                    .filter(|_| self.driver_multiplier(&candidate).is_some()) // drops `None` values from `get_cell_cost`
+                    .map(|_| candidate) // drops `None` values from `driver_multiplier`
+            })
+            .collect()
+    }
+
     /// Resolve the driver multiplier for a cell state.
     ///
     /// # Arguments
