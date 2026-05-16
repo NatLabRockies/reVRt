@@ -213,8 +213,10 @@ mod tests {
         algorithm: &str,
     ) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex::new_ij(si, sj)];
         let end = vec![ArrayIndex::new_ij(ei, ej)];
@@ -239,8 +241,10 @@ mod tests {
         algorithm: &str,
     ) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex::new_ij(si, sj)];
         let end = endpoints
@@ -277,12 +281,16 @@ mod tests {
 
         let cost_function = CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost"}],
-                "barrier_layers": [{
-                    "layer_name": "barrier",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0
-                }],
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [{
+                            "layer_name": "barrier",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0
+                        }]
+                    }
+                },
                 "ignore_invalid_costs": false
             }"#,
         )
@@ -318,8 +326,10 @@ mod tests {
         algorithm: &str,
     ) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, cost_array_fill);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex::new_ij(si, sj)];
         let end = endpoints
@@ -349,8 +359,10 @@ mod tests {
     // Due to truncation solution to handle f32 costs.
     fn routing_many_to_many(algorithm: &str) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![
             ArrayIndex::new_ij(1, 1),
@@ -385,8 +397,10 @@ mod tests {
     #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
     fn routing_many_to_one(algorithm: &str) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![ArrayIndex::new_ij(1, 1), ArrayIndex::new_ij(5, 5)];
         let end = vec![ArrayIndex::new_ij(3, 3)];
@@ -424,8 +438,10 @@ mod tests {
             .build()
             .expect("failed to build zarr test dataset");
 
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
 
         let start = vec![ArrayIndex::new_ij(0, 0)];

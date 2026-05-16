@@ -312,8 +312,10 @@ mod tests {
     #[test]
     fn test_simple_cost_function_get_3x3() {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
@@ -384,8 +386,10 @@ mod tests {
         .store_metadata()
         .unwrap();
 
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .unwrap();
 
         let error = Dataset::open(tmp_path.path(), cost_function, 1_000)
             .err()
@@ -405,7 +409,7 @@ mod tests {
     fn test_simple_invariant_cost_function_get_3x3() {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = CostFunction::from_json(
-            r#"{"cost_layers": [{"layer_name": "A", "is_invariant": true}]}"#,
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A","is_invariant":true}]}}}"#,
         )
         .unwrap();
         let dataset =
@@ -518,8 +522,10 @@ mod tests {
     #[test]
     fn test_get_3x3_single_item_array() {
         let tmp = samples::cost_as_index_zarr(1, 1, 1, 1, 1, 1);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
@@ -541,8 +547,10 @@ mod tests {
     #[test_case((1, 1), vec![(0, 1, 2.), (1, 0, 2.5)] ; "bottom right corner")]
     fn test_get_3x3_two_by_two_array((si, sj): (u64, u64), expected_output: Vec<(u64, u64, f32)>) {
         let tmp = samples::cost_as_index_zarr(1, 2, 2, 1, 2, 2);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
@@ -578,8 +586,10 @@ mod tests {
         expected_output: Vec<(u64, u64, f32)>,
     ) {
         let tmp = samples::cost_as_index_zarr(1, 3, 3, 1, 3, 3);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
@@ -618,8 +628,10 @@ mod tests {
         expected_output: Vec<(u64, u64, f32)>,
     ) {
         let tmp = samples::cost_as_index_zarr(1, 4, 4, 1, 2, 2);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
@@ -646,13 +658,17 @@ mod tests {
         // Define cost function: A normal, C invariant, friction from B * 0.5
         let json = r#"
         {
-            "cost_layers": [
-                {"layer_name": "A"},
-                {"layer_name": "C", "is_invariant": true}
-            ],
-            "friction_layers": [
-                {"multiplier_layer": "B", "multiplier_scalar": 0.5}
-            ]
+            "routing_options": {
+                "default": {
+                    "cost_layers": [
+                        {"layer_name": "A"},
+                        {"layer_name": "C", "is_invariant": true}
+                    ],
+                    "friction_layers": [
+                        {"multiplier_layer": "B", "multiplier_scalar": 0.5}
+                    ]
+                }
+            }
         }
         "#;
 
@@ -734,8 +750,8 @@ mod tests {
         }
     }
 
-    #[test_case(r#"{"cost_layers": [{"layer_name": "B"}], "ignore_invalid_costs": true}"# ; "zero layer")]
-    #[test_case(r#"{"cost_layers": [{"layer_name": "C"}], "ignore_invalid_costs": true}"# ; "negative layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"ignore_invalid_costs":true}"# ; "zero layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"ignore_invalid_costs":true}"# ; "negative layer")]
     fn test_get_3x3_with_hard_barriered_layers(json: &str) {
         let tmp = samples::ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
@@ -756,8 +772,8 @@ mod tests {
         );
     }
 
-    #[test_case(r#"{"cost_layers": [{"layer_name": "B"}], "ignore_invalid_costs": false}"# ; "zero layer")]
-    #[test_case(r#"{"cost_layers": [{"layer_name": "C"}], "ignore_invalid_costs": false}"# ; "negative layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"ignore_invalid_costs":false}"# ; "zero layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"ignore_invalid_costs":false}"# ; "negative layer")]
     fn test_get_3x3_with_soft_barrier_layers(json: &str) {
         let tmp = samples::ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
@@ -811,14 +827,18 @@ mod tests {
     fn test_get_3x3_keeps_explicit_barriers_out_of_cached_costs() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0
+                        }
+                    ]
                 }
-            ]
+            }
         }
         "#;
 
@@ -852,15 +872,19 @@ mod tests {
     fn test_explicit_barriers_do_not_modify_cached_costs_when_invalid_costs_are_soft() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 1
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 1
+                        }
+                    ]
                 }
-            ],
+            },
             "ignore_invalid_costs": false
         }
         "#;
@@ -887,21 +911,25 @@ mod tests {
     fn test_cumulative_soft_barrier_masks_follow_retry_state() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 1
-                },
-                {
-                    "layer_name": "C",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 2
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 1
+                        },
+                        {
+                            "layer_name": "C",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 2
+                        }
+                    ]
                 }
-            ]
+            }
         }
         "#;
 
@@ -941,21 +969,25 @@ mod tests {
     fn test_cumulative_soft_barrier_masks_or_tied_importance_groups() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 1
-                },
-                {
-                    "layer_name": "C",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 1
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 1
+                        },
+                        {
+                            "layer_name": "C",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 1
+                        }
+                    ]
                 }
-            ]
+            }
         }
         "#;
 

@@ -487,19 +487,23 @@ mod tests {
         let mut features = LazySubset::<f32>::new(source.clone(), subset.clone());
         let cost_function = CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost_length"}],
-                "barrier_layers": [
-                    {
-                        "layer_name": "hard_barrier_a",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
-                    },
-                    {
-                        "layer_name": "hard_barrier_b",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost_length"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier_a",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            },
+                            {
+                                "layer_name": "hard_barrier_b",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
                     }
-                ]
+                }
             }"#,
         )
         .unwrap();
@@ -518,41 +522,45 @@ mod tests {
         let (_source_tmp, source) = make_source_store();
         let cost_function = CostFunction::from_json(
             r#"{
-                "cost_layers": [
-                    {"layer_name": "cost_length"},
-                    {
-                        "layer_name": "cost_invariant_src",
-                        "is_invariant": true
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [
+                            {"layer_name": "cost_length"},
+                            {
+                                "layer_name": "cost_invariant_src",
+                                "is_invariant": true
+                            }
+                        ],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier_a",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            },
+                            {
+                                "layer_name": "hard_barrier_b",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            },
+                            {
+                                "layer_name": "soft_barrier_low",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 1
+                            },
+                            {
+                                "layer_name": "soft_barrier_high",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 2
+                            }
+                        ]
                     }
-                ],
-                "barrier_layers": [
-                    {
-                        "layer_name": "hard_barrier_a",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
-                    },
-                    {
-                        "layer_name": "hard_barrier_b",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
-                    },
-                    {
-                        "layer_name": "soft_barrier_low",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 1
-                    },
-                    {
-                        "layer_name": "soft_barrier_high",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 2
-                    }
-                ]
+                }
             }"#,
         )
         .unwrap();
-        let layout = super::super::swap::inspect_source_layout(&source).unwrap();
+        let layout = super::super::swap::inspect_source_layout(&source, 1).unwrap();
         let swap_tmp = TempDir::new().unwrap();
         let swap = super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2).unwrap();
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
@@ -561,7 +569,7 @@ mod tests {
         assert!(writer.has_hard_barriers());
         assert_eq!(writer.soft_barrier_groups.len(), 2);
 
-        writer.materialize_chunk(0, 0);
+        writer.materialize_chunk(0, 0, 0);
 
         assert_eq!(
             read_subset_values::<f32>(&swap, "/cost", &subset),
@@ -593,14 +601,18 @@ mod tests {
     fn materialize_chunk_extracts_hard_barriers_and_preserves_costs() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0
+                        }
+                    ]
                 }
-            ]
+            }
         }
         "#;
 
@@ -617,7 +629,7 @@ mod tests {
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(source_dir.path()).expect("could not open source"));
         let cost_function = CostFunction::from_json(json).unwrap();
-        let layout = inspect_source_layout(&source).expect("Error inspecting source layout");
+        let layout = inspect_source_layout(&source, 1).expect("Error inspecting source layout");
         let swap_dir = tempfile::TempDir::new().expect("could not create swap dir");
         let swap = initialize_swap(
             swap_dir.path(),
@@ -629,7 +641,7 @@ mod tests {
 
         assert!(writer.has_hard_barriers());
 
-        writer.materialize_chunk(0, 0);
+        writer.materialize_chunk(0, 0, 0);
 
         let subset = ArraySubset::new_with_ranges(&[0..1, 0..3, 0..3]);
         let cost_values: Vec<f32> = Array::open(swap.clone(), "/cost")
@@ -656,12 +668,14 @@ mod tests {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
-        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
         let swap = initialize_swap(swap_tmp.path(), &layout, 0)
             .expect("failed to initialize swap dataset");
-        let cost_function = CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#)
-            .expect("failed to construct cost function");
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .expect("failed to construct cost function");
 
         let writer = DerivedDataWriter::new(&layout, source, swap, cost_function);
         let chunk_idx = writer
@@ -669,7 +683,7 @@ mod tests {
             .read()
             .expect("failed to acquire read lock");
 
-        assert_eq!(chunk_idx.dim(), (2, 2));
+        assert_eq!(chunk_idx.dim(), (1, 2, 2));
         assert!(chunk_idx.iter().all(|&value| !value));
     }
 
@@ -678,7 +692,7 @@ mod tests {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
-        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
         let readable_source: Arc<dyn zarrs::storage::ReadableStorageTraits> = Arc::new(
             FilesystemStore::new(tmp.path()).expect("could not reopen readable test store"),
         );
@@ -687,8 +701,10 @@ mod tests {
         let swap_tmp = TempDir::new().expect("could not create swap dir");
         let swap = initialize_swap(swap_tmp.path(), &layout, 0)
             .expect("failed to initialize swap dataset");
-        let cost_function = CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#)
-            .expect("failed to construct cost function");
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .expect("failed to construct cost function");
         let writer = DerivedDataWriter::new(&layout, source, swap, cost_function);
         let materialized = Mutex::new(Vec::new());
 
@@ -700,7 +716,7 @@ mod tests {
                 .read()
                 .expect("failed to acquire read lock");
             for (ci, cj) in [(0, 0), (1, 0)] {
-                if chunk_idx[[ci, cj]] {
+                if chunk_idx[[0, ci, cj]] {
                     materialized
                         .lock()
                         .expect("failed to record materialized chunk")
@@ -717,7 +733,7 @@ mod tests {
                 .read()
                 .expect("failed to acquire read lock");
             for (ci, cj) in [(0, 1), (1, 1)] {
-                if chunk_idx[[ci, cj]] {
+                if chunk_idx[[0, ci, cj]] {
                     materialized
                         .lock()
                         .expect("failed to record materialized chunk")
@@ -739,6 +755,66 @@ mod tests {
             .swap_chunk_idx
             .read()
             .expect("failed to acquire read lock");
-        assert_eq!(*chunk_idx, Array2::from_elem((2, 2), true));
+        assert_eq!(*chunk_idx, Array3::from_elem((1, 2, 2), true));
+    }
+
+    #[test]
+    fn ensure_derived_data_for_subset_materializes_each_band_chunk_once() {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(2, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(LayerConfig::custom("A", |band, _, _| (band + 1) as f32))
+            .build()
+            .expect("failed to create multi-band source dataset");
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(source_tmp.path()).expect("could not open test store"));
+        let readable_source: Arc<dyn zarrs::storage::ReadableStorageTraits> = Arc::new(
+            FilesystemStore::new(source_tmp.path()).expect("could not reopen readable test store"),
+        );
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"overhead":{"cost_layers":[{"layer_name":"A"}]},"underground":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .expect("failed to construct cost function");
+        let layout = inspect_source_layout(&source, cost_function.routing_options.len() as u32)
+            .expect("source layout inspection failed");
+        let array =
+            zarrs::array::Array::open(readable_source, "/A").expect("failed to open source array");
+        let swap_tmp = TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+            .expect("failed to initialize swap dataset");
+        let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
+
+        let first_option_subset = ArraySubset::new_with_ranges(&[0..1, 0..2, 0..2]);
+        writer.ensure_derived_data_for_subset(&array, &first_option_subset);
+
+        {
+            let chunk_idx = writer
+                .swap_chunk_idx
+                .read()
+                .expect("failed to acquire read lock");
+            assert!(chunk_idx[[0, 0, 0]]);
+            assert!(!chunk_idx[[1, 0, 0]]);
+        }
+
+        let second_option_subset = ArraySubset::new_with_ranges(&[1..2, 0..2, 0..2]);
+        writer.ensure_derived_data_for_subset(&array, &second_option_subset);
+
+        let chunk_idx = writer
+            .swap_chunk_idx
+            .read()
+            .expect("failed to acquire read lock");
+        assert_eq!(*chunk_idx, Array3::from_elem((2, 1, 1), true));
+
+        let cost_band_0: Vec<f32> = Array::open(swap.clone(), "/cost")
+            .expect("could not open derived cost array")
+            .retrieve_array_subset_elements(&first_option_subset)
+            .expect("could not read first option cost array");
+        let cost_band_1: Vec<f32> = Array::open(swap, "/cost")
+            .expect("could not open derived cost array")
+            .retrieve_array_subset_elements(&second_option_subset)
+            .expect("could not read second option cost array");
+
+        assert_eq!(cost_band_0, vec![1.0; 4]);
+        assert_eq!(cost_band_1, vec![2.0; 4]);
     }
 }

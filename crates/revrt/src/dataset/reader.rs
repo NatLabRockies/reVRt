@@ -695,12 +695,105 @@ mod tests {
         );
         assert_eq!(
             retry_one,
-            vec![ArrayIndex { i: 0, j: 0 }, ArrayIndex { i: 2, j: 1 }]
+            vec![ArrayIndex::new_ij(0, 0), ArrayIndex::new_ij(2, 1)]
         );
     }
 
-    fn reader_for_grid(grid_nrows: u64, grid_ncols: u64) -> NeighborhoodReader {
+    #[test]
+    fn get_3x3_reads_from_requested_option_band() {
         let fixture = reader_fixture_with_shape(
+            2,
+            3,
+            3,
+            vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+                17.0, 18.0, 19.0,
+            ],
+            vec![0.0; 18],
+            vec![false; 18],
+            vec![false; 18],
+            vec![false; 18],
+        );
+
+        let neighbors = fixture.reader.get_3x3(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 1,
+            },
+            &NoOpMaterializer {
+                has_hard_barriers: false,
+            },
+        );
+
+        assert!(neighbors.iter().all(|(index, _)| index.option == 1));
+        assert!(neighbors.contains(&(
+            ArrayIndex {
+                i: 0,
+                j: 1,
+                option: 1
+            },
+            13.5
+        )));
+        assert!(neighbors.contains(&(
+            ArrayIndex {
+                i: 1,
+                j: 2,
+                option: 1
+            },
+            15.5
+        )));
+    }
+
+    #[test]
+    fn grid_shape_reports_option_count() {
+        let fixture = reader_fixture_with_shape(
+            2,
+            3,
+            4,
+            vec![1.0; 24],
+            vec![0.0; 24],
+            vec![false; 24],
+            vec![false; 24],
+            vec![false; 24],
+        );
+
+        assert_eq!(fixture.reader.grid_shape(), (3, 4, 2));
+    }
+
+    #[test]
+    fn get_cell_cost_reads_requested_option_band() {
+        let fixture = reader_fixture_with_shape(
+            2,
+            2,
+            2,
+            vec![1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 30.0, 40.0],
+            vec![0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0],
+            vec![false; 8],
+            vec![false; 8],
+            vec![false; 8],
+        );
+
+        let cost = fixture
+            .reader
+            .get_cell_cost(
+                &ArrayIndex {
+                    i: 1,
+                    j: 0,
+                    option: 1,
+                },
+                &NoOpMaterializer {
+                    has_hard_barriers: false,
+                },
+            )
+            .unwrap();
+
+        assert_eq!(cost, 31.0);
+    }
+
+    fn reader_for_grid(grid_nrows: u64, grid_ncols: u64) -> DerivedDataReader {
+        let fixture = reader_fixture_with_shape(
+            1,
             grid_nrows,
             grid_ncols,
             vec![1.0; (grid_nrows * grid_ncols) as usize],
@@ -720,6 +813,7 @@ mod tests {
         soft_retry_one_values: Vec<bool>,
     ) -> ReaderFixture {
         reader_fixture_with_shape(
+            1,
             3,
             3,
             cost_values,
@@ -730,7 +824,9 @@ mod tests {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn reader_fixture_with_shape(
+        grid_noptions: u64,
         grid_nrows: u64,
         grid_ncols: u64,
         cost_values: Vec<f32>,
@@ -740,25 +836,33 @@ mod tests {
         soft_retry_one_values: Vec<bool>,
     ) -> ReaderFixture {
         let source_tmp = ZarrTestBuilder::new()
-            .dimensions(1, grid_nrows, grid_ncols)
-            .chunks(1, grid_nrows, grid_ncols)
+            .dimensions(grid_noptions, grid_nrows, grid_ncols)
+            .chunks(grid_noptions, grid_nrows, grid_ncols)
             .layer(LayerConfig::ones("source"))
             .build()
             .expect("failed to create source test dataset");
         let source: ReadableListableStorage = Arc::new(
             FilesystemStore::new(source_tmp.path()).expect("could not open source test store"),
         );
-        let layout =
-            inspect_source_layout(&source).expect("source layout inspection should succeed");
+        let layout = inspect_source_layout(&source, grid_noptions as u32)
+            .expect("source layout inspection should succeed");
 
         let swap_tmp = TempDir::new().expect("could not create temporary swap");
         let swap = initialize_swap(swap_tmp.path(), &layout, 1)
             .expect("swap initialization should succeed");
 
-        store_f32_layer(swap.clone(), "/cost", grid_nrows, grid_ncols, cost_values);
+        store_f32_layer(
+            swap.clone(),
+            "/cost",
+            grid_noptions,
+            grid_nrows,
+            grid_ncols,
+            cost_values,
+        );
         store_f32_layer(
             swap.clone(),
             "/cost_invariant",
+            grid_noptions,
             grid_nrows,
             grid_ncols,
             invariant_values,
@@ -766,6 +870,7 @@ mod tests {
         store_bool_layer(
             swap.clone(),
             "/hard_barrier_mask",
+            grid_noptions,
             grid_nrows,
             grid_ncols,
             hard_barrier_values,
@@ -773,6 +878,7 @@ mod tests {
         store_bool_layer(
             swap.clone(),
             "/soft_barrier_mask_retry_0",
+            grid_noptions,
             grid_nrows,
             grid_ncols,
             soft_retry_zero_values,
@@ -780,6 +886,7 @@ mod tests {
         store_bool_layer(
             swap.clone(),
             "/soft_barrier_mask_retry_1",
+            grid_noptions,
             grid_nrows,
             grid_ncols,
             soft_retry_one_values,
@@ -797,13 +904,20 @@ mod tests {
     fn store_f32_layer(
         swap: ReadableWritableListableStorage,
         path: &str,
+        grid_noptions: u64,
         grid_nrows: u64,
         grid_ncols: u64,
         values: Vec<f32>,
     ) {
-        let data =
-            Array3::from_shape_vec((1_usize, grid_nrows as usize, grid_ncols as usize), values)
-                .expect("f32 layer values should match requested shape");
+        let data = Array3::from_shape_vec(
+            (
+                grid_noptions as usize,
+                grid_nrows as usize,
+                grid_ncols as usize,
+            ),
+            values,
+        )
+        .expect("f32 layer values should match requested shape");
         let array = Array::open(swap, path).expect("expected f32 layer to exist");
         let subset = chunk_subset(&array);
 
@@ -815,13 +929,20 @@ mod tests {
     fn store_bool_layer(
         swap: ReadableWritableListableStorage,
         path: &str,
+        grid_noptions: u64,
         grid_nrows: u64,
         grid_ncols: u64,
         values: Vec<bool>,
     ) {
-        let data =
-            Array3::from_shape_vec((1_usize, grid_nrows as usize, grid_ncols as usize), values)
-                .expect("bool layer values should match requested shape");
+        let data = Array3::from_shape_vec(
+            (
+                grid_noptions as usize,
+                grid_nrows as usize,
+                grid_ncols as usize,
+            ),
+            values,
+        )
+        .expect("bool layer values should match requested shape");
         let array = Array::open(swap, path).expect("expected bool layer to exist");
         let subset = chunk_subset(&array);
 

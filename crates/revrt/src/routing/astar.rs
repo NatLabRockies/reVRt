@@ -121,4 +121,67 @@ mod tests {
         assert_eq!(neighbors.len(), 2);
         assert_eq!(min_cost.get(), Some(12));
     }
+
+    #[test]
+    fn layered_octile_distance_ignores_option_dimension() {
+        let goals = [
+            ArrayIndex {
+                i: 3,
+                j: 3,
+                option: 1,
+            },
+            ArrayIndex {
+                i: 8,
+                j: 8,
+                option: 2,
+            },
+        ];
+        let distance = super::octile_distance(
+            &ArrayIndex {
+                i: 0,
+                j: 1,
+                option: 0,
+            },
+            &goals,
+        );
+
+        assert_eq!(distance, 1.0 + 2.0 * std::f64::consts::SQRT_2);
+    }
+
+    #[test]
+    fn layered_astar_successors_tracks_lowest_seen_cost() {
+        let min_cost = Cell::new(None);
+
+        let neighbors = super::astar_successors(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            &mut |_| {
+                vec![
+                    (
+                        ArrayIndex {
+                            i: 1,
+                            j: 2,
+                            option: 0,
+                        },
+                        15_u64,
+                    ),
+                    (
+                        ArrayIndex {
+                            i: 1,
+                            j: 1,
+                            option: 1,
+                        },
+                        8_u64,
+                    ),
+                ]
+            },
+            &min_cost,
+        );
+
+        assert_eq!(neighbors.len(), 2);
+        assert_eq!(min_cost.get(), Some(8));
+    }
 }
