@@ -250,6 +250,11 @@ def test_buffered_route_characterizations_with_multiplier(
     )
 
 
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
 def test_buffered_route_characterizations_strips_required_path_whitespace(
     cli_runner, cli_error_message, tmp_cwd, sample_raster
 ):

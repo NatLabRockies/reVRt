@@ -282,6 +282,7 @@ class LayeredFile:
             msg = f"File {self.fp!r} exits and overwrite=False"
             raise revrtFileExistsError(msg)
 
+        template_file = str(template_file).strip()
         _validate_template(template_file)
 
         logger.debug("\t- Initializing %s from %s", self.fp, template_file)

@@ -34,8 +34,13 @@ class BaseLayerCreator(ABC):
             Data type for final dataset. By default, ``float32``.
         """
         self._io_handler = io_handler
-        self.input_layer_dir = Path(input_layer_dir).expanduser().resolve()
-        self._output_tiff_dir = Path(output_tiff_dir).expanduser().resolve()
+
+        self.input_layer_dir = (
+            Path(str(input_layer_dir).strip()).expanduser().resolve()
+        )
+        self._output_tiff_dir = (
+            Path(str(output_tiff_dir).strip()).expanduser().resolve()
+        )
         self._dtype = dtype
 
     @property

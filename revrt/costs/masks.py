@@ -52,7 +52,7 @@ class Masks:
         self.crs = crs
         self.transform = transform
 
-        self._masks_dir = Path(masks_dir)
+        self._masks_dir = Path(str(masks_dir).strip())
         self._masks_dir.mkdir(parents=True, exist_ok=True)
 
         self._landfall_mask = None

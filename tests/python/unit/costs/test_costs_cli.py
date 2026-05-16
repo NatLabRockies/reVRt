@@ -376,14 +376,14 @@ def test_build_routing_layers_cli_strips_required_path_whitespace(
         "routing_file": f"  {test_fp}  ",
         "template_file": str(sample_extra_fp),
         "input_layer_dir": str(layer_dir),
-        "output_tiff_dir": str(out_tiff_dir),
-        "masks_dir": str(masks_for_testing._masks_dir),
+        "output_tiff_dir": f"  {out_tiff_dir}  ",
+        "masks_dir": f"    {masks_for_testing._masks_dir}  ",
         "layers": [
             {
                 "layer_name": "fi_1",
                 "include_in_file": False,
                 "build": {
-                    "fi_1.tif": {"extent": "wet+", "pass_through": True}
+                    "  fi_1.tif ": {"extent": "wet+", "pass_through": True}
                 },
             }
         ],
