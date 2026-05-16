@@ -211,7 +211,8 @@ def _route_characterizations_from_config(
     try:
         with (
             dask_performance_report(
-                "route_characterizations", out_dir=log_directory
+                "route_characterizations",
+                out_dir=log_directory if max_workers != 1 else None,
             ),
             log_runtime("Characterizing routes"),
         ):

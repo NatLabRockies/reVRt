@@ -218,7 +218,8 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     try:
         with (
             dask_performance_report(
-                "build_routing_layers", out_dir=log_directory
+                "build_routing_layers",
+                out_dir=log_directory if max_workers != 1 else None,
             ),
             log_runtime("Building routing layers"),
         ):
