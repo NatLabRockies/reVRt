@@ -202,6 +202,12 @@ impl Dataset {
         )
     }
 
+    /// Return the center-cell entry cost for a single option state.
+    pub(super) fn get_cell_cost(&self, index: &ArrayIndex) -> Option<f32> {
+        self.derived_data_reader
+            .get_cell_cost(index, &self.derived_data_writer)
+    }
+
     /// Return the number of soft barrier importance groups.
     ///
     /// # Returns
