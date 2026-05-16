@@ -45,12 +45,12 @@ struct CacheBudgets {
     per_soft_barrier_cache: u64,
 }
 
-/// Cached access to derived 3x3 neighborhoods from the swap dataset.
+/// Cached access to derived data from the swap dataset.
 ///
 /// The reader keeps decoded chunk caches for each derived array needed during
 /// routing so repeated neighborhood lookups can avoid reopening and decoding
 /// the same swap chunks.
-pub(super) struct NeighborhoodReader {
+pub(super) struct DerivedDataReader {
     /// Decoded chunk cache for the main per-cell routing cost.
     cost_cache: ChunkCacheDecodedLruSizeLimit,
     /// Decoded chunk cache for invariant movement costs.
@@ -67,7 +67,7 @@ pub(super) struct NeighborhoodReader {
     grid_ncols: u64,
 }
 
-impl NeighborhoodReader {
+impl DerivedDataReader {
     /// Open cached readers for the derived swap arrays.
     ///
     /// This initializes one decoded chunk cache per derived array used during
@@ -84,7 +84,7 @@ impl NeighborhoodReader {
     /// `layout`: Source grid layout metadata used to record dataset shape.
     ///
     /// # Returns
-    /// A `NeighborhoodReader` with initialized chunk caches for every derived
+    /// A `DerivedDataReader` with initialized chunk caches for every derived
     /// neighborhood array.
     pub(super) fn open(
         swap: ReadableWritableListableStorage,
@@ -738,7 +738,7 @@ mod tests {
             soft_retry_one_values,
         );
 
-        let reader = NeighborhoodReader::open(swap, 90, 1, layout).expect("reader should open");
+        let reader = DerivedDataReader::open(swap, 90, 1, layout).expect("reader should open");
 
         ReaderFixture {
             _source_tmp: source_tmp,
@@ -796,6 +796,6 @@ mod tests {
     struct ReaderFixture {
         _source_tmp: TempDir,
         _swap_tmp: TempDir,
-        reader: NeighborhoodReader,
+        reader: DerivedDataReader,
     }
 }

@@ -31,7 +31,7 @@ use crate::cost::{BarrierLayer, CostFunction};
 use crate::error::Result;
 use derived::DerivedDataWriter;
 pub(crate) use lazy_subset::LazySubset;
-use reader::NeighborhoodReader;
+use reader::DerivedDataReader;
 use swap::{initialize_swap, inspect_source_layout};
 
 /// Manage source features together with derived swap-backed routing data.
@@ -53,7 +53,7 @@ pub(super) struct Dataset {
     /// Derived-data materializer responsible for chunk tracking and writes.
     derived_data_writer: DerivedDataWriter,
     /// Reader responsible for cached neighborhood access to derived data.
-    neighborhood_reader: NeighborhoodReader,
+    neighborhood_reader: DerivedDataReader,
     /// Shape of the source routing grid as `(rows, cols, options)`.
     pub(super) grid_shape: (u64, u64, u32),
 }
@@ -141,7 +141,7 @@ impl Dataset {
         let derived_data_writer =
             DerivedDataWriter::new(&source_layout, source.clone(), swap.clone(), cost_function);
 
-        let neighborhood_reader = NeighborhoodReader::open(
+        let neighborhood_reader = DerivedDataReader::open(
             swap.clone(),
             cache_size,
             soft_barrier_group_count,
