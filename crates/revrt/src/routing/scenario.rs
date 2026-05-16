@@ -18,6 +18,7 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use super::cost_as_u64;
+use crate::cost::{DriverRuleSet, TransitionCostTable};
 use crate::routing::features::Features;
 use crate::{ArrayIndex, Result};
 
@@ -30,6 +31,8 @@ use crate::{ArrayIndex, Result};
 pub(super) struct Scenario {
     /// Derived dataset containing cost arrays and barrier masks.
     pub dataset: crate::dataset::Dataset,
+    transition_costs: TransitionCostTable,
+    driver_rules: DriverRuleSet,
     #[allow(dead_code)]
     /// Source feature metadata kept alive for scenario lifetime management.
     features: Features,
@@ -56,6 +59,8 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
+        let driver_rules = cost_function.driver_rule_set()?;
+        let transition_costs = cost_function.transition_cost_table()?;
         let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open_with_swap(
             store_path,
@@ -64,7 +69,12 @@ impl Scenario {
             swap_fp,
         )?;
 
-        Ok(Self { dataset, features })
+        Ok(Self {
+            dataset,
+            transition_costs,
+            driver_rules,
+            features,
+        })
     }
 
     /// Open a scenario that derives routing data directly from the source.
@@ -84,10 +94,17 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
+        let driver_rules = cost_function.driver_rule_set()?;
+        let transition_costs = cost_function.transition_cost_table()?;
         let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open(store_path, cost_function, cache_size)?;
 
-        Ok(Self { dataset, features })
+        Ok(Self {
+            dataset,
+            transition_costs,
+            driver_rules,
+            features,
+        })
     }
 
     /// Return retry-aware successor cells for a routing attempt.
@@ -110,7 +127,7 @@ impl Scenario {
         position: &ArrayIndex,
         dropped_soft_groups: usize,
     ) -> Vec<(ArrayIndex, u64)> {
-        let neighbors = self.dataset.get_3x3(position);
+        let spatial_neighbors = self.dataset.get_3x3(position);
         let soft_barrier_cells: HashSet<_> = self
             .dataset
             .get_3x3_soft_barrier_cells(position, dropped_soft_groups)
@@ -121,11 +138,54 @@ impl Scenario {
             return Vec::new();
         }
 
-        let neighbors = neighbors
+        if self.driver_multiplier(position).is_none() {
+            return Vec::new();
+        }
+
+        let mut neighbors = spatial_neighbors
             .into_iter()
             .filter(|(p, c)| c.is_finite() && *c > 0.0 && !soft_barrier_cells.contains(p))
-            .map(|(p, c)| (p, cost_as_u64(c)))
-            .collect();
+            .filter_map(|(p, c)| {
+                self.driver_multiplier(&p)
+                    .map(|multiplier| (p, cost_as_u64(c * multiplier)))
+            })
+            .collect::<Vec<_>>();
+
+        let (_, _, noptions) = self.grid_shape();
+        for option in 0..noptions {
+            if option == position.option {
+                continue;
+            }
+
+            let destination = ArrayIndex {
+                i: position.i,
+                j: position.j,
+                option,
+            };
+            let destination_soft_barriers: HashSet<_> = self
+                .dataset
+                .get_3x3_soft_barrier_cells(&destination, dropped_soft_groups)
+                .into_iter()
+                .collect();
+            if destination_soft_barriers.contains(&destination) {
+                continue;
+            }
+
+            let Some(destination_center_cost) = self.dataset.get_cell_cost(&destination) else {
+                continue; // destination is hard barriered
+            };
+            let Some(driver_multiplier) = self.driver_multiplier(&destination) else {
+                continue; // destination is excluded by the driver
+            };
+
+            let transition_cost = self.transition_cost(position.option, option);
+            neighbors.push((
+                destination,
+                transition_cost
+                    .saturating_add(cost_as_u64(destination_center_cost * driver_multiplier)),
+            ));
+        }
+
         trace!("Adjusting neighbors' types: {:?}", neighbors);
         neighbors
     }
