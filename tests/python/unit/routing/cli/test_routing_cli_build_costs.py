@@ -257,6 +257,38 @@ def test_cli_build_route_costs_command(
     assert np.allclose(final_layer, expected_vals)
 
 
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_cli_build_route_costs_strips_required_path_whitespace(
+    cli_runner, sample_layered_data, tmp_path
+):
+    """build-route-costs CLI strips whitespace on required path inputs"""
+
+    lcp_config = {
+        "cost_fpath": str(sample_layered_data),
+        "cost_layers": [{"layer_name": "layer_1"}],
+        "ignore_invalid_costs": True,
+    }
+
+    lcp_config_fp = tmp_path / "cli_trimmed_lcp_config.json"
+    lcp_config_fp.write_text(json.dumps(lcp_config))
+
+    cli_config = {"lcp_config_fp": f"  {lcp_config_fp}  "}
+
+    cli_config_fp = tmp_path / "cli_trimmed_command_config.json"
+    cli_config_fp.write_text(json.dumps(cli_config))
+
+    result = cli_runner.invoke(
+        main, ["build-route-costs", "-c", str(cli_config_fp)]
+    )
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "agg_costs.tif").exists()
+    assert (tmp_path / "final_routing_layer.tif").exists()
+
+
 def test_build_route_costs_command_metadata():
     """build_route_costs_command should expose CLI settings"""
 

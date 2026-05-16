@@ -497,7 +497,10 @@ def _geometry_centroids(features):
 
 
 layers_to_file_command = CLICommandFromClass(
-    LayeredFile, method="layers_to_file", add_collect=False
+    LayeredFile,
+    method="layers_to_file",
+    add_collect=False,
+    config_preprocessor=partial(strip_path_keys, keys_to_fix={"fp"}),
 )
 layers_from_file_command = CLICommandFromFunction(
     function=layers_from_file,

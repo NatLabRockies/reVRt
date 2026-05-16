@@ -862,6 +862,30 @@ def test_cli_layers_to_file(
     and (platform.system() == "Windows"),
     reason="CLI does not work under tox env on windows",
 )
+def test_cli_layers_to_file_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file, tmp_path, sample_tiff_fp
+):
+    """layers-to-file CLI strips whitespace on required path inputs"""
+
+    out_file_fp = tmp_path / "test-cli-trimmed.zarr"
+    config = {"fp": f"  {out_file_fp}  ", "layers": [str(sample_tiff_fp)]}
+
+    out_path = run_gaps_cli_with_expected_file(
+        "layers-to-file",
+        config,
+        tmp_path,
+        glob_pattern="test-cli-trimmed.zarr",
+    )
+
+    assert Path(out_path) == out_file_fp
+    assert out_file_fp.exists()
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
 def test_cli_layers_from_file_single(
     cli_runner, tmp_path, sample_tiff_fp, sample_tiff_fp_2x
 ):

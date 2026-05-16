@@ -350,6 +350,62 @@ def test_build_masks_cli_strips_required_path_whitespace(
     assert (masks_dir / Masks.LANDFALL_MASK_FNAME).exists()
 
 
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_build_routing_layers_cli_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file,
+    tmp_path,
+    sample_iso_fp,
+    sample_nlcd_fp,
+    sample_slope_fp,
+    sample_extra_fp,
+    tiff_layers_for_testing,
+    masks_for_testing,
+):
+    """CLI build-routing-layers strips whitespace on required paths"""
+
+    test_fp = tmp_path / "trimmed_test.zarr"
+    out_tiff_dir = tmp_path / "trimmed_out_tiffs"
+    layer_dir, __ = tiff_layers_for_testing
+
+    config = {
+        "execution_control": {"max_workers": 1},
+        "routing_file": f"  {test_fp}  ",
+        "template_file": str(sample_extra_fp),
+        "input_layer_dir": str(layer_dir),
+        "output_tiff_dir": str(out_tiff_dir),
+        "masks_dir": str(masks_for_testing._masks_dir),
+        "layers": [
+            {
+                "layer_name": "fi_1",
+                "include_in_file": False,
+                "build": {
+                    "fi_1.tif": {"extent": "wet+", "pass_through": True}
+                },
+            }
+        ],
+        "dry_costs": {
+            "iso_region_tiff": str(sample_iso_fp),
+            "nlcd_tiff": str(sample_nlcd_fp),
+            "slope_tiff": str(sample_slope_fp),
+            "extra_tiffs": [str(sample_extra_fp)],
+        },
+    }
+
+    run_gaps_cli_with_expected_file(
+        "build-routing-layers",
+        config,
+        tmp_path,
+        glob_pattern="trimmed_test.zarr",
+    )
+
+    assert test_fp.exists()
+    assert (out_tiff_dir / "fi_1.tif").exists()
+
+
 def test_build_config_missing_action(tmp_path):
     """Test correct error is raised for config with no actions"""
     tiff_fp = tmp_path / "nonexistent.tif"

@@ -1,5 +1,8 @@
 """reVrt tests for routing one point to many endpoints"""
 
+import json
+import os
+import platform
 import warnings
 from pathlib import Path
 
@@ -9,6 +12,7 @@ import pandas as pd
 import xarray as xr
 from shapely.geometry import LineString, Point, Polygon
 
+from revrt._cli import main
 from revrt.exceptions import revrtValueError
 from revrt.warn import revrtWarning
 from revrt.routing.cli.build_route_table import (
@@ -427,6 +431,68 @@ def test_point_to_feature_route_table_radius_only(
     clipped = gpd.read_file(expected_feature)
     assert len(clipped) == 1
     assert "end_feat_id" in clipped.columns
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_build_feature_route_table_cli_strips_required_path_whitespace(
+    cli_runner, tmp_path, revx_transmission_layers
+):
+    """build-feature-route-table CLI strips required path whitespace"""
+
+    cost_fp = tmp_path / "cost_surface_cli.zarr"
+    with xr.open_dataset(
+        revx_transmission_layers, consolidated=False, engine="zarr"
+    ) as ds:
+        subset = ds.isel(y=slice(0, 6), x=slice(0, 6))
+        subset.to_zarr(cost_fp, mode="w", zarr_format=3, consolidated=False)
+        crs = subset.rio.crs
+        transform = subset.rio.transform()
+        shape = (subset.rio.height, subset.rio.width)
+
+    resolution = shape[0] + 2
+    cell_size = max(abs(transform.a), abs(transform.e))
+    sc_points = make_rev_sc_points(
+        shape[0], shape[1], crs, transform, resolution=resolution
+    )
+    point_geom = sc_points.geometry.iloc[0]
+
+    features = gpd.GeoDataFrame(
+        {"gid": [1]},
+        geometry=[
+            LineString(
+                [
+                    (point_geom.x - cell_size, point_geom.y),
+                    (point_geom.x + cell_size, point_geom.y),
+                ]
+            )
+        ],
+        crs=crs,
+    )
+    features_fp = tmp_path / "features_cli.gpkg"
+    features.to_file(features_fp, driver="GPKG")
+
+    config = {
+        "cost_fpath": f"  {cost_fp}  ",
+        "features_fpath": f"  {features_fp}  ",
+        "resolution": resolution,
+        "radius": 3 * cell_size,
+        "expand_radius": False,
+    }
+
+    config_fp = tmp_path / "build_route_table_whitespace.json"
+    config_fp.write_text(json.dumps(config))
+
+    result = cli_runner.invoke(
+        main, ["build-feature-route-table", "-c", str(config_fp)]
+    )
+
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "mapped_features.gpkg").exists()
+    assert (tmp_path / "route_table.csv").exists()
 
 
 if __name__ == "__main__":
