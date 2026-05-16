@@ -126,12 +126,16 @@ impl Dataset {
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
         let soft_barrier_group_count = cost_function.soft_barrier_groups().len();
+        let routing_option_count =
+            u32::try_from(cost_function.routing_options.len()).map_err(|_| {
+                crate::error::Error::IO(std::io::Error::other("routing option count exceeds u32"))
+            })?;
 
         let filesystem =
             zarrs::filesystem::FilesystemStore::new(path).expect("could not open filesystem store");
         let source: ReadableListableStorage = std::sync::Arc::new(filesystem);
 
-        let source_layout = inspect_source_layout(&source)?;
+        let source_layout = inspect_source_layout(&source, routing_option_count)?;
         let swap = initialize_swap(swap_fp, &source_layout, soft_barrier_group_count)?;
 
         let derived_data_writer =
