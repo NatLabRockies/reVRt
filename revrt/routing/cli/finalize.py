@@ -5,7 +5,7 @@ import shutil
 import logging
 import warnings
 from pathlib import Path
-from functools import cached_property, partial
+from functools import cached_property
 
 import rasterio
 import numpy as np
@@ -517,12 +517,17 @@ def _compute_linear_lm(features):
     return features
 
 
+def _preprocess_finalize_routes(config):
+    """Preprocess config for finalize-routes command"""
+    return strip_path_keys(
+        config, keys_to_fix={"collect_pattern", "project_dir"}
+    )
+
+
 finalize_routes_command = CLICommandFromClass(
     init=RoutePostProcessor,
     method="process",
     name="finalize-routes",
     add_collect=False,
-    config_preprocessor=partial(
-        strip_path_keys, keys_to_fix={"collect_pattern", "project_dir"}
-    ),
+    config_preprocessor=_preprocess_finalize_routes,
 )

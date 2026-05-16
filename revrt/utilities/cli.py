@@ -4,7 +4,6 @@ import json
 import logging
 from pathlib import Path
 from warnings import warn
-from functools import partial
 
 import rasterio
 import rioxarray
@@ -496,11 +495,45 @@ def _geometry_centroids(features):
     return geometry.set_crs(features.crs, allow_override=True)
 
 
+def _preprocess_layers_to_file(config):
+    """Preprocess config for layers_to_file command"""
+    return strip_path_keys(config, keys_to_fix={"fp"})
+
+
+def _preprocess_convert_pois_to_lines(config):
+    """Preprocess config for convert_pois_to_lines command"""
+    return strip_path_keys(
+        config, keys_to_fix={"poi_csv_f", "template_f", "out_f"}
+    )
+
+
+def _preprocess_convert_map_ss_to_rr(config):
+    """Preprocess config for map_ss_to_rr command"""
+    return strip_path_keys(
+        config, keys_to_fix={"features_fpath", "regions_fpath", "out_fpath"}
+    )
+
+
+def _preprocess_convert_ss_from_conn(config):
+    """Preprocess config for ss_from_conn command"""
+    return strip_path_keys(
+        config, keys_to_fix={"connections_fpath", "out_fpath"}
+    )
+
+
+def _preprocess_convert_add_rr_to_nn(config):
+    """Preprocess config for add_rr_to_nn command"""
+    return strip_path_keys(
+        config,
+        keys_to_fix={"network_nodes_fpath", "regions_fpath", "out_fpath"},
+    )
+
+
 layers_to_file_command = CLICommandFromClass(
     LayeredFile,
     method="layers_to_file",
     add_collect=False,
-    config_preprocessor=partial(strip_path_keys, keys_to_fix={"fp"}),
+    config_preprocessor=_preprocess_layers_to_file,
 )
 layers_from_file_command = CLICommandFromFunction(
     function=layers_from_file,
@@ -512,30 +545,20 @@ convert_pois_to_lines_command = CLICommandFromFunction(
     name="convert-pois-to-lines",
     add_collect=False,
     split_keys=None,
-    config_preprocessor=partial(
-        strip_path_keys, keys_to_fix={"poi_csv_f", "template_f", "out_f"}
-    ),
+    config_preprocessor=_preprocess_convert_pois_to_lines,
 )
 map_ss_to_rr_command = CLICommandFromFunction(
     function=map_ss_to_rr,
     add_collect=False,
-    config_preprocessor=partial(
-        strip_path_keys,
-        keys_to_fix={"features_fpath", "regions_fpath", "out_fpath"},
-    ),
+    config_preprocessor=_preprocess_convert_map_ss_to_rr,
 )
 ss_from_conn_command = CLICommandFromFunction(
     function=ss_from_conn,
     add_collect=False,
-    config_preprocessor=partial(
-        strip_path_keys, keys_to_fix={"connections_fpath", "out_fpath"}
-    ),
+    config_preprocessor=_preprocess_convert_ss_from_conn,
 )
 add_rr_to_nn_command = CLICommandFromFunction(
     function=add_rr_to_nn,
     add_collect=False,
-    config_preprocessor=partial(
-        strip_path_keys,
-        keys_to_fix={"network_nodes_fpath", "regions_fpath", "out_fpath"},
-    ),
+    config_preprocessor=_preprocess_convert_add_rr_to_nn,
 )

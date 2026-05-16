@@ -4,7 +4,6 @@ import json
 import logging
 from pathlib import Path
 from warnings import warn
-from functools import partial
 
 import rioxarray
 import dask.config
@@ -392,15 +391,24 @@ def _combine_friction_and_barriers(config, io_handler, lock):
     io_handler.write_layer(combined, merge_config.output_layer_name)
 
 
+def _preprocess_build_masks(config):
+    """Preprocess config for build_masks command"""
+    return strip_path_keys(
+        config, keys_to_fix={"land_mask_shp_fp", "template_file", "masks_dir"}
+    )
+
+
+def _preprocess_build_routing_layers(config):
+    """Preprocess config for build_routing_layers command"""
+    return strip_path_keys(config, keys_to_fix={"routing_file"})
+
+
 build_masks_command = CLICommandFromFunction(
     build_masks,
     name="build-masks",
     add_collect=False,
     split_keys=None,
-    config_preprocessor=partial(
-        strip_path_keys,
-        keys_to_fix={"land_mask_shp_fp", "template_file", "masks_dir"},
-    ),
+    config_preprocessor=_preprocess_build_masks,
 )
 
 build_routing_layers_command = CLICommandFromFunction(
@@ -408,5 +416,5 @@ build_routing_layers_command = CLICommandFromFunction(
     name="build-routing-layers",
     add_collect=False,
     split_keys=None,
-    config_preprocessor=partial(strip_path_keys, keys_to_fix={"routing_file"}),
+    config_preprocessor=_preprocess_build_routing_layers,
 )

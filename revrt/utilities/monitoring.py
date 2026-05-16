@@ -177,7 +177,7 @@ def close_dask_client(client, timeout=600):
 
     Parameters
     ----------
-    client : dask.distributed.Client or None
+    client : distributed.Client or None
         Dask client to close. If ``None``, this function does nothing.
     timeout : int, optional
         Number of seconds to wait for the client to close before timing

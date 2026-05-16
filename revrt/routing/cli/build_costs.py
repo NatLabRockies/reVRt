@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from functools import partial
 
 from gaps.cli import CLICommandFromFunction
 from gaps.config import load_config
@@ -95,11 +94,14 @@ def build_routing_layer(lcp_config_fp, out_dir, polarity=None, voltage=None):
     return [str(cost_out_fp), str(frl_out_fp)]
 
 
+def _preprocess_build_routing_layer(config):
+    """Preprocess config for build_routing_layer command"""
+    return strip_path_keys(config, keys_to_fix={"lcp_config_fp", "out_dir"})
+
+
 build_route_costs_command = CLICommandFromFunction(
     build_routing_layer,
     name="build-route-costs",
     add_collect=False,
-    config_preprocessor=partial(
-        strip_path_keys, keys_to_fix={"lcp_config_fp", "out_dir"}
-    ),
+    config_preprocessor=_preprocess_build_routing_layer,
 )

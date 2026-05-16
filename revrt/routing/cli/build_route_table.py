@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 from warnings import warn
-from functools import partial
 
 import geopandas as gpd
 import xarray as xr
@@ -233,12 +232,16 @@ def _check_output_filepaths(out_dir, feature_out_fp, route_table_out_fp):
     return feature_out_fp, route_table_out_fp
 
 
+def _preprocess_point_to_feature_route_table(config):
+    """Preprocess config for point_to_feature_route_table command"""
+    return strip_path_keys(
+        config, keys_to_fix={"cost_fpath", "features_fpath", "out_dir"}
+    )
+
+
 build_point_to_feature_route_table_command = CLICommandFromFunction(
     point_to_feature_route_table,
     name="build-feature-route-table",
     add_collect=False,
-    config_preprocessor=partial(
-        strip_path_keys,
-        keys_to_fix={"cost_fpath", "features_fpath", "out_dir"},
-    ),
+    config_preprocessor=_preprocess_point_to_feature_route_table,
 )
