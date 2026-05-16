@@ -10,6 +10,9 @@ from .base import (
     features_to_route_table,
     save_data_using_layer_file_profile,
     save_data_using_custom_props,
+    strip_path_keys,
+    region_mapper,
+    transform_xy,
 )
 from .handlers import (
     LayeredFile,

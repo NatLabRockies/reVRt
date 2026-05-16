@@ -579,6 +579,15 @@ def features_to_route_table(features):
     return all_routes.reset_index(drop=False)
 
 
+def strip_path_keys(config, keys_to_fix):
+    """[NOT PUBLIC API] Strip whitespace from path-like keys"""
+    for key in keys_to_fix:
+        value = config.get(key)
+        if isinstance(value, str):
+            config[key] = value.strip()
+    return config
+
+
 def _crs_match(first_crs, second_crs):
     """Return whether two CRS definitions are semantically equivalent"""
     if first_crs is None or second_crs is None:
