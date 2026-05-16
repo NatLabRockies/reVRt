@@ -52,8 +52,8 @@ pub(super) struct Dataset {
     cost_path: Option<tempfile::TempDir>,
     /// Derived-data materializer responsible for chunk tracking and writes.
     derived_data_writer: DerivedDataWriter,
-    /// Reader responsible for cached neighborhood access to derived data.
-    neighborhood_reader: DerivedDataReader,
+    /// Reader responsible for cached access to derived data.
+    derived_data_reader: DerivedDataReader,
     /// Shape of the source routing grid as `(rows, cols, options)`.
     pub(super) grid_shape: (u64, u64, u32),
 }
@@ -141,20 +141,20 @@ impl Dataset {
         let derived_data_writer =
             DerivedDataWriter::new(&source_layout, source.clone(), swap.clone(), cost_function);
 
-        let neighborhood_reader = DerivedDataReader::open(
+        let derived_data_reader = DerivedDataReader::open(
             swap.clone(),
             cache_size,
             soft_barrier_group_count,
             source_layout,
         )?;
-        let grid_shape = neighborhood_reader.grid_shape();
+        let grid_shape = derived_data_reader.grid_shape();
 
         trace!("Dataset opened successfully");
         Ok(Self {
             source,
             cost_path: None,
             derived_data_writer,
-            neighborhood_reader,
+            derived_data_reader,
             grid_shape,
         })
     }
@@ -171,7 +171,7 @@ impl Dataset {
     /// A vector of neighboring indices paired with movement costs from the
     /// center cell.
     pub(super) fn get_3x3(&self, index: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
-        self.neighborhood_reader
+        self.derived_data_reader
             .get_3x3(index, &self.derived_data_writer)
     }
 
@@ -195,7 +195,7 @@ impl Dataset {
     ) -> Vec<ArrayIndex> {
         let retry_state =
             dropped_soft_groups.min(self.derived_data_writer.soft_barrier_groups.len());
-        self.neighborhood_reader.get_3x3_soft_barrier_cells(
+        self.derived_data_reader.get_3x3_soft_barrier_cells(
             index,
             retry_state,
             &self.derived_data_writer,
