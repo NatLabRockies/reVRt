@@ -7,7 +7,7 @@
 
 use std::sync::RwLock;
 
-use ndarray::Array2;
+use ndarray::Array3;
 use tracing::trace;
 use zarrs::storage::{ReadableListableStorage, ReadableWritableListableStorage};
 
@@ -29,8 +29,8 @@ pub(super) struct DerivedDataWriter {
     source: ReadableListableStorage,
     /// Writable swap storage where derived arrays are materialized.
     swap: ReadableWritableListableStorage,
-    /// Boolean materialization state indexed by chunk row and chunk column.
-    swap_chunk_idx: RwLock<ndarray::Array2<bool>>,
+    /// Boolean materialization state indexed by band, row, and column chunk.
+    swap_chunk_idx: RwLock<ndarray::Array3<bool>>,
     /// Barrier layers that always behave as hard exclusions.
     hard_barrier_layers: Vec<BarrierLayer>,
     /// Soft barrier layers grouped by importance in ascending retry order.
@@ -63,8 +63,15 @@ impl DerivedDataWriter {
         let hard_barrier_layers = cost_function.hard_barrier_layers();
         let soft_barrier_groups = cost_function.soft_barrier_groups();
         let cost_function = cost_function.without_barriers();
-        let swap_chunk_idx =
-            Array2::from_elem((layout.chunk_grid_rows, layout.chunk_grid_cols), false).into();
+        let swap_chunk_idx = Array3::from_elem(
+            (
+                layout.chunk_grid_bands,
+                layout.chunk_grid_rows,
+                layout.chunk_grid_cols,
+            ),
+            false,
+        )
+        .into();
 
         Self {
             source,
@@ -79,23 +86,27 @@ impl DerivedDataWriter {
     /// Materialize every derived array for a single chunk.
     ///
     /// This computes both cost layers and all barrier masks for the chunk
-    /// identified by the chunk-grid coordinates `ci` and `cj`, then stores
-    /// the results into the swap dataset.
+    /// identified by the chunk-grid coordinates `cb`, `ci`, and `cj`, then
+    /// stores the results into the swap dataset.
     ///
     /// # Arguments
+    /// `cb`: Chunk band index in the swap dataset.
     /// `ci`: Chunk row index in the swap dataset.
     /// `cj`: Chunk column index in the swap dataset.
-    fn materialize_chunk(&self, ci: u64, cj: u64) {
-        trace!("Creating a LazySubset for ({}, {})", ci, cj);
+    fn materialize_chunk(&self, cb: u64, ci: u64, cj: u64) {
+        trace!("Creating a LazySubset for ({}, {}, {})", cb, ci, cj);
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
-        let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
-        let chunk_subset =
-            zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
+        let subset = variable.chunk_subset(&[cb, ci, cj]).unwrap();
+        let chunk_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            cb..(cb + 1),
+            ci..(ci + 1),
+            cj..(cj + 1),
+        ]);
         let mut data = LazySubset::<f32>::new(self.source.clone(), subset.clone());
 
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, true);
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, false);
+        self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, true);
+        self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, false);
         self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
         self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
     }
@@ -107,6 +118,7 @@ impl DerivedDataWriter {
     /// destination array in the swap dataset.
     ///
     /// # Arguments
+    /// `cb`: Chunk band index in the swap dataset.
     /// `ci`: Chunk row index in the swap dataset.
     /// `cj`: Chunk column index in the swap dataset.
     /// `features`: Lazily loaded source features for the target chunk.
@@ -116,6 +128,7 @@ impl DerivedDataWriter {
     ///                 otherwise compute length-dependent terms.
     fn calculate_chunk_cost_single_layer(
         &self,
+        cb: u64,
         ci: u64,
         cj: u64,
         features: &mut LazySubset<f32>,
@@ -125,13 +138,16 @@ impl DerivedDataWriter {
         let output;
         let layer_name;
         if is_invariant {
-            trace!("Calculating invariant cost for chunk ({}, {})", ci, cj);
+            trace!(
+                "Calculating invariant cost for chunk ({}, {}, {})",
+                cb, ci, cj
+            );
             output = self.cost_function.compute(features, true);
             layer_name = "/cost_invariant";
         } else {
             trace!(
-                "Calculating length-dependent cost for chunk ({}, {})",
-                ci, cj
+                "Calculating length-dependent cost for chunk ({}, {}, {})",
+                cb, ci, cj
             );
             output = self.cost_function.compute(features, false);
             layer_name = "/cost";
@@ -141,7 +157,7 @@ impl DerivedDataWriter {
 
         let cost = zarrs::array::Array::open(self.swap.clone(), layer_name).unwrap();
         cost.store_metadata().unwrap();
-        let chunk_indices: Vec<u64> = vec![0, ci, cj];
+        let chunk_indices: Vec<u64> = vec![cb, ci, cj];
         trace!("Storing chunk at {:?}", chunk_indices);
         trace!("Target chunk subset: {:?}", chunk_subset);
         cost.store_chunks_ndarray(chunk_subset, output).unwrap();
@@ -270,35 +286,42 @@ impl DerivedDataMaterializer for DerivedDataWriter {
             chunks.num_elements_usize()
         );
 
-        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
-            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
-                trace!(
-                    "Checking if derived data for chunk ({}, {}) has been calculated",
-                    ci, cj
-                );
-                if self.swap_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
-                    trace!("Derived data for chunk ({}, {}) already calculated", ci, cj);
-                    continue;
-                }
+        for cb in chunks.start()[0]..(chunks.start()[0] + chunks.shape()[0]) {
+            for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
+                for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
+                    trace!(
+                        "Checking if derived data for chunk ({}, {}, {}) has been calculated",
+                        cb, ci, cj
+                    );
+                    if self.swap_chunk_idx.read().unwrap()[[cb as usize, ci as usize, cj as usize]]
+                    {
+                        trace!(
+                            "Derived data for chunk ({}, {}, {}) already calculated",
+                            cb, ci, cj
+                        );
+                        continue;
+                    }
 
-                let mut chunk_idx = self
-                    .swap_chunk_idx
-                    .write()
-                    .expect("Failed to acquire write lock");
-                if chunk_idx[[ci as usize, cj as usize]] {
-                    trace!(
-                        "Derived data for chunk ({}, {}) already calculated while waiting for the lock",
-                        ci, cj
-                    );
-                } else {
-                    self.materialize_chunk(ci, cj);
-                    chunk_idx[[ci as usize, cj as usize]] = true;
-                    trace!(
-                        "Recorded derived data for chunk ({}, {}) as calculated. Total number of computed chunks: {}",
-                        ci,
-                        cj,
-                        chunk_idx.iter().filter(|&&value| value).count()
-                    );
+                    let mut chunk_idx = self
+                        .swap_chunk_idx
+                        .write()
+                        .expect("Failed to acquire write lock");
+                    if chunk_idx[[cb as usize, ci as usize, cj as usize]] {
+                        trace!(
+                            "Derived data for chunk ({}, {}, {}) already calculated while waiting for the lock",
+                            cb, ci, cj
+                        );
+                    } else {
+                        self.materialize_chunk(cb, ci, cj);
+                        chunk_idx[[cb as usize, ci as usize, cj as usize]] = true;
+                        trace!(
+                            "Recorded derived data for chunk ({}, {}, {}) as calculated. Total number of computed chunks: {}",
+                            cb,
+                            ci,
+                            cj,
+                            chunk_idx.iter().filter(|&&value| value).count()
+                        );
+                    }
                 }
             }
         }
