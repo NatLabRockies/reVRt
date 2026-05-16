@@ -362,7 +362,7 @@ def test_route_features_cli_executes(
     reason="CLI does not work under tox env on windows",
 )
 def test_route_features_cli_strips_required_path_whitespace(
-    run_gaps_cli_with_expected_file, point_feature_dataset
+    run_gaps_cli_with_expected_file, point_feature_dataset, tmp_path
 ):
     """route-features CLI strips whitespace on required path inputs"""
 
@@ -380,7 +380,7 @@ def test_route_features_cli_strips_required_path_whitespace(
         "save_paths": False,
     }
     out_fp = run_gaps_cli_with_expected_file(
-        "route-features", config, point_feature_dataset["tmp_path"]
+        "route-features", config, tmp_path
     )
 
     assert Path(out_fp).exists()
