@@ -238,31 +238,31 @@ impl Scenario {
         &self,
         position: &ArrayIndex,
         dropped_soft_groups: usize,
-    ) -> Vec<ArrayIndex> {
+    ) -> impl Iterator<Item = ArrayIndex> + '_ {
         let (_, _, noptions) = self.grid_shape();
+        let row = position.i;
+        let col = position.j;
 
-        (0..noptions)
-            .filter_map(|option| {
-                let candidate = ArrayIndex {
-                    i: position.i,
-                    j: position.j,
-                    option,
-                };
-                let soft_barrier_cells: HashSet<_> = self
-                    .dataset
-                    .get_3x3_soft_barrier_cells(&candidate, dropped_soft_groups)
-                    .into_iter()
-                    .collect();
-                if soft_barrier_cells.contains(&candidate) {
-                    return None;
-                }
+        (0..noptions).filter_map(move |option| {
+            let candidate = ArrayIndex {
+                i: row,
+                j: col,
+                option,
+            };
+            let soft_barrier_cells: HashSet<_> = self
+                .dataset
+                .get_3x3_soft_barrier_cells(&candidate, dropped_soft_groups)
+                .into_iter()
+                .collect();
+            if soft_barrier_cells.contains(&candidate) {
+                return None;
+            }
 
-                self.dataset
-                    .get_cell_cost(&candidate) // checks for hard barriers
-                    .filter(|_| self.driver_multiplier(&candidate).is_some()) // drops `None` values from `get_cell_cost`
-                    .map(|_| candidate) // drops `None` values from `driver_multiplier`
-            })
-            .collect()
+            self.dataset
+                .get_cell_cost(&candidate) // checks for hard barriers
+                .filter(|_| self.driver_multiplier(&candidate).is_some()) // drops `None` values from `get_cell_cost`
+                .map(|_| candidate) // drops `None` values from `driver_multiplier`
+        })
     }
 
     /// Resolve the driver multiplier for a cell state.
