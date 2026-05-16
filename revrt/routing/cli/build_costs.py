@@ -2,10 +2,12 @@
 
 import logging
 from pathlib import Path
+from functools import partial
 
 from gaps.cli import CLICommandFromFunction
 from gaps.config import load_config
 
+from revrt.utilities import strip_path_keys
 from revrt.routing.cli.base import update_multipliers
 from revrt.routing.base import RoutingScenario, RoutingLayerManager
 
@@ -94,5 +96,10 @@ def build_routing_layer(lcp_config_fp, out_dir, polarity=None, voltage=None):
 
 
 build_route_costs_command = CLICommandFromFunction(
-    build_routing_layer, name="build-route-costs", add_collect=False
+    build_routing_layer,
+    name="build-route-costs",
+    add_collect=False,
+    config_preprocessor=partial(
+        strip_path_keys, keys_to_fix={"lcp_config_fp", "out_dir"}
+    ),
 )

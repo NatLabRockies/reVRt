@@ -4,6 +4,7 @@ import json
 import logging
 from pathlib import Path
 from warnings import warn
+from functools import partial
 
 import rasterio
 import rioxarray
@@ -16,7 +17,7 @@ from shapely.geometry import Point, LineString
 from shapely.ops import transform as shapely_transform
 from gaps.cli import CLICommandFromClass, CLICommandFromFunction
 
-from revrt.utilities.base import region_mapper, transform_xy
+from revrt.utilities import region_mapper, transform_xy, strip_path_keys
 from revrt.utilities.handlers import (
     IncrementalWriter,
     LayeredFile,
@@ -98,7 +99,7 @@ def _preprocess_layers_from_file_config(config, out_dir, out_layer_dir=None):
         By default, ``None``.
     """
     config["_out_layer_dir"] = str(out_layer_dir or out_dir)
-    return config
+    return strip_path_keys(config, keys_to_fix={"fp", "_out_layer_dir"})
 
 
 def convert_pois_to_lines(poi_csv_f, template_f, out_f):
@@ -508,13 +509,30 @@ convert_pois_to_lines_command = CLICommandFromFunction(
     name="convert-pois-to-lines",
     add_collect=False,
     split_keys=None,
+    config_preprocessor=partial(
+        strip_path_keys, keys_to_fix={"poi_csv_f", "template_f", "out_f"}
+    ),
 )
 map_ss_to_rr_command = CLICommandFromFunction(
-    function=map_ss_to_rr, add_collect=False
+    function=map_ss_to_rr,
+    add_collect=False,
+    config_preprocessor=partial(
+        strip_path_keys,
+        keys_to_fix={"features_fpath", "regions_fpath", "out_fpath"},
+    ),
 )
 ss_from_conn_command = CLICommandFromFunction(
-    function=ss_from_conn, add_collect=False
+    function=ss_from_conn,
+    add_collect=False,
+    config_preprocessor=partial(
+        strip_path_keys, keys_to_fix={"connections_fpath", "out_fpath"}
+    ),
 )
 add_rr_to_nn_command = CLICommandFromFunction(
-    function=add_rr_to_nn, add_collect=False
+    function=add_rr_to_nn,
+    add_collect=False,
+    config_preprocessor=partial(
+        strip_path_keys,
+        keys_to_fix={"network_nodes_fpath", "regions_fpath", "out_fpath"},
+    ),
 )

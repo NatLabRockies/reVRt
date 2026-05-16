@@ -323,6 +323,33 @@ def test_build_masks_cli_creates_expected_outputs(
     )
 
 
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_build_masks_cli_strips_required_path_whitespace(
+    tmp_path, sample_extra_fp, cli_runner, basic_land_mask
+):
+    """CLI build-masks strips whitespace on required path inputs"""
+
+    masks_dir = tmp_path / "masks_cli_whitespace"
+    config = {
+        "land_mask_shp_fp": f"  {basic_land_mask}  ",
+        "template_file": f"  {sample_extra_fp}  ",
+        "masks_dir": f"  {masks_dir}  ",
+        "reproject_vector": False,
+    }
+
+    config_path = tmp_path / "config_whitespace.json"
+    config_path.write_text(json.dumps(config))
+
+    result = cli_runner.invoke(main, ["build-masks", "-c", str(config_path)])
+    msg = f"Failed with error {traceback.print_exception(*result.exc_info)}"
+    assert result.exit_code == 0, msg
+    assert (masks_dir / Masks.LANDFALL_MASK_FNAME).exists()
+
+
 def test_build_config_missing_action(tmp_path):
     """Test correct error is raised for config with no actions"""
     tiff_fp = tmp_path / "nonexistent.tif"

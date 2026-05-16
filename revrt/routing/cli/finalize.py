@@ -5,7 +5,7 @@ import shutil
 import logging
 import warnings
 from pathlib import Path
-from functools import cached_property
+from functools import cached_property, partial
 
 import rasterio
 import numpy as np
@@ -26,6 +26,7 @@ from revrt.utilities import (
     LayeredFile,
     chunked_read_gpkg,
     gpkg_crs,
+    strip_path_keys,
 )
 from revrt.utilities.raster import integer_dimension_window
 from revrt.exceptions import revrtValueError, revrtFileNotFoundError
@@ -521,4 +522,7 @@ finalize_routes_command = CLICommandFromClass(
     method="process",
     name="finalize-routes",
     add_collect=False,
+    config_preprocessor=partial(
+        strip_path_keys, keys_to_fix={"collect_pattern", "project_dir"}
+    ),
 )

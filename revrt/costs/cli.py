@@ -4,6 +4,7 @@ import json
 import logging
 from pathlib import Path
 from warnings import warn
+from functools import partial
 
 import rioxarray
 import dask.config
@@ -22,6 +23,7 @@ from revrt.utilities import (
     save_data_using_layer_file_profile,
     dask_performance_report,
     log_runtime,
+    strip_path_keys,
 )
 from revrt.exceptions import revrtAttributeError, revrtConfigurationError
 from revrt.warn import revrtWarning
@@ -93,6 +95,7 @@ def build_masks(
     )
 
 
+# @strip_required_path_args("routing_file")
 def build_routing_layers(  # noqa: PLR0917, PLR0913
     routing_file,
     template_file=None,
@@ -394,6 +397,10 @@ build_masks_command = CLICommandFromFunction(
     name="build-masks",
     add_collect=False,
     split_keys=None,
+    config_preprocessor=partial(
+        strip_path_keys,
+        keys_to_fix={"land_mask_shp_fp", "template_file", "masks_dir"},
+    ),
 )
 
 build_routing_layers_command = CLICommandFromFunction(
@@ -401,4 +408,5 @@ build_routing_layers_command = CLICommandFromFunction(
     name="build-routing-layers",
     add_collect=False,
     split_keys=None,
+    config_preprocessor=partial(strip_path_keys, keys_to_fix={"routing_file"}),
 )

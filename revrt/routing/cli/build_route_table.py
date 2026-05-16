@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 from warnings import warn
+from functools import partial
 
 import geopandas as gpd
 import xarray as xr
@@ -14,7 +15,7 @@ from revrt.routing.utilities import (
     make_rev_sc_points,
     points_csv_to_geo_dataframe,
 )
-from revrt.utilities.monitoring import log_runtime
+from revrt.utilities import strip_path_keys, log_runtime
 from revrt.exceptions import revrtValueError
 from revrt.warn import revrtWarning
 
@@ -236,4 +237,8 @@ build_point_to_feature_route_table_command = CLICommandFromFunction(
     point_to_feature_route_table,
     name="build-feature-route-table",
     add_collect=False,
+    config_preprocessor=partial(
+        strip_path_keys,
+        keys_to_fix={"cost_fpath", "features_fpath", "out_dir"},
+    ),
 )

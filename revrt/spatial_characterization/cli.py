@@ -16,6 +16,7 @@ from revrt.utilities import (
     close_dask_client,
     dask_performance_report,
     log_runtime,
+    strip_path_keys,
 )
 
 
@@ -185,6 +186,9 @@ def _route_characterizations_from_config(
         "row_width_key", _default_row_width_key or "voltage"
     )
     _stat_kwargs.setdefault("chunks", _default_chunks or "auto")
+    _stat_kwargs = strip_path_keys(
+        _stat_kwargs, keys_to_fix={"geotiff_fp", "route_fp"}
+    )
 
     raster_name = _stat_kwargs.get("geotiff_fp")
     raster_name = f"_{Path(raster_name).stem}" if raster_name else ""
@@ -400,7 +404,7 @@ def _preprocess_stats_config(
     config["_default_copy_properties"] = default_copy_properties
     config["_default_row_width_key"] = default_row_width_key
     config["_default_chunks"] = default_chunks
-    return config
+    return strip_path_keys(config, keys_to_fix={"out_dir"})
 
 
 route_characterizations_command = CLICommandFromFunction(

@@ -263,7 +263,10 @@ def test_build_route_costs_command_metadata():
     assert build_route_costs_command.name == "build-route-costs"
     assert build_route_costs_command.runner is build_routing_layer
     assert build_route_costs_command.add_collect is False
-    assert tuple(build_route_costs_command.preprocessor_args) == ("config",)
+    assert tuple(build_route_costs_command.preprocessor_args) == (
+        "config",
+        "keys_to_fix",
+    )
 
 
 if __name__ == "__main__":

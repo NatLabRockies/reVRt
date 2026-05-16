@@ -948,6 +948,37 @@ def test_cli_layers_from_file_all(
         assert truth_tif.rio.crs == test_tif.rio.crs
 
 
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_cli_layers_from_file_strips_required_path_whitespace(
+    cli_runner, tmp_path, sample_tiff_fp, sample_tiff_fp_2x
+):
+    """layers-from-file CLI strips whitespace on required path inputs"""
+
+    out_file_fp = tmp_path / "test-cli-whitespace.zarr"
+    lf = LayeredFile(out_file_fp)
+    lf.write_geotiff_to_file(sample_tiff_fp, "test_layer")
+    lf.write_geotiff_to_file(sample_tiff_fp_2x, "test_layer_2")
+
+    out_layer_dir = tmp_path / "trimmed_output"
+    config = {
+        "fp": f"  {out_file_fp}  ",
+        "out_layer_dir": f"  {out_layer_dir}  ",
+        "layers": ["test_layer"],
+    }
+
+    config_path = tmp_path / "config_whitespace.json"
+    config_path.write_text(json.dumps(config))
+
+    result = cli_runner.invoke(main, ["layers-from-file", "-c", config_path])
+    msg = f"Failed with error {traceback.print_exception(*result.exc_info)}"
+    assert result.exit_code == 0, msg
+    assert (out_layer_dir / "test_layer.tif").exists()
+
+
 @pytest.mark.parametrize(
     "chunk_size",
     [

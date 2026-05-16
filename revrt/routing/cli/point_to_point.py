@@ -11,7 +11,7 @@ from revrt.routing.cli.base import (
     split_routes,
     RouteToDefinitionConverter,
 )
-from revrt.utilities.monitoring import log_runtime
+from revrt.utilities import strip_path_keys, log_runtime
 from revrt.routing.utilities import map_to_costs
 from revrt.costs.config import parse_config
 
@@ -437,11 +437,19 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     return str(out_fp)
 
 
+def _prep_config(config):
+    """Pre-process config inputs for point-to-point routing"""
+    config = split_routes(config)
+    return strip_path_keys(
+        config, keys_to_fix={"cost_fpath", "route_table_fpath", "out_dir"}
+    )
+
+
 route_points_command = CLICommandFromFunction(
     compute_lcp_routes,
     name="route-points",
     add_collect=False,
     split_keys={"_split_params"},
-    config_preprocessor=split_routes,
+    config_preprocessor=_prep_config,
     skip_doc_params=["system_mem_limit_gb"],
 )
