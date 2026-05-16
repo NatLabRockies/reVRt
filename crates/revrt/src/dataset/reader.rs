@@ -59,6 +59,8 @@ pub(super) struct NeighborhoodReader {
     hard_barrier_cache: ChunkCacheDecodedLruSizeLimit,
     /// Decoded chunk caches for cumulative soft barrier masks by retry state.
     cumulative_soft_barrier_caches: Vec<ChunkCacheDecodedLruSizeLimit>,
+    /// Number of routing options on the leading band axis.
+    grid_noptions: u32,
     /// Number of rows in the routing grid.
     grid_nrows: u64,
     /// Number of columns in the routing grid.
@@ -135,6 +137,7 @@ impl NeighborhoodReader {
             cost_invariant_cache,
             hard_barrier_cache,
             cumulative_soft_barrier_caches,
+            grid_noptions: layout.grid_noptions,
             grid_nrows: layout.grid_nrows,
             grid_ncols: layout.grid_ncols,
         })
@@ -161,9 +164,12 @@ impl NeighborhoodReader {
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<(ArrayIndex, f32)> {
-        let &ArrayIndex { i, j } = index;
+        let &ArrayIndex { i, j, option } = index;
 
-        trace!("Getting 3x3 neighborhood for (i={}, j={})", i, j);
+        trace!(
+            "Getting 3x3 neighborhood for (i={}, j={}, option={})",
+            i, j, option
+        );
 
         trace!("Opening cost dataset via cache");
         let cost_array = self.cost_cache.array();
@@ -220,7 +226,14 @@ impl NeighborhoodReader {
                 } else {
                     v
                 };
-                (ArrayIndex { i: *ir, j: *jr }, scaled + inv_cost)
+                (
+                    ArrayIndex {
+                        i: *ir,
+                        j: *jr,
+                        option,
+                    },
+                    scaled + inv_cost,
+                )
             })
             .collect::<Vec<_>>();
 
@@ -323,7 +336,7 @@ impl NeighborhoodReader {
         };
 
         let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-            0..1,
+            u64::from(option)..u64::from(option) + 1,
             i_range.clone(),
             j_range.clone(),
         ]);
