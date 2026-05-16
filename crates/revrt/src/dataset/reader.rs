@@ -204,7 +204,9 @@ impl DerivedDataReader {
                 }
             })
             .unwrap();
+
         if center.2 {
+            // center cell is barrier, so no neighbors
             return Vec::new();
         }
         trace!("Center point: {:?}", center);
