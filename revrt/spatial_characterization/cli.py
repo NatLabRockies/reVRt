@@ -114,6 +114,11 @@ def buffered_route_characterizations(
     DataFrame
         Pandas DataFrame containing computed characteristics/stats.
     """
+    if isinstance(geotiff_fp, str):
+        geotiff_fp = geotiff_fp.strip()
+    if isinstance(route_fp, str):
+        route_fp = route_fp.strip()
+
     rds = (
         rioxarray.open_rasterio(geotiff_fp, chunks=chunks) * multiplier_scalar
     )
