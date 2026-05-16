@@ -3,9 +3,10 @@
 import logging
 from math import ceil, hypot
 
-import numpy as np
 import rasterio
 import geopandas as gpd
+import numpy as np
+from shapely import make_valid
 from shapely.geometry import box
 
 from revrt.constants import DEFAULT_DTYPE
@@ -157,6 +158,7 @@ def rasterize(  # noqa: PLR0913, PLR0917
     array-like
         Rasterized vector data
     """
+    gdf = _clean_shapes_for_rasterize(gdf)
 
     if simply_before_rasterize:
         gdf = simplify_shapes(gdf, transform)
@@ -323,3 +325,20 @@ def _resolve_burn_values(gdf, burn_value):
         raise revrtValueError(msg)
 
     return gdf[burn_value]
+
+
+def _clean_shapes_for_rasterize(gdf):
+    """Repair invalid shapes and drop null or empty geometries"""
+    gdf = gdf[gdf.geometry.notna()]
+    if gdf.empty:
+        return gdf
+
+    invalid = ~gdf.geometry.is_valid
+    if invalid.any():
+        logger.debug(
+            "Repairing %d invalid shape(s) before rasterization",
+            int(invalid.sum()),
+        )
+        gdf.loc[:, "geometry"] = make_valid(gdf.geometry)
+
+    return gdf[~gdf.is_empty]

@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 import numpy as np
 import geopandas as gpd
-from shapely.geometry import GeometryCollection, LineString, box
+from shapely import make_valid
+from shapely.geometry import GeometryCollection, LineString, Polygon, box
 from shapely.ops import unary_union
 from rasterio.transform import Affine
 from rasterio.windows import from_bounds
@@ -235,6 +236,53 @@ def test_rasterize_shape_file_uses_nan_fill_when_fill_is_none(tmp_path):
             dtype="float32",
         ),
     )
+
+
+def test_rasterize_shape_file_repairs_invalid_geometries(tmp_path):
+    """Rasterization repairs invalid geometries before tiling"""
+    invalid_fp = tmp_path / "test_invalid_shape_mask.gpkg"
+    valid_fp = tmp_path / "test_valid_shape_mask.gpkg"
+    invalid_geom = Polygon([(0, 0), (4, 4), (0, 4), (4, 0), (0, 0)])
+
+    gpd.GeoDataFrame(
+        geometry=[invalid_geom],
+        crs="ESRI:102008",
+    ).to_file(invalid_fp, driver="GPKG")
+    gpd.GeoDataFrame(
+        geometry=[make_valid(invalid_geom)],
+        crs="ESRI:102008",
+    ).to_file(valid_fp, driver="GPKG")
+
+    invalid_out = rasterize_shape_file(
+        invalid_fp,
+        width=4,
+        height=4,
+        transform=Affine(1.0, 0.0, 0.0, 0.0, -1.0, 4.0),
+        tile_size=2,
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="uint8",
+    )
+    valid_out = rasterize_shape_file(
+        valid_fp,
+        width=4,
+        height=4,
+        transform=Affine(1.0, 0.0, 0.0, 0.0, -1.0, 4.0),
+        tile_size=2,
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="uint8",
+    )
+
+    assert invalid_geom.is_valid is False
+    assert np.array_equal(invalid_out, valid_out)
+    assert invalid_out.sum() > 0
 
 
 def test_rasterize_shape_file_uses_explicit_fill_value(tmp_path):
