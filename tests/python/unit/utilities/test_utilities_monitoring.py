@@ -1,7 +1,7 @@
 """Tests for monitoring utilities"""
 
-from pathlib import Path
 import logging
+from pathlib import Path
 
 import pytest
 
@@ -83,6 +83,33 @@ def test_elapsed_time_as_str():
     assert elapsed_time_as_str(24 * 60 * 60) == "1 day, 0:00:00"
     assert elapsed_time_as_str(24 * 60 * 60 + 72) == "1 day, 0:01:12"
     assert elapsed_time_as_str(50 * 60 * 60 + 72) == "2 days, 2:01:12"
+
+
+def test_dask_performance_report_uses_unique_filename(monkeypatch, tmp_path):
+    """Test that dask_performance_report appends a UUID to filenames"""
+
+    called = {}
+
+    class FakeUuid:
+        hex = "12345678123456781234567812345678"
+
+    def fake_performance_report(*, filename):
+        called["filename"] = filename
+        return "report-context"
+
+    monkeypatch.setattr(monitoring, "uuid4", FakeUuid)
+    monkeypatch.setattr(
+        monitoring,
+        "performance_report",
+        fake_performance_report,
+    )
+
+    context = monitoring.dask_performance_report("run", out_dir=tmp_path)
+
+    assert context == "report-context"
+    assert called["filename"] == (
+        tmp_path / "dask-report_run_12345678123456781234567812345678.html"
+    )
 
 
 if __name__ == "__main__":

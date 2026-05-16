@@ -5,6 +5,7 @@ import psutil
 import logging
 from pathlib import Path
 from contextlib import nullcontext, contextmanager
+from uuid import uuid4
 
 import numpy as np
 import xarray as xr
@@ -158,13 +159,14 @@ def dask_performance_report(prefix, out_dir=None):
     object
         A context manager that generates a Dask performance report when
         entered, and saves it to the specified output directory with a
-        filename based on the provided prefix. If no output directory is
-        specified, the context manager will do nothing and simply yield
-        without generating a report.
+        filename based on the provided prefix. A UUID is appended to the
+        filename to avoid collisions across multiple invocations. If no
+        output directory is specified, the context manager will do
+        nothing and simply yield without generating a report.
     """
     if out_dir is None:
         return nullcontext()
 
     return performance_report(
-        filename=Path(out_dir) / f"{prefix}_dask-report.html"
+        filename=Path(out_dir) / f"dask-report_{prefix}_{uuid4().hex}.html"
     )
