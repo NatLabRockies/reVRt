@@ -170,3 +170,32 @@ def dask_performance_report(prefix, out_dir=None):
     return performance_report(
         filename=Path(out_dir) / f"dask-report_{prefix}_{uuid4().hex}.html"
     )
+
+
+def close_dask_client(client, timeout=600):
+    """Close a Dask client without failing on shutdown timeouts
+
+    Parameters
+    ----------
+    client : dask.distributed.Client or None
+        Dask client to close. If ``None``, this function does nothing.
+    timeout : int, optional
+        Number of seconds to wait for the client to close before timing
+        out. If the client fails to close within this time, a warning
+        is logged and the client is marked as closed anyway to allow
+        cleanup to proceed without hanging. By default, ``600``.
+    """
+    if client is None:
+        return
+
+    try:
+        client.close(timeout=timeout)
+    except TimeoutError:
+        logger.warning(
+            "Timed out closing Dask client after %s seconds; "
+            "continuing cleanup",
+            timeout,
+            exc_info=True,
+        )
+        client.status = "closed"
+        vars(client)["_Client__loop"] = None

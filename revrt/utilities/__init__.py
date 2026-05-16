@@ -19,6 +19,7 @@ from .handlers import (
     gpkg_crs,
 )
 from .monitoring import (
+    close_dask_client,
     dask_performance_report,
     log_mem,
     log_array_backend,

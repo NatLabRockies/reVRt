@@ -2,6 +2,7 @@
 
 import os
 import json
+import logging
 import platform
 from pathlib import Path
 
@@ -18,7 +19,10 @@ from revrt.spatial_characterization.stats import (
     FractionalStat,
     _PCT_PREFIX,
 )
-from revrt.spatial_characterization.cli import buffered_route_characterizations
+from revrt.spatial_characterization.cli import (
+    buffered_route_characterizations,
+    _route_characterizations_from_config,
+)
 from revrt._cli import main
 
 
@@ -517,6 +521,54 @@ def test_cli_local_overrides_top_level(
     )
     assert np.allclose(out_stats["voltage"], [1, 2])
     assert out_stats["A"].to_list() == ["a", "b"]
+
+
+def test_route_characterizations_ignores_dask_close_timeout(
+    monkeypatch, caplog, tmp_path
+):
+    """route characterization should not fail if Dask close times out"""
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.status = "created"
+            self._Client__loop = object()
+
+        def close(self, timeout):
+            msg = f"timed out after {timeout} seconds"
+            raise TimeoutError(msg)
+
+    class FakeDataFrame:
+        def to_csv(self, out_fp, index=False):
+            assert index is False
+            Path(out_fp).write_text("value\n1\n", encoding="utf-8")
+
+    def fake_buffered_route_characterizations(**kwargs):
+        assert kwargs["parallel"] is True
+        return FakeDataFrame()
+
+    monkeypatch.setattr(
+        "revrt.spatial_characterization.cli.Client", FakeClient
+    )
+    monkeypatch.setattr(
+        "revrt.spatial_characterization.cli.buffered_route_characterizations",
+        fake_buffered_route_characterizations,
+    )
+
+    with caplog.at_level(logging.WARNING, logger="revrt.utilities.monitoring"):
+        out_fp = _route_characterizations_from_config(
+            _stat_kwargs={
+                "geotiff_fp": tmp_path / "raster.tif",
+                "route_fp": tmp_path / "routes.gpkg",
+            },
+            _row_widths={"1": 100},
+            _row_width_ranges=None,
+            out_dir=tmp_path,
+            max_workers=2,
+        )
+
+    assert Path(out_fp).exists()
+    assert "Timed out closing Dask client" in caplog.text
 
 
 if __name__ == "__main__":

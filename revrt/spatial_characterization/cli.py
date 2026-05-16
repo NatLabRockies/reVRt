@@ -11,7 +11,12 @@ from gaps.config import load_config
 from gaps.cli import CLICommandFromFunction
 
 from revrt.spatial_characterization.zonal import ZonalStats
-from revrt.utilities import buffer_routes, dask_performance_report, log_runtime
+from revrt.utilities import (
+    buffer_routes,
+    close_dask_client,
+    dask_performance_report,
+    log_runtime,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -225,7 +230,7 @@ def _route_characterizations_from_config(
             out_data.to_csv(out_fp, index=False)
     finally:
         if client is not None:
-            client.close()
+            close_dask_client(client)
 
     return str(out_fp)
 

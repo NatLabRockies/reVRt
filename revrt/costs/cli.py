@@ -17,6 +17,7 @@ from revrt.costs.dry_costs_creator import DryCostsCreator
 from revrt.costs.masks import Masks
 from revrt.utilities import (
     LayeredFile,
+    close_dask_client,
     load_data_using_layer_file_profile,
     save_data_using_layer_file_profile,
     dask_performance_report,
@@ -232,7 +233,7 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
 
     finally:
         if client is not None:
-            client.close()
+            close_dask_client(client)
 
 
 def _build_routing_layers(

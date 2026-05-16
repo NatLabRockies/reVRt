@@ -112,5 +112,27 @@ def test_dask_performance_report_uses_unique_filename(monkeypatch, tmp_path):
     )
 
 
+def test_close_dask_client_swallows_timeout_and_marks_closed(caplog):
+    """Test that close_dask_client degrades cleanly on shutdown timeout"""
+
+    class FakeClient:
+        def __init__(self):
+            self.status = "closing"
+            self._Client__loop = object()
+
+        def close(self, timeout):
+            msg = f"timed out after {timeout} seconds"
+            raise TimeoutError(msg)
+
+    client = FakeClient()
+
+    with caplog.at_level(logging.WARNING, logger=monitoring.logger.name):
+        monitoring.close_dask_client(client, timeout=7)
+
+    assert client.status == "closed"
+    assert client._Client__loop is None
+    assert "Timed out closing Dask client after 7 seconds" in caplog.text
+
+
 if __name__ == "__main__":
     pytest.main(["-q", "--show-capture=all", Path(__file__), "-rapP"])

@@ -2,8 +2,10 @@
 
 import os
 import json
+import logging
 import platform
 import traceback
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
@@ -489,6 +491,41 @@ def test_build_dry_only(
         assert "fi_1" not in ds
         assert "friction_1" not in ds
         assert "friction" not in ds
+
+
+def test_build_routing_layers_ignores_dask_close_timeout(
+    monkeypatch, caplog, tmp_path
+):
+    """build_routing_layers should not fail if Dask client close times out"""
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.status = "created"
+            self._Client__loop = object()
+
+        def close(self, timeout):
+            msg = f"timed out after {timeout} seconds"
+            raise TimeoutError(msg)
+
+    monkeypatch.setattr("revrt.costs.cli._validated_config", SimpleNamespace)
+    monkeypatch.setattr(
+        "revrt.costs.cli._build_routing_layers", lambda *__, **___: None
+    )
+    monkeypatch.setattr("revrt.costs.cli.dask.distributed.Client", FakeClient)
+    monkeypatch.setattr(
+        "revrt.costs.cli.dask.distributed.Lock", lambda name: name
+    )
+
+    with caplog.at_level(logging.WARNING, logger="revrt.utilities.monitoring"):
+        build_routing_layers(
+            routing_file=tmp_path / "routing.zarr",
+            template_file=tmp_path / "template.tif",
+            layers=[{"layer_name": "friction", "build": {}}],
+            max_workers=2,
+        )
+
+    assert "Timed out closing Dask client" in caplog.text
 
 
 def test_build_layers_only(
