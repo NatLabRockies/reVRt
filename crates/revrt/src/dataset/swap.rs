@@ -8,6 +8,7 @@ use std::path::Path;
 
 use tracing::{debug, trace};
 use zarrs::array::ChunkGrid;
+use zarrs::array::chunk_grid::regular::RegularChunkGrid;
 use zarrs::storage::{
     ListableStorageTraits, ReadableListableStorage, ReadableWritableListableStorage,
 };
@@ -21,10 +22,14 @@ use crate::error::{Error, Result};
 pub(super) struct SourceLayout {
     /// Chunk grid definition copied from the representative source array.
     pub(super) chunk_grid: ChunkGrid,
+    /// Number of chunks along the band axis.
+    pub(super) chunk_grid_bands: usize,
     /// Number of chunk rows in the source grid.
     pub(super) chunk_grid_rows: usize,
     /// Number of chunk columns in the source grid.
     pub(super) chunk_grid_cols: usize,
+    /// Number of routing options encoded on the leading band axis.
+    pub(super) grid_noptions: u32,
     /// Number of rows in the full source grid.
     pub(super) grid_nrows: u64,
     /// Number of columns in the full source grid.
@@ -40,11 +45,17 @@ pub(super) struct SourceLayout {
 ///
 /// # Arguments
 /// `source`: Source dataset storage containing the input feature arrays.
+/// `routing_option_count`: Number of routing options that will be encoded
+///                         on the leading band dimension of the swap arrays.
 ///
 /// # Returns
-/// A `SourceLayout` describing the representative array's grid and chunking,
-/// which is then reused when creating swap arrays.
-pub(super) fn inspect_source_layout(source: &ReadableListableStorage) -> Result<SourceLayout> {
+/// A `SourceLayout` describing the representative array's spatial shape and
+/// chunking, combined with the caller-provided routing-option count used for
+/// swap arrays.
+pub(super) fn inspect_source_layout(
+    source: &ReadableListableStorage,
+    routing_option_count: u32,
+) -> Result<SourceLayout> {
     let entries = source.list().map_err(|err| {
         Error::IO(std::io::Error::other(format!(
             "failed to list variables in source dataset: {err}"
@@ -89,11 +100,41 @@ pub(super) fn inspect_source_layout(source: &ReadableListableStorage) -> Result<
         });
     }
 
-    let chunk_grid_shape = representative.chunk_grid_shape();
+    let chunk_shape = representative
+        .chunk_grid()
+        .chunk_shape_u64(&[0, 0, 0])
+        .map_err(|error| {
+            Error::IO(std::io::Error::other(format!(
+                "failed to inspect source chunk shape: {error}"
+            )))
+        })?
+        .ok_or_else(|| {
+            Error::IO(std::io::Error::other(
+                "source chunk shape was unavailable for representative array",
+            ))
+        })?;
+    let chunk_grid = ChunkGrid::new(
+        RegularChunkGrid::new(
+            vec![u64::from(routing_option_count), shape[1], shape[2]],
+            chunk_shape.try_into().map_err(|error| {
+                Error::IO(std::io::Error::other(format!(
+                    "failed to convert source chunk shape: {error}"
+                )))
+            })?,
+        )
+        .map_err(|error| {
+            Error::IO(std::io::Error::other(format!(
+                "failed to create swap chunk grid: {error}"
+            )))
+        })?,
+    );
+    let chunk_grid_shape = chunk_grid.grid_shape().to_vec();
     let layout = SourceLayout {
-        chunk_grid: representative.chunk_grid().clone(),
+        chunk_grid,
+        chunk_grid_bands: chunk_grid_shape[0] as usize,
         chunk_grid_rows: chunk_grid_shape[1] as usize,
         chunk_grid_cols: chunk_grid_shape[2] as usize,
+        grid_noptions: routing_option_count,
         grid_nrows: shape[1],
         grid_ncols: shape[2],
     };
@@ -271,12 +312,14 @@ mod tests {
 
     #[test]
     fn inspect_source_layout_returns_expected_grid_metadata() {
-        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "cost"]);
+        let tmp = samples::multi_variable_random(2, 8, 8, 1, 4, 4, &["A", "B", "cost"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
 
-        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let layout = inspect_source_layout(&source, 2).expect("source layout inspection failed");
 
+        assert_eq!(layout.grid_noptions, 2);
+        assert_eq!(layout.chunk_grid_bands, 2);
         assert_eq!(layout.grid_nrows, 8);
         assert_eq!(layout.grid_ncols, 8);
         assert_eq!(layout.chunk_grid_rows, 2);
@@ -296,7 +339,7 @@ mod tests {
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
 
-        let error = inspect_source_layout(&source)
+        let error = inspect_source_layout(&source, 1)
             .err()
             .expect("expected coordinate-only dataset to be rejected");
 
@@ -309,7 +352,7 @@ mod tests {
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
 
-        let error = inspect_source_layout(&source)
+        let error = inspect_source_layout(&source, 1)
             .err()
             .expect("expected 2D representative variable to be rejected");
 
@@ -328,7 +371,7 @@ mod tests {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "cost"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
-        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let layout = inspect_source_layout(&source, 3).expect("source layout inspection failed");
         let swap_dir = TempDir::new().expect("could not create temporary swap directory");
 
         let initialized_swap =
@@ -346,10 +389,10 @@ mod tests {
         for (layer_name, expected_dtype) in expected_layers {
             let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
                 .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
-            assert_eq!(array.shape(), &[1, 8, 8], "wrong shape for {layer_name}");
+            assert_eq!(array.shape(), &[3, 8, 8], "wrong shape for {layer_name}");
             assert_eq!(
                 array.chunk_grid_shape(),
-                &[1, 2, 2],
+                &[3, 2, 2],
                 "wrong chunk grid shape for {layer_name}"
             );
             assert_eq!(*array.data_type(), expected_dtype);
