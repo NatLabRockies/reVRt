@@ -214,8 +214,17 @@ fn compute_solution_for_start(
             );
         }
 
+        let start_state = scenario
+            .allowed_states_at(start_point, dropped_soft_groups)
+            .find(|state| *state == *start_point);
+
+        let start_point = match start_state {
+            Some(state) => state,
+            None => continue,
+        };
+
         let solution = algorithm.compute(
-            start_point,
+            &start_point,
             end,
             |p| scenario.successors_for_attempt(p, dropped_soft_groups),
             |p| end.contains(p),
@@ -230,6 +239,64 @@ fn compute_solution_for_start(
 
     None
 }
+
+// fn compute_solution_for_start(
+//     scenario: &Scenario,
+//     algorithm: &Algorithm,
+//     start_point: &ArrayIndex,
+//     end: &[ArrayIndex],
+// ) -> Option<Solution<ArrayIndex, f32>> {
+//     let grid_shape = scenario.grid_shape();
+//     let goal_requires_explicit_option = end.iter().any(|goal| goal.option != 0);
+
+//     for dropped_soft_groups in 0..=scenario.soft_barrier_group_count() {
+//         if dropped_soft_groups > 0 {
+//             info!(
+//                 "Retrying route from {:?} with {} soft-barrier group(s) dropped",
+//                 start_point, dropped_soft_groups
+//             );
+//         }
+
+//         let start_requires_explicit_option =
+//             start_point.option != 0 || goal_requires_explicit_option;
+
+//         let start_states = if start_requires_explicit_option {
+//             scenario
+//                 .allowed_states_at(start_point, dropped_soft_groups)
+//                 .into_iter()
+//                 .filter(|state| *state == *start_point)
+//                 .collect()
+//         } else {
+//             scenario.allowed_states_at(start_point, dropped_soft_groups)
+//         };
+
+//         let solution = start_states
+//             .iter()
+//             .filter_map(|start_state| {
+//                 algorithm.compute(
+//                     start_state,
+//                     end,
+//                     |p| scenario.successors_for_attempt(p, dropped_soft_groups),
+//                     |p| {
+//                         if goal_requires_explicit_option {
+//                             end.iter().any(|goal| goal == p)
+//                         } else {
+//                             end.iter().any(|goal| goal.i == p.i && goal.j == p.j)
+//                         }
+//                     },
+//                     grid_shape,
+//                 )
+//             })
+//             .min_by(|left, right| left.total_cost.total_cmp(&right.total_cost));
+
+//         if let Some(solution) = solution {
+//             let dropped_barrier_layers = scenario.dropped_barrier_layers(dropped_soft_groups);
+//             return Some(solution.record_dropped_barriers(dropped_barrier_layers));
+//         }
+//     }
+
+//     None
+// }
 
 const PRECISION_SCALAR: f32 = 1e4;
 fn cost_as_u64(cost: f32) -> u64 {
