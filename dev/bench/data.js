@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778969983675,
+  "lastUpdate": 1779122099827,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -9911,6 +9911,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 456365078,
             "range": "± 6761161",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0964464d23e0d1e37c886bc71adf131aa120d95c",
+          "message": "Mask fix (#270)\n\n* Add test\n\n* Less strict CRS matching\n\n* Add `_clear_combined_mask_cache` + test\n\n* Mask validation is now optional\n\n* Update docs\n\n* Docs fix\n\n* Show dashboard link\n\n* More robust matching\n\n* Add unit test\n\n* Support GeoJSON as input\n\n* Update logging\n\n* Don't cache large vector files\n\n* Add new utility function\n\n* Use log time fixture\n\n* Update phrasing\n\n* Change phrasing\n\n* Update function name\n\n* Fix format\n\n* Add `simplify_shapes`\n\n* Add option to simplify before rasterize\n\n* Add imports\n\n* Use a tiled raster\n\n* Add `log_array_backend`\n\n* Use `_backend_array`\n\n* MInor update\n\n* Better dtype handling\n\n* Add tests\n\n* Rasterized Tiff files are dumped and re-loaded lazily\n\n* Add options to raster config\n\n* Monitoring update\n\n* Bump gaps version\n\n* Allow users to specify fill value\n\n* Allow user to select burn value from column\n\n* Minor bug fix\n\n* Report now unique\n\n* Add repair geometries before raster\n\n* Safer client close function + tests\n\n* Add `strip_path_keys`\n\n* Strip whitespace from file inputs\n\n* Fix whitespace\n\n* Add fix\n\n* Add tests\n\n* Fix tests\n\n* Add some extra logging\n\n* Fix more whitespace\n\n* Fix docs",
+          "timestamp": "2026-05-18T10:21:32-06:00",
+          "tree_id": "5ac6e52260c53212ecb415d814178eb6960b064a",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/0964464d23e0d1e37c886bc71adf131aa120d95c"
+        },
+        "date": 1779122098741,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 100289240,
+            "range": "± 933685",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 93129426,
+            "range": "± 828114",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 140024542,
+            "range": "± 2928882",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 209657462,
+            "range": "± 3129737",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 844542901,
+            "range": "± 14298476",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 143373878,
+            "range": "± 1583040",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 150513642,
+            "range": "± 831422",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 169783423,
+            "range": "± 1807090",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 234528391,
+            "range": "± 2432128",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 474505881,
+            "range": "± 4907016",
             "unit": "ns/iter"
           }
         ]
