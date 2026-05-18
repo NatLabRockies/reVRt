@@ -6,6 +6,7 @@ from pathlib import Path
 from gaps.cli import CLICommandFromFunction
 from gaps.config import load_config
 
+from revrt.utilities import strip_path_keys
 from revrt.routing.cli.base import update_multipliers
 from revrt.routing.base import RoutingScenario, RoutingLayerManager
 
@@ -14,6 +15,16 @@ logger = logging.getLogger(__name__)
 
 def build_routing_layer(lcp_config_fp, out_dir, polarity=None, voltage=None):
     """Build out the routing layers used by reVRt
+
+    Given an LCP config file, build out the routing layers used by
+    ``reVRt``. The routing layers include the aggregated cost layer and
+    the final routing layer that is used for computing routes. The
+    layers that are created and added to the file are determined based
+    on the input config file. The config file can specify three types of
+    actions: building custom layers, building dry cost layers, and
+    merging friction and barriers. At least one of these actions must be
+    specified in the config file. See the documentation for more details
+    on each type of action.
 
     Parameters
     ----------
@@ -83,6 +94,14 @@ def build_routing_layer(lcp_config_fp, out_dir, polarity=None, voltage=None):
     return [str(cost_out_fp), str(frl_out_fp)]
 
 
+def _preprocess_build_routing_layer(config):
+    """Preprocess config for build_routing_layer command"""
+    return strip_path_keys(config, keys_to_fix={"lcp_config_fp", "out_dir"})
+
+
 build_route_costs_command = CLICommandFromFunction(
-    build_routing_layer, name="build-route-costs", add_collect=False
+    build_routing_layer,
+    name="build-route-costs",
+    add_collect=False,
+    config_preprocessor=_preprocess_build_routing_layer,
 )

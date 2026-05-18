@@ -1,8 +1,8 @@
 """Base reVRt utilities"""
 
 import shutil
-import psutil
 import logging
+import contextlib
 from pathlib import Path
 from warnings import warn
 
@@ -11,7 +11,7 @@ import odc.geo.xr
 import pandas as pd
 import numpy as np
 import xarray as xr
-from pyproj import Transformer
+from pyproj import CRS, Transformer
 from rasterio.warp import Resampling
 from shapely.ops import transform as shapely_transform
 
@@ -189,7 +189,7 @@ def check_geotiff(layer_file_fp, geotiff, transform_atol=0.01):
 
         layered_file_crs = ds.rio.crs
         tif_crs = tif.rio.crs
-        if layered_file_crs != tif_crs:
+        if not _crs_match(layered_file_crs, tif_crs):
             msg = (
                 f'Geospatial "CRS" in {geotiff} and {layer_file_fp} do not '
                 f"match!\n {tif_crs} !=\n {layered_file_crs}"
@@ -535,56 +535,6 @@ def transform_xy(src_crs, dst_crs, x, y):
     return np.asarray(out_x), np.asarray(out_y)
 
 
-def log_mem(log_level="DEBUG"):
-    """Log the memory usage to the input logger object
-
-    Parameters
-    ----------
-    log_level : str, default="DEBUG"
-        Logging level to use. Can be any valid log level string, such
-        as  DEBUG or INFO for different log levels for this log message.
-        By default, ``"DEBUG"``.
-
-    Returns
-    -------
-    msg : str
-        Memory utilization log message string.
-    """
-    mem = psutil.virtual_memory()
-    msg = (
-        f"Memory utilization is {mem.used / (1024.0**3):.3f} GB "
-        f"out of {mem.total / (1024.0**3):.3f} GB total "
-        f"({mem.used / mem.total:.1%} used)"
-    )
-    log_level = logging.getLevelNamesMapping().get(log_level.upper(), "DEBUG")
-    logger.log(log_level, msg)
-
-    return msg
-
-
-def elapsed_time_as_str(seconds_elapsed):
-    """Format elapsed time into human readable string
-
-    Parameters
-    ----------
-    seconds_elapsed : int
-        Number of seconds that should be represented in string form.
-
-    Returns
-    -------
-    str
-        Human-readable string representing the number of elapsed
-        seconds.
-    """
-    days, seconds = divmod(int(seconds_elapsed), 24 * 3600)
-    minutes, seconds = divmod(seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    time_str = f"{hours:d}:{minutes:02d}:{seconds:02d}"
-    if days:
-        time_str = f"{days:,d} day{'s' if abs(days) != 1 else ''}, {time_str}"
-    return time_str
-
-
 def features_to_route_table(features):
     """Convert features GDF into route start/end point table
 
@@ -627,6 +577,52 @@ def features_to_route_table(features):
     all_routes = pd.concat(all_routes, axis=0).reset_index(drop=True)
     all_routes.index.name = "rid"
     return all_routes.reset_index(drop=False)
+
+
+def strip_path_keys(config, keys_to_fix):
+    """[NOT PUBLIC API] Strip whitespace from path-like keys"""
+    for key in keys_to_fix:
+        value = config.get(key)
+        if isinstance(value, str):
+            value = value.strip()
+            for token in (r"\n", r"\r", r"\t"):
+                while value.startswith(token):
+                    value = value[len(token) :].lstrip()
+                while value.endswith(token):
+                    value = value[: -len(token)].rstrip()
+            config[key] = value
+    return config
+
+
+def _crs_match(first_crs, second_crs):
+    """Return whether two CRS definitions are semantically equivalent"""
+    if first_crs is None or second_crs is None:
+        return first_crs == second_crs
+
+    with contextlib.suppress(AttributeError):
+        if first_crs.equals(second_crs, ignore_axis_order=True):
+            return True
+
+    first_crs = CRS.from_user_input(first_crs)
+    second_crs = CRS.from_user_input(second_crs)
+    if first_crs.equals(second_crs, ignore_axis_order=True):
+        return True
+
+    first_axes = [
+        (axis.name, axis.direction, axis.unit_name)
+        for axis in first_crs.axis_info
+    ]
+    second_axes = [
+        (axis.name, axis.direction, axis.unit_name)
+        for axis in second_crs.axis_info
+    ]
+    return (
+        first_crs.name == second_crs.name
+        and first_axes == second_axes
+        and first_crs.coordinate_system == second_crs.coordinate_system
+        and {first_crs.is_projected, first_crs.is_engineering}
+        == {second_crs.is_projected, second_crs.is_engineering}
+    )
 
 
 def _compute_half_width_using_ranges(

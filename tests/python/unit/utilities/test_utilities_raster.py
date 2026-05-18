@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 import numpy as np
 import geopandas as gpd
-from shapely.geometry import box
+from shapely import make_valid
+from shapely.geometry import GeometryCollection, LineString, Polygon, box
 from shapely.ops import unary_union
 from rasterio.transform import Affine
 from rasterio.windows import from_bounds
@@ -13,6 +14,9 @@ from rasterio.windows import from_bounds
 from revrt.utilities.raster import (
     integer_dimension_window,
     rasterize_shape_file,
+    simplify_shapes,
+    _iter_tile_windows,
+    _simplify_tolerance,
 )
 
 
@@ -159,6 +163,201 @@ def test_rasterize_with_reproject(tmp_path):
     assert out.max() == 0
     assert out.min() == 0
     assert out.sum() == 0
+
+
+@pytest.mark.parametrize("tile_size", [None, 2, 2048])
+def test_rasterize_shape_file_uses_tiles(tmp_path, tile_size):
+    """Rasterization is stable when forced to use multiple tiles"""
+    land_mask_fp = tmp_path / "test_tiled_shape_mask.gpkg"
+    basic_shape = gpd.GeoDataFrame(
+        geometry=[box(0, 0, 12, 12)], crs="ESRI:102008"
+    )
+    basic_shape.to_file(land_mask_fp, driver="GPKG")
+
+    out = rasterize_shape_file(
+        land_mask_fp,
+        width=4,
+        height=4,
+        transform=Affine(3.0, 0.0, 0.0, 0.0, -3.0, 12.0),
+        tile_size=tile_size,
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="uint8",
+    )
+
+    assert np.array_equal(out, np.ones((4, 4), dtype="uint8"))
+
+
+def test_iter_tile_windows_logs_quarter_progress(caplog):
+    """Tile-window logging only emits quarter-progress milestones"""
+    with caplog.at_level("DEBUG", logger="revrt.utilities.raster"):
+        windows = list(_iter_tile_windows(width=4, height=4, tile_size=2))
+
+    assert len(windows) == 4
+    assert [record.message for record in caplog.records] == [
+        "Rasterized 1 of 4 tiles (25%)",
+        "Rasterized 2 of 4 tiles (50%)",
+        "Rasterized 3 of 4 tiles (75%)",
+        "Rasterized 4 of 4 tiles (100%)",
+    ]
+
+
+def test_rasterize_shape_file_uses_nan_fill_when_fill_is_none(tmp_path):
+    """Rasterization uses NaN for untouched cells when fill is None"""
+    land_mask_fp = tmp_path / "test_shape_mask_nan_fill.gpkg"
+    basic_shape = gpd.GeoDataFrame(
+        geometry=[box(0, 0, 6, 6)], crs="ESRI:102008"
+    )
+    basic_shape.to_file(land_mask_fp, driver="GPKG")
+
+    out = rasterize_shape_file(
+        land_mask_fp,
+        width=4,
+        height=4,
+        transform=Affine(3.0, 0.0, 0.0, 0.0, -3.0, 12.0),
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="float32",
+        fill=None,
+    )
+
+    assert out.dtype == np.dtype("float32")
+    assert np.array_equal(
+        np.isnan(out),
+        np.array(
+            [
+                [True, True, True, True],
+                [True, True, True, True],
+                [False, False, True, True],
+                [False, False, True, True],
+            ]
+        ),
+    )
+    assert np.array_equal(
+        np.nan_to_num(out, nan=0.0),
+        np.array(
+            [
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 0.0, 0.0],
+                [1.0, 1.0, 0.0, 0.0],
+            ],
+            dtype="float32",
+        ),
+    )
+
+
+def test_rasterize_shape_file_repairs_invalid_geometries(tmp_path):
+    """Rasterization repairs invalid geometries before tiling"""
+    invalid_fp = tmp_path / "test_invalid_shape_mask.gpkg"
+    valid_fp = tmp_path / "test_valid_shape_mask.gpkg"
+    invalid_geom = Polygon([(0, 0), (4, 4), (0, 4), (4, 0), (0, 0)])
+
+    gpd.GeoDataFrame(
+        geometry=[invalid_geom],
+        crs="ESRI:102008",
+    ).to_file(invalid_fp, driver="GPKG")
+    gpd.GeoDataFrame(
+        geometry=[make_valid(invalid_geom)],
+        crs="ESRI:102008",
+    ).to_file(valid_fp, driver="GPKG")
+
+    invalid_out = rasterize_shape_file(
+        invalid_fp,
+        width=4,
+        height=4,
+        transform=Affine(1.0, 0.0, 0.0, 0.0, -1.0, 4.0),
+        tile_size=2,
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="uint8",
+    )
+    valid_out = rasterize_shape_file(
+        valid_fp,
+        width=4,
+        height=4,
+        transform=Affine(1.0, 0.0, 0.0, 0.0, -1.0, 4.0),
+        tile_size=2,
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="uint8",
+    )
+
+    assert invalid_geom.is_valid is False
+    assert np.array_equal(invalid_out, valid_out)
+    assert invalid_out.sum() > 0
+
+
+def test_rasterize_shape_file_uses_explicit_fill_value(tmp_path):
+    """Rasterization uses the provided fill value for untouched cells"""
+    land_mask_fp = tmp_path / "test_shape_mask_fill_value.gpkg"
+    basic_shape = gpd.GeoDataFrame(
+        geometry=[box(0, 0, 6, 6)], crs="ESRI:102008"
+    )
+    basic_shape.to_file(land_mask_fp, driver="GPKG")
+
+    out = rasterize_shape_file(
+        land_mask_fp,
+        width=4,
+        height=4,
+        transform=Affine(3.0, 0.0, 0.0, 0.0, -3.0, 12.0),
+        buffer_dist=None,
+        all_touched=False,
+        dest_crs=None,
+        burn_value=1,
+        boundary_only=False,
+        dtype="int16",
+        fill=7,
+    )
+
+    assert out.dtype == np.dtype("int16")
+    assert np.array_equal(
+        out,
+        np.array(
+            [
+                [7, 7, 7, 7],
+                [7, 7, 7, 7],
+                [1, 1, 7, 7],
+                [1, 1, 7, 7],
+            ],
+            dtype="int16",
+        ),
+    )
+
+
+def test_simplify_tolerance_uses_half_cell_size():
+    """Simplification tolerance is half of the largest raster cell size"""
+    transform = Affine(4.0, 0.0, 0.0, 0.0, -6.0, 0.0)
+
+    assert _simplify_tolerance(transform) == pytest.approx(3.0)
+
+
+def test_simplify_shapes_returns_copy_and_drops_empty_geometries():
+    """simplify_shapes returns a simplified copy without empty shapes"""
+    gdf = gpd.GeoDataFrame(
+        geometry=[
+            LineString([(0, 0), (1, 0.5), (2, 0)]),
+            GeometryCollection(),
+        ],
+        crs="ESRI:102008",
+    )
+
+    simplified = simplify_shapes(gdf, Affine(2.0, 0.0, 0.0, 0.0, -2.0, 0.0))
+
+    assert len(simplified) == 1
+    assert simplified.geometry.iloc[0].equals(LineString([(0, 0), (2, 0)]))
 
 
 def test_integer_dimension_window_rounds_offsets():

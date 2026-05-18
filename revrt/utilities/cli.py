@@ -16,7 +16,7 @@ from shapely.geometry import Point, LineString
 from shapely.ops import transform as shapely_transform
 from gaps.cli import CLICommandFromClass, CLICommandFromFunction
 
-from revrt.utilities.base import region_mapper, transform_xy
+from revrt.utilities import region_mapper, transform_xy, strip_path_keys
 from revrt.utilities.handlers import (
     IncrementalWriter,
     LayeredFile,
@@ -31,6 +31,8 @@ logger = logging.getLogger(__name__)
 
 def layers_from_file(fp, _out_layer_dir, layers=None, profile_kwargs=None):
     """Extract layers from a layered file on disk
+
+    Layers are output as individual GeoTIFF files.
 
     Parameters
     ----------
@@ -96,7 +98,7 @@ def _preprocess_layers_from_file_config(config, out_dir, out_layer_dir=None):
         By default, ``None``.
     """
     config["_out_layer_dir"] = str(out_layer_dir or out_dir)
-    return config
+    return strip_path_keys(config, keys_to_fix={"fp", "_out_layer_dir"})
 
 
 def convert_pois_to_lines(poi_csv_f, template_f, out_f):
@@ -493,8 +495,45 @@ def _geometry_centroids(features):
     return geometry.set_crs(features.crs, allow_override=True)
 
 
+def _preprocess_layers_to_file(config):
+    """Preprocess config for layers_to_file command"""
+    return strip_path_keys(config, keys_to_fix={"fp"})
+
+
+def _preprocess_convert_pois_to_lines(config):
+    """Preprocess config for convert_pois_to_lines command"""
+    return strip_path_keys(
+        config, keys_to_fix={"poi_csv_f", "template_f", "out_f"}
+    )
+
+
+def _preprocess_convert_map_ss_to_rr(config):
+    """Preprocess config for map_ss_to_rr command"""
+    return strip_path_keys(
+        config, keys_to_fix={"features_fpath", "regions_fpath", "out_fpath"}
+    )
+
+
+def _preprocess_convert_ss_from_conn(config):
+    """Preprocess config for ss_from_conn command"""
+    return strip_path_keys(
+        config, keys_to_fix={"connections_fpath", "out_fpath"}
+    )
+
+
+def _preprocess_convert_add_rr_to_nn(config):
+    """Preprocess config for add_rr_to_nn command"""
+    return strip_path_keys(
+        config,
+        keys_to_fix={"network_nodes_fpath", "regions_fpath", "out_fpath"},
+    )
+
+
 layers_to_file_command = CLICommandFromClass(
-    LayeredFile, method="layers_to_file", add_collect=False
+    LayeredFile,
+    method="layers_to_file",
+    add_collect=False,
+    config_preprocessor=_preprocess_layers_to_file,
 )
 layers_from_file_command = CLICommandFromFunction(
     function=layers_from_file,
@@ -506,13 +545,20 @@ convert_pois_to_lines_command = CLICommandFromFunction(
     name="convert-pois-to-lines",
     add_collect=False,
     split_keys=None,
+    config_preprocessor=_preprocess_convert_pois_to_lines,
 )
 map_ss_to_rr_command = CLICommandFromFunction(
-    function=map_ss_to_rr, add_collect=False
+    function=map_ss_to_rr,
+    add_collect=False,
+    config_preprocessor=_preprocess_convert_map_ss_to_rr,
 )
 ss_from_conn_command = CLICommandFromFunction(
-    function=ss_from_conn, add_collect=False
+    function=ss_from_conn,
+    add_collect=False,
+    config_preprocessor=_preprocess_convert_ss_from_conn,
 )
 add_rr_to_nn_command = CLICommandFromFunction(
-    function=add_rr_to_nn, add_collect=False
+    function=add_rr_to_nn,
+    add_collect=False,
+    config_preprocessor=_preprocess_convert_add_rr_to_nn,
 )

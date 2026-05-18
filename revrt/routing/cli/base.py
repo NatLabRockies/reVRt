@@ -1,6 +1,5 @@
 """reVRt routing CLI functions and helpers"""
 
-import time
 import logging
 import contextlib
 from math import ceil
@@ -16,6 +15,7 @@ import xarray as xr
 
 from revrt.routing.cli.utilities import routing_layer_mover
 from revrt.routing.base import BatchRouteProcessor, RoutingScenario
+from revrt.utilities.monitoring import log_runtime
 from revrt.exceptions import revrtKeyError
 
 
@@ -214,14 +214,43 @@ def run_lcp(  # noqa
 ):
     """[NOT PUBLIC API] Run LCP routing and save to output file"""
 
-    ts = time.monotonic()
-    out_fp = Path(out_fp)
-    save_paths = out_fp.suffix.lower() == ".gpkg"
-
     logger.info(
         "Computing best routes for %d point pairs",
         routes_to_compute.num_routes,
     )
+
+    with log_runtime(f"Routing for {routes_to_compute.num_routes:,d} points"):
+        _run_all_lcp_batches(
+            cost_fpath=cost_fpath,
+            out_fp=out_fp,
+            routes_to_compute=routes_to_compute,
+            job_name=job_name,
+            cost_multiplier_layer=cost_multiplier_layer,
+            cost_multiplier_scalar=cost_multiplier_scalar,
+            tracked_layers=tracked_layers,
+            ignore_invalid_costs=ignore_invalid_costs,
+            user_mem_limit_gb=user_mem_limit_gb,
+            save_routing_layer=save_routing_layer,
+            algorithm=algorithm,
+        )
+
+
+def _run_all_lcp_batches(  # noqa
+    cost_fpath,
+    out_fp,
+    routes_to_compute,
+    job_name,
+    cost_multiplier_layer,
+    cost_multiplier_scalar,
+    tracked_layers,
+    ignore_invalid_costs,
+    user_mem_limit_gb,
+    save_routing_layer,
+    algorithm,
+):
+    """Run LCP routing for all batches of routes and save results"""
+    out_fp = Path(out_fp)
+    save_paths = out_fp.suffix.lower() == ".gpkg"
     for route_batch in routes_to_compute:
         route_cl, route_fl, route_bl, route_definitions, route_attrs = (
             route_batch
@@ -262,13 +291,6 @@ def run_lcp(  # noqa
                 save_paths=save_paths,
                 routing_layer_out_fp=routing_layer_out_fp,
             )
-
-    time_elapsed = f"{(time.monotonic() - ts) / 3600:.4f} hour(s)"
-    logger.info(
-        "Routing for %d points completed in %s",
-        routes_to_compute.num_routes,
-        time_elapsed,
-    )
 
 
 def route_points_subset(route_points, split_params):

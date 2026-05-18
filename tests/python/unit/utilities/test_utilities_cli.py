@@ -665,6 +665,44 @@ def test_cli_convert_pois_to_lines_command(
     and (platform.system() == "Windows"),
     reason="CLI does not work under tox env on windows",
 )
+def test_cli_convert_pois_to_lines_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file, tmp_path, sample_tiff_fp
+):
+    """convert-pois-to-lines CLI strips whitespace on required paths"""
+
+    poi_csv = tmp_path / "poi_whitespace.csv"
+    pd.DataFrame(
+        {
+            "POI Name": ["alpha"],
+            "State": ["CO"],
+            "Voltage (kV)": [230],
+            "Lat": [35.0],
+            "Long": [-110.0],
+        }
+    ).to_csv(poi_csv, index=False)
+
+    out_gpkg = tmp_path / "pois_trimmed.gpkg"
+    config = {
+        "poi_csv_f": f"  {poi_csv}  ",
+        "template_f": f"  {sample_tiff_fp}  ",
+        "out_f": f"  {out_gpkg}  ",
+    }
+
+    run_gaps_cli_with_expected_file(
+        "convert-pois-to-lines",
+        config,
+        tmp_path,
+        glob_pattern="pois_trimmed.gpkg",
+    )
+
+    assert out_gpkg.exists()
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
 def test_cli_map_ss_to_rr_command(run_gaps_cli_with_expected_file, tmp_path):
     """Ensure map-ss-to-rr CLI filters and maps regions"""
 
@@ -725,6 +763,50 @@ def test_cli_map_ss_to_rr_command(run_gaps_cli_with_expected_file, tmp_path):
     and (platform.system() == "Windows"),
     reason="CLI does not work under tox env on windows",
 )
+def test_cli_map_ss_to_rr_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file, tmp_path
+):
+    """map-ss-to-rr CLI strips whitespace on required path inputs"""
+
+    features = gpd.GeoDataFrame(
+        {
+            "category": ["Substation", "Line"],
+            "gid": [1, 10],
+            "trans_gids": [json.dumps([10]), None],
+            "voltage": [0, 230],
+        },
+        geometry=[Point(0.0, 0.0), LineString([(0.0, 0.0), (0.0, 1.0)])],
+        crs="EPSG:4326",
+    )
+    regions = gpd.GeoDataFrame(
+        {"region_id": ["A"]},
+        geometry=[Polygon([(-1, -1), (-1, 1), (1, 1), (1, -1)])],
+        crs="EPSG:4326",
+    )
+
+    features_path = tmp_path / "features_trimmed.gpkg"
+    regions_path = tmp_path / "regions_trimmed.gpkg"
+    features.to_file(features_path, driver="GPKG")
+    regions.to_file(regions_path, driver="GPKG")
+
+    config = {
+        "features_fpath": f"  {features_path}  ",
+        "regions_fpath": f"  {regions_path}  ",
+        "region_identifier_column": "region_id",
+    }
+
+    out_path = run_gaps_cli_with_expected_file(
+        "map-ss-to-rr", config, tmp_path
+    )
+
+    assert Path(out_path).exists()
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
 def test_cli_ss_from_conn_command(run_gaps_cli_with_expected_file, tmp_path):
     """Ensure ss-from-conn CLI extracts substations"""
 
@@ -747,6 +829,35 @@ def test_cli_ss_from_conn_command(run_gaps_cli_with_expected_file, tmp_path):
     subs = gpd.read_file(out_path)
     assert len(subs) == 1
     assert subs.loc[0, "poi_gid"] == 1
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_cli_ss_from_conn_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file, tmp_path
+):
+    """ss-from-conn CLI strips whitespace on required path inputs"""
+
+    csv_path = tmp_path / "connections_trimmed.csv"
+    pd.DataFrame(
+        {
+            "poi_gid": [1],
+            "poi_lat": [10.0],
+            "poi_lon": [100.0],
+            "region_id": ["A"],
+        }
+    ).to_csv(csv_path, index=False)
+
+    config = {"connections_fpath": f"  {csv_path}  "}
+
+    out_path = run_gaps_cli_with_expected_file(
+        "ss-from-conn", config, tmp_path
+    )
+
+    assert Path(out_path).exists()
 
 
 @pytest.mark.skipif(
@@ -791,6 +902,48 @@ def test_cli_add_rr_to_nn_command(
 
     nodes = gpd.read_file(out_path).sort_values("value").reset_index(drop=True)
     assert nodes["region"].tolist() == ["west", "east"]
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_cli_add_rr_to_nn_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file, tmp_path, sample_tiff_fp
+):
+    """add-rr-to-nn CLI strips whitespace on required path inputs"""
+
+    network = gpd.GeoDataFrame(
+        {"value": [1]},
+        geometry=[Point(0.0, 0.0)],
+        crs="EPSG:4326",
+    )
+    regions = gpd.GeoDataFrame(
+        {"region": ["west"]},
+        geometry=[Polygon([(-1, -1), (-1, 1), (1, 1), (1, -1)])],
+        crs="EPSG:4326",
+    )
+
+    network_path = tmp_path / "network_trimmed.gpkg"
+    regions_path = tmp_path / "regions_trimmed.gpkg"
+    network.to_file(network_path, driver="GPKG")
+    regions.to_file(regions_path, driver="GPKG")
+
+    config = {
+        "network_nodes_fpath": f"  {network_path}  ",
+        "regions_fpath": f"  {regions_path}  ",
+        "region_identifier_column": "region",
+        "crs_template_file": str(sample_tiff_fp),
+    }
+
+    out_path = run_gaps_cli_with_expected_file(
+        "add-rr-to-nn",
+        config,
+        tmp_path,
+    )
+
+    assert Path(out_path).exists()
 
 
 if __name__ == "__main__":

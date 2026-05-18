@@ -26,6 +26,7 @@ from revrt.utilities import (
     LayeredFile,
     chunked_read_gpkg,
     gpkg_crs,
+    strip_path_keys,
 )
 from revrt.utilities.raster import integer_dimension_window
 from revrt.exceptions import revrtValueError, revrtFileNotFoundError
@@ -352,6 +353,12 @@ class RoutePostProcessor:
     def process(self):
         """Merge and post-process routes files into a single file
 
+        This function collects together multiple LCP routing output
+        files into a single file and applies any specified
+        post-processing steps, which include simplifying geometries,
+        applying length multipliers, applying a minimum length floor,
+        and merging in transmission feature attributes.
+
         Raises
         ------
         revrtFileNotFoundError
@@ -510,9 +517,17 @@ def _compute_linear_lm(features):
     return features
 
 
+def _preprocess_finalize_routes(config):
+    """Preprocess config for finalize-routes command"""
+    return strip_path_keys(
+        config, keys_to_fix={"collect_pattern", "project_dir"}
+    )
+
+
 finalize_routes_command = CLICommandFromClass(
     init=RoutePostProcessor,
     method="process",
     name="finalize-routes",
     add_collect=False,
+    config_preprocessor=_preprocess_finalize_routes,
 )

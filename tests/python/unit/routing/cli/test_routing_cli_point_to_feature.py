@@ -356,5 +356,35 @@ def test_route_features_cli_executes(
     assert len(df) == 1
 
 
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_route_features_cli_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file, point_feature_dataset, tmp_path
+):
+    """route-features CLI strips whitespace on required path inputs"""
+
+    route_table = _build_route_table(
+        point_feature_dataset["metadata"], [(1, 1)], [1]
+    )
+    route_table_fp = point_feature_dataset["tmp_path"] / "trimmed_routes.csv"
+    route_table.to_csv(route_table_fp, index=False)
+
+    config = {
+        "cost_fpath": f"  {point_feature_dataset['cost_fp']}  ",
+        "route_table_fpath": f"  {route_table_fp}  ",
+        "features_fpath": f"  {point_feature_dataset['features_fp']}  ",
+        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "save_paths": False,
+    }
+    out_fp = run_gaps_cli_with_expected_file(
+        "route-features", config, tmp_path
+    )
+
+    assert Path(out_fp).exists()
+
+
 if __name__ == "__main__":
     pytest.main(["-q", "--show-capture=all", Path(__file__), "-rapP"])

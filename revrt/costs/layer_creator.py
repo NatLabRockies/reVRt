@@ -1,11 +1,12 @@
 """Build friction or barrier layers from raster and vector data"""
 
 import logging
-from pathlib import Path
 from warnings import warn
+from pathlib import Path
 
 import numpy as np
 import dask.array as da
+import xarray as xr
 
 from revrt.costs.base import BaseLayerCreator
 from revrt.utilities import (
@@ -13,15 +14,16 @@ from revrt.utilities import (
     load_data_using_layer_file_profile,
     save_data_using_layer_file_profile,
     log_mem,
+    log_array_backend,
+    rasterize_shape_file,
 )
-from revrt.utilities.raster import rasterize_shape_file
 from revrt.constants import DEFAULT_DTYPE, ALL, METERS_IN_MILE
 from revrt.exceptions import revrtAttributeError, revrtValueError
 from revrt.warn import revrtWarning
 
 logger = logging.getLogger(__name__)
 TIFF_EXTENSIONS = {".tif", ".tiff"}
-SHP_EXTENSIONS = {".shp", ".gpkg"}
+SHP_EXTENSIONS = {".shp", ".gpkg", ".geojson"}
 
 
 class LayerCreator(BaseLayerCreator):
@@ -159,41 +161,12 @@ class LayerCreator(BaseLayerCreator):
         layer_name = layer_name.replace(".tif", "").replace(".tiff", "")
         logger.debug("Combining %s layers", layer_name)
         log_mem()
-        result = da.zeros(self.shape, dtype=self._dtype, chunks=self.chunks)
-        fi_layers = {}
-        logger.debug("Initialized zeros")
-        log_mem()
 
-        for fname, config in build_config.items():
-            if config.forced_inclusion:
-                fi_layers[fname] = config
-                continue
-
-            logger.debug("Processing %s with config %s", fname, config)
-            if Path(fname).suffix.lower() in TIFF_EXTENSIONS:
-                temp = self._process_raster_layer(
-                    fname, config, tiff_chunks=tiff_chunks
-                )
-                result += temp
-            elif Path(fname).suffix.lower() in SHP_EXTENSIONS:
-                temp = self._process_vector_layer(fname, config)
-                result += temp
-            else:
-                msg = f"Unsupported file extension on {fname!r}"
-                raise revrtValueError(msg)
-
-            log_mem()
-
-        result = self._process_forced_inclusions(
-            result, fi_layers, tiff_chunks=tiff_chunks
+        result = self._build_layer_from_components(
+            build_config,
+            values_are_costs_per_mile=values_are_costs_per_mile,
+            tiff_chunks=tiff_chunks,
         )
-        logger.debug("After forced inclusions")
-        log_mem()
-        if values_are_costs_per_mile:
-            result = result / METERS_IN_MILE * self.cell_size
-            log_mem()
-
-        result = result.astype(self._dtype)
         out_filename = self.output_tiff_dir / f"{layer_name}.tif"
         logger.debug(
             "Writing combined %s layers to %s", layer_name, out_filename
@@ -208,6 +181,49 @@ class LayerCreator(BaseLayerCreator):
             **profile_kwargs,
         )
         return out_filename
+
+    def _build_layer_from_components(
+        self, build_config, values_are_costs_per_mile=False, tiff_chunks="file"
+    ):
+        result = da.zeros(self.shape, dtype=self._dtype, chunks=self.chunks)
+        fi_layers = {}
+        logger.debug("Initialized zeros")
+        log_mem()
+
+        for fname, config in build_config.items():
+            if config.forced_inclusion:
+                fi_layers[fname] = config
+                continue
+
+            fname = str(fname).strip()  # noqa: PLW2901
+            logger.debug("Processing '%s' with config: %s", fname, config)
+            if Path(fname).suffix.lower() in TIFF_EXTENSIONS:
+                temp = self._process_raster_layer(
+                    fname, config, tiff_chunks=tiff_chunks
+                )
+                log_array_backend(fname, temp, kind="Processed")
+                result += _backend_array(temp)
+            elif Path(fname).suffix.lower() in SHP_EXTENSIONS:
+                temp = self._process_vector_layer(
+                    fname, config, tiff_chunks=tiff_chunks
+                )
+                log_array_backend(fname, temp, kind="Lazy reload")
+                result += _backend_array(temp)
+            else:
+                msg = f"Unsupported file extension on {fname!r}"
+                raise revrtValueError(msg)
+
+            log_mem()
+
+        result = self._process_forced_inclusions(
+            result, fi_layers, tiff_chunks=tiff_chunks
+        )
+        logger.debug("After forced inclusions")
+        log_mem()
+        if values_are_costs_per_mile:
+            result = result / METERS_IN_MILE * self.cell_size
+            log_mem()
+        return result.astype(self._dtype)
 
     def _process_raster_layer(self, fname, config, tiff_chunks="file"):
         """Create the desired layer from the input file"""
@@ -286,7 +302,7 @@ class LayerCreator(BaseLayerCreator):
 
         return self._apply_mask(config, temp)
 
-    def _process_vector_layer(self, fname, config):
+    def _process_vector_layer(self, fname, config, tiff_chunks="file"):
         """Rasterize a vector layer"""
         if config.rasterize is None:
             msg = (
@@ -295,6 +311,20 @@ class LayerCreator(BaseLayerCreator):
             )
             raise revrtValueError(msg)
 
+        out_tiff = self.output_tiff_dir / f"{Path(fname).stem}.tif"
+        if not out_tiff.exists():
+            self._rasterize_vector_layer(fname, config, out_tiff)
+
+        return load_data_using_layer_file_profile(
+            layer_fp=self._io_handler.fp,
+            geotiff=out_tiff,
+            tiff_chunks=tiff_chunks,
+            layer_dirs=[self.output_tiff_dir],
+            band_index=0,
+        )
+
+    def _rasterize_vector_layer(self, fname, config, out_tiff):
+        """Rasterize a vector layer and save to GeoTIFF"""
         kwargs = {
             k: v for k, v in self._io_handler.profile.items() if k != "crs"
         }
@@ -302,16 +332,37 @@ class LayerCreator(BaseLayerCreator):
             kwargs["dest_crs"] = self._io_handler.profile["crs"]
 
         fname = file_full_path(fname, self.input_layer_dir)
+        vector_dtype = _vector_raster_dtype(
+            config.rasterize.value, self._dtype
+        )
+        logger.debug(
+            "Rasterizing vector '%s' using intermediate dtype %s",
+            fname,
+            vector_dtype,
+        )
         temp = rasterize_shape_file(
             fname,
             buffer_dist=config.rasterize.buffer,
             burn_value=config.rasterize.value,
             all_touched=config.rasterize.all_touched,
-            dtype=self._dtype,
+            tile_size=config.rasterize.tile_size,
+            simply_before_rasterize=config.rasterize.simply_before_rasterize,
+            fill=config.rasterize.fill,
+            dtype=vector_dtype,
             **kwargs,
         )
 
-        return self._apply_mask(config, temp)
+        log_array_backend(fname, temp, kind="Rasterized")
+
+        temp = self._apply_mask(config, temp)
+        log_array_backend(fname, temp, kind="Masked")
+
+        logger.debug("Writing rasterized vector '%s' to '%s'", fname, out_tiff)
+        save_data_using_layer_file_profile(
+            layer_fp=self._io_handler.fp,
+            data=temp,
+            geotiff=out_tiff,
+        )
 
     def _apply_mask(self, config, data):
         """Apply the mask to the data based on the config extent"""
@@ -367,6 +418,7 @@ class LayerCreator(BaseLayerCreator):
                 layer_dirs=[self.input_layer_dir, self.output_tiff_dir],
                 band_index=0,
             )
+            temp = _backend_array(temp)
 
             if config.extent == ALL:
                 fi += temp
@@ -462,3 +514,30 @@ def _validate_bin_continuity(bins):
             warn(msg, revrtWarning)
 
         last_max = input_bin.max
+
+
+def _vector_raster_dtype(burn_value, default_dtype):
+    """Choose a compact dtype for vector rasterization"""
+    try:
+        scalar = float(burn_value)
+    except (TypeError, ValueError):
+        return default_dtype
+
+    if not np.isfinite(scalar) or not scalar.is_integer():
+        return default_dtype
+
+    dtype = np.result_type(
+        np.min_scalar_type(0), np.min_scalar_type(int(scalar))
+    )
+    if np.issubdtype(dtype, np.bool_):
+        return "uint8"
+
+    return np.dtype(dtype).name
+
+
+def _backend_array(data):
+    """Return the NumPy/Dask backing array for accumulation"""
+    if isinstance(data, xr.DataArray):
+        return data.data
+
+    return data

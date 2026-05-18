@@ -19,6 +19,7 @@ from shapely.geometry.linestring import LineString
 from revrt import RouteFinder, simplify_using_slopes
 from revrt.models.cost_layers import BarrierLayer
 from revrt.utilities.handlers import IncrementalWriter
+from revrt.utilities.monitoring import log_runtime
 from revrt.exceptions import (
     revrtKeyError,
     revrtLeastCostPathNotFoundError,
@@ -757,20 +758,15 @@ class BatchRouteProcessor:
         if not self.route_definitions:
             return
 
-        ts = time.monotonic()
-        try:
-            self._compute_routes(
-                out_fp, save_paths=save_paths, rl=routing_layer_out_fp
-            )
-        finally:
-            self._reset_routing_layers()
-
-        time_elapsed = f"{(time.monotonic() - ts) / 60:.4f} min"
-        logger.debug(
-            "Routing for %d route definitions computed in %s",
-            len(self.route_definitions),
-            time_elapsed,
-        )
+        with log_runtime(
+            f"Routing for {len(self.route_definitions)} route definitions"
+        ):
+            try:
+                self._compute_routes(
+                    out_fp, save_paths=save_paths, rl=routing_layer_out_fp
+                )
+            finally:
+                self._reset_routing_layers()
 
     def _compute_routes(self, out_fp, save_paths, rl=None):
         """Evaluate route definitions and build result records"""

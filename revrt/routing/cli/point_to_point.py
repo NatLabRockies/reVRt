@@ -1,6 +1,5 @@
 """reVRt point-to-point routing CLI command"""
 
-import time
 import logging
 from pathlib import Path
 
@@ -12,6 +11,7 @@ from revrt.routing.cli.base import (
     split_routes,
     RouteToDefinitionConverter,
 )
+from revrt.utilities import strip_path_keys, log_runtime
 from revrt.routing.utilities import map_to_costs
 from revrt.costs.config import parse_config
 
@@ -388,57 +388,61 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         Compute LCP routes between points and features.
     """
 
-    start_time = time.time()
+    with log_runtime("LCP processing"):
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+        logger.debug("Tracked layers input: %r", tracked_layers)
+        logger.debug("Transmission config input: %r", transmission_config)
 
-    logger.debug("Tracked layers input: %r", tracked_layers)
-    logger.debug("Transmission config input: %r", transmission_config)
+        transmission_config = parse_config(config=transmission_config)
 
-    transmission_config = parse_config(config=transmission_config)
+        route_points = route_points_subset(
+            route_table_fpath, split_params=_split_params
+        )
+        if len(route_points) == 0:
+            logger.info("No routes to process!")
+            return None
 
-    route_points = route_points_subset(
-        route_table_fpath, split_params=_split_params
-    )
-    if len(route_points) == 0:
-        logger.info("No routes to process!")
-        return None
+        out_fp = (
+            out_dir / f"{job_name}.gpkg"
+            if save_paths
+            else out_dir / f"{job_name}.csv"
+        )
 
-    out_fp = (
-        out_dir / f"{job_name}.gpkg"
-        if save_paths
-        else out_dir / f"{job_name}.csv"
-    )
+        routes_to_compute = PointToPointRouteDefinitionConverter(
+            cost_fpath=cost_fpath,
+            route_points=route_points,
+            out_fp=out_fp,
+            cost_layers=cost_layers,
+            friction_layers=friction_layers,
+            barrier_layers=barrier_layers,
+            transmission_config=transmission_config,
+        )
 
-    routes_to_compute = PointToPointRouteDefinitionConverter(
-        cost_fpath=cost_fpath,
-        route_points=route_points,
-        out_fp=out_fp,
-        cost_layers=cost_layers,
-        friction_layers=friction_layers,
-        barrier_layers=barrier_layers,
-        transmission_config=transmission_config,
-    )
-
-    run_lcp(
-        cost_fpath,
-        out_fp=out_fp,
-        routes_to_compute=routes_to_compute,
-        job_name=job_name,
-        cost_multiplier_layer=cost_multiplier_layer,
-        cost_multiplier_scalar=cost_multiplier_scalar,
-        tracked_layers=tracked_layers,
-        ignore_invalid_costs=ignore_invalid_costs,
-        user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
-        save_routing_layer=save_routing_layer,
-        algorithm=algorithm,
-    )
-
-    elapsed_time = (time.time() - start_time) / 60
-    logger.info("Processing took %.2f minutes", elapsed_time)
+        run_lcp(
+            cost_fpath,
+            out_fp=out_fp,
+            routes_to_compute=routes_to_compute,
+            job_name=job_name,
+            cost_multiplier_layer=cost_multiplier_layer,
+            cost_multiplier_scalar=cost_multiplier_scalar,
+            tracked_layers=tracked_layers,
+            ignore_invalid_costs=ignore_invalid_costs,
+            user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
+            save_routing_layer=save_routing_layer,
+            algorithm=algorithm,
+        )
 
     return str(out_fp)
+
+
+def _prep_config(config):
+    """Pre-process config inputs for point-to-point routing"""
+    config = split_routes(config)
+    return strip_path_keys(
+        config, keys_to_fix={"cost_fpath", "route_table_fpath", "out_dir"}
+    )
 
 
 route_points_command = CLICommandFromFunction(
@@ -446,6 +450,6 @@ route_points_command = CLICommandFromFunction(
     name="route-points",
     add_collect=False,
     split_keys={"_split_params"},
-    config_preprocessor=split_routes,
+    config_preprocessor=_prep_config,
     skip_doc_params=["system_mem_limit_gb"],
 )

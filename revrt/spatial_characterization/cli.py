@@ -11,7 +11,13 @@ from gaps.config import load_config
 from gaps.cli import CLICommandFromFunction
 
 from revrt.spatial_characterization.zonal import ZonalStats
-from revrt.utilities import buffer_routes
+from revrt.utilities import (
+    buffer_routes,
+    close_dask_client,
+    dask_performance_report,
+    log_runtime,
+    strip_path_keys,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -108,6 +114,11 @@ def buffered_route_characterizations(
     DataFrame
         Pandas DataFrame containing computed characteristics/stats.
     """
+    if isinstance(geotiff_fp, str):
+        geotiff_fp = geotiff_fp.strip()
+    if isinstance(route_fp, str):
+        route_fp = route_fp.strip()
+
     rds = (
         rioxarray.open_rasterio(geotiff_fp, chunks=chunks) * multiplier_scalar
     )
@@ -150,6 +161,7 @@ def _route_characterizations_from_config(
     max_workers=1,
     tag=None,
     memory_limit_per_worker="auto",
+    log_directory=None,
 ):
     """Compute route characterizations/statistics
 
@@ -168,6 +180,9 @@ def _route_characterizations_from_config(
         used *per worker*. If a string giving a number  of bytes (like
         "1GiB"), that amount is used *per worker*. If an int, that
         number of bytes is used *per worker*. By default, ``"auto"``
+    log_directory : path-like, optional
+        Directory to save Dask performance reports in. If ``None``, Dask
+        performance reports will not be generated. By default, ``None``.
     """
     tag = tag or ""
     _stat_kwargs.setdefault("route_fp", _default_route_fp)
@@ -176,6 +191,9 @@ def _route_characterizations_from_config(
         "row_width_key", _default_row_width_key or "voltage"
     )
     _stat_kwargs.setdefault("chunks", _default_chunks or "auto")
+    _stat_kwargs = strip_path_keys(
+        _stat_kwargs, keys_to_fix={"geotiff_fp", "route_fp"}
+    )
 
     raster_name = _stat_kwargs.get("geotiff_fp")
     raster_name = f"_{Path(raster_name).stem}" if raster_name else ""
@@ -205,16 +223,23 @@ def _route_characterizations_from_config(
         )
 
     try:
-        out_data = buffered_route_characterizations(
-            row_widths=_row_widths,
-            row_width_ranges=_row_width_ranges,
-            parallel=parallel,
-            **_stat_kwargs,
-        )
-        out_data.to_csv(out_fp, index=False)
+        with (
+            dask_performance_report(
+                "route_characterizations",
+                out_dir=log_directory if max_workers != 1 else None,
+            ),
+            log_runtime("Characterizing routes"),
+        ):
+            out_data = buffered_route_characterizations(
+                row_widths=_row_widths,
+                row_width_ranges=_row_width_ranges,
+                parallel=parallel,
+                **_stat_kwargs,
+            )
+            out_data.to_csv(out_fp, index=False)
     finally:
         if client is not None:
-            client.close()
+            close_dask_client(client)
 
     return str(out_fp)
 
@@ -384,7 +409,7 @@ def _preprocess_stats_config(
     config["_default_copy_properties"] = default_copy_properties
     config["_default_row_width_key"] = default_row_width_key
     config["_default_chunks"] = default_chunks
-    return config
+    return strip_path_keys(config, keys_to_fix={"out_dir"})
 
 
 route_characterizations_command = CLICommandFromFunction(
