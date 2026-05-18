@@ -18924,9 +18924,10 @@ packages:
 - pypi: ./
   name: nlr-revrt
   version: 0.6.2
-  sha256: 0ed9f2cb5212ef810b371572bf7f033f6b1a4060e4d948b8ed789e77ccc8c087
+  sha256: 5a8999951c09d7a1b6e852ab8b85a95ee8d1b0903a02da3d8a30850a97c50e16
   requires_dist:
   - affine>=2.4.0,<3
+  - bokeh>=3.9.0,<4
   - dask>=2026.3.0,<2027
   - distributed>=2026.3.0,<2027
   - fiona>=1.10.1,<2

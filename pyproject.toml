@@ -33,6 +33,7 @@ classifiers=[
 ]
 dependencies = [
   "affine>=2.4.0,<3",
+  "bokeh>=3.9.0,<4",  # for dask performance report
   "dask>=2026.3.0,<2027",
   "distributed>=2026.3.0,<2027",
   "fiona>=1.10.1,<2",
@@ -264,6 +265,7 @@ python = ">=3.12"
 rust = ">=1.94.0,<1.95"
 # package
 affine = ">=2.4.0,<3"
+bokeh = ">=3.9.0,<4"
 dask = ">=2026.3.0,<2027"
 distributed = ">=2026.3.0,<2027"
 fiona = ">=1.10.1,<2"
