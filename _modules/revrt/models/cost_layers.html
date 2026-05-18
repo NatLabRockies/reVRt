@@ -951,8 +951,8 @@ window.runMermaid = runMermaid;</script>
 <span class="k">class</span><span class="w"> </span><span class="nc">Rasterize</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Config to rasterize a vector layer and apply a value to it&quot;&quot;&quot;</span>
 
-    <span class="n">value</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value to burn in to raster&quot;&quot;&quot;</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value or source column name to burn in to raster&quot;&quot;&quot;</span>
 
     <span class="n">buffer</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Value to buffer by (can be negative)&quot;&quot;&quot;</span>
@@ -961,7 +961,28 @@ window.runMermaid = runMermaid;</script>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reproject vector to raster CRS if ``True``&quot;&quot;&quot;</span>
 
     <span class="n">all_touched</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rasterize all cells touched by vector if ``True``&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rasterize all cells touched by vector if ``True``&quot;&quot;&quot;</span>
+
+    <span class="n">tile_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tile size to use for rasterization</span>
+
+<span class="sd">    If not specified, a default value of 2048 will be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">simply_before_rasterize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simplify geometries before rasterization if ``True``</span>
+
+<span class="sd">    Geometries are simplified to half of the raster cell size when this</span>
+<span class="sd">    is ``True``. This can help speed up rasterization and reduce memory</span>
+<span class="sd">    usage for very complex vectors, but may result in less accurate</span>
+<span class="sd">    rasterization. By default, ``False``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fill</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value used to fill raster cells not burned by vector</span>
+
+<span class="sd">    If None, uses np.nan. By default, ``0``.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 

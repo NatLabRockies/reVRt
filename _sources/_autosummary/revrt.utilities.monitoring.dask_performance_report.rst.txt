@@ -1,0 +1,6 @@
+revrt.utilities.monitoring.dask\_performance\_report
+====================================================
+
+.. currentmodule:: revrt.utilities.monitoring
+
+.. autofunction:: dask_performance_report

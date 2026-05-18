@@ -31,5 +31,6 @@ revrt.utilities
    base
    cli
    handlers
+   monitoring
    raster
 

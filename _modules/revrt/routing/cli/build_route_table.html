@@ -824,7 +824,6 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for revrt.routing.cli.build_route_table</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;reVRt build route table to features CLI command&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
@@ -839,6 +838,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">make_rev_sc_points</span><span class="p">,</span>
     <span class="n">points_csv_to_geo_dataframe</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">strip_path_keys</span><span class="p">,</span> <span class="n">log_runtime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtValueError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span>
 
@@ -865,6 +865,17 @@ window.runMermaid = runMermaid;</script>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a route table mapping points to nearest features</span>
+
+<span class="sd">    This table is used as an input to the routing step, which computes</span>
+<span class="sd">    the least cost path from each point to its mapped feature. The</span>
+<span class="sd">    points can be defined by an input csv file or generated from a given</span>
+<span class="sd">    reV supply curve resolution. The features are defined by an input</span>
+<span class="sd">    vector file. The points can be optionally clipped to regions defined</span>
+<span class="sd">    by an input vector file, which limits the features they can be</span>
+<span class="sd">    mapped to. The output route table contains the row and column index</span>
+<span class="sd">    of the point (in the cost raster) and the ID of the feature it maps</span>
+<span class="sd">    to. The mapped features are also output as a separate file that</span>
+<span class="sd">    contains the same feature IDs for linking to the route table.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -948,57 +959,55 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    list of path-like</span>
 <span class="sd">        Path to route table output file and mapped feature output file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="s2">&quot;Building point-to-feature routing table&quot;</span><span class="p">):</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+        <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
-    <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span> <span class="o">=</span> <span class="n">_check_output_filepaths</span><span class="p">(</span>
+            <span class="n">out_dir</span><span class="p">,</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
+        <span class="p">)</span>
 
-    <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span> <span class="o">=</span> <span class="n">_check_output_filepaths</span><span class="p">(</span>
-        <span class="n">out_dir</span><span class="p">,</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
-    <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cost input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">cost_fpath</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Features input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">features_fpath</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Output directory: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cost input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">cost_fpath</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Features input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">features_fpath</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Output directory: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">)</span>
+        <span class="n">regions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">regions_fpath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">regions</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">regions_fpath</span><span class="p">)</span>
 
-    <span class="n">regions</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">regions_fpath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">regions</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">regions_fpath</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
+            <span class="n">cost_fpath</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+            <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
+            <span class="n">cost_shape</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">width</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">()</span>
 
-    <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">cost_fpath</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
-        <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
-        <span class="n">cost_shape</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">width</span>
-        <span class="n">transform</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">()</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">_make_points</span><span class="p">(</span>
+            <span class="n">crs</span><span class="p">,</span>
+            <span class="n">transform</span><span class="p">,</span>
+            <span class="n">cost_shape</span><span class="p">,</span>
+            <span class="n">points_fpath</span><span class="o">=</span><span class="n">points_fpath</span><span class="p">,</span>
+            <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+        <span class="p">)</span>
 
-    <span class="n">points</span> <span class="o">=</span> <span class="n">_make_points</span><span class="p">(</span>
-        <span class="n">crs</span><span class="p">,</span>
-        <span class="n">transform</span><span class="p">,</span>
-        <span class="n">cost_shape</span><span class="p">,</span>
-        <span class="n">points_fpath</span><span class="o">=</span><span class="n">points_fpath</span><span class="p">,</span>
-        <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">mapper</span> <span class="o">=</span> <span class="n">PointToFeatureMapper</span><span class="p">(</span>
-        <span class="n">crs</span><span class="p">,</span>
-        <span class="n">features_fpath</span><span class="p">,</span>
-        <span class="n">regions</span><span class="p">,</span>
-        <span class="n">region_identifier_column</span><span class="o">=</span><span class="n">region_identifier_column</span><span class="p">,</span>
-        <span class="n">connection_identifier_column</span><span class="o">=</span><span class="n">connection_identifier_column</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">route_table</span> <span class="o">=</span> <span class="n">mapper</span><span class="o">.</span><span class="n">map_points</span><span class="p">(</span>
-        <span class="n">points</span><span class="p">,</span>
-        <span class="n">feature_out_fp</span><span class="p">,</span>
-        <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
-        <span class="n">expand_radius</span><span class="o">=</span><span class="n">expand_radius</span><span class="p">,</span>
-        <span class="n">clip_points_to_regions</span><span class="o">=</span><span class="n">clip_points_to_regions</span><span class="p">,</span>
-        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">route_table</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-        <span class="n">route_table_out_fp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">)</span>
-
-    <span class="n">elapsed_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing took </span><span class="si">%.2f</span><span class="s2"> minutes&quot;</span><span class="p">,</span> <span class="n">elapsed_time</span><span class="p">)</span>
+        <span class="n">mapper</span> <span class="o">=</span> <span class="n">PointToFeatureMapper</span><span class="p">(</span>
+            <span class="n">crs</span><span class="p">,</span>
+            <span class="n">features_fpath</span><span class="p">,</span>
+            <span class="n">regions</span><span class="p">,</span>
+            <span class="n">region_identifier_column</span><span class="o">=</span><span class="n">region_identifier_column</span><span class="p">,</span>
+            <span class="n">connection_identifier_column</span><span class="o">=</span><span class="n">connection_identifier_column</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">route_table</span> <span class="o">=</span> <span class="n">mapper</span><span class="o">.</span><span class="n">map_points</span><span class="p">(</span>
+            <span class="n">points</span><span class="p">,</span>
+            <span class="n">feature_out_fp</span><span class="p">,</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
+            <span class="n">expand_radius</span><span class="o">=</span><span class="n">expand_radius</span><span class="p">,</span>
+            <span class="n">clip_points_to_regions</span><span class="o">=</span><span class="n">clip_points_to_regions</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">route_table</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="n">route_table_out_fp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
 
     <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">route_table_out_fp</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">feature_out_fp</span><span class="p">)]</span></div>
 
@@ -1050,10 +1059,18 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_point_to_feature_route_table</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for point_to_feature_route_table command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;features_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+
 <span class="n">build_point_to_feature_route_table_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
     <span class="n">point_to_feature_route_table</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;build-feature-route-table&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_point_to_feature_route_table</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 

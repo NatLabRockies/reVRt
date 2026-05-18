@@ -843,6 +843,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt</span><span class="w"> </span><span class="kn">import</span> <span class="n">RouteFinder</span><span class="p">,</span> <span class="n">simplify_using_slopes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.models.cost_layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BarrierLayer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">IncrementalWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.monitoring</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_runtime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">revrtKeyError</span><span class="p">,</span>
     <span class="n">revrtLeastCostPathNotFoundError</span><span class="p">,</span>
@@ -1630,20 +1631,15 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="n">ts</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_routes</span><span class="p">(</span>
-                <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="o">=</span><span class="n">save_paths</span><span class="p">,</span> <span class="n">rl</span><span class="o">=</span><span class="n">routing_layer_out_fp</span>
-            <span class="p">)</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_reset_routing_layers</span><span class="p">()</span>
-
-        <span class="n">time_elapsed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> min&quot;</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Routing for </span><span class="si">%d</span><span class="s2"> route definitions computed in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">),</span>
-            <span class="n">time_elapsed</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Routing for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">)</span><span class="si">}</span><span class="s2"> route definitions&quot;</span>
+        <span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_compute_routes</span><span class="p">(</span>
+                    <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="o">=</span><span class="n">save_paths</span><span class="p">,</span> <span class="n">rl</span><span class="o">=</span><span class="n">routing_layer_out_fp</span>
+                <span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_reset_routing_layers</span><span class="p">()</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="p">,</span> <span class="n">rl</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

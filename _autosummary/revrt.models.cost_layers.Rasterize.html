@@ -523,12 +523,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.check_geotiff.html">revrt.utilities.base.check_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html">revrt.utilities.base.elapsed_time_as_str</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html">revrt.utilities.base.expand_dim_if_needed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html">revrt.utilities.base.features_to_route_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.log_mem.html">revrt.utilities.base.log_mem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
@@ -552,10 +550,21 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.monitoring.html">revrt.utilities.monitoring</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.close_dask_client.html">revrt.utilities.monitoring.close_dask_client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.dask_performance_report.html">revrt.utilities.monitoring.dask_performance_report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.elapsed_time_as_str.html">revrt.utilities.monitoring.elapsed_time_as_str</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_array_backend.html">revrt.utilities.monitoring.log_array_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_mem.html">revrt.utilities.monitoring.log_mem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_runtime.html">revrt.utilities.monitoring.log_runtime</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE.html">revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.integer_dimension_window.html">revrt.utilities.raster.integer_dimension_window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize.html">revrt.utilities.raster.rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize_shape_file.html">revrt.utilities.raster.rasterize_shape_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.simplify_shapes.html">revrt.utilities.raster.simplify_shapes</a></li>
 </ul>
 </details></li>
 </ul>
@@ -635,7 +644,7 @@
 <h1>revrt.models.cost_layers.Rasterize<a class="headerlink" href="#revrt-models-cost-layers-rasterize" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.models.cost_layers.Rasterize">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Rasterize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_touched</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/models/cost_layers.html#Rasterize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.models.cost_layers.Rasterize" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Rasterize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_touched</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simply_before_rasterize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/models/cost_layers.html#Rasterize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.models.cost_layers.Rasterize" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Config to rasterize a vector layer and apply a value to it</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
@@ -667,7 +676,7 @@ validated to form a valid model.</p>
 <td><p>Returns the set of fields that have been explicitly set on this model instance.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#revrt.models.cost_layers.Rasterize.value" title="revrt.models.cost_layers.Rasterize.value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">value</span></code></a></p></td>
-<td><p>Value to burn in to raster</p></td>
+<td><p>Value or source column name to burn in to raster</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.models.cost_layers.Rasterize.buffer" title="revrt.models.cost_layers.Rasterize.buffer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">buffer</span></code></a></p></td>
 <td><p>Value to buffer by (can be negative)</p></td>
@@ -678,13 +687,22 @@ validated to form a valid model.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.models.cost_layers.Rasterize.all_touched" title="revrt.models.cost_layers.Rasterize.all_touched"><code class="xref py py-obj docutils literal notranslate"><span class="pre">all_touched</span></code></a></p></td>
 <td><p>Rasterize all cells touched by vector if <code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.models.cost_layers.Rasterize.tile_size" title="revrt.models.cost_layers.Rasterize.tile_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tile_size</span></code></a></p></td>
+<td><p>Tile size to use for rasterization</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.models.cost_layers.Rasterize.simply_before_rasterize" title="revrt.models.cost_layers.Rasterize.simply_before_rasterize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simply_before_rasterize</span></code></a></p></td>
+<td><p>Simplify geometries before rasterization if <code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.models.cost_layers.Rasterize.fill" title="revrt.models.cost_layers.Rasterize.fill"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fill</span></code></a></p></td>
+<td><p>Value used to fill raster cells not burned by vector</p></td>
+</tr>
 </tbody>
 </table>
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="revrt.models.cost_layers.Rasterize.value">
-<span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#revrt.models.cost_layers.Rasterize.value" title="Link to this definition">#</a></dt>
-<dd><p>Value to burn in to raster</p>
+<span class="sig-name descname"><span class="pre">value</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#revrt.models.cost_layers.Rasterize.value" title="Link to this definition">#</a></dt>
+<dd><p>Value or source column name to burn in to raster</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -703,6 +721,30 @@ validated to form a valid model.</p>
 <dt class="sig sig-object py" id="revrt.models.cost_layers.Rasterize.all_touched">
 <span class="sig-name descname"><span class="pre">all_touched</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#revrt.models.cost_layers.Rasterize.all_touched" title="Link to this definition">#</a></dt>
 <dd><p>Rasterize all cells touched by vector if <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.models.cost_layers.Rasterize.tile_size">
+<span class="sig-name descname"><span class="pre">tile_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#revrt.models.cost_layers.Rasterize.tile_size" title="Link to this definition">#</a></dt>
+<dd><p>Tile size to use for rasterization</p>
+<p>If not specified, a default value of 2048 will be used.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.models.cost_layers.Rasterize.simply_before_rasterize">
+<span class="sig-name descname"><span class="pre">simply_before_rasterize</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#revrt.models.cost_layers.Rasterize.simply_before_rasterize" title="Link to this definition">#</a></dt>
+<dd><p>Simplify geometries before rasterization if <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<p>Geometries are simplified to half of the raster cell size when this
+is <code class="docutils literal notranslate"><span class="pre">True</span></code>. This can help speed up rasterization and reduce memory
+usage for very complex vectors, but may result in less accurate
+rasterization. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.models.cost_layers.Rasterize.fill">
+<span class="sig-name descname"><span class="pre">fill</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#revrt.models.cost_layers.Rasterize.fill" title="Link to this definition">#</a></dt>
+<dd><p>Value used to fill raster cells not burned by vector</p>
+<p>If None, uses np.nan. By default, <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -790,6 +832,9 @@ validated to form a valid model.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.buffer"><code class="docutils literal notranslate"><span class="pre">Rasterize.buffer</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.reproject"><code class="docutils literal notranslate"><span class="pre">Rasterize.reproject</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.all_touched"><code class="docutils literal notranslate"><span class="pre">Rasterize.all_touched</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.tile_size"><code class="docutils literal notranslate"><span class="pre">Rasterize.tile_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.simply_before_rasterize"><code class="docutils literal notranslate"><span class="pre">Rasterize.simply_before_rasterize</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.fill"><code class="docutils literal notranslate"><span class="pre">Rasterize.fill</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.model_config"><code class="docutils literal notranslate"><span class="pre">Rasterize.model_config</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.model_extra"><code class="docutils literal notranslate"><span class="pre">Rasterize.model_extra</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.models.cost_layers.Rasterize.model_fields_set"><code class="docutils literal notranslate"><span class="pre">Rasterize.model_fields_set</span></code></a></li>

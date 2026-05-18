@@ -835,7 +835,13 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gaps.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLICommandFromFunction</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.spatial_characterization.zonal</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZonalStats</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">buffer_routes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">buffer_routes</span><span class="p">,</span>
+    <span class="n">close_dask_client</span><span class="p">,</span>
+    <span class="n">dask_performance_report</span><span class="p">,</span>
+    <span class="n">log_runtime</span><span class="p">,</span>
+    <span class="n">strip_path_keys</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -934,6 +940,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    DataFrame</span>
 <span class="sd">        Pandas DataFrame containing computed characteristics/stats.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geotiff_fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">geotiff_fp</span> <span class="o">=</span> <span class="n">geotiff_fp</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">route_fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">route_fp</span> <span class="o">=</span> <span class="n">route_fp</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
     <span class="n">rds</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">rioxarray</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">geotiff_fp</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">)</span> <span class="o">*</span> <span class="n">multiplier_scalar</span>
     <span class="p">)</span>
@@ -977,6 +988,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">max_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">tag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">memory_limit_per_worker</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">log_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute route characterizations/statistics</span>
 
@@ -995,6 +1007,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        used *per worker*. If a string giving a number  of bytes (like</span>
 <span class="sd">        &quot;1GiB&quot;), that amount is used *per worker*. If an int, that</span>
 <span class="sd">        number of bytes is used *per worker*. By default, ``&quot;auto&quot;``</span>
+<span class="sd">    log_directory : path-like, optional</span>
+<span class="sd">        Directory to save Dask performance reports in. If ``None``, Dask</span>
+<span class="sd">        performance reports will not be generated. By default, ``None``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tag</span> <span class="o">=</span> <span class="n">tag</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
     <span class="n">_stat_kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;route_fp&quot;</span><span class="p">,</span> <span class="n">_default_route_fp</span><span class="p">)</span>
@@ -1003,6 +1018,9 @@ window.runMermaid = runMermaid;</script>
         <span class="s2">&quot;row_width_key&quot;</span><span class="p">,</span> <span class="n">_default_row_width_key</span> <span class="ow">or</span> <span class="s2">&quot;voltage&quot;</span>
     <span class="p">)</span>
     <span class="n">_stat_kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;chunks&quot;</span><span class="p">,</span> <span class="n">_default_chunks</span> <span class="ow">or</span> <span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+    <span class="n">_stat_kwargs</span> <span class="o">=</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">_stat_kwargs</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;geotiff_fp&quot;</span><span class="p">,</span> <span class="s2">&quot;route_fp&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
 
     <span class="n">raster_name</span> <span class="o">=</span> <span class="n">_stat_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geotiff_fp&quot;</span><span class="p">)</span>
     <span class="n">raster_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">raster_name</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">raster_name</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
@@ -1032,16 +1050,23 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">out_data</span> <span class="o">=</span> <span class="n">buffered_route_characterizations</span><span class="p">(</span>
-            <span class="n">row_widths</span><span class="o">=</span><span class="n">_row_widths</span><span class="p">,</span>
-            <span class="n">row_width_ranges</span><span class="o">=</span><span class="n">_row_width_ranges</span><span class="p">,</span>
-            <span class="n">parallel</span><span class="o">=</span><span class="n">parallel</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">_stat_kwargs</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">out_data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">with</span> <span class="p">(</span>
+            <span class="n">dask_performance_report</span><span class="p">(</span>
+                <span class="s2">&quot;route_characterizations&quot;</span><span class="p">,</span>
+                <span class="n">out_dir</span><span class="o">=</span><span class="n">log_directory</span> <span class="k">if</span> <span class="n">max_workers</span> <span class="o">!=</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">log_runtime</span><span class="p">(</span><span class="s2">&quot;Characterizing routes&quot;</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">out_data</span> <span class="o">=</span> <span class="n">buffered_route_characterizations</span><span class="p">(</span>
+                <span class="n">row_widths</span><span class="o">=</span><span class="n">_row_widths</span><span class="p">,</span>
+                <span class="n">row_width_ranges</span><span class="o">=</span><span class="n">_row_width_ranges</span><span class="p">,</span>
+                <span class="n">parallel</span><span class="o">=</span><span class="n">parallel</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">_stat_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">out_data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">close_dask_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span>
 
@@ -1211,7 +1236,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">[</span><span class="s2">&quot;_default_copy_properties&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_copy_properties</span>
     <span class="n">config</span><span class="p">[</span><span class="s2">&quot;_default_row_width_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_row_width_key</span>
     <span class="n">config</span><span class="p">[</span><span class="s2">&quot;_default_chunks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_chunks</span>
-    <span class="k">return</span> <span class="n">config</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;out_dir&quot;</span><span class="p">})</span>
 
 
 <span class="n">route_characterizations_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>

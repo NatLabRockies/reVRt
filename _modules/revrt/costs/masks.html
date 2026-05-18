@@ -878,7 +878,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">crs</span> <span class="o">=</span> <span class="n">crs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_masks_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">masks_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_masks_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">masks_dir</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_masks_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_landfall_mask</span> <span class="o">=</span> <span class="kc">None</span>
@@ -988,6 +988,7 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># XOR landfall and raw land to get all land cells except</span>
         <span class="c1"># landfall cells</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dry_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_xor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">landfall_mask</span><span class="p">,</span> <span class="n">raw_land_mask</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear_combined_mask_cache</span><span class="p">()</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Created all masks&quot;</span><span class="p">)</span>
 
@@ -1014,9 +1015,14 @@ window.runMermaid = runMermaid;</script>
             <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clear_combined_mask_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear cached masks derived from base mask layers&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dry_plus_mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wet_plus_mask</span> <span class="o">=</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="Masks.load">
 <a class="viewcode-back" href="../../../_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks.load">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the mask layers from GeoTIFFs</span>
 
 <span class="sd">        Parameters</span>
@@ -1025,6 +1031,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Path to :class:`~revrt.utilities.handlers.LayeredFile` on</span>
 <span class="sd">            disk for which masks were created. The masks will be of the</span>
 <span class="sd">            same shape/crs/transform as this file.</span>
+<span class="sd">        validate : bool, optional</span>
+<span class="sd">            Whether to validate that loaded masks have appropriate</span>
+<span class="sd">            values. This breaks the lazy (Dask) loading of the masks, so</span>
+<span class="sd">            it is not recommended to use this if you know your masks are</span>
+<span class="sd">            valid. By default, ``False``.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -1032,15 +1043,20 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        was run previously. Mask files must be in the current directory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading masks&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_dry_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LAND_MASK_FNAME</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_wet_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OFFSHORE_MASK_FNAME</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_landfall_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_mask</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">LANDFALL_MASK_FNAME</span><span class="p">,</span> <span class="n">layer_fp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dry_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_mask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">LAND_MASK_FNAME</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">,</span> <span class="n">validate</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wet_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_mask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">OFFSHORE_MASK_FNAME</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">,</span> <span class="n">validate</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_landfall_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_mask</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">LANDFALL_MASK_FNAME</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">,</span> <span class="n">validate</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear_combined_mask_cache</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Successfully loaded wet, dry, and landfall masks&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">layer_fp</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load mask from GeoTIFF with sanity checking&quot;&quot;&quot;</span>
         <span class="n">full_fname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masks_dir</span> <span class="o">/</span> <span class="n">fname</span>
 
@@ -1055,21 +1071,25 @@ window.runMermaid = runMermaid;</script>
             <span class="n">layer_fp</span><span class="p">,</span> <span class="n">full_fname</span><span class="p">,</span> <span class="n">band_index</span><span class="o">=</span><span class="mi">0</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">raster</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Maximum value in mask file </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">raster</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">}</span><span class="s2"> but&quot;</span>
-                <span class="s2">&quot; should be 1. Mask file appears to be corrupt. Please &quot;</span>
-                <span class="s2">&quot;recreate it.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+            <span class="n">raster_max</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">raster_min</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="n">raster</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Minimum value in mask file </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">raster</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">}</span><span class="s2"> but&quot;</span>
-                <span class="s2">&quot; should be 0. Mask file appears to be corrupt. Please &quot;</span>
-                <span class="s2">&quot;recreate it.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">raster_max</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Maximum value in mask file </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">raster_max</span><span class="si">}</span><span class="s2"> but&quot;</span>
+                    <span class="s2">&quot; should be 1. Mask file appears to be corrupt. Please &quot;</span>
+                    <span class="s2">&quot;recreate it.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">raster_min</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Minimum value in mask file </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">raster_min</span><span class="si">}</span><span class="s2"> but&quot;</span>
+                    <span class="s2">&quot; should be 0. Mask file appears to be corrupt. Please &quot;</span>
+                    <span class="s2">&quot;recreate it.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">raster</span> <span class="o">==</span> <span class="mi">1</span></div>
 

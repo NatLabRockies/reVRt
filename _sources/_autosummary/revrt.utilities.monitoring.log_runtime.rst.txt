@@ -1,0 +1,6 @@
+revrt.utilities.monitoring.log\_runtime
+=======================================
+
+.. currentmodule:: revrt.utilities.monitoring
+
+.. autofunction:: log_runtime

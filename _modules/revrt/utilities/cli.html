@@ -840,7 +840,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform</span> <span class="k">as</span> <span class="n">shapely_transform</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gaps.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLICommandFromClass</span><span class="p">,</span> <span class="n">CLICommandFromFunction</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">region_mapper</span><span class="p">,</span> <span class="n">transform_xy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">region_mapper</span><span class="p">,</span> <span class="n">transform_xy</span><span class="p">,</span> <span class="n">strip_path_keys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.handlers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">IncrementalWriter</span><span class="p">,</span>
     <span class="n">LayeredFile</span><span class="p">,</span>
@@ -857,6 +857,8 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.cli.layers_from_file.html#revrt.utilities.cli.layers_from_file">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">layers_from_file</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">_out_layer_dir</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">profile_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract layers from a layered file on disk</span>
+
+<span class="sd">    Layers are output as individual GeoTIFF files.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -923,7 +925,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        By default, ``None``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">config</span><span class="p">[</span><span class="s2">&quot;_out_layer_dir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_layer_dir</span> <span class="ow">or</span> <span class="n">out_dir</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">config</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fp&quot;</span><span class="p">,</span> <span class="s2">&quot;_out_layer_dir&quot;</span><span class="p">})</span>
 
 
 <div class="viewcode-block" id="convert_pois_to_lines">
@@ -1332,8 +1334,45 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">geometry</span><span class="o">.</span><span class="n">set_crs</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">allow_override</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_layers_to_file</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for layers_to_file command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fp&quot;</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_convert_pois_to_lines</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for convert_pois_to_lines command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;poi_csv_f&quot;</span><span class="p">,</span> <span class="s2">&quot;template_f&quot;</span><span class="p">,</span> <span class="s2">&quot;out_f&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_convert_map_ss_to_rr</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for map_ss_to_rr command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;regions_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_fpath&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_convert_ss_from_conn</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for ss_from_conn command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connections_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_fpath&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_convert_add_rr_to_nn</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for add_rr_to_nn command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span>
+        <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;network_nodes_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;regions_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_fpath&quot;</span><span class="p">},</span>
+    <span class="p">)</span>
+
+
 <span class="n">layers_to_file_command</span> <span class="o">=</span> <span class="n">CLICommandFromClass</span><span class="p">(</span>
-    <span class="n">LayeredFile</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;layers_to_file&quot;</span><span class="p">,</span> <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">LayeredFile</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;layers_to_file&quot;</span><span class="p">,</span>
+    <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_layers_to_file</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">layers_from_file_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
     <span class="n">function</span><span class="o">=</span><span class="n">layers_from_file</span><span class="p">,</span>
@@ -1345,15 +1384,22 @@ window.runMermaid = runMermaid;</script>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;convert-pois-to-lines&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">split_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_convert_pois_to_lines</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">map_ss_to_rr_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
-    <span class="n">function</span><span class="o">=</span><span class="n">map_ss_to_rr</span><span class="p">,</span> <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">function</span><span class="o">=</span><span class="n">map_ss_to_rr</span><span class="p">,</span>
+    <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_convert_map_ss_to_rr</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">ss_from_conn_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
-    <span class="n">function</span><span class="o">=</span><span class="n">ss_from_conn</span><span class="p">,</span> <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">function</span><span class="o">=</span><span class="n">ss_from_conn</span><span class="p">,</span>
+    <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_convert_ss_from_conn</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">add_rr_to_nn_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
-    <span class="n">function</span><span class="o">=</span><span class="n">add_rr_to_nn</span><span class="p">,</span> <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">function</span><span class="o">=</span><span class="n">add_rr_to_nn</span><span class="p">,</span>
+    <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_convert_add_rr_to_nn</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 

@@ -841,8 +841,12 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.costs.masks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Masks</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LayeredFile</span><span class="p">,</span>
+    <span class="n">close_dask_client</span><span class="p">,</span>
     <span class="n">load_data_using_layer_file_profile</span><span class="p">,</span>
     <span class="n">save_data_using_layer_file_profile</span><span class="p">,</span>
+    <span class="n">dask_performance_report</span><span class="p">,</span>
+    <span class="n">log_runtime</span><span class="p">,</span>
+    <span class="n">strip_path_keys</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtAttributeError</span><span class="p">,</span> <span class="n">revrtConfigurationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span>
@@ -862,6 +866,14 @@ window.runMermaid = runMermaid;</script>
     <span class="n">chunks</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build masks from land vector file</span>
+
+<span class="sd">    Masks are used in the cost layer creation step to determine where</span>
+<span class="sd">    costs should be applied (e.g. wet vs dry). The land mask is the base</span>
+<span class="sd">    mask that is created by rasterizing the input land vector file. The</span>
+<span class="sd">    landfall mask is derived from the land mask and is a one pixel width</span>
+<span class="sd">    line at the shore. The offshore mask is derived from the land mask</span>
+<span class="sd">    and is the inverse of the land mask (i.e. all non-land cells are</span>
+<span class="sd">    offshore).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -909,6 +921,7 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<span class="c1"># @strip_required_path_args(&quot;routing_file&quot;)</span>
 <div class="viewcode-block" id="build_routing_layers">
 <a class="viewcode-back" href="../../../_autosummary/revrt.costs.cli.build_routing_layers.html#revrt.costs.cli.build_routing_layers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_routing_layers</span><span class="p">(</span>  <span class="c1"># noqa: PLR0917, PLR0913</span>
@@ -920,11 +933,23 @@ window.runMermaid = runMermaid;</script>
     <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">dry_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">merge_friction_and_barriers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">validate_masks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">max_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">memory_limit_per_worker</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
     <span class="n">create_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">log_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create costs, barriers, and frictions from a config file</span>
+
+<span class="sd">    This function creates cost layers file that is ultimately used to</span>
+<span class="sd">    compute routes between points. The layers that are created and added</span>
+<span class="sd">    to the file are determined based on the input config file. If the</span>
+<span class="sd">    layered file does not already exist, it will be created based on the</span>
+<span class="sd">    provided template file. The config file can specify three types of</span>
+<span class="sd">    actions: building custom layers, building dry cost layers, and</span>
+<span class="sd">    merging friction and barriers. At least one of these actions must be</span>
+<span class="sd">    specified in the config file. See the documentation for more details</span>
+<span class="sd">    on each type of action.</span>
 
 <span class="sd">    You can re-run this function on an existing file to add new layers</span>
 <span class="sd">    without overwriting existing layers or needing to change your</span>
@@ -966,6 +991,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        the layered costs file. At least one of `layers`, `dry_costs`,</span>
 <span class="sd">        or `merge_friction_and_barriers` must be defined.</span>
 <span class="sd">        By default, ``None``</span>
+<span class="sd">    validate_masks : bool, optional</span>
+<span class="sd">        Whether to validate that any loaded masks have appropriate</span>
+<span class="sd">        values. This breaks the lazy (Dask) loading of the masks, so it</span>
+<span class="sd">        it is not recommended to use this if you know your masks are</span>
+<span class="sd">        valid. By default, ``False``.</span>
 <span class="sd">    max_workers : int, optional</span>
 <span class="sd">        Number of parallel workers to use for file creation. If ``None``</span>
 <span class="sd">        or &gt;1, processing is performed in parallel using Dask.</span>
@@ -983,6 +1013,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        :meth:`~revrt.utilities.handlers.LayeredFile.create_new` when</span>
 <span class="sd">        creating a new layered file. Do not include ``template_file``;</span>
 <span class="sd">        it will be ignored. By default, ``None``.</span>
+<span class="sd">    log_directory : path-like, optional</span>
+<span class="sd">        Directory to save Dask performance reports in. If ``None``, Dask</span>
+<span class="sd">        performance reports will not be generated. By default, ``None``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">_validated_config</span><span class="p">(</span>
         <span class="n">routing_file</span><span class="o">=</span><span class="n">routing_file</span><span class="p">,</span>
@@ -1007,7 +1040,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">dashboard_address</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Dask client created with </span><span class="si">%s</span><span class="s2"> workers and </span><span class="si">%r</span><span class="s2"> memory limit per &quot;</span>
+            <span class="s2">&quot;Dask client created with </span><span class="si">%s</span><span class="s2"> workers and </span><span class="si">%s</span><span class="s2"> memory limit per &quot;</span>
             <span class="s2">&quot;worker&quot;</span><span class="p">,</span>
             <span class="n">max_workers</span><span class="p">,</span>
             <span class="n">memory_limit_per_worker</span><span class="p">,</span>
@@ -1015,29 +1048,49 @@ window.runMermaid = runMermaid;</script>
         <span class="n">lock</span> <span class="o">=</span> <span class="n">dask</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">Lock</span><span class="p">(</span><span class="s2">&quot;rioxarray-write&quot;</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">lf_handler</span> <span class="o">=</span> <span class="n">_create_lf_if_not_exists</span><span class="p">(</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">routing_file</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">template_file</span><span class="p">,</span> <span class="n">create_kwargs</span>
-        <span class="p">)</span>
+        <span class="k">with</span> <span class="p">(</span>
+            <span class="n">dask_performance_report</span><span class="p">(</span>
+                <span class="s2">&quot;build_routing_layers&quot;</span><span class="p">,</span>
+                <span class="n">out_dir</span><span class="o">=</span><span class="n">log_directory</span> <span class="k">if</span> <span class="n">max_workers</span> <span class="o">!=</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">log_runtime</span><span class="p">(</span><span class="s2">&quot;Building routing layers&quot;</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">_build_routing_layers</span><span class="p">(</span>
+                <span class="n">config</span><span class="p">,</span>
+                <span class="n">lock</span><span class="p">,</span>
+                <span class="n">validate_masks</span><span class="o">=</span><span class="n">validate_masks</span><span class="p">,</span>
+                <span class="n">create_kwargs</span><span class="o">=</span><span class="n">create_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
 
-        <span class="n">masks</span> <span class="o">=</span> <span class="n">_load_masks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">)</span>
-
-        <span class="n">builder</span> <span class="o">=</span> <span class="n">LayerCreator</span><span class="p">(</span>
-            <span class="n">lf_handler</span><span class="p">,</span>
-            <span class="n">masks</span><span class="p">,</span>
-            <span class="n">input_layer_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">input_layer_dir</span><span class="p">,</span>
-            <span class="n">output_tiff_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_tiff_dir</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_build_layers</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">dry_costs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">_build_dry_costs</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">merge_friction_and_barriers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">_combine_friction_and_barriers</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+            <span class="n">close_dask_client</span><span class="p">(</span><span class="n">client</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_routing_layers</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">,</span> <span class="n">lock</span><span class="p">,</span> <span class="n">validate_masks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">create_kwargs</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build routing layers based on config file&quot;&quot;&quot;</span>
+    <span class="n">lf_handler</span> <span class="o">=</span> <span class="n">_create_lf_if_not_exists</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">routing_file</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">template_file</span><span class="p">,</span> <span class="n">create_kwargs</span>
+    <span class="p">)</span>
+
+    <span class="n">masks</span> <span class="o">=</span> <span class="n">_load_masks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">,</span> <span class="n">validate_masks</span><span class="o">=</span><span class="n">validate_masks</span><span class="p">)</span>
+
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">LayerCreator</span><span class="p">(</span>
+        <span class="n">lf_handler</span><span class="p">,</span>
+        <span class="n">masks</span><span class="p">,</span>
+        <span class="n">input_layer_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">input_layer_dir</span><span class="p">,</span>
+        <span class="n">output_tiff_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">output_tiff_dir</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">_build_layers</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">dry_costs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_build_dry_costs</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">merge_friction_and_barriers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_combine_friction_and_barriers</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validated_config</span><span class="p">(</span><span class="o">**</span><span class="n">config_dict</span><span class="p">):</span>
@@ -1067,7 +1120,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">lf_handler</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_load_masks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_masks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lf_handler</span><span class="p">,</span> <span class="n">validate_masks</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load masks based on config file&quot;&quot;&quot;</span>
     <span class="n">masks</span> <span class="o">=</span> <span class="n">Masks</span><span class="p">(</span>
         <span class="n">shape</span><span class="o">=</span><span class="n">lf_handler</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
@@ -1083,7 +1136,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">lc</span><span class="o">.</span><span class="n">extent</span> <span class="o">!=</span> <span class="n">ALL</span> <span class="k">for</span> <span class="n">bc</span> <span class="ow">in</span> <span class="n">build_configs</span> <span class="k">for</span> <span class="n">lc</span> <span class="ow">in</span> <span class="n">bc</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="n">need_masks</span><span class="p">:</span>
-        <span class="n">masks</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">lf_handler</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
+        <span class="n">masks</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">lf_handler</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">validate_masks</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">masks</span>
 
@@ -1168,11 +1221,24 @@ window.runMermaid = runMermaid;</script>
     <span class="n">io_handler</span><span class="o">.</span><span class="n">write_layer</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">merge_config</span><span class="o">.</span><span class="n">output_layer_name</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_build_masks</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for build_masks command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;land_mask_shp_fp&quot;</span><span class="p">,</span> <span class="s2">&quot;template_file&quot;</span><span class="p">,</span> <span class="s2">&quot;masks_dir&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_build_routing_layers</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for build_routing_layers command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;routing_file&quot;</span><span class="p">})</span>
+
+
 <span class="n">build_masks_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
     <span class="n">build_masks</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;build-masks&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">split_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_build_masks</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">build_routing_layers_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
@@ -1180,6 +1246,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;build-routing-layers&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">split_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_build_routing_layers</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 

@@ -5,6 +5,13 @@ revrt.utilities.raster
 
    
    
+   .. rubric:: Module attributes
+
+   .. autosummary::
+      :toctree:
+   
+      DEFAULT_RASTERIZE_TILE_SIZE
+   
    
 
    
@@ -17,6 +24,7 @@ revrt.utilities.raster
       integer_dimension_window
       rasterize
       rasterize_shape_file
+      simplify_shapes
    
    
 

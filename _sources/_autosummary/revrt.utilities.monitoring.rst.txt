@@ -1,0 +1,35 @@
+revrt.utilities.monitoring
+==========================
+
+.. automodule:: revrt.utilities.monitoring
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      close_dask_client
+      dask_performance_report
+      elapsed_time_as_str
+      log_array_backend
+      log_mem
+      log_runtime
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

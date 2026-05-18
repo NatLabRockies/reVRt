@@ -850,6 +850,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">LayeredFile</span><span class="p">,</span>
     <span class="n">chunked_read_gpkg</span><span class="p">,</span>
     <span class="n">gpkg_crs</span><span class="p">,</span>
+    <span class="n">strip_path_keys</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.raster</span><span class="w"> </span><span class="kn">import</span> <span class="n">integer_dimension_window</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtValueError</span><span class="p">,</span> <span class="n">revrtFileNotFoundError</span>
@@ -1204,6 +1205,12 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge and post-process routes files into a single file</span>
 
+<span class="sd">        This function collects together multiple LCP routing output</span>
+<span class="sd">        files into a single file and applies any specified</span>
+<span class="sd">        post-processing steps, which include simplifying geometries,</span>
+<span class="sd">        applying length multipliers, applying a minimum length floor,</span>
+<span class="sd">        and merging in transmission feature attributes.</span>
+
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        revrtFileNotFoundError</span>
@@ -1364,11 +1371,19 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">features</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_finalize_routes</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for finalize-routes command&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;collect_pattern&quot;</span><span class="p">,</span> <span class="s2">&quot;project_dir&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+
 <span class="n">finalize_routes_command</span> <span class="o">=</span> <span class="n">CLICommandFromClass</span><span class="p">(</span>
     <span class="n">init</span><span class="o">=</span><span class="n">RoutePostProcessor</span><span class="p">,</span>
     <span class="n">method</span><span class="o">=</span><span class="s2">&quot;process&quot;</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;finalize-routes&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_finalize_routes</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 

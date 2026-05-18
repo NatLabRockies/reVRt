@@ -523,12 +523,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.check_geotiff.html">revrt.utilities.base.check_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html">revrt.utilities.base.elapsed_time_as_str</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html">revrt.utilities.base.expand_dim_if_needed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html">revrt.utilities.base.features_to_route_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.log_mem.html">revrt.utilities.base.log_mem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
@@ -552,10 +550,21 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.monitoring.html">revrt.utilities.monitoring</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.close_dask_client.html">revrt.utilities.monitoring.close_dask_client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.dask_performance_report.html">revrt.utilities.monitoring.dask_performance_report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.elapsed_time_as_str.html">revrt.utilities.monitoring.elapsed_time_as_str</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_array_backend.html">revrt.utilities.monitoring.log_array_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_mem.html">revrt.utilities.monitoring.log_mem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_runtime.html">revrt.utilities.monitoring.log_runtime</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE.html">revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.integer_dimension_window.html">revrt.utilities.raster.integer_dimension_window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize.html">revrt.utilities.raster.rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize_shape_file.html">revrt.utilities.raster.rasterize_shape_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.simplify_shapes.html">revrt.utilities.raster.simplify_shapes</a></li>
 </ul>
 </details></li>
 </ul>
@@ -640,7 +649,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>points</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> or <a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – Data with latitude and longitude columns that need to be
+<li><p><strong>points</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> or <a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – Data with latitude and longitude columns that need to be
 converted to row and column indices.</p></li>
 <li><p><strong>crs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://pyproj4.github.io/pyproj/stable/api/crs/crs.html#pyproj.crs.CRS" title="(in pyproj v3.7.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyproj.crs.CRS</span></code></a>) – Coordinate reference system for the target grid.</p></li>
 <li><p><strong>transform</strong> (<a class="reference external" href="https://affine.readthedocs.io/en/latest/index.html#affine.Affine" title="(in rasterio/affine)"><code class="xref py py-class docutils literal notranslate"><span class="pre">affine.Affine</span></code></a>) – Affine transform for the target grid.</p></li>
@@ -655,7 +664,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;s
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> or <a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> – Input <cite>points</cite> with added row and column index columns.</p>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> or <a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> – Input <cite>points</cite> with added row and column index columns.</p>
 </dd>
 </dl>
 </dd></dl>

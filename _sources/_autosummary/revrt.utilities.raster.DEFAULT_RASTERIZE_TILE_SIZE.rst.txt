@@ -1,0 +1,6 @@
+revrt.utilities.raster.DEFAULT\_RASTERIZE\_TILE\_SIZE
+=====================================================
+
+.. currentmodule:: revrt.utilities.raster
+
+.. autodata:: DEFAULT_RASTERIZE_TILE_SIZE

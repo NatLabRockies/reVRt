@@ -523,12 +523,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.check_geotiff.html">revrt.utilities.base.check_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html">revrt.utilities.base.elapsed_time_as_str</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html">revrt.utilities.base.expand_dim_if_needed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html">revrt.utilities.base.features_to_route_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.log_mem.html">revrt.utilities.base.log_mem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
@@ -552,10 +550,21 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.monitoring.html">revrt.utilities.monitoring</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.close_dask_client.html">revrt.utilities.monitoring.close_dask_client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.dask_performance_report.html">revrt.utilities.monitoring.dask_performance_report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.elapsed_time_as_str.html">revrt.utilities.monitoring.elapsed_time_as_str</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_array_backend.html">revrt.utilities.monitoring.log_array_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_mem.html">revrt.utilities.monitoring.log_mem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_runtime.html">revrt.utilities.monitoring.log_runtime</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE.html">revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.integer_dimension_window.html">revrt.utilities.raster.integer_dimension_window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize.html">revrt.utilities.raster.rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize_shape_file.html">revrt.utilities.raster.rasterize_shape_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.simplify_shapes.html">revrt.utilities.raster.simplify_shapes</a></li>
 </ul>
 </details></li>
 </ul>
@@ -637,6 +646,13 @@
 <dt class="sig sig-object py" id="revrt.costs.cli.build_masks">
 <span class="sig-name descname"><span class="pre">build_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">land_mask_shp_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/costs/cli.html#build_masks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.costs.cli.build_masks" title="Link to this definition">#</a></dt>
 <dd><p>Build masks from land vector file</p>
+<p>Masks are used in the cost layer creation step to determine where
+costs should be applied (e.g. wet vs dry). The land mask is the base
+mask that is created by rasterizing the input land vector file. The
+landfall mask is derived from the land mask and is a one pixel width
+line at the shore. The offshore mask is derived from the land mask
+and is the inverse of the land mask (i.e. all non-land cells are
+offshore).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

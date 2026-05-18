@@ -824,7 +824,6 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for revrt.utilities.handlers</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Handler for file containing GeoTIFF layers&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
@@ -851,12 +850,11 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">check_geotiff</span><span class="p">,</span>
     <span class="n">delete_data_file</span><span class="p">,</span>
-    <span class="n">elapsed_time_as_str</span><span class="p">,</span>
     <span class="n">expand_dim_if_needed</span><span class="p">,</span>
     <span class="n">transform_xy</span><span class="p">,</span>
-    <span class="n">log_mem</span><span class="p">,</span>
     <span class="n">TRANSFORM_ATOL</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.monitoring</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_mem</span><span class="p">,</span> <span class="n">log_runtime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span>
 
 
@@ -1127,32 +1125,28 @@ window.runMermaid = runMermaid;</script>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">!r}</span><span class="s2"> exits and overwrite=False&quot;</span>
             <span class="k">raise</span> <span class="n">revrtFileExistsError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
+        <span class="n">template_file</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">template_file</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="n">_validate_template</span><span class="p">(</span><span class="n">template_file</span><span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Initializing </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">template_file</span><span class="p">)</span>
-        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">_init_zarr_file_from_template</span><span class="p">(</span>
-                <span class="n">template_file</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
-                <span class="n">chunk_x</span><span class="o">=</span><span class="n">chunk_x</span><span class="p">,</span>
-                <span class="n">chunk_y</span><span class="o">=</span><span class="n">chunk_y</span><span class="p">,</span>
-                <span class="n">read_chunks</span><span class="o">=</span><span class="n">read_chunks</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;Layered file </span><span class="si">%s</span><span class="s2"> created from </span><span class="si">%s</span><span class="s2">!&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">template_file</span>
-            <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Error initializing </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">delete_data_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
-            <span class="k">raise</span>
+        <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Layered file creation (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_init_zarr_file_from_template</span><span class="p">(</span>
+                    <span class="n">template_file</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
+                    <span class="n">chunk_x</span><span class="o">=</span><span class="n">chunk_x</span><span class="p">,</span>
+                    <span class="n">chunk_y</span><span class="o">=</span><span class="n">chunk_y</span><span class="p">,</span>
+                    <span class="n">read_chunks</span><span class="o">=</span><span class="n">read_chunks</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;Layered file </span><span class="si">%s</span><span class="s2"> created from </span><span class="si">%s</span><span class="s2">!&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">template_file</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Error initializing </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                    <span class="n">delete_data_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
+                <span class="k">raise</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Time to create </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
-            <span class="n">elapsed_time_as_str</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">),</span>
-        <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
@@ -1221,78 +1215,74 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtFileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing layer </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_existing_layer</span><span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing layer </span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_existing_layer</span><span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">)</span>
 
-        <span class="n">values</span> <span class="o">=</span> <span class="n">expand_dim_if_needed</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">expand_dim_if_needed</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Shape of provided data </span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2"> does &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;not match shape of LayeredFile: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
-            <span class="n">attrs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span>
-            <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
-            <span class="n">transform</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">()</span>
-            <span class="n">layer_is_new</span> <span class="o">=</span> <span class="n">layer_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span>
-            <span class="n">coords</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span>
-
-        <span class="n">chunks</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">][</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">][</span><span class="s2">&quot;x&quot;</span><span class="p">])</span>
-
-        <span class="n">da</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;band&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">),</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
-        <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">])</span>
-        <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
-        <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
-        <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">layer_is_new</span><span class="p">:</span>
-                <span class="n">nodata</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
-                <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
-                <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;nodata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodata</span>
-            <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;Attempting to set ``nodata`` value when overwriting &quot;</span>
-                    <span class="s2">&quot;layer - this is not allowed. ``nodata`` value must be &quot;</span>
-                    <span class="s2">&quot;set when layer is first created. User-provided &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;``nodata`` value (</span><span class="si">{</span><span class="n">nodata</span><span class="si">}</span><span class="s2">) will be ignored.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Shape of provided data </span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2"> does &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;not match shape of LayeredFile: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
-                <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">ds_to_add</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span><span class="n">layer_name</span><span class="p">:</span> <span class="n">da</span><span class="p">},</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
-        <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span>
-        <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
-        <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_grid_mapping</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+                <span class="n">attrs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span>
+                <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
+                <span class="n">transform</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">()</span>
+                <span class="n">layer_is_new</span> <span class="o">=</span> <span class="n">layer_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span>
 
-        <span class="n">encoding</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">layer_is_new</span><span class="p">:</span>
-            <span class="n">encoding</span> <span class="o">=</span> <span class="p">{</span><span class="n">layer_name</span><span class="p">:</span> <span class="n">da</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="p">{}}</span>
-            <span class="n">encoding</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">&quot;compressors&quot;</span><span class="p">:</span> <span class="n">ZARR_COMPRESSORS</span><span class="p">,</span>
-                    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                    <span class="s2">&quot;chunks&quot;</span><span class="p">:</span> <span class="n">chunks</span><span class="p">,</span>
-                <span class="p">}</span>
-            <span class="p">)</span>
+            <span class="n">chunks</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">][</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">][</span><span class="s2">&quot;x&quot;</span><span class="p">])</span>
 
-        <span class="n">log_mem</span><span class="p">()</span>
-        <span class="n">ds_to_add</span><span class="o">.</span><span class="n">to_zarr</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
-            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a-&quot;</span><span class="p">,</span>
-            <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span>
-            <span class="n">zarr_format</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-            <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">compute</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;band&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">),</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">])</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+            <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">layer_is_new</span><span class="p">:</span>
+                    <span class="n">nodata</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
+                    <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
+                    <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;nodata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodata</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="s2">&quot;Attempting to set ``nodata`` value when overwriting &quot;</span>
+                        <span class="s2">&quot;layer - this is not allowed. ``nodata`` value must &quot;</span>
+                        <span class="s2">&quot;be set when layer is first created. User-provided &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;``nodata`` value (</span><span class="si">{</span><span class="n">nodata</span><span class="si">}</span><span class="s2">) will be ignored.&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Time to write layer </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="n">layer_name</span><span class="p">,</span>
-            <span class="n">elapsed_time_as_str</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">),</span>
-        <span class="p">)</span></div>
+            <span class="n">ds_to_add</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span><span class="n">layer_name</span><span class="p">:</span> <span class="n">da</span><span class="p">},</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_grid_mapping</span><span class="p">()</span>
+
+            <span class="n">encoding</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">layer_is_new</span><span class="p">:</span>
+                <span class="n">encoding</span> <span class="o">=</span> <span class="p">{</span><span class="n">layer_name</span><span class="p">:</span> <span class="n">da</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="p">{}}</span>
+                <span class="n">encoding</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;compressors&quot;</span><span class="p">:</span> <span class="n">ZARR_COMPRESSORS</span><span class="p">,</span>
+                        <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                        <span class="s2">&quot;chunks&quot;</span><span class="p">:</span> <span class="n">chunks</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+            <span class="n">log_mem</span><span class="p">()</span>
+            <span class="n">ds_to_add</span><span class="o">.</span><span class="n">to_zarr</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a-&quot;</span><span class="p">,</span>
+                <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span>
+                <span class="n">zarr_format</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">compute</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_for_existing_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">):</span>
@@ -1370,33 +1360,28 @@ window.runMermaid = runMermaid;</script>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not found - creating from </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">create_new</span><span class="p">(</span><span class="n">geotiff</span><span class="p">)</span>
 
-        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> being extracted from </span><span class="si">%s</span><span class="s2"> and added to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> being extracted from </span><span class="si">%s</span><span class="s2"> and written to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">layer_name</span><span class="p">,</span>
-            <span class="n">geotiff</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">check_tiff</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Checking </span><span class="si">%s</span><span class="s2"> against </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
-            <span class="n">check_geotiff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">transform_atol</span><span class="o">=</span><span class="n">TRANSFORM_ATOL</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="n">rioxarray</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">tiff_chunks</span><span class="p">)</span> <span class="k">as</span> <span class="n">tif</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Writing data from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">write_layer</span><span class="p">(</span>
-                <span class="n">tif</span><span class="p">,</span>
-                <span class="n">layer_name</span><span class="p">,</span>
-                <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
-                <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
-                <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Time to write GeoTIFF </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">geotiff</span><span class="p">,</span>
-            <span class="n">elapsed_time_as_str</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">),</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing GeoTIFF to </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">check_tiff</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Checking </span><span class="si">%s</span><span class="s2"> against </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
+                <span class="n">check_geotiff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">transform_atol</span><span class="o">=</span><span class="n">TRANSFORM_ATOL</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">rioxarray</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">tiff_chunks</span><span class="p">)</span> <span class="k">as</span> <span class="n">tif</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Writing data from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write_layer</span><span class="p">(</span>
+                    <span class="n">tif</span><span class="p">,</span>
+                    <span class="n">layer_name</span><span class="p">,</span>
+                    <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+                    <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+                    <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span>
+                <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LayeredFile.layer_to_geotiff">

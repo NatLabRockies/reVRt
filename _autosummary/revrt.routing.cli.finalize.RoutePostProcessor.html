@@ -523,12 +523,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.check_geotiff.html">revrt.utilities.base.check_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html">revrt.utilities.base.elapsed_time_as_str</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html">revrt.utilities.base.expand_dim_if_needed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html">revrt.utilities.base.features_to_route_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.log_mem.html">revrt.utilities.base.log_mem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
@@ -552,10 +550,21 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.monitoring.html">revrt.utilities.monitoring</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.close_dask_client.html">revrt.utilities.monitoring.close_dask_client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.dask_performance_report.html">revrt.utilities.monitoring.dask_performance_report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.elapsed_time_as_str.html">revrt.utilities.monitoring.elapsed_time_as_str</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_array_backend.html">revrt.utilities.monitoring.log_array_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_mem.html">revrt.utilities.monitoring.log_mem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_runtime.html">revrt.utilities.monitoring.log_runtime</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE.html">revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.integer_dimension_window.html">revrt.utilities.raster.integer_dimension_window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize.html">revrt.utilities.raster.rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize_shape_file.html">revrt.utilities.raster.rasterize_shape_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.simplify_shapes.html">revrt.utilities.raster.simplify_shapes</a></li>
 </ul>
 </details></li>
 </ul>
@@ -814,6 +823,11 @@ large files. By default, <code class="docutils literal notranslate"><span class=
 <dt class="sig sig-object py" id="revrt.routing.cli.finalize.RoutePostProcessor.process">
 <span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/finalize.html#RoutePostProcessor.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.finalize.RoutePostProcessor.process" title="Link to this definition">#</a></dt>
 <dd><p>Merge and post-process routes files into a single file</p>
+<p>This function collects together multiple LCP routing output
+files into a single file and applies any specified
+post-processing steps, which include simplifying geometries,
+applying length multipliers, applying a minimum length floor,
+and merging in transmission feature attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

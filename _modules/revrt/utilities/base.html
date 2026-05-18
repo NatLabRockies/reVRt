@@ -825,8 +825,8 @@ window.runMermaid = runMermaid;</script>
 <span></span><span class="sd">&quot;&quot;&quot;Base reVRt utilities&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">psutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
@@ -835,7 +835,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyproj</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transformer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyproj</span><span class="w"> </span><span class="kn">import</span> <span class="n">CRS</span><span class="p">,</span> <span class="n">Transformer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rasterio.warp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resampling</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform</span> <span class="k">as</span> <span class="n">shapely_transform</span>
 
@@ -1021,7 +1021,7 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">layered_file_crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
         <span class="n">tif_crs</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
-        <span class="k">if</span> <span class="n">layered_file_crs</span> <span class="o">!=</span> <span class="n">tif_crs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_crs_match</span><span class="p">(</span><span class="n">layered_file_crs</span><span class="p">,</span> <span class="n">tif_crs</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s1">&#39;Geospatial &quot;CRS&quot; in </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s1"> and </span><span class="si">{</span><span class="n">layer_file_fp</span><span class="si">}</span><span class="s1"> do not &#39;</span>
                 <span class="sa">f</span><span class="s2">&quot;match!</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">tif_crs</span><span class="si">}</span><span class="s2"> !=</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">layered_file_crs</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -1389,62 +1389,6 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<div class="viewcode-block" id="log_mem">
-<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.log_mem.html#revrt.utilities.base.log_mem">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">log_mem</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Log the memory usage to the input logger object</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    log_level : str, default=&quot;DEBUG&quot;</span>
-<span class="sd">        Logging level to use. Can be any valid log level string, such</span>
-<span class="sd">        as  DEBUG or INFO for different log levels for this log message.</span>
-<span class="sd">        By default, ``&quot;DEBUG&quot;``.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    msg : str</span>
-<span class="sd">        Memory utilization log message string.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">mem</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()</span>
-    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Memory utilization is </span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">1024.0</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> GB &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;out of </span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">1024.0</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> GB total &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2"> used)&quot;</span>
-    <span class="p">)</span>
-    <span class="n">log_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelNamesMapping</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">log_level</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">log_level</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">msg</span></div>
-
-
-
-<div class="viewcode-block" id="elapsed_time_as_str">
-<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.elapsed_time_as_str.html#revrt.utilities.base.elapsed_time_as_str">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">elapsed_time_as_str</span><span class="p">(</span><span class="n">seconds_elapsed</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format elapsed time into human readable string</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    seconds_elapsed : int</span>
-<span class="sd">        Number of seconds that should be represented in string form.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str</span>
-<span class="sd">        Human-readable string representing the number of elapsed</span>
-<span class="sd">        seconds.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">days</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">seconds_elapsed</span><span class="p">),</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">)</span>
-    <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
-    <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
-    <span class="n">time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hours</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="k">if</span> <span class="n">days</span><span class="p">:</span>
-        <span class="n">time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">days</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> day</span><span class="si">{</span><span class="s1">&#39;s&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">abs</span><span class="p">(</span><span class="n">days</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">time_str</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="k">return</span> <span class="n">time_str</span></div>
-
-
-
 <div class="viewcode-block" id="features_to_route_table">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.features_to_route_table.html#revrt.utilities.base.features_to_route_table">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">features_to_route_table</span><span class="p">(</span><span class="n">features</span><span class="p">):</span>
@@ -1490,6 +1434,52 @@ window.runMermaid = runMermaid;</script>
     <span class="n">all_routes</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;rid&quot;</span>
     <span class="k">return</span> <span class="n">all_routes</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Strip whitespace from path-like keys&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_fix</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\n&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\r&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\t&quot;</span><span class="p">):</span>
+                <span class="k">while</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+                <span class="k">while</span> <span class="n">value</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">config</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_crs_match</span><span class="p">(</span><span class="n">first_crs</span><span class="p">,</span> <span class="n">second_crs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether two CRS definitions are semantically equivalent&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">first_crs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">second_crs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">first_crs</span> <span class="o">==</span> <span class="n">second_crs</span>
+
+    <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">AttributeError</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">first_crs</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">second_crs</span><span class="p">,</span> <span class="n">ignore_axis_order</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">first_crs</span> <span class="o">=</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="n">first_crs</span><span class="p">)</span>
+    <span class="n">second_crs</span> <span class="o">=</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="n">second_crs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">first_crs</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">second_crs</span><span class="p">,</span> <span class="n">ignore_axis_order</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">first_axes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">axis</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">axis</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">axis</span><span class="o">.</span><span class="n">unit_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">first_crs</span><span class="o">.</span><span class="n">axis_info</span>
+    <span class="p">]</span>
+    <span class="n">second_axes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">axis</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">axis</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">axis</span><span class="o">.</span><span class="n">unit_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">second_crs</span><span class="o">.</span><span class="n">axis_info</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">first_crs</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">second_crs</span><span class="o">.</span><span class="n">name</span>
+        <span class="ow">and</span> <span class="n">first_axes</span> <span class="o">==</span> <span class="n">second_axes</span>
+        <span class="ow">and</span> <span class="n">first_crs</span><span class="o">.</span><span class="n">coordinate_system</span> <span class="o">==</span> <span class="n">second_crs</span><span class="o">.</span><span class="n">coordinate_system</span>
+        <span class="ow">and</span> <span class="p">{</span><span class="n">first_crs</span><span class="o">.</span><span class="n">is_projected</span><span class="p">,</span> <span class="n">first_crs</span><span class="o">.</span><span class="n">is_engineering</span><span class="p">}</span>
+        <span class="o">==</span> <span class="p">{</span><span class="n">second_crs</span><span class="o">.</span><span class="n">is_projected</span><span class="p">,</span> <span class="n">second_crs</span><span class="o">.</span><span class="n">is_engineering</span><span class="p">}</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compute_half_width_using_ranges</span><span class="p">(</span>

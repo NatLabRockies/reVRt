@@ -1,0 +1,6 @@
+revrt.utilities.monitoring.close\_dask\_client
+==============================================
+
+.. currentmodule:: revrt.utilities.monitoring
+
+.. autofunction:: close_dask_client

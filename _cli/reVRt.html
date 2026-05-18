@@ -895,6 +895,16 @@ concatenation.</p>
 <section id="revrt-build-feature-route-table">
 <h2>build-feature-route-table<a class="headerlink" href="#revrt-build-feature-route-table" title="Link to this heading">#</a></h2>
 <p>Execute the <code class="docutils literal notranslate"><span class="pre">build-feature-route-table</span></code> step from a config file.</p>
+<p>This table is used as an input to the routing step, which computes
+the least cost path from each point to its mapped feature. The
+points can be defined by an input csv file or generated from a given
+reV supply curve resolution. The features are defined by an input
+vector file. The points can be optionally clipped to regions defined
+by an input vector file, which limits the features they can be
+mapped to. The output route table contains the row and column index
+of the point (in the cost raster) and the ID of the feature it maps
+to. The mapped features are also output as a separate file that
+contains the same feature IDs for linking to the route table.</p>
 <p>The general structure for calling this CLI command is given below
 (add <code class="docutils literal notranslate"><span class="pre">--help</span></code> to print help info to the terminal).</p>
 <p class="rubric">Usage</p>
@@ -1122,6 +1132,13 @@ which submits all node jobs.</p>
 <section id="revrt-build-masks">
 <h2>build-masks<a class="headerlink" href="#revrt-build-masks" title="Link to this heading">#</a></h2>
 <p>Execute the <code class="docutils literal notranslate"><span class="pre">build-masks</span></code> step from a config file.</p>
+<p>Masks are used in the cost layer creation step to determine where
+costs should be applied (e.g. wet vs dry). The land mask is the base
+mask that is created by rasterizing the input land vector file. The
+landfall mask is derived from the land mask and is a one pixel width
+line at the shore. The offshore mask is derived from the land mask
+and is the inverse of the land mask (i.e. all non-land cells are
+offshore).</p>
 <p>The general structure for calling this CLI command is given below
 (add <code class="docutils literal notranslate"><span class="pre">--help</span></code> to print help info to the terminal).</p>
 <p class="rubric">Usage</p>
@@ -1313,6 +1330,15 @@ which submits all node jobs.</p>
 <section id="revrt-build-route-costs">
 <h2>build-route-costs<a class="headerlink" href="#revrt-build-route-costs" title="Link to this heading">#</a></h2>
 <p>Execute the <code class="docutils literal notranslate"><span class="pre">build-route-costs</span></code> step from a config file.</p>
+<p>Given an LCP config file, build out the routing layers used by
+<code class="docutils literal notranslate"><span class="pre">reVRt</span></code>. The routing layers include the aggregated cost layer and
+the final routing layer that is used for computing routes. The
+layers that are created and added to the file are determined based
+on the input config file. The config file can specify three types of
+actions: building custom layers, building dry cost layers, and
+merging friction and barriers. At least one of these actions must be
+specified in the config file. See the documentation for more details
+on each type of action.</p>
 <p>The general structure for calling this CLI command is given below
 (add <code class="docutils literal notranslate"><span class="pre">--help</span></code> to print help info to the terminal).</p>
 <p class="rubric">Usage</p>
@@ -1492,6 +1518,15 @@ which submits all node jobs.</p>
 <section id="revrt-build-routing-layers">
 <h2>build-routing-layers<a class="headerlink" href="#revrt-build-routing-layers" title="Link to this heading">#</a></h2>
 <p>Execute the <code class="docutils literal notranslate"><span class="pre">build-routing-layers</span></code> step from a config file.</p>
+<p>This function creates cost layers file that is ultimately used to
+compute routes between points. The layers that are created and added
+to the file are determined based on the input config file. If the
+layered file does not already exist, it will be created based on the
+provided template file. The config file can specify three types of
+actions: building custom layers, building dry cost layers, and
+merging friction and barriers. At least one of these actions must be
+specified in the config file. See the documentation for more details
+on each type of action.</p>
 <p>You can re-run this function on an existing file to add new layers
 without overwriting existing layers or needing to change your
 original config.</p>
@@ -1534,6 +1569,7 @@ original config.</p>
     <span class="s2">&quot;layers&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;dry_costs&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;merge_friction_and_barriers&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;validate_masks&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
     <span class="s2">&quot;create_kwargs&quot;</span><span class="p">:</span> <span class="n">null</span>
 <span class="p">}</span>
 </pre></div>
@@ -1563,6 +1599,7 @@ original config.</p>
 <span class="n">layers</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">dry_costs</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">merge_friction_and_barriers</span><span class="p">:</span> <span class="n">null</span>
+<span class="n">validate_masks</span><span class="p">:</span> <span class="n">false</span>
 <span class="n">create_kwargs</span><span class="p">:</span> <span class="n">null</span>
 </pre></div>
 </div>
@@ -1572,6 +1609,7 @@ original config.</p>
 <span class="n">input_layer_dir</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span>
 <span class="n">output_tiff_dir</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span>
 <span class="n">masks_dir</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span>
+<span class="n">validate_masks</span> <span class="o">=</span> <span class="n">false</span>
 
 <span class="p">[</span><span class="n">execution_control</span><span class="p">]</span>
 <span class="n">option</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
@@ -1704,7 +1742,11 @@ which submits all node jobs.</p>
 </dd>
 <dt>merge_friction_and_barriers<span class="classifier">MergeFrictionBarriers, optional</span></dt><dd><p>Configuration for merging friction and barriers and adding to the layered costs file. At least one of <cite>layers</cite>, <cite>dry_costs</cite>, or <cite>merge_friction_and_barriers</cite> must be defined. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
+<dt>validate_masks<span class="classifier">bool, optional</span></dt><dd><p>Whether to validate that any loaded masks have appropriate values. This breaks the lazy (Dask) loading of the masks, so it it is not recommended to use this if you know your masks are valid. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
 <dt>create_kwargs<span class="classifier">dict, optional</span></dt><dd><p>Additional keyword arguments to pass to <a class="reference internal" href="../_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.create_new" title="revrt.utilities.handlers.LayeredFile.create_new"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_new()</span></code></a> when creating a new layered file. Do not include <code class="docutils literal notranslate"><span class="pre">template_file</span></code>; it will be ignored. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>log_directory<span class="classifier">path-like, optional</span></dt><dd><p>Directory to save Dask performance reports in. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, Dask performance reports will not be generated. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
 </dl>
 <p>Note that you may remove any keys with a <code class="docutils literal notranslate"><span class="pre">null</span></code> value if you do not intend to update them yourself.</p>
@@ -2105,6 +2147,7 @@ which submits all node jobs.</p>
 <section id="revrt-layers-from-file">
 <h2>layers-from-file<a class="headerlink" href="#revrt-layers-from-file" title="Link to this heading">#</a></h2>
 <p>Execute the <code class="docutils literal notranslate"><span class="pre">layers-from-file</span></code> step from a config file.</p>
+<p>Layers are output as individual GeoTIFF files.</p>
 <p>The general structure for calling this CLI command is given below
 (add <code class="docutils literal notranslate"><span class="pre">--help</span></code> to print help info to the terminal).</p>
 <p class="rubric">Usage</p>
@@ -3141,6 +3184,8 @@ which submits all node jobs.</p>
 <dt>log_directory<span class="classifier">str</span></dt><dd><p>Path to directory where logs should be written. Path can be relative and does not have to exist on disk (it will be created if missing). By default, <code class="docutils literal notranslate"><span class="pre">&quot;./logs&quot;</span></code>.</p>
 </dd>
 <dt>log_level<span class="classifier">{“DEBUG”, “INFO”, “WARNING”, “ERROR”}</span></dt><dd><p>String representation of desired logger verbosity. Suitable options are <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> (most verbose), <code class="docutils literal notranslate"><span class="pre">INFO</span></code> (moderately verbose), <code class="docutils literal notranslate"><span class="pre">WARNING</span></code> (only log warnings and errors), and <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> (only log errors). By default, <code class="docutils literal notranslate"><span class="pre">&quot;INFO&quot;</span></code>.</p>
+</dd>
+<dt>log_directory<span class="classifier">path-like, optional</span></dt><dd><p>Directory to save Dask performance reports in. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, Dask performance reports will not be generated. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
 <dt>layers<span class="classifier">dict or list of dict</span></dt><dd><p>A single dictionary or a list of dictionaries specifying the statistics to compute. Each dictionary should contain the following keys:</p>
 <blockquote>

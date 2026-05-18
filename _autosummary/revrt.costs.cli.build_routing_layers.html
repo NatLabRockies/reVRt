@@ -523,12 +523,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.check_geotiff.html">revrt.utilities.base.check_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html">revrt.utilities.base.elapsed_time_as_str</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html">revrt.utilities.base.expand_dim_if_needed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html">revrt.utilities.base.features_to_route_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.log_mem.html">revrt.utilities.base.log_mem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
@@ -552,10 +550,21 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.monitoring.html">revrt.utilities.monitoring</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.close_dask_client.html">revrt.utilities.monitoring.close_dask_client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.dask_performance_report.html">revrt.utilities.monitoring.dask_performance_report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.elapsed_time_as_str.html">revrt.utilities.monitoring.elapsed_time_as_str</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_array_backend.html">revrt.utilities.monitoring.log_array_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_mem.html">revrt.utilities.monitoring.log_mem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_runtime.html">revrt.utilities.monitoring.log_runtime</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE.html">revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.integer_dimension_window.html">revrt.utilities.raster.integer_dimension_window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize.html">revrt.utilities.raster.rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize_shape_file.html">revrt.utilities.raster.rasterize_shape_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.simplify_shapes.html">revrt.utilities.raster.simplify_shapes</a></li>
 </ul>
 </details></li>
 </ul>
@@ -635,8 +644,17 @@
 <h1>revrt.costs.cli.build_routing_layers<a class="headerlink" href="#revrt-costs-cli-build-routing-layers" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="revrt.costs.cli.build_routing_layers">
-<span class="sig-name descname"><span class="pre">build_routing_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routing_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_layer_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_tiff_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_friction_and_barriers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_limit_per_worker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/costs/cli.html#build_routing_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.costs.cli.build_routing_layers" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build_routing_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routing_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_layer_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_tiff_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_friction_and_barriers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_masks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_limit_per_worker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/costs/cli.html#build_routing_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.costs.cli.build_routing_layers" title="Link to this definition">#</a></dt>
 <dd><p>Create costs, barriers, and frictions from a config file</p>
+<p>This function creates cost layers file that is ultimately used to
+compute routes between points. The layers that are created and added
+to the file are determined based on the input config file. If the
+layered file does not already exist, it will be created based on the
+provided template file. The config file can specify three types of
+actions: building custom layers, building dry cost layers, and
+merging friction and barriers. At least one of these actions must be
+specified in the config file. See the documentation for more details
+on each type of action.</p>
 <p>You can re-run this function on an existing file to add new layers
 without overwriting existing layers or needing to change your
 original config.</p>
@@ -669,6 +687,10 @@ By default, <code class="docutils literal notranslate"><span class="pre">None</s
 the layered costs file. At least one of <cite>layers</cite>, <cite>dry_costs</cite>,
 or <cite>merge_friction_and_barriers</cite> must be defined.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p><strong>validate_masks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Whether to validate that any loaded masks have appropriate
+values. This breaks the lazy (Dask) loading of the masks, so it
+it is not recommended to use this if you know your masks are
+valid. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>max_workers</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Number of parallel workers to use for file creation. If <code class="docutils literal notranslate"><span class="pre">None</span></code>
 or &gt;1, processing is performed in parallel using Dask.
 By default, <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
@@ -683,6 +705,8 @@ number of bytes is used <em>per worker</em>. By default, <code class="docutils l
 <a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.create_new" title="revrt.utilities.handlers.LayeredFile.create_new"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_new()</span></code></a> when
 creating a new layered file. Do not include <code class="docutils literal notranslate"><span class="pre">template_file</span></code>;
 it will be ignored. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>log_directory</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory to save Dask performance reports in. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, Dask
+performance reports will not be generated. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 </dl>

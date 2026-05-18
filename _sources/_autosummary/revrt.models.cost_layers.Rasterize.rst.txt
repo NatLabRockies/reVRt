@@ -33,5 +33,8 @@ revrt.models.cost\_layers.Rasterize
       ~Rasterize.buffer
       ~Rasterize.reproject
       ~Rasterize.all_touched
+      ~Rasterize.tile_size
+      ~Rasterize.simply_before_rasterize
+      ~Rasterize.fill
    
    

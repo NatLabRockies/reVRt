@@ -824,7 +824,6 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for revrt.routing.cli.point_to_feature</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;reVRt point-to-feature routing CLI command&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
@@ -840,6 +839,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">split_routes</span><span class="p">,</span>
     <span class="n">RouteToDefinitionConverter</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">strip_path_keys</span><span class="p">,</span> <span class="n">log_runtime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">map_to_costs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.costs.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_config</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.raster</span><span class="w"> </span><span class="kn">import</span> <span class="n">integer_dimension_window</span>
@@ -1338,61 +1338,70 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Helper function to build a routing table for points mapped to</span>
 <span class="sd">        features.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="s2">&quot;LCP processing&quot;</span><span class="p">):</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+        <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tracked layers input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">tracked_layers</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Transmission config input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">)</span>
 
-    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
-    <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">transmission_config</span> <span class="o">=</span> <span class="n">parse_config</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tracked layers input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">tracked_layers</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Transmission config input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">)</span>
+        <span class="n">route_points</span> <span class="o">=</span> <span class="n">route_points_subset</span><span class="p">(</span>
+            <span class="n">route_table_fpath</span><span class="p">,</span> <span class="n">split_params</span><span class="o">=</span><span class="n">_split_params</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No routes to process!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="n">transmission_config</span> <span class="o">=</span> <span class="n">parse_config</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">)</span>
+        <span class="n">out_fp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.gpkg&quot;</span>
+            <span class="k">if</span> <span class="n">save_paths</span>
+            <span class="k">else</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+        <span class="p">)</span>
 
-    <span class="n">route_points</span> <span class="o">=</span> <span class="n">route_points_subset</span><span class="p">(</span>
-        <span class="n">route_table_fpath</span><span class="p">,</span> <span class="n">split_params</span><span class="o">=</span><span class="n">_split_params</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No routes to process!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">routes_to_compute</span> <span class="o">=</span> <span class="n">PointToFeatureRouteDefinitionConverter</span><span class="p">(</span>
+            <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
+            <span class="n">route_points</span><span class="o">=</span><span class="n">route_points</span><span class="p">,</span>
+            <span class="n">features_fpath</span><span class="o">=</span><span class="n">features_fpath</span><span class="p">,</span>
+            <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
+            <span class="n">cost_layers</span><span class="o">=</span><span class="n">cost_layers</span><span class="p">,</span>
+            <span class="n">friction_layers</span><span class="o">=</span><span class="n">friction_layers</span><span class="p">,</span>
+            <span class="n">barrier_layers</span><span class="o">=</span><span class="n">barrier_layers</span><span class="p">,</span>
+            <span class="n">transmission_config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">,</span>
+            <span class="n">connection_identifier_column</span><span class="o">=</span><span class="n">connection_identifier_column</span><span class="p">,</span>
+        <span class="p">)</span>
 
-    <span class="n">out_fp</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.gpkg&quot;</span>
-        <span class="k">if</span> <span class="n">save_paths</span>
-        <span class="k">else</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.csv&quot;</span>
-    <span class="p">)</span>
-
-    <span class="n">routes_to_compute</span> <span class="o">=</span> <span class="n">PointToFeatureRouteDefinitionConverter</span><span class="p">(</span>
-        <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
-        <span class="n">route_points</span><span class="o">=</span><span class="n">route_points</span><span class="p">,</span>
-        <span class="n">features_fpath</span><span class="o">=</span><span class="n">features_fpath</span><span class="p">,</span>
-        <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
-        <span class="n">cost_layers</span><span class="o">=</span><span class="n">cost_layers</span><span class="p">,</span>
-        <span class="n">friction_layers</span><span class="o">=</span><span class="n">friction_layers</span><span class="p">,</span>
-        <span class="n">barrier_layers</span><span class="o">=</span><span class="n">barrier_layers</span><span class="p">,</span>
-        <span class="n">transmission_config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">,</span>
-        <span class="n">connection_identifier_column</span><span class="o">=</span><span class="n">connection_identifier_column</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">run_lcp</span><span class="p">(</span>
-        <span class="n">cost_fpath</span><span class="p">,</span>
-        <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
-        <span class="n">routes_to_compute</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="p">,</span>
-        <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span>
-        <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">cost_multiplier_layer</span><span class="p">,</span>
-        <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">cost_multiplier_scalar</span><span class="p">,</span>
-        <span class="n">tracked_layers</span><span class="o">=</span><span class="n">tracked_layers</span><span class="p">,</span>
-        <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
-        <span class="n">user_mem_limit_gb</span><span class="o">=</span><span class="n">memory_utilization_limit</span> <span class="o">*</span> <span class="n">system_mem_limit_gb</span><span class="p">,</span>
-        <span class="n">save_routing_layer</span><span class="o">=</span><span class="n">save_routing_layer</span><span class="p">,</span>
-        <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">elapsed_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing took </span><span class="si">%.2f</span><span class="s2"> minutes&quot;</span><span class="p">,</span> <span class="n">elapsed_time</span><span class="p">)</span>
+        <span class="n">run_lcp</span><span class="p">(</span>
+            <span class="n">cost_fpath</span><span class="p">,</span>
+            <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
+            <span class="n">routes_to_compute</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="p">,</span>
+            <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span>
+            <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">cost_multiplier_layer</span><span class="p">,</span>
+            <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">cost_multiplier_scalar</span><span class="p">,</span>
+            <span class="n">tracked_layers</span><span class="o">=</span><span class="n">tracked_layers</span><span class="p">,</span>
+            <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
+            <span class="n">user_mem_limit_gb</span><span class="o">=</span><span class="n">memory_utilization_limit</span> <span class="o">*</span> <span class="n">system_mem_limit_gb</span><span class="p">,</span>
+            <span class="n">save_routing_layer</span><span class="o">=</span><span class="n">save_routing_layer</span><span class="p">,</span>
+            <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_prep_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pre-process config inputs for point-to-feature routing&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span>
+        <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;route_table_fpath&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;features_fpath&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;out_dir&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
 
 
 <span class="n">route_features_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
@@ -1400,7 +1409,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;route-features&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">split_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;_split_params&quot;</span><span class="p">},</span>
-    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">split_routes</span><span class="p">,</span>
+    <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_prep_config</span><span class="p">,</span>
     <span class="n">skip_doc_params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;system_mem_limit_gb&quot;</span><span class="p">],</span>
 <span class="p">)</span>
 </pre></div>

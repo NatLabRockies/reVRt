@@ -1,0 +1,6 @@
+revrt.utilities.raster.simplify\_shapes
+=======================================
+
+.. currentmodule:: revrt.utilities.raster
+
+.. autofunction:: simplify_shapes

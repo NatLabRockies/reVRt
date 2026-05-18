@@ -1,0 +1,6 @@
+revrt.utilities.monitoring.elapsed\_time\_as\_str
+=================================================
+
+.. currentmodule:: revrt.utilities.monitoring
+
+.. autofunction:: elapsed_time_as_str

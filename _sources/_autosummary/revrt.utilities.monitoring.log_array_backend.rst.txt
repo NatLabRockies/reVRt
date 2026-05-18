@@ -1,0 +1,6 @@
+revrt.utilities.monitoring.log\_array\_backend
+==============================================
+
+.. currentmodule:: revrt.utilities.monitoring
+
+.. autofunction:: log_array_backend

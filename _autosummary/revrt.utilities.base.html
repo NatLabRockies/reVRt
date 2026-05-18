@@ -519,12 +519,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.check_geotiff.html">revrt.utilities.base.check_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html">revrt.utilities.base.elapsed_time_as_str</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html">revrt.utilities.base.expand_dim_if_needed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html">revrt.utilities.base.features_to_route_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.log_mem.html">revrt.utilities.base.log_mem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
@@ -548,10 +546,21 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.monitoring.html">revrt.utilities.monitoring</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.close_dask_client.html">revrt.utilities.monitoring.close_dask_client</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.dask_performance_report.html">revrt.utilities.monitoring.dask_performance_report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.elapsed_time_as_str.html">revrt.utilities.monitoring.elapsed_time_as_str</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_array_backend.html">revrt.utilities.monitoring.log_array_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_mem.html">revrt.utilities.monitoring.log_mem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_runtime.html">revrt.utilities.monitoring.log_runtime</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE.html">revrt.utilities.raster.DEFAULT_RASTERIZE_TILE_SIZE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.integer_dimension_window.html">revrt.utilities.raster.integer_dimension_window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize.html">revrt.utilities.raster.rasterize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.rasterize_shape_file.html">revrt.utilities.raster.rasterize_shape_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.raster.simplify_shapes.html">revrt.utilities.raster.simplify_shapes</a></li>
 </ul>
 </details></li>
 </ul>
@@ -648,23 +657,17 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="revrt.utilities.base.delete_data_file.html#revrt.utilities.base.delete_data_file" title="revrt.utilities.base.delete_data_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete_data_file</span></code></a>(fp)</p></td>
 <td><p>Delete data file (can be Zarr, which is a directory)</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="revrt.utilities.base.elapsed_time_as_str.html#revrt.utilities.base.elapsed_time_as_str" title="revrt.utilities.base.elapsed_time_as_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">elapsed_time_as_str</span></code></a>(seconds_elapsed)</p></td>
-<td><p>Format elapsed time into human readable string</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html#revrt.utilities.base.expand_dim_if_needed" title="revrt.utilities.base.expand_dim_if_needed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expand_dim_if_needed</span></code></a>(values)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="revrt.utilities.base.expand_dim_if_needed.html#revrt.utilities.base.expand_dim_if_needed" title="revrt.utilities.base.expand_dim_if_needed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expand_dim_if_needed</span></code></a>(values)</p></td>
 <td><p>Expand data array dimensions if needed to ensure 3D (band, y, x)</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html#revrt.utilities.base.features_to_route_table" title="revrt.utilities.base.features_to_route_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_to_route_table</span></code></a>(features)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="revrt.utilities.base.features_to_route_table.html#revrt.utilities.base.features_to_route_table" title="revrt.utilities.base.features_to_route_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_to_route_table</span></code></a>(features)</p></td>
 <td><p>Convert features GDF into route start/end point table</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="revrt.utilities.base.file_full_path.html#revrt.utilities.base.file_full_path" title="revrt.utilities.base.file_full_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">file_full_path</span></code></a>(file_name, *layer_dirs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="revrt.utilities.base.file_full_path.html#revrt.utilities.base.file_full_path" title="revrt.utilities.base.file_full_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">file_full_path</span></code></a>(file_name, *layer_dirs)</p></td>
 <td><p>Get full path to file, searching <cite>layer_dirs</cite> if needed</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html#revrt.utilities.base.load_data_using_layer_file_profile" title="revrt.utilities.base.load_data_using_layer_file_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_data_using_layer_file_profile</span></code></a>(layer_fp, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html#revrt.utilities.base.load_data_using_layer_file_profile" title="revrt.utilities.base.load_data_using_layer_file_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_data_using_layer_file_profile</span></code></a>(layer_fp, ...)</p></td>
 <td><p>Load GeoTIFF data, reprojecting to LayeredFile CRS if needed</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="revrt.utilities.base.log_mem.html#revrt.utilities.base.log_mem" title="revrt.utilities.base.log_mem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_mem</span></code></a>([log_level])</p></td>
-<td><p>Log the memory usage to the input logger object</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="revrt.utilities.base.region_mapper.html#revrt.utilities.base.region_mapper" title="revrt.utilities.base.region_mapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">region_mapper</span></code></a>(regions, region_identifier_column)</p></td>
 <td><p>Generate a function to map points to a region</p></td>
