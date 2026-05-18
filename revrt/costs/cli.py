@@ -94,8 +94,7 @@ def build_masks(
     )
 
 
-# @strip_required_path_args("routing_file")
-def build_routing_layers(  # noqa: PLR0917, PLR0913
+def build_routing_layer_file(  # noqa: PLR0917, PLR0913
     routing_file,
     template_file=None,
     input_layer_dir=".",
@@ -110,7 +109,7 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     create_kwargs=None,
     log_directory=None,
 ):
-    """Create costs, barriers, and frictions from a config file
+    """Create a layered file with cost, barrier, and friction layers
 
     This function creates a cost layers file that is ultimately used to
     compute routes between points. The layers that are created and added
@@ -221,12 +220,12 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     try:
         with (
             dask_performance_report(
-                "build_routing_layers",
+                "build_routing_layer_file",
                 out_dir=log_directory if max_workers != 1 else None,
             ),
             log_runtime("Building routing layers"),
         ):
-            _build_routing_layers(
+            _build_routing_layer_file(
                 config,
                 lock,
                 validate_masks=validate_masks,
@@ -238,7 +237,7 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
             close_dask_client(client)
 
 
-def _build_routing_layers(
+def _build_routing_layer_file(
     config, lock, validate_masks=False, create_kwargs=None
 ):
     """Build routing layers based on config file"""
@@ -398,8 +397,8 @@ def _preprocess_build_masks(config):
     )
 
 
-def _preprocess_build_routing_layers(config):
-    """Preprocess config for build_routing_layers command"""
+def _preprocess_build_routing_layer_file(config):
+    """Preprocess config for build_routing_layer_file command"""
     return strip_path_keys(config, keys_to_fix={"routing_file"})
 
 
@@ -411,10 +410,10 @@ build_masks_command = CLICommandFromFunction(
     config_preprocessor=_preprocess_build_masks,
 )
 
-build_routing_layers_command = CLICommandFromFunction(
-    build_routing_layers,
+build_routing_layer_file_command = CLICommandFromFunction(
+    build_routing_layer_file,
     name="build-routing-layer-file",
     add_collect=False,
     split_keys=None,
-    config_preprocessor=_preprocess_build_routing_layers,
+    config_preprocessor=_preprocess_build_routing_layer_file,
 )

@@ -18,7 +18,7 @@ from shapely.ops import unary_union
 
 from revrt._cli import main
 from revrt.constants import BARRIER_H5_LAYER_NAME
-from revrt.costs.cli import build_masks, build_routing_layers
+from revrt.costs.cli import build_masks, build_routing_layer_file
 from revrt.costs.masks import Masks
 from revrt.exceptions import revrtConfigurationError
 from revrt.warn import revrtWarning
@@ -355,7 +355,7 @@ def test_build_masks_cli_strips_required_path_whitespace(
     and (platform.system() == "Windows"),
     reason="CLI does not work under tox env on windows",
 )
-def test_build_routing_layers_cli_strips_required_path_whitespace(
+def test_build_routing_layer_file_cli_strips_required_path_whitespace(
     run_gaps_cli_with_expected_file,
     tmp_path,
     sample_iso_fp,
@@ -415,7 +415,7 @@ def test_build_config_missing_action(tmp_path):
         revrtConfigurationError,
         match=r"At least one of .* must be in the config file",
     ):
-        build_routing_layers(
+        build_routing_layer_file(
             routing_file=tmp_path / "test.zarr", template_file=tiff_fp
         )
 
@@ -476,7 +476,7 @@ def test_build_basic_all(
         },
     }
 
-    build_routing_layers(**config, max_workers=mw)
+    build_routing_layer_file(**config, max_workers=mw)
 
     assert test_fp.exists()
     assert out_tiff_dir.exists()
@@ -547,7 +547,7 @@ def test_build_dry_only(
     }
 
     with pytest.warns(revrtWarning, match="Dry mask not found"):
-        build_routing_layers(**config)
+        build_routing_layer_file(**config)
 
     assert test_fp.exists()
     assert out_tiff_dir.exists()
@@ -576,10 +576,10 @@ def test_build_dry_only(
         assert "friction" not in ds
 
 
-def test_build_routing_layers_ignores_dask_close_timeout(
+def test_build_routing_layer_file_ignores_dask_close_timeout(
     monkeypatch, caplog, tmp_path
 ):
-    """build_routing_layers should not fail if Dask client close times out"""
+    """build_routing_layer_file should not fail if closing client times out"""
 
     class FakeClient:
         def __init__(self, **kwargs):
@@ -593,7 +593,7 @@ def test_build_routing_layers_ignores_dask_close_timeout(
 
     monkeypatch.setattr("revrt.costs.cli._validated_config", SimpleNamespace)
     monkeypatch.setattr(
-        "revrt.costs.cli._build_routing_layers", lambda *__, **___: None
+        "revrt.costs.cli._build_routing_layer_file", lambda *__, **___: None
     )
     monkeypatch.setattr("revrt.costs.cli.dask.distributed.Client", FakeClient)
     monkeypatch.setattr(
@@ -601,7 +601,7 @@ def test_build_routing_layers_ignores_dask_close_timeout(
     )
 
     with caplog.at_level(logging.WARNING, logger="revrt.utilities.monitoring"):
-        build_routing_layers(
+        build_routing_layer_file(
             routing_file=tmp_path / "routing.zarr",
             template_file=tmp_path / "template.tif",
             layers=[{"layer_name": "friction", "build": {}}],
@@ -648,7 +648,7 @@ def test_build_layers_only(
         ],
     }
 
-    build_routing_layers(**config)
+    build_routing_layer_file(**config)
 
     assert test_fp.exists()
     assert out_tiff_dir.exists()
@@ -712,7 +712,7 @@ def test_build_layers_only(
         ],
     }
 
-    build_routing_layers(**config)
+    build_routing_layer_file(**config)
 
     with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
         for ds_name in expected_missing_datasets:
