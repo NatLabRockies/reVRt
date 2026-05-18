@@ -477,6 +477,34 @@ def test_cli_route_points_skips_precomputed_routes(
     and (platform.system() == "Windows"),
     reason="CLI does not work under tox env on windows",
 )
+def test_cli_route_points_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file, sample_layered_data, tmp_path
+):
+    """route-points CLI strips whitespace on required path inputs"""
+
+    routes = _build_route_table(
+        sample_layered_data, rows_cols=[((1, 1), (2, 3))]
+    )
+    route_table_fp = tmp_path / "route_points_trimmed.csv"
+    routes.to_csv(route_table_fp, index=False)
+
+    config = {
+        "cost_fpath": f"  {sample_layered_data}  ",
+        "route_table_fpath": f"  {route_table_fp}  ",
+        "cost_layers": [{"layer_name": "layer_1"}],
+    }
+    out_fp = run_gaps_cli_with_expected_file(
+        "route-points", config, tmp_path, glob_pattern="*test*.csv"
+    )
+
+    assert Path(out_fp).exists()
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
 def test_cli_route_points_skips_precomputed_routes_gpkg(
     cli_runner, sample_layered_data, tmp_path
 ):

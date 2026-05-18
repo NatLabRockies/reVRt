@@ -2,8 +2,10 @@
 
 import os
 import json
+import logging
 import platform
 import traceback
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
@@ -321,6 +323,89 @@ def test_build_masks_cli_creates_expected_outputs(
     )
 
 
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_build_masks_cli_strips_required_path_whitespace(
+    tmp_path, sample_extra_fp, cli_runner, basic_land_mask
+):
+    """CLI build-masks strips whitespace on required path inputs"""
+
+    masks_dir = tmp_path / "masks_cli_whitespace"
+    config = {
+        "land_mask_shp_fp": f"  {basic_land_mask}  ",
+        "template_file": f"  {sample_extra_fp}  ",
+        "masks_dir": f"  {masks_dir}  ",
+        "reproject_vector": False,
+    }
+
+    config_path = tmp_path / "config_whitespace.json"
+    config_path.write_text(json.dumps(config))
+
+    result = cli_runner.invoke(main, ["build-masks", "-c", str(config_path)])
+    msg = f"Failed with error {traceback.print_exception(*result.exc_info)}"
+    assert result.exit_code == 0, msg
+    assert (masks_dir / Masks.LANDFALL_MASK_FNAME).exists()
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_build_routing_layers_cli_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file,
+    tmp_path,
+    sample_iso_fp,
+    sample_nlcd_fp,
+    sample_slope_fp,
+    sample_extra_fp,
+    tiff_layers_for_testing,
+    masks_for_testing,
+):
+    """CLI build-routing-layers strips whitespace on required paths"""
+
+    test_fp = tmp_path / "trimmed_test.zarr"
+    out_tiff_dir = tmp_path / "trimmed_out_tiffs"
+    layer_dir, __ = tiff_layers_for_testing
+
+    config = {
+        "execution_control": {"max_workers": 1},
+        "routing_file": f"  {test_fp}  ",
+        "template_file": str(sample_extra_fp),
+        "input_layer_dir": str(layer_dir),
+        "output_tiff_dir": f"  {out_tiff_dir}  ",
+        "masks_dir": f"    {masks_for_testing._masks_dir}  ",
+        "layers": [
+            {
+                "layer_name": "fi_1",
+                "include_in_file": False,
+                "build": {
+                    "  fi_1.tif ": {"extent": "wet+", "pass_through": True}
+                },
+            }
+        ],
+        "dry_costs": {
+            "iso_region_tiff": str(sample_iso_fp),
+            "nlcd_tiff": str(sample_nlcd_fp),
+            "slope_tiff": str(sample_slope_fp),
+            "extra_tiffs": [str(sample_extra_fp)],
+        },
+    }
+
+    run_gaps_cli_with_expected_file(
+        "build-routing-layers",
+        config,
+        tmp_path,
+        glob_pattern="trimmed_test.zarr",
+    )
+
+    assert test_fp.exists()
+    assert (out_tiff_dir / "fi_1.tif").exists()
+
+
 def test_build_config_missing_action(tmp_path):
     """Test correct error is raised for config with no actions"""
     tiff_fp = tmp_path / "nonexistent.tif"
@@ -489,6 +574,41 @@ def test_build_dry_only(
         assert "fi_1" not in ds
         assert "friction_1" not in ds
         assert "friction" not in ds
+
+
+def test_build_routing_layers_ignores_dask_close_timeout(
+    monkeypatch, caplog, tmp_path
+):
+    """build_routing_layers should not fail if Dask client close times out"""
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.status = "created"
+            self._Client__loop = object()
+
+        def close(self, timeout):
+            msg = f"timed out after {timeout} seconds"
+            raise TimeoutError(msg)
+
+    monkeypatch.setattr("revrt.costs.cli._validated_config", SimpleNamespace)
+    monkeypatch.setattr(
+        "revrt.costs.cli._build_routing_layers", lambda *__, **___: None
+    )
+    monkeypatch.setattr("revrt.costs.cli.dask.distributed.Client", FakeClient)
+    monkeypatch.setattr(
+        "revrt.costs.cli.dask.distributed.Lock", lambda name: name
+    )
+
+    with caplog.at_level(logging.WARNING, logger="revrt.utilities.monitoring"):
+        build_routing_layers(
+            routing_file=tmp_path / "routing.zarr",
+            template_file=tmp_path / "template.tif",
+            layers=[{"layer_name": "friction", "build": {}}],
+            max_workers=2,
+        )
+
+    assert "Timed out closing Dask client" in caplog.text
 
 
 def test_build_layers_only(

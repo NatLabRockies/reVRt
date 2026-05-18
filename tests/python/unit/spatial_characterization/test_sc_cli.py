@@ -2,6 +2,7 @@
 
 import os
 import json
+import logging
 import platform
 from pathlib import Path
 
@@ -18,7 +19,10 @@ from revrt.spatial_characterization.stats import (
     FractionalStat,
     _PCT_PREFIX,
 )
-from revrt.spatial_characterization.cli import buffered_route_characterizations
+from revrt.spatial_characterization.cli import (
+    buffered_route_characterizations,
+    _route_characterizations_from_config,
+)
 from revrt._cli import main
 
 
@@ -244,6 +248,56 @@ def test_buffered_route_characterizations_with_multiplier(
         out_stats[FractionalStat.VALUE_MULTIPLIED_BY_FRACTIONAL_AREA],
         [scaled_raster.sum() * 100, 15 * (80 + 64) + 27 * 16],
     )
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_buffered_route_characterizations_strips_required_path_whitespace(
+    cli_runner, cli_error_message, tmp_cwd, sample_raster
+):
+    """Route characterization strips whitespace on required paths"""
+
+    raster_fp = tmp_cwd / "test_whitespace.tif"
+    zones_fp = tmp_cwd / "test_whitespace.gpkg"
+
+    zones = gpd.GeoDataFrame(
+        {"id": [1], "A": ["a"]},
+        geometry=[box(-5, -5, 5, 5)],
+    )
+    zones = zones.set_crs(sample_raster.attrs["crs"])
+
+    sample_raster.rio.to_raster(raster_fp)
+    zones.to_file(zones_fp, driver="GPKG")
+
+    config = {
+        "layers": {
+            "geotiff_fp": f"  {raster_fp}  ",
+            "route_fp": f"\n{zones_fp}\t",
+            "row_width_key": "id",
+            "stats": "*",
+        },
+        "row_widths": {"1": 200},
+    }
+    config_fp = tmp_cwd / "config_whitespace.json"
+    config_fp.write_text(json.dumps(config))
+
+    result = cli_runner.invoke(
+        main, ["route-characterization", "-c", config_fp.as_posix()]
+    )
+    msg = f"Failed with error {cli_error_message(result)}"
+    assert result.exit_code == 0, msg
+
+    out_files = sorted(tmp_cwd.glob("*.csv"))
+    assert len(out_files) == 1
+    out_fp = out_files[0]
+    assert out_fp.name == "characterized_test_whitespace_test_whitespace.csv"
+
+    out_stats = pd.read_csv(out_fp)
+
+    assert len(out_stats) == 1
 
 
 def test_buffered_route_characterizations_percentile(tmp_path, sample_raster):
@@ -517,6 +571,54 @@ def test_cli_local_overrides_top_level(
     )
     assert np.allclose(out_stats["voltage"], [1, 2])
     assert out_stats["A"].to_list() == ["a", "b"]
+
+
+def test_route_characterizations_ignores_dask_close_timeout(
+    monkeypatch, caplog, tmp_path
+):
+    """route characterization should not fail if Dask close times out"""
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.status = "created"
+            self._Client__loop = object()
+
+        def close(self, timeout):
+            msg = f"timed out after {timeout} seconds"
+            raise TimeoutError(msg)
+
+    class FakeDataFrame:
+        def to_csv(self, out_fp, index=False):
+            assert index is False
+            Path(out_fp).write_text("value\n1\n", encoding="utf-8")
+
+    def fake_buffered_route_characterizations(**kwargs):
+        assert kwargs["parallel"] is True
+        return FakeDataFrame()
+
+    monkeypatch.setattr(
+        "revrt.spatial_characterization.cli.Client", FakeClient
+    )
+    monkeypatch.setattr(
+        "revrt.spatial_characterization.cli.buffered_route_characterizations",
+        fake_buffered_route_characterizations,
+    )
+
+    with caplog.at_level(logging.WARNING, logger="revrt.utilities.monitoring"):
+        out_fp = _route_characterizations_from_config(
+            _stat_kwargs={
+                "geotiff_fp": tmp_path / "raster.tif",
+                "route_fp": tmp_path / "routes.gpkg",
+            },
+            _row_widths={"1": 100},
+            _row_width_ranges=None,
+            out_dir=tmp_path,
+            max_workers=2,
+        )
+
+    assert Path(out_fp).exists()
+    assert "Timed out closing Dask client" in caplog.text
 
 
 if __name__ == "__main__":

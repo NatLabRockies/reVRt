@@ -1,21 +1,25 @@
 """Tests for base reVRt utilities"""
 
+import logging
 from pathlib import Path
 
 import pytest
 import numpy as np
 import xarray as xr
+import dask.array as da
 import geopandas as gpd
+from rasterio.crs import CRS
 from shapely.geometry import box, LineString, Point
 
 from revrt.utilities import (
     buffer_routes,
     check_geotiff,
     delete_data_file,
-    elapsed_time_as_str,
     features_to_route_table,
     LayeredFile,
+    log_array_backend,
 )
+from revrt.utilities.base import _crs_match
 from revrt.exceptions import revrtProfileCheckError, revrtValueError
 from revrt.warn import revrtWarning
 
@@ -265,6 +269,71 @@ def test_check_geotiff_bad_transform(
         check_geotiff(test_fp, test_tiff_fp)
 
 
+def test_check_geotiff_equivalent_crs_wkt():
+    """Test check_geotiff accepts equivalent CRS WKT encodings"""
+    layered_file_crs = (
+        'PROJCS["NAD83 / Conus Albers",GEOGCS["NAD83",'
+        'DATUM["North_American_Datum_1983",'
+        'SPHEROID["GRS 1980",6378137,298.257222101,'
+        'AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6269"]],'
+        'PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,'
+        'AUTHORITY["EPSG","9122"]]],'
+        'PROJECTION["Albers_Conic_Equal_Area"],'
+        'PARAMETER["latitude_of_center",23],'
+        'PARAMETER["longitude_of_center",-96],'
+        'PARAMETER["standard_parallel_1",29.5],'
+        'PARAMETER["standard_parallel_2",45.5],'
+        'PARAMETER["false_easting",0],'
+        'PARAMETER["false_northing",0],UNIT["metre",1,'
+        'AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],'
+        'AXIS["Northing",NORTH]]'
+    )
+    geotiff_crs = (
+        'LOCAL_CS["NAD83 / Conus Albers",UNIT["metre",1,'
+        'AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],'
+        'AXIS["Northing",NORTH]]'
+    )
+    assert _crs_match(layered_file_crs, geotiff_crs)
+
+
+def test_check_geotiff_equivalent_rasterio_crs_roundtrip():
+    """Test CRS matching accepts rasterio round-trip differences"""
+    layered_file_crs = CRS.from_wkt(
+        'PROJCS["unknown",GEOGCS["unknown",'
+        'DATUM["Unknown_based_on_GRS80_ellipsoid",'
+        'SPHEROID["GRS 1980",6378137,298.257222101004,'
+        'AUTHORITY["EPSG","7019"]],TOWGS84[0,0,0,0,0,0,0]],'
+        'PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,'
+        'AUTHORITY["EPSG","9122"]]],'
+        'PROJECTION["Transverse_Mercator"],'
+        'PARAMETER["latitude_of_origin",41.0833333333333],'
+        'PARAMETER["central_meridian",-71.5],'
+        'PARAMETER["scale_factor",0.99999375],'
+        'PARAMETER["false_easting",100000],'
+        'PARAMETER["false_northing",0],UNIT["metre",1,'
+        'AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],'
+        'AXIS["Northing",NORTH]]'
+    )
+    geotiff_crs = CRS.from_wkt(
+        'PROJCS["unknown",GEOGCS["unknown",'
+        'DATUM["Unknown_based_on_GRS80_ellipsoid",'
+        'SPHEROID["GRS 1980",6378137,298.257222101004,'
+        'AUTHORITY["EPSG","7019"]]],PRIMEM["Greenwich",0],'
+        'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],'
+        'PROJECTION["Transverse_Mercator"],'
+        'PARAMETER["latitude_of_origin",41.0833333333333],'
+        'PARAMETER["central_meridian",-71.5],'
+        'PARAMETER["scale_factor",0.99999375],'
+        'PARAMETER["false_easting",100000],'
+        'PARAMETER["false_northing",0],UNIT["metre",1,'
+        'AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],'
+        'AXIS["Northing",NORTH]]'
+    )
+
+    assert layered_file_crs.equals(geotiff_crs)
+    assert _crs_match(layered_file_crs, geotiff_crs)
+
+
 @pytest.mark.parametrize("test_as_dir", [True, False])
 def test_delete_data_file(tmp_path, test_as_dir):
     """Test not overwriting when creating a new file"""
@@ -286,23 +355,6 @@ def test_delete_data_file(tmp_path, test_as_dir):
 
     delete_data_file(test_fp)
     assert not test_fp.exists()
-
-
-def test_elapsed_time_as_str():
-    """Test elapsed_time_as_str utility function"""
-
-    assert elapsed_time_as_str(1) == "0:00:01"
-    assert elapsed_time_as_str(46) == "0:00:46"
-    assert elapsed_time_as_str(60) == "0:01:00"
-    assert elapsed_time_as_str(62) == "0:01:02"
-    assert elapsed_time_as_str(1 * 60 * 60) == "1:00:00"
-    assert elapsed_time_as_str(1 * 60 * 60 + 42) == "1:00:42"
-    assert elapsed_time_as_str(1 * 60 * 60 + 63) == "1:01:03"
-    assert elapsed_time_as_str(2 * 60 * 60 + 63) == "2:01:03"
-    assert elapsed_time_as_str(13 * 60 * 60 + 63) == "13:01:03"
-    assert elapsed_time_as_str(24 * 60 * 60) == "1 day, 0:00:00"
-    assert elapsed_time_as_str(24 * 60 * 60 + 72) == "1 day, 0:01:12"
-    assert elapsed_time_as_str(50 * 60 * 60 + 72) == "2 days, 2:01:12"
 
 
 def test_features_to_route_table_generates_pairs():
@@ -349,6 +401,47 @@ def test_features_to_route_table_generates_pairs():
         assert row.start_lon == pytest.approx(start_lon)
         assert row.end_lat == pytest.approx(end_lat)
         assert row.end_lon == pytest.approx(end_lon)
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_storage", "expected_backend"),
+    [
+        (
+            xr.DataArray(
+                np.arange(6, dtype=np.int16).reshape((2, 3)),
+                dims=("y", "x"),
+            ),
+            "NumPy",
+            "ndarray",
+        ),
+        (
+            xr.DataArray(
+                da.from_array(
+                    np.arange(6, dtype=np.int16).reshape((2, 3)),
+                    chunks=(1, 3),
+                ),
+                dims=("y", "x"),
+            ),
+            "Dask",
+            "Array",
+        ),
+    ],
+)
+def test_log_array_backend_reports_xarray_storage(
+    caplog, data, expected_storage, expected_backend
+):
+    """log_array_backend reports backend details for xarray inputs"""
+
+    with caplog.at_level(logging.DEBUG, logger="revrt.utilities.monitoring"):
+        log_array_backend("test_layer", data, kind="processed")
+
+    assert caplog.messages == [
+        (
+            "processed layer test_layer is "
+            f"{expected_storage}-backed ({expected_backend}) "
+            f"with dtype {data.dtype}, and shape {data.shape}"
+        )
+    ]
 
 
 if __name__ == "__main__":

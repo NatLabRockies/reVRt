@@ -1,5 +1,6 @@
 """Test reVRt cost layer creator"""
 
+import logging
 from pathlib import Path
 from itertools import chain, combinations
 
@@ -548,6 +549,222 @@ def test_rasterizing_shape_file(
             assert np.allclose(
                 np.array([[[0, 0, value], [0, 0, value], [0, 0, value]]]), ds
             ), f"{np.array(ds.values)}"
+
+
+def test_vector_layers_reload_lazily(tmp_path, mask_instance, caplog):
+    """Test vector layers rasterized and reloaded lazily"""
+    fn = "test_basic_shape.gpkg"
+    vector_file = tmp_path / fn
+    template_tiff = tmp_path / "template.tif"
+
+    crs = "ESRI:102008"
+    transform = Affine(5.0, 0.0, -12.5, 0.0, -5.0, 12.5)
+    width = height = 3
+    cell_size = 5
+    x0, y0 = -12.5, 12.5
+
+    data = xr.DataArray(
+        np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]]),
+        dims=("y", "x"),
+        coords={
+            "x": x0 + np.arange(width) * cell_size + cell_size / 2,
+            "y": y0 - np.arange(height) * cell_size - cell_size / 2,
+        },
+        name="test_band",
+    )
+    data = data.rio.write_crs(crs)
+    data.rio.write_transform(transform)
+    data.rio.to_raster(template_tiff, driver="GTiff")
+
+    basic_shape = gpd.GeoDataFrame(geometry=[box(-5, -20, 20, 20)], crs=crs)
+    basic_shape.to_file(vector_file, driver="GPKG")
+
+    lf = LayeredFile(tmp_path / "test.zarr").create_new(template_tiff)
+    builder = LayerCreator(
+        lf, mask_instance, input_layer_dir=tmp_path, output_tiff_dir=tmp_path
+    )
+    config = {
+        fn: LayerBuildConfig(
+            extent="all",
+            rasterize=Rasterize(value=1000, reproject=False),
+        )
+    }
+
+    with caplog.at_level(logging.DEBUG, logger="revrt"):
+        builder.build("friction", config, write_to_file=False)
+
+    messages = "\n".join(caplog.messages)
+    assert "intermediate dtype uint16" in messages
+    assert "Rasterized layer" in messages
+    assert "NumPy-backed" in messages
+    assert "Lazy reload layer" in messages
+    assert "Dask-backed" in messages
+
+
+def test_rasterizing_shape_file_uses_column_values(tmp_path, mask_instance):
+    """Rasterize vector features using values from a source column"""
+    fn = "test_attribute_shapes.gpkg"
+    vector_file = tmp_path / fn
+    tiff_fp = tmp_path / "friction.tif"
+
+    template_tiff = tmp_path / "template.tif"
+    crs = "ESRI:102008"
+    transform = Affine(5.0, 0.0, -12.5, 0.0, -5.0, 12.5)
+    width = height = 3
+    x0, y0 = -12.5, 12.5
+
+    data = xr.DataArray(
+        np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]]),
+        dims=("y", "x"),
+        coords={
+            "x": x0 + np.arange(width) * 5 + 2.5,
+            "y": y0 - np.arange(height) * 5 - 2.5,
+        },
+        name="test_band",
+    )
+    data = data.rio.write_crs(crs)
+    data.rio.write_transform(transform)
+    data.rio.to_raster(template_tiff, driver="GTiff")
+
+    attributed_shapes = gpd.GeoDataFrame(
+        {
+            "burn_cost": [10, 20, 30],
+            "geometry": [
+                box(-2.4, 7.6, 2.4, 12.4),
+                box(-2.4, 2.6, 2.4, 7.4),
+                box(-2.4, -2.4, 2.4, 2.4),
+            ],
+        },
+        crs=crs,
+    )
+    attributed_shapes.to_file(vector_file, driver="GPKG")
+
+    lf = LayeredFile(tmp_path / "test.zarr").create_new(template_tiff)
+    builder = LayerCreator(
+        lf, mask_instance, input_layer_dir=tmp_path, output_tiff_dir=tmp_path
+    )
+    config = {
+        fn: LayerBuildConfig(
+            extent="all",
+            rasterize=Rasterize(value="burn_cost", reproject=False),
+        )
+    }
+
+    builder.build("friction", config, write_to_file=False)
+
+    with rioxarray.open_rasterio(tiff_fp, chunks="auto") as ds:
+        assert np.allclose(
+            np.array([[[0, 0, 10], [0, 0, 20], [0, 0, 30]]]),
+            ds,
+        ), f"{np.array(ds.values)}"
+
+
+def test_rasterizing_shape_file_rejects_missing_value_column(
+    tmp_path, mask_instance
+):
+    """Fail when the rasterize value references a missing column"""
+    fn = "test_attribute_shapes.gpkg"
+    vector_file = tmp_path / fn
+    template_tiff = tmp_path / "template.tif"
+
+    crs = "ESRI:102008"
+    transform = Affine(5.0, 0.0, -12.5, 0.0, -5.0, 12.5)
+    width = height = 3
+    x0, y0 = -12.5, 12.5
+
+    data = xr.DataArray(
+        np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]]),
+        dims=("y", "x"),
+        coords={
+            "x": x0 + np.arange(width) * 5 + 2.5,
+            "y": y0 - np.arange(height) * 5 - 2.5,
+        },
+        name="test_band",
+    )
+    data = data.rio.write_crs(crs)
+    data.rio.write_transform(transform)
+    data.rio.to_raster(template_tiff, driver="GTiff")
+
+    gpd.GeoDataFrame(
+        {"burn_cost": [10], "geometry": [box(-2.4, 7.6, 2.4, 12.4)]},
+        crs=crs,
+    ).to_file(vector_file, driver="GPKG")
+
+    lf = LayeredFile(tmp_path / "test.zarr").create_new(template_tiff)
+    builder = LayerCreator(
+        lf, mask_instance, input_layer_dir=tmp_path, output_tiff_dir=tmp_path
+    )
+    config = {
+        fn: LayerBuildConfig(
+            extent="all",
+            rasterize=Rasterize(value="missing_cost", reproject=False),
+        )
+    }
+
+    with pytest.raises(
+        revrtValueError,
+        match="Rasterize value column 'missing_cost' was not found",
+    ):
+        builder.build("friction", config, write_to_file=False)
+
+
+def test_raster_layers_accumulate_without_alignment_errors(
+    tmp_path, mask_instance
+):
+    """Slightly offset TIFFs accumulate by position without alignment"""
+    template_tiff = tmp_path / "template.tif"
+    shifted_tiff = tmp_path / "offset.tif"
+    tiff_fp = tmp_path / "friction.tif"
+
+    crs = "ESRI:102008"
+    width = height = 3
+    cell_size = 5
+    x0, y0 = -12.5, 12.5
+    base_transform = Affine(5.0, 0.0, x0, 0.0, -5.0, y0)
+    shifted_transform = Affine(5.0, 0.0, x0 + 0.005, 0.0, -5.0, y0)
+
+    base = xr.DataArray(
+        np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]]),
+        dims=("y", "x"),
+        coords={
+            "x": x0 + np.arange(width) * cell_size + cell_size / 2,
+            "y": y0 - np.arange(height) * cell_size - cell_size / 2,
+        },
+        name="test_band",
+    )
+    base = base.rio.write_crs(crs)
+    base.rio.write_transform(base_transform)
+    base.rio.to_raster(template_tiff, driver="GTiff")
+
+    shifted = xr.DataArray(
+        np.array([[10, 10, 10], [20, 20, 20], [30, 30, 30]]),
+        dims=("y", "x"),
+        coords={
+            "x": x0 + 0.005 + np.arange(width) * cell_size + cell_size / 2,
+            "y": y0 - np.arange(height) * cell_size - cell_size / 2,
+        },
+        name="test_band",
+    )
+    shifted = shifted.rio.write_crs(crs)
+    shifted.rio.write_transform(shifted_transform)
+    shifted.rio.to_raster(shifted_tiff, driver="GTiff")
+
+    lf = LayeredFile(tmp_path / "test.zarr").create_new(template_tiff)
+    builder = LayerCreator(
+        lf, mask_instance, input_layer_dir=tmp_path, output_tiff_dir=tmp_path
+    )
+    config = {
+        "template.tif": LayerBuildConfig(extent="all", pass_through=True),
+        "offset.tif": LayerBuildConfig(extent="all", pass_through=True),
+    }
+
+    builder.build("friction", config, write_to_file=False)
+
+    with rioxarray.open_rasterio(tiff_fp, chunks="auto") as ds:
+        assert np.allclose(
+            np.array([[[11, 11, 11], [22, 22, 22], [33, 33, 33]]]),
+            ds,
+        )
 
 
 def test_cost_binning_results(builder_instance):

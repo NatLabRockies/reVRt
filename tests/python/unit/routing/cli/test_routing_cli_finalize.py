@@ -291,6 +291,46 @@ def test_cli_finalize_single_csv(run_gaps_cli_with_expected_file, tmp_path):
     and (platform.system() == "Windows"),
     reason="CLI does not work under tox env on windows",
 )
+def test_cli_finalize_strips_required_path_whitespace(
+    run_gaps_cli_with_expected_file, tmp_path
+):
+    """finalize-routes CLI strips whitespace on required path inputs"""
+
+    chunk_dir = tmp_path / "trimmed_chunks"
+    chunk_dir.mkdir(parents=True, exist_ok=True)
+
+    pd.DataFrame(
+        {
+            "route_id": ["chunk0_route0"],
+            "start_row": [0],
+            "start_col": [0],
+            "end_row": [2],
+            "end_col": [2],
+            "cost": [10.0],
+        }
+    ).to_csv(chunk_dir / "routes.csv", index=False)
+
+    config = {
+        "collect_pattern": "  trimmed_chunks/routes.csv  ",
+        "project_dir": f"  {tmp_path}  ",
+    }
+
+    merged_fp = run_gaps_cli_with_expected_file(
+        "finalize-routes",
+        config,
+        tmp_path,
+        glob_pattern="*_finalize_routes.*",
+    )
+
+    merged_df = pd.read_csv(merged_fp)
+    assert merged_df["route_id"].tolist() == ["chunk0_route0"]
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
 def test_cli_finalize_min_length(run_gaps_cli_with_expected_file, tmp_path):
     """CLI finalize should enforce minimum lengths and rescale cost"""
 

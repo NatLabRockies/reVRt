@@ -1,6 +1,5 @@
 """Handler for file containing GeoTIFF layers"""
 
-import time
 import sqlite3
 import logging
 import operator
@@ -27,12 +26,11 @@ from revrt.exceptions import (
 from revrt.utilities.base import (
     check_geotiff,
     delete_data_file,
-    elapsed_time_as_str,
     expand_dim_if_needed,
     transform_xy,
-    log_mem,
     TRANSFORM_ATOL,
 )
+from revrt.utilities.monitoring import log_mem, log_runtime
 from revrt.warn import revrtWarning
 
 
@@ -284,32 +282,28 @@ class LayeredFile:
             msg = f"File {self.fp!r} exits and overwrite=False"
             raise revrtFileExistsError(msg)
 
+        template_file = str(template_file).strip()
         _validate_template(template_file)
 
         logger.debug("\t- Initializing %s from %s", self.fp, template_file)
-        start_time = time.monotonic()
-        try:
-            _init_zarr_file_from_template(
-                template_file,
-                self.fp,
-                chunk_x=chunk_x,
-                chunk_y=chunk_y,
-                read_chunks=read_chunks,
-            )
-            logger.info(
-                "Layered file %s created from %s!", self.fp, template_file
-            )
-        except Exception:  # pragma: no cover
-            logger.exception("Error initializing %s", self.fp)
-            if self.fp.exists():
-                delete_data_file(self.fp)
-            raise
+        with log_runtime(f"Layered file creation ({self.fp})"):
+            try:
+                _init_zarr_file_from_template(
+                    template_file,
+                    self.fp,
+                    chunk_x=chunk_x,
+                    chunk_y=chunk_y,
+                    read_chunks=read_chunks,
+                )
+                logger.info(
+                    "Layered file %s created from %s!", self.fp, template_file
+                )
+            except Exception:  # pragma: no cover
+                logger.exception("Error initializing %s", self.fp)
+                if self.fp.exists():
+                    delete_data_file(self.fp)
+                raise
 
-        logger.debug(
-            "Time to create %s: %s",
-            self.fp,
-            elapsed_time_as_str(time.monotonic() - start_time),
-        )
         return self
 
     def write_layer(
@@ -375,78 +369,74 @@ class LayeredFile:
             )
             raise revrtFileNotFoundError(msg)
 
-        start_time = time.monotonic()
         logger.info("Writing layer %s to %s", layer_name, self.fp)
-        self._check_for_existing_layer(layer_name, overwrite)
+        with log_runtime(f"Writing layer {layer_name} to {self.fp}"):
+            self._check_for_existing_layer(layer_name, overwrite)
 
-        values = expand_dim_if_needed(values)
+            values = expand_dim_if_needed(values)
 
-        if values.shape[1:] != self.shape:
-            msg = (
-                f"Shape of provided data {values.shape[1:]} does "
-                f"not match shape of LayeredFile: {self.shape}"
-            )
-            raise revrtValueError(msg)
-
-        with xr.open_dataset(self.fp, consolidated=False, engine="zarr") as ds:
-            attrs = ds.attrs
-            crs = ds.rio.crs
-            transform = ds.rio.transform()
-            layer_is_new = layer_name not in ds
-            coords = ds.coords
-
-        chunks = (1, attrs["chunks"]["y"], attrs["chunks"]["x"])
-
-        da = xr.DataArray(values, dims=("band", "y", "x"), attrs=attrs)
-        da = da.chunk(attrs["chunks"])
-        da = da.assign_coords(coords)
-        da.attrs["count"] = 1
-        da.attrs["description"] = description
-        if nodata is not None:
-            if layer_is_new:
-                nodata = da.dtype.type(nodata)
-                da = da.rio.write_nodata(nodata)
-                da.attrs["nodata"] = nodata
-            else:
+            if values.shape[1:] != self.shape:
                 msg = (
-                    "Attempting to set ``nodata`` value when overwriting "
-                    "layer - this is not allowed. ``nodata`` value must be "
-                    "set when layer is first created. User-provided "
-                    f"``nodata`` value ({nodata}) will be ignored."
+                    f"Shape of provided data {values.shape[1:]} does "
+                    f"not match shape of LayeredFile: {self.shape}"
                 )
-                warn(msg, revrtWarning)
+                raise revrtValueError(msg)
 
-        ds_to_add = xr.Dataset({layer_name: da}, attrs=attrs)
-        da = da.rio.write_crs(crs)
-        da = da.rio.write_transform(transform)
-        da = da.rio.write_grid_mapping()
+            with xr.open_dataset(
+                self.fp, consolidated=False, engine="zarr"
+            ) as ds:
+                attrs = ds.attrs
+                crs = ds.rio.crs
+                transform = ds.rio.transform()
+                layer_is_new = layer_name not in ds
+                coords = ds.coords
 
-        encoding = None
-        if layer_is_new:
-            encoding = {layer_name: da.encoding or {}}
-            encoding[layer_name].update(
-                {
-                    "compressors": ZARR_COMPRESSORS,
-                    "dtype": da.dtype,
-                    "chunks": chunks,
-                }
+            chunks = (1, attrs["chunks"]["y"], attrs["chunks"]["x"])
+
+            da = xr.DataArray(values, dims=("band", "y", "x"), attrs=attrs)
+            da = da.chunk(attrs["chunks"])
+            da = da.assign_coords(coords)
+            da.attrs["count"] = 1
+            da.attrs["description"] = description
+            if nodata is not None:
+                if layer_is_new:
+                    nodata = da.dtype.type(nodata)
+                    da = da.rio.write_nodata(nodata)
+                    da.attrs["nodata"] = nodata
+                else:
+                    msg = (
+                        "Attempting to set ``nodata`` value when overwriting "
+                        "layer - this is not allowed. ``nodata`` value must "
+                        "be set when layer is first created. User-provided "
+                        f"``nodata`` value ({nodata}) will be ignored."
+                    )
+                    warn(msg, revrtWarning)
+
+            ds_to_add = xr.Dataset({layer_name: da}, attrs=attrs)
+            da = da.rio.write_crs(crs)
+            da = da.rio.write_transform(transform)
+            da = da.rio.write_grid_mapping()
+
+            encoding = None
+            if layer_is_new:
+                encoding = {layer_name: da.encoding or {}}
+                encoding[layer_name].update(
+                    {
+                        "compressors": ZARR_COMPRESSORS,
+                        "dtype": da.dtype,
+                        "chunks": chunks,
+                    }
+                )
+
+            log_mem()
+            ds_to_add.to_zarr(
+                self.fp,
+                mode="a-",
+                encoding=encoding,
+                zarr_format=3,
+                consolidated=False,
+                compute=True,
             )
-
-        log_mem()
-        ds_to_add.to_zarr(
-            self.fp,
-            mode="a-",
-            encoding=encoding,
-            zarr_format=3,
-            consolidated=False,
-            compute=True,
-        )
-
-        logger.debug(
-            "Time to write layer %s: %s",
-            layer_name,
-            elapsed_time_as_str(time.monotonic() - start_time),
-        )
 
     def _check_for_existing_layer(self, layer_name, overwrite):
         """Warn about existing layers"""
@@ -521,33 +511,28 @@ class LayeredFile:
             logger.info("%s not found - creating from %s...", self.fp, geotiff)
             self.create_new(geotiff)
 
-        start_time = time.monotonic()
         logger.info(
-            "%s being extracted from %s and added to %s",
+            "%s being extracted from %s and written to %s",
             layer_name,
-            geotiff,
             self.fp,
-        )
-
-        if check_tiff:
-            logger.debug("\t- Checking %s against %s", geotiff, self.fp)
-            check_geotiff(self.fp, geotiff, transform_atol=TRANSFORM_ATOL)
-
-        with rioxarray.open_rasterio(geotiff, chunks=tiff_chunks) as tif:
-            logger.debug("\t- Writing data from %s to %s", geotiff, self.fp)
-            self.write_layer(
-                tif,
-                layer_name,
-                description=description,
-                overwrite=overwrite,
-                nodata=nodata,
-            )
-
-        logger.debug(
-            "Time to write GeoTIFF %s: %s",
             geotiff,
-            elapsed_time_as_str(time.monotonic() - start_time),
         )
+        with log_runtime(f"Writing GeoTIFF to {geotiff}"):
+            if check_tiff:
+                logger.debug("\t- Checking %s against %s", geotiff, self.fp)
+                check_geotiff(self.fp, geotiff, transform_atol=TRANSFORM_ATOL)
+
+            with rioxarray.open_rasterio(geotiff, chunks=tiff_chunks) as tif:
+                logger.debug(
+                    "\t- Writing data from %s to %s", geotiff, self.fp
+                )
+                self.write_layer(
+                    tif,
+                    layer_name,
+                    description=description,
+                    overwrite=overwrite,
+                    nodata=nodata,
+                )
 
     def layer_to_geotiff(
         self, layer, geotiff, ds_chunks="auto", lock=None, **profile_kwargs

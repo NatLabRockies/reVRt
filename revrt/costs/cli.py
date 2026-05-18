@@ -17,8 +17,12 @@ from revrt.costs.dry_costs_creator import DryCostsCreator
 from revrt.costs.masks import Masks
 from revrt.utilities import (
     LayeredFile,
+    close_dask_client,
     load_data_using_layer_file_profile,
     save_data_using_layer_file_profile,
+    dask_performance_report,
+    log_runtime,
+    strip_path_keys,
 )
 from revrt.exceptions import revrtAttributeError, revrtConfigurationError
 from revrt.warn import revrtWarning
@@ -36,6 +40,14 @@ def build_masks(
     chunks="auto",
 ):
     """Build masks from land vector file
+
+    Masks are used in the cost layer creation step to determine where
+    costs should be applied (e.g. wet vs dry). The land mask is the base
+    mask that is created by rasterizing the input land vector file. The
+    landfall mask is derived from the land mask and is a one pixel width
+    line at the shore. The offshore mask is derived from the land mask
+    and is the inverse of the land mask (i.e. all non-land cells are
+    offshore).
 
     Parameters
     ----------
@@ -82,6 +94,7 @@ def build_masks(
     )
 
 
+# @strip_required_path_args("routing_file")
 def build_routing_layers(  # noqa: PLR0917, PLR0913
     routing_file,
     template_file=None,
@@ -91,11 +104,23 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     layers=None,
     dry_costs=None,
     merge_friction_and_barriers=None,
+    validate_masks=False,
     max_workers=1,
     memory_limit_per_worker="auto",
     create_kwargs=None,
+    log_directory=None,
 ):
     """Create costs, barriers, and frictions from a config file
+
+    This function creates cost layers file that is ultimately used to
+    compute routes between points. The layers that are created and added
+    to the file are determined based on the input config file. If the
+    layered file does not already exist, it will be created based on the
+    provided template file. The config file can specify three types of
+    actions: building custom layers, building dry cost layers, and
+    merging friction and barriers. At least one of these actions must be
+    specified in the config file. See the documentation for more details
+    on each type of action.
 
     You can re-run this function on an existing file to add new layers
     without overwriting existing layers or needing to change your
@@ -137,6 +162,11 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
         the layered costs file. At least one of `layers`, `dry_costs`,
         or `merge_friction_and_barriers` must be defined.
         By default, ``None``
+    validate_masks : bool, optional
+        Whether to validate that any loaded masks have appropriate
+        values. This breaks the lazy (Dask) loading of the masks, so it
+        it is not recommended to use this if you know your masks are
+        valid. By default, ``False``.
     max_workers : int, optional
         Number of parallel workers to use for file creation. If ``None``
         or >1, processing is performed in parallel using Dask.
@@ -154,6 +184,9 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
         :meth:`~revrt.utilities.handlers.LayeredFile.create_new` when
         creating a new layered file. Do not include ``template_file``;
         it will be ignored. By default, ``None``.
+    log_directory : path-like, optional
+        Directory to save Dask performance reports in. If ``None``, Dask
+        performance reports will not be generated. By default, ``None``.
     """
     config = _validated_config(
         routing_file=routing_file,
@@ -178,7 +211,7 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
             dashboard_address=None,
         )
         logger.info(
-            "Dask client created with %s workers and %r memory limit per "
+            "Dask client created with %s workers and %s memory limit per "
             "worker",
             max_workers,
             memory_limit_per_worker,
@@ -186,28 +219,48 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
         lock = dask.distributed.Lock("rioxarray-write")
 
     try:
-        lf_handler = _create_lf_if_not_exists(
-            config.routing_file, config.template_file, create_kwargs
-        )
+        with (
+            dask_performance_report(
+                "build_routing_layers",
+                out_dir=log_directory if max_workers != 1 else None,
+            ),
+            log_runtime("Building routing layers"),
+        ):
+            _build_routing_layers(
+                config,
+                lock,
+                validate_masks=validate_masks,
+                create_kwargs=create_kwargs,
+            )
 
-        masks = _load_masks(config, lf_handler)
-
-        builder = LayerCreator(
-            lf_handler,
-            masks,
-            input_layer_dir=config.input_layer_dir,
-            output_tiff_dir=config.output_tiff_dir,
-        )
-        _build_layers(config, builder, lf_handler, lock=lock)
-
-        if config.dry_costs is not None:
-            _build_dry_costs(config, masks, lf_handler, lock=lock)
-
-        if config.merge_friction_and_barriers is not None:
-            _combine_friction_and_barriers(config, lf_handler, lock=lock)
     finally:
         if client is not None:
-            client.close()
+            close_dask_client(client)
+
+
+def _build_routing_layers(
+    config, lock, validate_masks=False, create_kwargs=None
+):
+    """Build routing layers based on config file"""
+    lf_handler = _create_lf_if_not_exists(
+        config.routing_file, config.template_file, create_kwargs
+    )
+
+    masks = _load_masks(config, lf_handler, validate_masks=validate_masks)
+
+    builder = LayerCreator(
+        lf_handler,
+        masks,
+        input_layer_dir=config.input_layer_dir,
+        output_tiff_dir=config.output_tiff_dir,
+    )
+    _build_layers(config, builder, lf_handler, lock=lock)
+
+    if config.dry_costs is not None:
+        _build_dry_costs(config, masks, lf_handler, lock=lock)
+
+    if config.merge_friction_and_barriers is not None:
+        _combine_friction_and_barriers(config, lf_handler, lock=lock)
 
 
 def _validated_config(**config_dict):
@@ -237,7 +290,7 @@ def _create_lf_if_not_exists(lf_fp, template_file, create_kwargs):
     return lf_handler
 
 
-def _load_masks(config, lf_handler):
+def _load_masks(config, lf_handler, validate_masks=False):
     """Load masks based on config file"""
     masks = Masks(
         shape=lf_handler.shape,
@@ -253,7 +306,7 @@ def _load_masks(config, lf_handler):
         lc.extent != ALL for bc in build_configs for lc in bc.values()
     )
     if need_masks:
-        masks.load(lf_handler.fp)
+        masks.load(lf_handler.fp, validate_masks)
 
     return masks
 
@@ -338,11 +391,24 @@ def _combine_friction_and_barriers(config, io_handler, lock):
     io_handler.write_layer(combined, merge_config.output_layer_name)
 
 
+def _preprocess_build_masks(config):
+    """Preprocess config for build_masks command"""
+    return strip_path_keys(
+        config, keys_to_fix={"land_mask_shp_fp", "template_file", "masks_dir"}
+    )
+
+
+def _preprocess_build_routing_layers(config):
+    """Preprocess config for build_routing_layers command"""
+    return strip_path_keys(config, keys_to_fix={"routing_file"})
+
+
 build_masks_command = CLICommandFromFunction(
     build_masks,
     name="build-masks",
     add_collect=False,
     split_keys=None,
+    config_preprocessor=_preprocess_build_masks,
 )
 
 build_routing_layers_command = CLICommandFromFunction(
@@ -350,4 +416,5 @@ build_routing_layers_command = CLICommandFromFunction(
     name="build-routing-layers",
     add_collect=False,
     split_keys=None,
+    config_preprocessor=_preprocess_build_routing_layers,
 )
