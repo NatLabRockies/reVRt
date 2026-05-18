@@ -365,7 +365,7 @@ def test_build_routing_layers_cli_strips_required_path_whitespace(
     tiff_layers_for_testing,
     masks_for_testing,
 ):
-    """CLI build-routing-layers strips whitespace on required paths"""
+    """CLI build-routing-layer-file strips whitespace on required paths"""
 
     test_fp = tmp_path / "trimmed_test.zarr"
     out_tiff_dir = tmp_path / "trimmed_out_tiffs"
@@ -396,7 +396,7 @@ def test_build_routing_layers_cli_strips_required_path_whitespace(
     }
 
     run_gaps_cli_with_expected_file(
-        "build-routing-layers",
+        "build-routing-layer-file",
         config,
         tmp_path,
         glob_pattern="trimmed_test.zarr",
@@ -789,7 +789,7 @@ def test_build_basic_from_cli(
     }
 
     test_fp = run_gaps_cli_with_expected_file(
-        "build-routing-layers", config, tmp_path, glob_pattern="test.zarr"
+        "build-routing-layer-file", config, tmp_path, glob_pattern="test.zarr"
     )
 
     assert out_tiff_dir.exists()

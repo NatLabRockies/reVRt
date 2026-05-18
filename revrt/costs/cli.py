@@ -112,7 +112,7 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
 ):
     """Create costs, barriers, and frictions from a config file
 
-    This function creates cost layers file that is ultimately used to
+    This function creates a cost layers file that is ultimately used to
     compute routes between points. The layers that are created and added
     to the file are determined based on the input config file. If the
     layered file does not already exist, it will be created based on the
@@ -413,7 +413,7 @@ build_masks_command = CLICommandFromFunction(
 
 build_routing_layers_command = CLICommandFromFunction(
     build_routing_layers,
-    name="build-routing-layers",
+    name="build-routing-layer-file",
     add_collect=False,
     split_keys=None,
     config_preprocessor=_preprocess_build_routing_layers,

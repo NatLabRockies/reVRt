@@ -18,7 +18,7 @@ body:
       label: Location of the documentation
       description: >
         Please provide the location of the documentation,
-      placeholder: https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-build-routing-layers
+      placeholder: https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-build-routing-layer-file
     validations:
       required: true
   - type: textarea
