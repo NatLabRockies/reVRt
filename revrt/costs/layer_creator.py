@@ -29,6 +29,12 @@ SHP_EXTENSIONS = {".shp", ".gpkg", ".geojson"}
 class LayerCreator(BaseLayerCreator):
     """Build layer based on tiff and user config"""
 
+    BUILD_CONFIG_ATTR = "build_config"
+    """str: Attribute key containing the serialized build config"""
+
+    CPM_CONFIG_ATTR = "input_values_are_costs_per_mile"
+    """str: Attribute key containing 'values are cost per mile' flag"""
+
     def __init__(
         self,
         io_handler,
