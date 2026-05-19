@@ -13,6 +13,7 @@ from rasterio.transform import from_origin
 
 from revrt._cli import main
 from revrt.utilities import LayeredFile
+from revrt.routing.cli.base import _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
 
 from revrt.routing.cli.build_costs import (
     build_final_routing_layers_command,
@@ -199,6 +200,61 @@ def test_build_final_routing_layers_command_applies_explicit_barriers(
 
     assert np.allclose(agg_costs, expected_costs)
     assert np.array_equal(final_layer, expected_final, equal_nan=True)
+
+
+def test_build_final_routing_layers_parses_transmission_config_path(
+    sample_layered_data, tmp_path
+):
+    """build_final_routing_layers should parse string config paths"""
+
+    transmission_config = {
+        "row_width": {"138": 1.5},
+        "voltage_polarity_mult": {"138": {"ac": 0.5}},
+    }
+    transmission_config_fp = tmp_path / "transmission_config.json"
+    transmission_config_fp.write_text(json.dumps(transmission_config))
+
+    config = {
+        "cost_fpath": str(sample_layered_data),
+        "cost_layers": [
+            {"layer_name": "layer_1", "apply_row_mult": True},
+            {"layer_name": "layer_2", "apply_polarity_mult": True},
+        ],
+        "transmission_config": str(transmission_config_fp),
+        "ignore_invalid_costs": True,
+    }
+
+    config_fp = tmp_path / "lcp_config_with_transmission.json"
+    config_fp.write_text(json.dumps(config))
+    out_dir = tmp_path / "outputs_with_transmission"
+
+    outputs = build_final_routing_layers(
+        lcp_config_fp=config_fp,
+        out_dir=out_dir,
+        polarity="ac",
+        voltage=138,
+    )
+
+    cost_fp, final_fp = [Path(fp) for fp in outputs]
+    with xr.open_dataset(
+        sample_layered_data, consolidated=False, engine="zarr"
+    ) as ds:
+        layer_one = ds["layer_1"].isel(band=0).astype(np.float32).load()
+        layer_two = ds["layer_2"].isel(band=0).astype(np.float32).load()
+
+    expected_vals = layer_one * 1.5 + layer_two * (
+        0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+    )
+    expected_vals = expected_vals.to_numpy()
+
+    with rasterio.open(cost_fp) as src:
+        agg_costs = src.read(1)
+
+    with rasterio.open(final_fp) as src:
+        final_layer = src.read(1)
+
+    assert np.allclose(agg_costs, expected_vals)
+    assert np.allclose(final_layer, expected_vals)
 
 
 @pytest.mark.skipif(

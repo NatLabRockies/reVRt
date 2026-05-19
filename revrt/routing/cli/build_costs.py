@@ -6,6 +6,7 @@ from pathlib import Path
 from gaps.cli import CLICommandFromFunction
 from gaps.config import load_config
 
+from revrt.costs.config import parse_config
 from revrt.utilities import strip_path_keys
 from revrt.routing.cli.base import update_multipliers
 from revrt.routing.base import RoutingScenario, RoutingLayerManager
@@ -58,18 +59,21 @@ def build_final_routing_layers(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     config = load_config(lcp_config_fp)
+    transmission_config = parse_config(
+        config=config.get("transmission_config")
+    )
 
     route_cl = update_multipliers(
         config["cost_layers"],
         polarity,
         voltage,
-        config.get("transmission_config"),
+        transmission_config,
     )
     route_fl = update_multipliers(
         config.get("friction_layers") or [],
         polarity,
         voltage,
-        config.get("transmission_config"),
+        transmission_config,
     )
 
     routing_scenario = RoutingScenario(
