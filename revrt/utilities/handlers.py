@@ -1,5 +1,6 @@
 """Handler for file containing GeoTIFF layers"""
 
+import json
 import sqlite3
 import logging
 import operator
@@ -748,6 +749,28 @@ class LayeredFile:
             layers, ds_chunks=ds_chunks, lock=lock, **profile_kwargs
         )
         return layers
+
+
+def serialize_layer_build_dict(build_dict):
+    """Serialize layer config for storing in file attrs
+
+    Parameters
+    ----------
+    build_dict : dict
+        Dictionary mapping layer names to layer build configs.
+
+    Returns
+    -------
+    str
+        Serialized layer build config dictionary as a JSON string.
+    """
+    normalized_config = {
+        str(layer_name): component_config.model_dump(
+            mode="json", exclude_none=True
+        )
+        for layer_name, component_config in build_dict.items()
+    }
+    return json.dumps(normalized_config, sort_keys=True)
 
 
 def num_feats_in_gpkg(filename):
