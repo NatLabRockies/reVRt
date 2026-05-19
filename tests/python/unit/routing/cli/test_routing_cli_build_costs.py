@@ -122,11 +122,11 @@ def test_build_final_routing_layers_command_writes_expected_layers(
 
     config_fp = tmp_path / "lcp_config.json"
     config_fp.write_text(json.dumps(config))
-    out_dir = tmp_path / "outputs"
+    output_dir = tmp_path / "outputs"
 
     outputs = build_final_routing_layers_command.runner(
         lcp_config_fp=config_fp,
-        out_dir=out_dir,
+        output_dir=output_dir,
         polarity=None,
         voltage=None,
     )
@@ -175,11 +175,11 @@ def test_build_final_routing_layers_command_applies_explicit_barriers(
 
     config_fp = tmp_path / "barrier_lcp_config.json"
     config_fp.write_text(json.dumps(config))
-    out_dir = tmp_path / "barrier_outputs"
+    output_dir = tmp_path / "barrier_outputs"
 
     outputs = build_final_routing_layers_command.runner(
         lcp_config_fp=config_fp,
-        out_dir=out_dir,
+        output_dir=output_dir,
         polarity=None,
         voltage=None,
     )
@@ -226,11 +226,11 @@ def test_build_final_routing_layers_parses_transmission_config_path(
 
     config_fp = tmp_path / "lcp_config_with_transmission.json"
     config_fp.write_text(json.dumps(config))
-    out_dir = tmp_path / "outputs_with_transmission"
+    output_dir = tmp_path / "outputs_with_transmission"
 
     outputs = build_final_routing_layers(
         lcp_config_fp=config_fp,
-        out_dir=out_dir,
+        output_dir=output_dir,
         polarity="ac",
         voltage=138,
     )
@@ -255,6 +255,42 @@ def test_build_final_routing_layers_parses_transmission_config_path(
 
     assert np.allclose(agg_costs, expected_vals)
     assert np.allclose(final_layer, expected_vals)
+
+
+def test_build_final_routing_layers_writes_to_supplied_output_directory(
+    sample_layered_data, tmp_path
+):
+    """build_final_routing_layers should honor a supplied output_dir"""
+
+    config = {
+        "cost_fpath": str(sample_layered_data),
+        "cost_layers": [{"layer_name": "layer_1"}],
+        "ignore_invalid_costs": True,
+    }
+
+    config_fp = tmp_path / "custom_output_lcp_config.json"
+    config_fp.write_text(json.dumps(config))
+
+    output_dir = tmp_path / "nested" / "custom_outputs"
+
+    outputs = build_final_routing_layers(
+        lcp_config_fp=config_fp,
+        output_dir=output_dir,
+        polarity=None,
+        voltage=None,
+    )
+
+    expected_cost_fp = output_dir / "custom_outputs_agg_costs.tif"
+    expected_final_fp = output_dir / "custom_outputs_final_routing_layer.tif"
+
+    assert [Path(fp) for fp in outputs] == [
+        expected_cost_fp,
+        expected_final_fp,
+    ]
+    assert expected_cost_fp.exists()
+    assert expected_final_fp.exists()
+    assert not (tmp_path / f"{tmp_path.name}_agg_costs.tif").exists()
+    assert not (tmp_path / f"{tmp_path.name}_final_routing_layer.tif").exists()
 
 
 @pytest.mark.skipif(
@@ -290,8 +326,8 @@ def test_cli_build_final_routing_layers_command(
     )
     assert result.exit_code == 0, result.output
 
-    cost_fp = tmp_path / "agg_costs.tif"
-    final_fp = tmp_path / "final_routing_layer.tif"
+    cost_fp = tmp_path / f"{tmp_path.name}_agg_costs.tif"
+    final_fp = tmp_path / f"{tmp_path.name}_final_routing_layer.tif"
     assert cost_fp.exists()
     assert final_fp.exists()
 
@@ -341,8 +377,47 @@ def test_cli_build_route_costs_strips_required_path_whitespace(
         main, ["build-final-routing-layers", "-c", str(cli_config_fp)]
     )
     assert result.exit_code == 0, result.output
-    assert (tmp_path / "agg_costs.tif").exists()
-    assert (tmp_path / "final_routing_layer.tif").exists()
+    assert (tmp_path / f"{tmp_path.name}_agg_costs.tif").exists()
+    assert (tmp_path / f"{tmp_path.name}_final_routing_layer.tif").exists()
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_cli_build_final_routing_layers_honors_output_directory(
+    cli_runner, sample_layered_data, tmp_path
+):
+    """CLI build-final-routing-layers should honor output_directory"""
+
+    lcp_config = {
+        "cost_fpath": str(sample_layered_data),
+        "cost_layers": [{"layer_name": "layer_1"}],
+        "ignore_invalid_costs": True,
+    }
+
+    lcp_config_fp = tmp_path / "cli_custom_output_lcp_config.json"
+    lcp_config_fp.write_text(json.dumps(lcp_config))
+
+    output_dir = tmp_path / "cli_nested" / "cli_outputs"
+    cli_config = {
+        "lcp_config_fp": str(lcp_config_fp),
+        "output_directory": str(output_dir),
+    }
+
+    cli_config_fp = tmp_path / "cli_custom_output_command_config.json"
+    cli_config_fp.write_text(json.dumps(cli_config))
+
+    result = cli_runner.invoke(
+        main, ["build-final-routing-layers", "-c", str(cli_config_fp)]
+    )
+
+    assert result.exit_code == 0, result.output
+    assert (output_dir / "cli_outputs_agg_costs.tif").exists()
+    assert (output_dir / "cli_outputs_final_routing_layer.tif").exists()
+    assert not (tmp_path / f"{tmp_path.name}_agg_costs.tif").exists()
+    assert not (tmp_path / f"{tmp_path.name}_final_routing_layer.tif").exists()
 
 
 def test_build_final_routing_layers_command_metadata():
@@ -357,6 +432,8 @@ def test_build_final_routing_layers_command_metadata():
     assert build_final_routing_layers_command.add_collect is False
     assert tuple(build_final_routing_layers_command.preprocessor_args) == (
         "config",
+        "project_dir",
+        "output_directory",
     )
 
 
