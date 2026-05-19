@@ -317,7 +317,13 @@ def load_data_using_layer_file_profile(
 
 
 def save_data_using_layer_file_profile(
-    layer_fp, data, geotiff, nodata=None, lock=None, **profile_kwargs
+    layer_fp,
+    data,
+    geotiff,
+    nodata=None,
+    lock=None,
+    metadata=None,
+    **profile_kwargs,
 ):
     """Write to GeoTIFF file
 
@@ -337,6 +343,9 @@ def save_data_using_layer_file_profile(
         Lock to use to write data using dask. If not supplied, a single
         process is used for writing data to the GeoTIFF.
         By default, ``None``.
+    metadata : dict, optional
+        Optional metadata tags to add to the output GeoTIFF. By
+        default, ``None``.
     **profile_kwargs
         Additional keyword arguments to pass into writing the
         raster. The following attributes ar ignored (they are set
@@ -369,6 +378,7 @@ def save_data_using_layer_file_profile(
         transform=transform,
         nodata=nodata,
         lock=lock,
+        metadata=metadata,
         **profile_kwargs,
     )
 
@@ -381,6 +391,7 @@ def save_data_using_custom_props(
     transform,
     nodata=None,
     lock=None,
+    metadata=None,
     **profile_kwargs,
 ):
     """Write to GeoTIFF file
@@ -405,6 +416,9 @@ def save_data_using_custom_props(
         Lock to use to write data using dask. If not supplied, a single
         process is used for writing data to the GeoTIFF.
         By default, ``None``.
+    metadata : dict, optional
+        Optional metadata tags to add to the output GeoTIFF. By
+        default, ``None``.
     **profile_kwargs
         Additional keyword arguments to pass into writing the
         raster. The following attributes ar ignored (they are set
@@ -440,6 +454,67 @@ def save_data_using_custom_props(
     da.attrs["count"] = 1
     da = da.rio.write_crs(crs)
     da = da.rio.write_transform(transform)
+
+    save_data_array_to_geotiff(
+        da,
+        geotiff,
+        nodata=nodata,
+        lock=lock,
+        metadata=metadata,
+        **profile_kwargs,
+    )
+
+
+def save_data_array_to_geotiff(
+    da,
+    geotiff,
+    nodata=None,
+    lock=None,
+    metadata=None,
+    **profile_kwargs,
+):
+    """Write xarray DataArray to GeoTIFF file
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        DataArray to write to GeoTIFF. This should have "y" and "x"
+        dimensions, and optionally a "band" dimension (if not provided,
+        one will be added).
+    geotiff : path-like
+        Path to output GeoTIFF file.
+    nodata : int or float, optional
+        Optional nodata value for the raster layer. By default,
+        ``None``, which does not add a "nodata" value.
+    lock : bool or `dask.distributed.Lock`, optional
+        Lock to use to write data using dask. If not supplied, a single
+        process is used for writing data to the GeoTIFF.
+        By default, ``None``.
+    metadata : dict, optional
+        Optional metadata tags to add to the output GeoTIFF. By
+        default, ``None``.
+    **profile_kwargs
+        Additional keyword arguments to pass into writing the
+        raster. The following attributes ar ignored (they are set
+        using properties of the source
+        :class:`~revrt.utilities.handlers.LayeredFile`):
+
+            - nodata
+            - transform
+            - crs
+            - count
+            - width
+            - height
+    """
+    da = expand_dim_if_needed(da)
+
+    if "y" not in da.dims or "x" not in da.dims:
+        msg = "DataArray must have 'y' and 'x' dimensions!"
+        raise revrtValueError(msg)
+
+    if da.dtype.name == "bool":
+        da = da.astype("uint8")
+
     if nodata is not None:
         nodata = da.dtype.type(nodata)
         da = da.rio.write_nodata(nodata)
@@ -452,16 +527,19 @@ def save_data_using_custom_props(
         "tiled": True,
         "compress": "lzw",
         "interleave": "band",
+        "driver": "GTiff",
     }
     pk.update(profile_kwargs)
+    metadata = metadata or {}
+    metadata = {str(k): str(v) for k, v in metadata.items()}
     logger.debug(
-        "Saving TIFF with shape %r and dtype %r to %s",
+        "Saving TIFF with shape %r, dtype %r, and metadata %r to %s",
         da.shape,
         da.dtype,
+        metadata,
         geotiff,
     )
-
-    da.rio.to_raster(geotiff, driver="GTiff", lock=lock, **pk)
+    da.rio.to_raster(geotiff, lock=lock, tags=metadata, **pk)
 
 
 def expand_dim_if_needed(values):

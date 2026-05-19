@@ -477,9 +477,10 @@ def test_cli_command_parallel(tmp_cwd, cli_runner, use_top_level_default):
         json.dump(config, f)
 
     assert not list(tmp_cwd.glob("*.csv"))
-    cli_runner.invoke(
+    result = cli_runner.invoke(
         main, ["route-characterization", "-c", config_fp.as_posix()]
     )
+    assert result.exit_code == 0, result.output
 
     out_files = sorted(tmp_cwd.glob("*.csv"))
     assert len(out_files) == 2
@@ -612,9 +613,10 @@ def test_cli_command_parallel_with_multiplier(
         json.dump(config, f)
 
     assert not list(tmp_cwd.glob("*.csv"))
-    cli_runner.invoke(
+    result = cli_runner.invoke(
         main, ["route-characterization", "-c", config_fp.as_posix()]
     )
+    assert result.exit_code == 0, result.output
 
     out_files = sorted(tmp_cwd.glob("*.csv"))
     assert len(out_files) == 2

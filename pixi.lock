@@ -18923,10 +18923,11 @@ packages:
   requires_python: '>=3.9'
 - pypi: ./
   name: nlr-revrt
-  version: 0.6.0
-  sha256: c349e094ef1b7aec78d1f728e73e6f94a7eac686b418ad64585d29b68f61462a
+  version: 0.7.0
+  sha256: b47a59913cf2bb64f2bb96fecaa44a84be4eaf1e24708678a64086419f9e1def
   requires_dist:
   - affine>=2.4.0,<3
+  - bokeh>=3.9.0,<4
   - dask>=2026.3.0,<2027
   - distributed>=2026.3.0,<2027
   - fiona>=1.10.1,<2
