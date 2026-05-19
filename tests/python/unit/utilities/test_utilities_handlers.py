@@ -39,7 +39,6 @@ from revrt.exceptions import (
     revrtKeyError,
     revrtValueError,
 )
-from revrt.warn import revrtWarning
 
 
 @pytest.fixture(scope="module")
@@ -461,16 +460,23 @@ def test_write_layer(sample_tiff_fp, sample_tiff_props, tmp_path):
     new_data_2 -= new_data_2.min()
     new_data_2 /= new_data_2.max()
 
-    lf.write_layer(new_data_2, "test_layer", overwrite=True)
+    lf.write_layer(
+        new_data_2,
+        "test_layer",
+        description="replacement",
+        overwrite=True,
+        nodata=7,
+    )
     with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
         _validate_top_level_ds_props(ds, transform)
         assert "test_layer" in ds
         _validate_random_data_layer(width, height, transform, ds["test_layer"])
         assert not np.allclose(ds["test_layer"], new_data)
         assert np.allclose(ds["test_layer"], new_data_2)
-        assert "nodata" not in ds["test_layer"].attrs
-        assert np.isnan(ds["test_layer"].rio.nodata)
-        assert np.isnan(ds["test_layer"].rio.encoded_nodata)
+        assert ds["test_layer"].attrs["description"] == "replacement"
+        assert "build_config" not in ds["test_layer"].attrs
+        assert np.isclose(ds["test_layer"].attrs["nodata"], 7)
+        assert np.isclose(ds["test_layer"].rio.encoded_nodata, 7)
 
     lf.write_layer(
         new_data, "original_layer", description="My desc", nodata=255
@@ -528,23 +534,24 @@ def test_write_tiff_to_layer_file(
         assert np.isnan(ds["test_layer_2"].rio.nodata)
         assert np.isnan(ds["test_layer_2"].rio.encoded_nodata)
 
-    with pytest.warns(revrtWarning, match="Attempting to set ``nodata``"):
-        lf.write_geotiff_to_file(
-            sample_tiff_fp_2x,
-            "test_layer",
-            overwrite=True,
-            description="My desc",
-            nodata=100,
-            check_tiff=False,
-        )
+    lf.write_geotiff_to_file(
+        sample_tiff_fp_2x,
+        "test_layer",
+        overwrite=True,
+        description="My desc",
+        nodata=100,
+        check_tiff=False,
+    )
 
     with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
         _validate_top_level_ds_props(ds, transform)
         assert "test_layer" in ds
         assert "test_layer_2" in ds
-        assert np.allclose(ds["test_layer_2"], ds["test_layer"])
+        assert not np.allclose(
+            ds["test_layer_2"].values, ds["test_layer"].values
+        )
         assert "nodata" in ds["test_layer"].attrs
-        assert np.isclose(ds["test_layer"].rio.encoded_nodata, 255)
+        assert np.isclose(ds["test_layer"].rio.encoded_nodata, 100)
 
 
 def test_layer_to_geotiff_file(sample_tiff_fp, tmp_path):

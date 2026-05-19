@@ -6,7 +6,6 @@ import logging
 import operator
 import functools
 from pathlib import Path
-from warnings import warn
 from functools import cached_property
 
 import zarr
@@ -32,7 +31,6 @@ from revrt.utilities.base import (
     TRANSFORM_ATOL,
 )
 from revrt.utilities.monitoring import log_mem, log_runtime
-from revrt.warn import revrtWarning
 
 
 logger = logging.getLogger(__name__)
@@ -363,13 +361,6 @@ class LayeredFile:
         overwrite : bool, default=False
             Option to overwrite layer data if layer already exists in
             :class:`~revrt.utilities.handlers.LayeredFile`.
-
-            .. IMPORTANT::
-              When overwriting data, the encoding (and therefore things
-              like data type, nodata value, etc) is not allowed to
-              change. If you need to overwrite an existing layer with a
-              new type of data, manually remove it from the file first.
-
             By default, ``False``.
         nodata : int or float, optional
             Optional nodata value for the raster layer. This value will
@@ -409,8 +400,6 @@ class LayeredFile:
 
         logger.info("Writing layer %s to %s", layer_name, self.fp)
         with log_runtime(f"Writing layer {layer_name} to {self.fp}"):
-            self._check_for_existing_layer(layer_name, overwrite)
-
             values = expand_dim_if_needed(values)
 
             if values.shape[1:] != self.shape:
@@ -424,10 +413,15 @@ class LayeredFile:
                 self.fp, consolidated=False, engine="zarr"
             ) as ds:
                 attrs = ds.attrs
-                crs = ds.rio.crs
-                transform = ds.rio.transform()
-                layer_is_new = layer_name not in ds
                 coords = ds.coords
+                layer_exists = layer_name in ds
+
+            if layer_exists:
+                msg = f"{layer_name!r} is already present in {self.fp}"
+                if not overwrite:
+                    msg = f"{msg} and 'overwrite=False'"
+                    raise revrtKeyError(msg)
+                self._delete_layer(layer_name)
 
             chunks = (1, attrs["chunks"]["y"], attrs["chunks"]["x"])
 
@@ -438,34 +432,19 @@ class LayeredFile:
             da.attrs["description"] = description
             da.attrs.update(layer_attrs)
             if nodata is not None:
-                if layer_is_new:
-                    nodata = da.dtype.type(nodata)
-                    da = da.rio.write_nodata(nodata)
-                    da.attrs["nodata"] = nodata
-                else:
-                    msg = (
-                        "Attempting to set ``nodata`` value when overwriting "
-                        "layer - this is not allowed. ``nodata`` value must "
-                        "be set when layer is first created. User-provided "
-                        f"``nodata`` value ({nodata}) will be ignored."
-                    )
-                    warn(msg, revrtWarning)
+                nodata = da.dtype.type(nodata)
+                da = da.rio.write_nodata(nodata)
+                da.attrs["nodata"] = nodata
 
             ds_to_add = xr.Dataset({layer_name: da}, attrs=attrs)
-            da = da.rio.write_crs(crs)
-            da = da.rio.write_transform(transform)
-            da = da.rio.write_grid_mapping()
-
-            encoding = None
-            if layer_is_new:
-                encoding = {layer_name: da.encoding or {}}
-                encoding[layer_name].update(
-                    {
-                        "compressors": ZARR_COMPRESSORS,
-                        "dtype": da.dtype,
-                        "chunks": chunks,
-                    }
-                )
+            encoding = {layer_name: da.encoding or {}}
+            encoding[layer_name].update(
+                {
+                    "compressors": ZARR_COMPRESSORS,
+                    "dtype": da.dtype,
+                    "chunks": chunks,
+                }
+            )
 
             log_mem()
             ds_to_add.to_zarr(
@@ -477,18 +456,10 @@ class LayeredFile:
                 compute=True,
             )
 
-    def _check_for_existing_layer(self, layer_name, overwrite):
-        """Warn about existing layers"""
-        if layer_name not in self.layers:
-            return
-
-        msg = f"{layer_name!r} is already present in {self.fp}"
-        if not overwrite:
-            msg = f"{msg} and 'overwrite=False'"
-            raise revrtKeyError(msg)
-
-        msg = f"{msg} and will be replaced"
-        logger.info(msg)
+    def _delete_layer(self, layer_name):
+        """Delete a layer from the backing Zarr file"""
+        group = zarr.open_group(self.fp, mode="a")
+        del group[layer_name]
 
     def write_geotiff_to_file(
         self,
