@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779161802685,
+  "lastUpdate": 1779165824678,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -10163,6 +10163,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 845547641,
             "range": "± 521462954",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "008fc636585fe604f9dcc0a27c5f0a98dcf102a0",
+          "message": "More fixes (#272)\n\n* Fix CLI command tests to assert exit codes for better error handling\n\n* Add missing dep to fix tests\n\n* Rename command\n\n* Rename command + functions\n\n* Update command + function name\n\n* add `serialize_layer_build_dict`\n\n* Add ability to write attrs on layer\n\n* Add defensive check\n\n* Add tests\n\n* Add `layer_attrs`\n\n* Add new attrs\n\n* Save attrs to file\n\n* Fix docs\n\n* MInor update\n\n* Overwrite now works as expected\n\n* Add more sophisticated `_should_skip_layer`\n\n* MInor updates\n\n* Allow writing tags to TIFF\n\n* Tiff now checked for rebuild also\n\n* Always overwrite\n\n* Fix crash when transmission config is a str input\n\n* standardize writing to geotiff across repo\n\n* Bump repo version",
+          "timestamp": "2026-05-18T21:18:56-06:00",
+          "tree_id": "df76c42d55192b3c35b1ab266d92ea8c8c3d2cfd",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/008fc636585fe604f9dcc0a27c5f0a98dcf102a0"
+        },
+        "date": 1779165822811,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 103433037,
+            "range": "± 1525989",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 100122615,
+            "range": "± 1521703",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 142331120,
+            "range": "± 3318359",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 213446222,
+            "range": "± 3732378",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 861319772,
+            "range": "± 14771710",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 143618607,
+            "range": "± 1810774",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 150796646,
+            "range": "± 1116507",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 170318140,
+            "range": "± 1668420",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 236877983,
+            "range": "± 2730007",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 482740037,
+            "range": "± 5225037",
             "unit": "ns/iter"
           }
         ]
