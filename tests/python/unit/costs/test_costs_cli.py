@@ -18,7 +18,7 @@ from shapely.geometry import box
 from shapely.ops import unary_union
 
 from revrt._cli import main
-from revrt.constants import BARRIER_H5_LAYER_NAME, METERS_IN_MILE
+from revrt.constants import BARRIER_LAYER_NAME, METERS_IN_MILE
 from revrt.costs.cli import build_masks, build_routing_layer_file
 from revrt.costs.layer_creator import LayerCreator
 from revrt.costs.masks import Masks
@@ -511,7 +511,7 @@ def test_build_basic_all(
     assert out_tiff_dir.exists()
     assert (out_tiff_dir / "fi_1.tif").exists()
     assert (out_tiff_dir / "friction.tif").exists()
-    assert (out_tiff_dir / f"{BARRIER_H5_LAYER_NAME}.tif").exists()
+    assert (out_tiff_dir / f"{BARRIER_LAYER_NAME}.tif").exists()
 
     expected_datasets = [
         "sample_nlcd",
@@ -538,7 +538,7 @@ def test_build_basic_all(
         )
 
     with rioxarray.open_rasterio(
-        out_tiff_dir / f"{BARRIER_H5_LAYER_NAME}.tif", chunks="auto"
+        out_tiff_dir / f"{BARRIER_LAYER_NAME}.tif", chunks="auto"
     ) as ds:
         assert np.allclose(
             ds,
@@ -582,7 +582,7 @@ def test_build_dry_only(
     assert out_tiff_dir.exists()
     assert not (out_tiff_dir / "fi_1.tif").exists()
     assert not (out_tiff_dir / "friction.tif").exists()
-    assert not (out_tiff_dir / f"{BARRIER_H5_LAYER_NAME}.tif").exists()
+    assert not (out_tiff_dir / f"{BARRIER_LAYER_NAME}.tif").exists()
 
     expected_datasets = [
         "sample_nlcd",
@@ -683,7 +683,7 @@ def test_build_layers_only(
     assert out_tiff_dir.exists()
     assert (out_tiff_dir / "fi_1.tif").exists()
     assert (out_tiff_dir / "friction.tif").exists()
-    assert not (out_tiff_dir / f"{BARRIER_H5_LAYER_NAME}.tif").exists()
+    assert not (out_tiff_dir / f"{BARRIER_LAYER_NAME}.tif").exists()
 
     expected_missing_datasets = [
         "sample_nlcd",
@@ -1028,7 +1028,7 @@ def test_build_basic_from_cli(
     assert out_tiff_dir.exists()
     assert (out_tiff_dir / "fi_1.tif").exists()
     assert (out_tiff_dir / "friction.tif").exists()
-    assert (out_tiff_dir / f"{BARRIER_H5_LAYER_NAME}.tif").exists()
+    assert (out_tiff_dir / f"{BARRIER_LAYER_NAME}.tif").exists()
 
     expected_datasets = [
         "sample_nlcd",
@@ -1055,7 +1055,7 @@ def test_build_basic_from_cli(
         )
 
     with rioxarray.open_rasterio(
-        out_tiff_dir / f"{BARRIER_H5_LAYER_NAME}.tif", chunks="auto"
+        out_tiff_dir / f"{BARRIER_LAYER_NAME}.tif", chunks="auto"
     ) as ds:
         assert np.allclose(
             ds,

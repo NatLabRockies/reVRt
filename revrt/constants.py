@@ -2,7 +2,7 @@
 
 ALL = "all"
 
-BARRIER_H5_LAYER_NAME = "transmission_barrier"
+BARRIER_LAYER_NAME = "transmission_barrier"
 """Combined friction and barrier layer name"""
 
 DEFAULT_DTYPE = "float32"

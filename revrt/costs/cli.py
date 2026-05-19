@@ -418,7 +418,7 @@ def _combine_friction_and_barriers(config, io_handler, lock):
         layer_fp=io_handler.fp, data=combined, geotiff=out_fp, lock=lock
     )
 
-    logger.info("Writing combined barriers to H5")
+    logger.info("Writing combined barriers to layered file")
     io_handler.write_layer(combined, merge_config.output_layer_name)
 
 

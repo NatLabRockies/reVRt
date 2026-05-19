@@ -87,13 +87,13 @@ class LayerCreator(BaseLayerCreator):
         Parameters
         ----------
         layer_name : str
-            Name of layer to use in H5 and for output tiff.
+            Name of layer to use in Zarr and for output tiff.
         build_config : LayerBuildComponents
             Dict of LayerBuildConfig keyed by GeoTIFF/vector filenames.
         values_are_costs_per_mile : bool, default=False
             Option to convert values into costs per cell under the
             assumption that the resulting values are costs in $/mile.
-            By default, ``False``, which writes raw values to TIFF/H5.
+            By default, ``False``, which writes raw values to TIFF/Zarr.
         write_to_file : bool, default=True
             Option to write the layer to file after creation.
 
@@ -103,7 +103,7 @@ class LayerCreator(BaseLayerCreator):
 
             By default, ``True``.
         description : str, optional
-            Optional description to store with this layer in the H5
+            Optional description to store with this layer in the Zarr
             file. By default, ``None``.
         tiff_chunks : int or str, default="file"
             Chunk size to use when reading the GeoTIFF file. This will

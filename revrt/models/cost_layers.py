@@ -7,7 +7,7 @@ from typing_extensions import TypedDict
 
 from pydantic import BaseModel, DirectoryPath, FilePath, field_validator
 
-from revrt.constants import ALL, BARRIER_H5_LAYER_NAME
+from revrt.constants import ALL, BARRIER_LAYER_NAME
 from revrt.exceptions import revrtConfigurationError
 
 
@@ -217,7 +217,7 @@ class BarrierLayer(BaseModel, extra="forbid"):
     """Config for a routing barrier layer"""
 
     layer_name: str
-    """Name of layer in H5/Zarr file"""
+    """Name of layer in Zarr file"""
 
     barrier_values: str
     """Comparison definition describing barrier cells"""
@@ -309,7 +309,7 @@ class DryCosts(BaseModel, extra="forbid"):
     """
 
     extra_tiffs: list[FilePath] | None = None
-    """Optional list of extra GeoTIFFs to add to cost H5 file"""
+    """Optional list of extra GeoTIFFs to add to cost Zarr file"""
 
 
 class MergeFrictionBarriers(BaseModel, extra="forbid"):
@@ -334,10 +334,10 @@ class MergeFrictionBarriers(BaseModel, extra="forbid"):
     created or had already existed in the tiff directory.
     """
 
-    output_layer_name: str | None = BARRIER_H5_LAYER_NAME
+    output_layer_name: str | None = BARRIER_LAYER_NAME
     """Name of combined output layer
 
-    By default, :obj:`~revrt.constants.BARRIER_H5_LAYER_NAME`.
+    By default, :obj:`~revrt.constants.BARRIER_LAYER_NAME`.
     """
 
     barrier_multiplier: float = 1e6
@@ -360,7 +360,7 @@ class LayerConfig(BaseModel):
     """Config for friction, barrier, and costs processing"""
 
     layer_name: str
-    """Name of layer in H5 file"""
+    """Name of layer in Zarr file"""
 
     description: str | None = None
     """Optional description to store in attrs for layer"""
