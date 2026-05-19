@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779220423398,
+  "lastUpdate": 1779221183492,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -10331,6 +10331,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 456098960,
             "range": "± 8679159",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bf2a05188d0bd92eb9bc651222428d1ad18fca19",
+          "message": "Build(deps): Bump peaceiris/actions-gh-pages from 4.0.0 to 4.1.0 (#274)\n\nBumps [peaceiris/actions-gh-pages](https://github.com/peaceiris/actions-gh-pages) from 4.0.0 to 4.1.0.\n- [Release notes](https://github.com/peaceiris/actions-gh-pages/releases)\n- [Changelog](https://github.com/peaceiris/actions-gh-pages/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/peaceiris/actions-gh-pages/compare/4f9cc6602d3f66b9c108549d475ec49e8ef4d45e...84c30a85c19949d7eee79c4ff27748b70285e453)\n\n---\nupdated-dependencies:\n- dependency-name: peaceiris/actions-gh-pages\n  dependency-version: 4.1.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-19T13:41:04-06:00",
+          "tree_id": "a00b6276f6a419e74481646ca5d49faa0a1560b8",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/bf2a05188d0bd92eb9bc651222428d1ad18fca19"
+        },
+        "date": 1779221182253,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 94194622,
+            "range": "± 1080396",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 181790717,
+            "range": "± 4029751",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 134822513,
+            "range": "± 2604828",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 201797356,
+            "range": "± 2718996",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 800569323,
+            "range": "± 14623589",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 152159217,
+            "range": "± 1584980",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 158592544,
+            "range": "± 2190449",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 175611376,
+            "range": "± 1686051",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 236221862,
+            "range": "± 2702291",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 460467746,
+            "range": "± 5852115",
             "unit": "ns/iter"
           }
         ]
