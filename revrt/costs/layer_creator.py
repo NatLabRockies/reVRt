@@ -105,9 +105,6 @@ class LayerCreator(BaseLayerCreator):
         description : str, optional
             Optional description to store with this layer in the H5
             file. By default, ``None``.
-        build_config_attr : str, optional
-            Serialized build config to store as a layer attribute. By
-            default, ``None``.
         tiff_chunks : int or str, default="file"
             Chunk size to use when reading the GeoTIFF file. This will
             be passed down as the ``chunks`` argument to
