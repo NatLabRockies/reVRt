@@ -869,9 +869,14 @@ def test_build_layers_rebuilds_without_stored_build_config(
         },
         write_to_file=False,
     )
+    legacy_tiff = out_tiff_dir / "friction.tif"
+    with rioxarray.open_rasterio(legacy_tiff) as tif:
+        legacy_tiff_data = np.array(tif.isel(band=0).values)
+    _overwrite_test_tiff(legacy_tiff, legacy_tiff_data)
+
     legacy_data = load_data_using_layer_file_profile(
         layer_fp=lf_handler.fp,
-        geotiff=out_tiff_dir / "friction.tif",
+        geotiff=legacy_tiff,
         band_index=0,
     )
     lf_handler.write_layer(legacy_data, "friction", overwrite=True)

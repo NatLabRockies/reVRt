@@ -4,6 +4,7 @@ import logging
 from warnings import warn
 from pathlib import Path
 
+import rasterio
 import numpy as np
 import dask.array as da
 import xarray as xr
@@ -172,6 +173,13 @@ class LayerCreator(BaseLayerCreator):
         **profile_kwargs,
     ):
         layer_name = layer_name.replace(".tif", "").replace(".tiff", "")
+        out_filename = self.output_tiff_dir / f"{layer_name}.tif"
+        serialized_build_config = serialize_layer_build_dict(build_config)
+        if self._matching_tiff_exists(
+            out_filename, serialized_build_config, values_are_costs_per_mile
+        ):
+            return out_filename
+
         logger.debug("Combining %s layers", layer_name)
         log_mem()
 
@@ -180,7 +188,6 @@ class LayerCreator(BaseLayerCreator):
             values_are_costs_per_mile=values_are_costs_per_mile,
             tiff_chunks=tiff_chunks,
         )
-        out_filename = self.output_tiff_dir / f"{layer_name}.tif"
         logger.debug(
             "Writing combined %s layers to %s", layer_name, out_filename
         )
@@ -191,9 +198,57 @@ class LayerCreator(BaseLayerCreator):
             geotiff=out_filename,
             nodata=nodata,
             lock=lock,
+            metadata={
+                self.BUILD_CONFIG_ATTR: serialized_build_config,
+                self.CPM_CONFIG_ATTR: values_are_costs_per_mile,
+            },
             **profile_kwargs,
         )
         return out_filename
+
+    def _matching_tiff_exists(
+        self,
+        out_filename,
+        serialized_build_config,
+        values_are_costs_per_mile,
+    ):
+        """bool: Whether an existing GeoTIFF matches build metadata"""
+        if not out_filename.exists():
+            return False
+
+        with rasterio.open(out_filename) as tif:
+            tags = tif.tags()
+
+        existing_build_config = tags.get(self.BUILD_CONFIG_ATTR)
+        existing_cpm = tags.get(self.CPM_CONFIG_ATTR)
+        requested_cpm = str(values_are_costs_per_mile)
+        should_skip = (
+            existing_build_config == serialized_build_config
+            and existing_cpm == requested_cpm
+        )
+        if should_skip:
+            logger.info(
+                "GeoTIFF %s already exists with matching stored config. "
+                "Skipping rebuild...",
+                out_filename,
+            )
+            return True
+
+        logger.info(
+            "GeoTIFF %s exists but build config does not match. Rebuilding...",
+            out_filename,
+        )
+        logger.debug(
+            "Existing TIFF config:\n%r\nNew config:\n%r",
+            existing_build_config,
+            serialized_build_config,
+        )
+        logger.debug(
+            "Existing TIFF cpm:\n%r\nNew cpm:\n%r",
+            existing_cpm,
+            requested_cpm,
+        )
+        return False
 
     def _build_layer_from_components(
         self, build_config, values_are_costs_per_mile=False, tiff_chunks="file"
