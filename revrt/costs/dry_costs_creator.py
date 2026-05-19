@@ -305,6 +305,7 @@ class DryCostsCreator(BaseLayerCreator):
             layer_name,
             nodata=nodata.get(layer_name),
             description=descriptions.get(layer_name),
+            overwrite=True,
         )
 
     def _compute_multipliers(
