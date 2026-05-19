@@ -317,7 +317,13 @@ def load_data_using_layer_file_profile(
 
 
 def save_data_using_layer_file_profile(
-    layer_fp, data, geotiff, nodata=None, lock=None, **profile_kwargs
+    layer_fp,
+    data,
+    geotiff,
+    nodata=None,
+    lock=None,
+    metadata=None,
+    **profile_kwargs,
 ):
     """Write to GeoTIFF file
 
@@ -337,6 +343,9 @@ def save_data_using_layer_file_profile(
         Lock to use to write data using dask. If not supplied, a single
         process is used for writing data to the GeoTIFF.
         By default, ``None``.
+    metadata : dict, optional
+        Optional metadata tags to add to the output GeoTIFF. By
+        default, ``None``.
     **profile_kwargs
         Additional keyword arguments to pass into writing the
         raster. The following attributes ar ignored (they are set
@@ -369,6 +378,7 @@ def save_data_using_layer_file_profile(
         transform=transform,
         nodata=nodata,
         lock=lock,
+        metadata=metadata,
         **profile_kwargs,
     )
 
@@ -381,6 +391,7 @@ def save_data_using_custom_props(
     transform,
     nodata=None,
     lock=None,
+    metadata=None,
     **profile_kwargs,
 ):
     """Write to GeoTIFF file
@@ -405,6 +416,9 @@ def save_data_using_custom_props(
         Lock to use to write data using dask. If not supplied, a single
         process is used for writing data to the GeoTIFF.
         By default, ``None``.
+    metadata : dict, optional
+        Optional metadata tags to add to the output GeoTIFF. By
+        default, ``None``.
     **profile_kwargs
         Additional keyword arguments to pass into writing the
         raster. The following attributes ar ignored (they are set
@@ -454,14 +468,16 @@ def save_data_using_custom_props(
         "interleave": "band",
     }
     pk.update(profile_kwargs)
+    metadata = metadata or {}
+    metadata = {str(k): str(v) for k, v in metadata.items()}
     logger.debug(
-        "Saving TIFF with shape %r and dtype %r to %s",
+        "Saving TIFF with shape %r, dtype %r, and metadata %r to %s",
         da.shape,
         da.dtype,
+        metadata,
         geotiff,
     )
-
-    da.rio.to_raster(geotiff, driver="GTiff", lock=lock, **pk)
+    da.rio.to_raster(geotiff, driver="GTiff", lock=lock, tags=metadata, **pk)
 
 
 def expand_dim_if_needed(values):
