@@ -7,7 +7,7 @@ from gaps.cli import CLICommandFromFunction
 from gaps.config import load_config
 
 from revrt.costs.config import parse_config
-from revrt.utilities import strip_path_keys
+from revrt.utilities import strip_path_keys, save_data_array_to_geotiff
 from revrt.routing.cli.base import update_multipliers
 from revrt.routing.base import RoutingScenario, RoutingLayerManager
 
@@ -91,11 +91,11 @@ def build_final_routing_layers(
 
     cost_out_fp = out_dir / "agg_costs.tif"
     logger.debug("Writing costs to %s", cost_out_fp)
-    rl.cost.rio.to_raster(cost_out_fp, driver="GTiff", nodata=-1)
+    save_data_array_to_geotiff(rl.cost, cost_out_fp, nodata=-1)
 
     frl_out_fp = out_dir / "final_routing_layer.tif"
     logger.debug("Writing final routing layer to %s", frl_out_fp)
-    rl.final_routing_layer.rio.to_raster(frl_out_fp, driver="GTiff", nodata=-1)
+    save_data_array_to_geotiff(rl.final_routing_layer, frl_out_fp, nodata=-1)
 
     return [str(cost_out_fp), str(frl_out_fp)]
 

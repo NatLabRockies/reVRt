@@ -28,6 +28,7 @@ from revrt.utilities.base import (
     delete_data_file,
     expand_dim_if_needed,
     transform_xy,
+    save_data_array_to_geotiff,
     TRANSFORM_ATOL,
 )
 from revrt.utilities.monitoring import log_mem, log_runtime
@@ -582,8 +583,8 @@ class LayeredFile:
         with xr.open_dataset(
             self.fp, chunks=ds_chunks, consolidated=False, engine="zarr"
         ) as ds:
-            ds[layer].rio.to_raster(
-                geotiff, driver="GTiff", lock=lock, **profile_kwargs
+            save_data_array_to_geotiff(
+                ds[layer], geotiff, lock=lock, **profile_kwargs
             )
 
     def layers_to_file(
