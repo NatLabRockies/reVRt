@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779165824678,
+  "lastUpdate": 1779220423398,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -10247,6 +10247,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 482740037,
             "range": "± 5225037",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6c5a2723c32a409bfe92c4f9409ab0d5a0ac8643",
+          "message": "Build(deps): Bump github/codeql-action from 4.35.4 to 4.35.5 (#275)\n\nBumps [github/codeql-action](https://github.com/github/codeql-action) from 4.35.4 to 4.35.5.\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/68bde559dea0fdcac2102bfdf6230c5f70eb485e...9e0d7b8d25671d64c341c19c0152d693099fb5ba)\n\n---\nupdated-dependencies:\n- dependency-name: github/codeql-action\n  dependency-version: 4.35.5\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-19T13:40:35-06:00",
+          "tree_id": "e8b0ce84ef74065007e8e8437d8f80951bf3851a",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/6c5a2723c32a409bfe92c4f9409ab0d5a0ac8643"
+        },
+        "date": 1779220422294,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 92860220,
+            "range": "± 1005451",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 65648868,
+            "range": "± 966291",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 134119653,
+            "range": "± 2604580",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 200663326,
+            "range": "± 2275860",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 796459893,
+            "range": "± 12203098",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 152508460,
+            "range": "± 2669693",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 158348530,
+            "range": "± 1944444",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 175832725,
+            "range": "± 2343358",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 236634593,
+            "range": "± 3236037",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 456098960,
+            "range": "± 8679159",
             "unit": "ns/iter"
           }
         ]
