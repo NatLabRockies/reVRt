@@ -252,6 +252,31 @@ class LayeredFile:
         with xr.open_dataset(self.fp, consolidated=False, engine="zarr") as ds:
             return _layer_profile_from_open_ds(layer, ds)
 
+    def layer_attrs(self, layer):
+        """Get layer attributes
+
+        Parameters
+        ----------
+        layer : str
+            Name of layer in file to get attributes for.
+
+        Returns
+        -------
+        dict
+            _description_
+
+        Raises
+        ------
+        revrtKeyError
+            If layer is not present in file.
+        """
+        if layer not in self.layers:
+            msg = f"{layer!r} is not present in {self.fp}"
+            raise revrtKeyError(msg)
+
+        with xr.open_dataset(self.fp, consolidated=False, engine="zarr") as ds:
+            return dict(ds[layer].attrs)
+
     def create_new(
         self,
         template_file,
