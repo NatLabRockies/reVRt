@@ -409,12 +409,17 @@ def test_write_layer(sample_tiff_fp, sample_tiff_props, tmp_path):
         .reshape((height, width))
         .astype(np.float32)
     )
-    lf.write_layer(new_data, "test_layer")
+    lf.write_layer(
+        new_data, "test_layer", build_config='{"friction_1.tif": {}}'
+    )
     with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
         _validate_top_level_ds_props(ds, transform)
         assert "test_layer" in ds
         _validate_random_data_layer(width, height, transform, ds["test_layer"])
         assert np.allclose(ds["test_layer"], new_data)
+        assert (
+            ds["test_layer"].attrs["build_config"] == '{"friction_1.tif": {}}'
+        )
         assert "nodata" not in ds["test_layer"].attrs
         assert np.isnan(ds["test_layer"].rio.nodata)
         assert np.isnan(ds["test_layer"].rio.encoded_nodata)

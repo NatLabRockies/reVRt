@@ -314,6 +314,7 @@ class LayeredFile:
         description=None,
         overwrite=False,
         nodata=None,
+        **layer_attrs,
     ):
         """Write a layer to the file
 
@@ -353,6 +354,9 @@ class LayeredFile:
                and if present, use ``da.rio.write_nodata`` to write the
                nodata value so that ``da.rio.nodata`` gives the right
                value.
+
+        **layer_attrs
+            Additional attributes to store on the written layer.
 
         Raises
         ------
@@ -399,6 +403,7 @@ class LayeredFile:
             da = da.assign_coords(coords)
             da.attrs["count"] = 1
             da.attrs["description"] = description
+            da.attrs.update(layer_attrs)
             if nodata is not None:
                 if layer_is_new:
                     nodata = da.dtype.type(nodata)
