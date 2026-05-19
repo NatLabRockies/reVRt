@@ -62,7 +62,7 @@ def test_cli(run_gaps_cli_with_expected_file, tmp_path, test_utility_data_dir):
     }
 
     run_gaps_cli_with_expected_file(
-        "build-routing-layers", config, tmp_path, glob_pattern="*.zarr"
+        "build-routing-layer-file", config, tmp_path, glob_pattern="*.zarr"
     )
 
     to_check_ds = [

@@ -23,6 +23,7 @@ from revrt.utilities import (
     dask_performance_report,
     log_runtime,
     strip_path_keys,
+    serialize_layer_build_dict,
 )
 from revrt.exceptions import revrtAttributeError, revrtConfigurationError
 from revrt.warn import revrtWarning
@@ -94,8 +95,7 @@ def build_masks(
     )
 
 
-# @strip_required_path_args("routing_file")
-def build_routing_layers(  # noqa: PLR0917, PLR0913
+def build_routing_layer_file(  # noqa: PLR0917, PLR0913
     routing_file,
     template_file=None,
     input_layer_dir=".",
@@ -110,9 +110,9 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     create_kwargs=None,
     log_directory=None,
 ):
-    """Create costs, barriers, and frictions from a config file
+    """Create a layered file with cost, barrier, and friction layers
 
-    This function creates cost layers file that is ultimately used to
+    This function creates a cost layers file that is ultimately used to
     compute routes between points. The layers that are created and added
     to the file are determined based on the input config file. If the
     layered file does not already exist, it will be created based on the
@@ -221,12 +221,12 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
     try:
         with (
             dask_performance_report(
-                "build_routing_layers",
+                "build_routing_layer_file",
                 out_dir=log_directory if max_workers != 1 else None,
             ),
             log_runtime("Building routing layers"),
         ):
-            _build_routing_layers(
+            _build_routing_layer_file(
                 config,
                 lock,
                 validate_masks=validate_masks,
@@ -238,7 +238,7 @@ def build_routing_layers(  # noqa: PLR0917, PLR0913
             close_dask_client(client)
 
 
-def _build_routing_layers(
+def _build_routing_layer_file(
     config, lock, validate_masks=False, create_kwargs=None
 ):
     """Build routing layers based on config file"""
@@ -316,22 +316,53 @@ def _build_layers(config, builder, lf_handler, lock):
     existing_layers = set(lf_handler.data_layers)
 
     for lc in config.layers or []:
-        if lc.layer_name in existing_layers:
-            logger.info(
-                "Layer %r already exists in %s! Skipping...",
-                lc.layer_name,
-                lf_handler.fp,
-            )
+        layer_exists = lc.layer_name in existing_layers
+        if layer_exists and _should_skip_layer(lf_handler, lc):
             continue
 
         builder.build(
             lc.layer_name,
             lc.build,
             values_are_costs_per_mile=lc.values_are_costs_per_mile,
-            write_to_file=lc.include_in_file,
+            write_to_file=lc.include_in_file or layer_exists,
             description=lc.description,
             lock=lock,
         )
+
+
+def _should_skip_layer(lf_handler, lc):
+    """Determine whether to skip building a layer"""
+    existing_attrs = lf_handler.layer_attrs(lc.layer_name)
+    existing_build_config = existing_attrs.get(LayerCreator.BUILD_CONFIG_ATTR)
+    cpm = existing_attrs.get(LayerCreator.CPM_CONFIG_ATTR)
+    serialized_build_config = serialize_layer_build_dict(lc.build)
+    should_skip = (
+        existing_build_config == serialized_build_config
+        and cpm == lc.values_are_costs_per_mile
+    )
+    if should_skip:
+        logger.info(
+            "Layer %r already exists in %s with matching stored "
+            "config. Skipping...",
+            lc.layer_name,
+            lf_handler.fp,
+        )
+        return True
+
+    logger.info(
+        "Layer %r exists in %s but build config does not match! Rebuilding...",
+        lc.layer_name,
+        lf_handler.fp,
+    )
+    logger.debug(
+        "Existing config:\n%r\nNew config:\n%r",
+        existing_build_config,
+        serialize_layer_build_dict,
+    )
+    logger.debug(
+        "Existing cpm:\n%r\nNew cpm:\n%r", cpm, lc.values_are_costs_per_mile
+    )
+    return False
 
 
 def _build_dry_costs(config, masks, lf_handler, lock):
@@ -387,7 +418,7 @@ def _combine_friction_and_barriers(config, io_handler, lock):
         layer_fp=io_handler.fp, data=combined, geotiff=out_fp, lock=lock
     )
 
-    logger.info("Writing combined barriers to H5")
+    logger.info("Writing combined barriers to layered file")
     io_handler.write_layer(combined, merge_config.output_layer_name)
 
 
@@ -398,8 +429,8 @@ def _preprocess_build_masks(config):
     )
 
 
-def _preprocess_build_routing_layers(config):
-    """Preprocess config for build_routing_layers command"""
+def _preprocess_build_routing_layer_file(config):
+    """Preprocess config for build_routing_layer_file command"""
     return strip_path_keys(config, keys_to_fix={"routing_file"})
 
 
@@ -411,10 +442,10 @@ build_masks_command = CLICommandFromFunction(
     config_preprocessor=_preprocess_build_masks,
 )
 
-build_routing_layers_command = CLICommandFromFunction(
-    build_routing_layers,
-    name="build-routing-layers",
+build_routing_layer_file_command = CLICommandFromFunction(
+    build_routing_layer_file,
+    name="build-routing-layer-file",
     add_collect=False,
     split_keys=None,
-    config_preprocessor=_preprocess_build_routing_layers,
+    config_preprocessor=_preprocess_build_routing_layer_file,
 )

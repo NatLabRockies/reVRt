@@ -4,6 +4,7 @@ import logging
 from warnings import warn
 from pathlib import Path
 
+import rasterio
 import numpy as np
 import dask.array as da
 import xarray as xr
@@ -16,6 +17,7 @@ from revrt.utilities import (
     log_mem,
     log_array_backend,
     rasterize_shape_file,
+    serialize_layer_build_dict,
 )
 from revrt.constants import DEFAULT_DTYPE, ALL, METERS_IN_MILE
 from revrt.exceptions import revrtAttributeError, revrtValueError
@@ -28,6 +30,12 @@ SHP_EXTENSIONS = {".shp", ".gpkg", ".geojson"}
 
 class LayerCreator(BaseLayerCreator):
     """Build layer based on tiff and user config"""
+
+    BUILD_CONFIG_ATTR = "build_config"
+    """str: Attribute key containing the serialized build config"""
+
+    CPM_CONFIG_ATTR = "input_values_are_costs_per_mile"
+    """str: Attribute key containing 'values are cost per mile' flag"""
 
     def __init__(
         self,
@@ -80,13 +88,13 @@ class LayerCreator(BaseLayerCreator):
         Parameters
         ----------
         layer_name : str
-            Name of layer to use in H5 and for output tiff.
+            Name of layer to use in Zarr and for output tiff.
         build_config : LayerBuildComponents
             Dict of LayerBuildConfig keyed by GeoTIFF/vector filenames.
         values_are_costs_per_mile : bool, default=False
             Option to convert values into costs per cell under the
             assumption that the resulting values are costs in $/mile.
-            By default, ``False``, which writes raw values to TIFF/H5.
+            By default, ``False``, which writes raw values to TIFF/Zarr.
         write_to_file : bool, default=True
             Option to write the layer to file after creation.
 
@@ -96,7 +104,7 @@ class LayerCreator(BaseLayerCreator):
 
             By default, ``True``.
         description : str, optional
-            Optional description to store with this layer in the H5
+            Optional description to store with this layer in the Zarr
             file. By default, ``None``.
         tiff_chunks : int or str, default="file"
             Chunk size to use when reading the GeoTIFF file. This will
@@ -133,20 +141,26 @@ class LayerCreator(BaseLayerCreator):
             lock=lock,
             **profile_kwargs,
         )
-        if write_to_file:
-            out = load_data_using_layer_file_profile(
-                layer_fp=self._io_handler.fp,
-                geotiff=tiff_filename,
-                tiff_chunks=tiff_chunks,
-                layer_dirs=[self.input_layer_dir, self.output_tiff_dir],
-                band_index=0,
-            )
-            log_mem()
-            logger.debug("Writing %r to '%s'", layer_name, self._io_handler.fp)
-            self._io_handler.write_layer(
-                out, layer_name, description=description, overwrite=True
-            )
-            log_mem()
+        if not write_to_file:
+            return
+
+        out = load_data_using_layer_file_profile(
+            layer_fp=self._io_handler.fp,
+            geotiff=tiff_filename,
+            tiff_chunks=tiff_chunks,
+            layer_dirs=[self.input_layer_dir, self.output_tiff_dir],
+            band_index=0,
+        )
+        log_mem()
+        logger.debug("Writing %r to '%s'", layer_name, self._io_handler.fp)
+        kwargs = {
+            self.BUILD_CONFIG_ATTR: serialize_layer_build_dict(build_config),
+            self.CPM_CONFIG_ATTR: values_are_costs_per_mile,
+        }
+        self._io_handler.write_layer(
+            out, layer_name, description=description, overwrite=True, **kwargs
+        )
+        log_mem()
 
     def _process_and_write_as_tiff(
         self,
@@ -159,6 +173,13 @@ class LayerCreator(BaseLayerCreator):
         **profile_kwargs,
     ):
         layer_name = layer_name.replace(".tif", "").replace(".tiff", "")
+        out_filename = self.output_tiff_dir / f"{layer_name}.tif"
+        serialized_build_config = serialize_layer_build_dict(build_config)
+        if self._matching_tiff_exists(
+            out_filename, serialized_build_config, values_are_costs_per_mile
+        ):
+            return out_filename
+
         logger.debug("Combining %s layers", layer_name)
         log_mem()
 
@@ -167,7 +188,6 @@ class LayerCreator(BaseLayerCreator):
             values_are_costs_per_mile=values_are_costs_per_mile,
             tiff_chunks=tiff_chunks,
         )
-        out_filename = self.output_tiff_dir / f"{layer_name}.tif"
         logger.debug(
             "Writing combined %s layers to %s", layer_name, out_filename
         )
@@ -178,9 +198,57 @@ class LayerCreator(BaseLayerCreator):
             geotiff=out_filename,
             nodata=nodata,
             lock=lock,
+            metadata={
+                self.BUILD_CONFIG_ATTR: serialized_build_config,
+                self.CPM_CONFIG_ATTR: values_are_costs_per_mile,
+            },
             **profile_kwargs,
         )
         return out_filename
+
+    def _matching_tiff_exists(
+        self,
+        out_filename,
+        serialized_build_config,
+        values_are_costs_per_mile,
+    ):
+        """bool: Whether an existing GeoTIFF matches build metadata"""
+        if not out_filename.exists():
+            return False
+
+        with rasterio.open(out_filename) as tif:
+            tags = tif.tags()
+
+        existing_build_config = tags.get(self.BUILD_CONFIG_ATTR)
+        existing_cpm = tags.get(self.CPM_CONFIG_ATTR)
+        requested_cpm = str(values_are_costs_per_mile)
+        should_skip = (
+            existing_build_config == serialized_build_config
+            and existing_cpm == requested_cpm
+        )
+        if should_skip:
+            logger.info(
+                "GeoTIFF %s already exists with matching stored config. "
+                "Skipping rebuild...",
+                out_filename,
+            )
+            return True
+
+        logger.info(
+            "GeoTIFF %s exists but build config does not match. Rebuilding...",
+            out_filename,
+        )
+        logger.debug(
+            "Existing TIFF config:\n%r\nNew config:\n%r",
+            existing_build_config,
+            serialized_build_config,
+        )
+        logger.debug(
+            "Existing TIFF cpm:\n%r\nNew cpm:\n%r",
+            existing_cpm,
+            requested_cpm,
+        )
+        return False
 
     def _build_layer_from_components(
         self, build_config, values_are_costs_per_mile=False, tiff_chunks="file"

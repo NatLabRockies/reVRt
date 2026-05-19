@@ -13,10 +13,11 @@ from rasterio.transform import from_origin
 
 from revrt._cli import main
 from revrt.utilities import LayeredFile
+from revrt.routing.cli.base import _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
 
 from revrt.routing.cli.build_costs import (
-    build_route_costs_command,
-    build_routing_layer,
+    build_final_routing_layers_command,
+    build_final_routing_layers,
 )
 
 
@@ -104,10 +105,10 @@ def sample_layered_data(tmp_path_factory):
     return layered_fp
 
 
-def test_build_route_costs_command_writes_expected_layers(
+def test_build_final_routing_layers_command_writes_expected_layers(
     sample_layered_data, tmp_path
 ):
-    """build_route_costs_command should persist aggregated raster outputs"""
+    """build_final_routing_layers_command should persist aggregated outputs"""
 
     config = {
         "cost_fpath": str(sample_layered_data),
@@ -123,7 +124,7 @@ def test_build_route_costs_command_writes_expected_layers(
     config_fp.write_text(json.dumps(config))
     out_dir = tmp_path / "outputs"
 
-    outputs = build_route_costs_command.runner(
+    outputs = build_final_routing_layers_command.runner(
         lcp_config_fp=config_fp,
         out_dir=out_dir,
         polarity=None,
@@ -156,10 +157,10 @@ def test_build_route_costs_command_writes_expected_layers(
     assert np.allclose(final_layer, expected_vals)
 
 
-def test_build_route_costs_command_applies_explicit_barriers(
+def test_build_final_routing_layers_command_applies_explicit_barriers(
     sample_layered_data, tmp_path
 ):
-    """build-route-costs applies explicit barriers to routing rasters"""
+    """build-final-routing-layers applies explicit barriers"""
 
     config = {
         "cost_fpath": str(sample_layered_data),
@@ -176,7 +177,7 @@ def test_build_route_costs_command_applies_explicit_barriers(
     config_fp.write_text(json.dumps(config))
     out_dir = tmp_path / "barrier_outputs"
 
-    outputs = build_route_costs_command.runner(
+    outputs = build_final_routing_layers_command.runner(
         lcp_config_fp=config_fp,
         out_dir=out_dir,
         polarity=None,
@@ -201,15 +202,70 @@ def test_build_route_costs_command_applies_explicit_barriers(
     assert np.array_equal(final_layer, expected_final, equal_nan=True)
 
 
+def test_build_final_routing_layers_parses_transmission_config_path(
+    sample_layered_data, tmp_path
+):
+    """build_final_routing_layers should parse string config paths"""
+
+    transmission_config = {
+        "row_width": {"138": 1.5},
+        "voltage_polarity_mult": {"138": {"ac": 0.5}},
+    }
+    transmission_config_fp = tmp_path / "transmission_config.json"
+    transmission_config_fp.write_text(json.dumps(transmission_config))
+
+    config = {
+        "cost_fpath": str(sample_layered_data),
+        "cost_layers": [
+            {"layer_name": "layer_1", "apply_row_mult": True},
+            {"layer_name": "layer_2", "apply_polarity_mult": True},
+        ],
+        "transmission_config": str(transmission_config_fp),
+        "ignore_invalid_costs": True,
+    }
+
+    config_fp = tmp_path / "lcp_config_with_transmission.json"
+    config_fp.write_text(json.dumps(config))
+    out_dir = tmp_path / "outputs_with_transmission"
+
+    outputs = build_final_routing_layers(
+        lcp_config_fp=config_fp,
+        out_dir=out_dir,
+        polarity="ac",
+        voltage=138,
+    )
+
+    cost_fp, final_fp = [Path(fp) for fp in outputs]
+    with xr.open_dataset(
+        sample_layered_data, consolidated=False, engine="zarr"
+    ) as ds:
+        layer_one = ds["layer_1"].isel(band=0).astype(np.float32).load()
+        layer_two = ds["layer_2"].isel(band=0).astype(np.float32).load()
+
+    expected_vals = layer_one * 1.5 + layer_two * (
+        0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+    )
+    expected_vals = expected_vals.to_numpy()
+
+    with rasterio.open(cost_fp) as src:
+        agg_costs = src.read(1)
+
+    with rasterio.open(final_fp) as src:
+        final_layer = src.read(1)
+
+    assert np.allclose(agg_costs, expected_vals)
+    assert np.allclose(final_layer, expected_vals)
+
+
 @pytest.mark.skipif(
     (os.environ.get("TOX_RUNNING") == "True")
     and (platform.system() == "Windows"),
     reason="CLI does not work under tox env on windows",
 )
-def test_cli_build_route_costs_command(
+def test_cli_build_final_routing_layers_command(
     cli_runner, sample_layered_data, tmp_path
 ):
-    """CLI build-route-costs command should produce routed rasters"""
+    """CLI build-final-routing-layers command should produce routed rasters"""
 
     lcp_config = {
         "cost_fpath": str(sample_layered_data),
@@ -230,7 +286,7 @@ def test_cli_build_route_costs_command(
     cli_config_fp.write_text(json.dumps(cli_config))
 
     result = cli_runner.invoke(
-        main, ["build-route-costs", "-c", str(cli_config_fp)]
+        main, ["build-final-routing-layers", "-c", str(cli_config_fp)]
     )
     assert result.exit_code == 0, result.output
 
@@ -265,7 +321,7 @@ def test_cli_build_route_costs_command(
 def test_cli_build_route_costs_strips_required_path_whitespace(
     cli_runner, sample_layered_data, tmp_path
 ):
-    """build-route-costs CLI strips whitespace on required path inputs"""
+    """build-final-routing-layers CLI strips whitespace on path inputs"""
 
     lcp_config = {
         "cost_fpath": str(sample_layered_data),
@@ -282,20 +338,26 @@ def test_cli_build_route_costs_strips_required_path_whitespace(
     cli_config_fp.write_text(json.dumps(cli_config))
 
     result = cli_runner.invoke(
-        main, ["build-route-costs", "-c", str(cli_config_fp)]
+        main, ["build-final-routing-layers", "-c", str(cli_config_fp)]
     )
     assert result.exit_code == 0, result.output
     assert (tmp_path / "agg_costs.tif").exists()
     assert (tmp_path / "final_routing_layer.tif").exists()
 
 
-def test_build_route_costs_command_metadata():
-    """build_route_costs_command should expose CLI settings"""
+def test_build_final_routing_layers_command_metadata():
+    """build_final_routing_layers_command should expose CLI settings"""
 
-    assert build_route_costs_command.name == "build-route-costs"
-    assert build_route_costs_command.runner is build_routing_layer
-    assert build_route_costs_command.add_collect is False
-    assert tuple(build_route_costs_command.preprocessor_args) == ("config",)
+    assert (
+        build_final_routing_layers_command.name == "build-final-routing-layers"
+    )
+    assert (
+        build_final_routing_layers_command.runner is build_final_routing_layers
+    )
+    assert build_final_routing_layers_command.add_collect is False
+    assert tuple(build_final_routing_layers_command.preprocessor_args) == (
+        "config",
+    )
 
 
 if __name__ == "__main__":

@@ -1,11 +1,13 @@
 """Test reVRt cost layer creator"""
 
 import logging
+import shutil
 from pathlib import Path
 from itertools import chain, combinations
 
 import pytest
 import rioxarray
+import rasterio
 import numpy as np
 import xarray as xr
 import geopandas as gpd
@@ -16,7 +18,7 @@ from revrt.constants import METERS_IN_MILE
 from revrt.models.cost_layers import LayerBuildConfig, RangeConfig, Rasterize
 from revrt.costs.layer_creator import LayerCreator
 from revrt.costs.masks import Masks
-from revrt.utilities import LayeredFile
+from revrt.utilities import LayeredFile, serialize_layer_build_dict
 from revrt.exceptions import revrtAttributeError, revrtValueError
 from revrt.warn import revrtWarning
 
@@ -169,6 +171,113 @@ def test_no_write(tmp_path, mask_instance, tiff_layers_for_testing):
 
     with xr.open_dataset(lf.fp, consolidated=False, engine="zarr") as ds:
         assert "friction" not in ds
+
+
+def test_build_reuses_existing_tiff_when_metadata_matches(
+    tmp_path, mask_instance, tiff_layers_for_testing
+):
+    """Matching TIFF metadata should skip rebuild"""
+    source_layer_dir, layers = tiff_layers_for_testing
+    layer_dir = tmp_path / "input_layers"
+    shutil.copytree(source_layer_dir, layer_dir)
+    config = {
+        "friction_1.tif": LayerBuildConfig(extent="all", pass_through=True)
+    }
+
+    out_dir = tmp_path / "out_data"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    test_fp = tmp_path / "zarr_data" / "test.zarr"
+    test_fp.parent.mkdir(parents=True, exist_ok=True)
+
+    lf = LayeredFile(test_fp)
+    lf.create_new(layer_dir / "friction_1.tif")
+
+    builder = LayerCreator(
+        lf,
+        mask_instance,
+        input_layer_dir=layer_dir,
+        output_tiff_dir=out_dir,
+    )
+
+    builder.build("friction", config, write_to_file=False)
+
+    tiff_fp = out_dir / "friction.tif"
+    with rioxarray.open_rasterio(tiff_fp, chunks="auto") as ds:
+        original = np.array(ds.values)
+
+    replacement = xr.DataArray(
+        np.full_like(layers["friction_1.tif"], 99),
+        dims=("y", "x"),
+        coords={
+            "x": 10 + np.arange(3) + 0.5,
+            "y": 10 - np.arange(3) - 0.5,
+        },
+        name="test_band",
+    )
+    replacement = replacement.rio.write_crs("EPSG:4326")
+    replacement.rio.write_transform(from_origin(10, 10, 1, 1))
+    replacement.rio.to_raster(layer_dir / "friction_1.tif", driver="GTiff")
+
+    builder.build("friction", config, write_to_file=False)
+
+    with rioxarray.open_rasterio(tiff_fp, chunks="auto") as ds:
+        assert np.allclose(ds.values, original)
+
+    with rasterio.open(tiff_fp) as tif:
+        tags = tif.tags()
+
+    assert tags[LayerCreator.BUILD_CONFIG_ATTR] == serialize_layer_build_dict(
+        config
+    )
+    assert tags[LayerCreator.CPM_CONFIG_ATTR] == "False"
+
+
+def test_build_rebuilds_existing_tiff_when_metadata_changes(
+    tmp_path, mask_instance, tiff_layers_for_testing
+):
+    """Changed TIFF metadata inputs should trigger rebuild"""
+    source_layer_dir, layers = tiff_layers_for_testing
+    layer_dir = tmp_path / "input_layers"
+    shutil.copytree(source_layer_dir, layer_dir)
+    config = {
+        "friction_1.tif": LayerBuildConfig(extent="all", pass_through=True)
+    }
+
+    out_dir = tmp_path / "out_data"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    test_fp = tmp_path / "zarr_data" / "test.zarr"
+    test_fp.parent.mkdir(parents=True, exist_ok=True)
+
+    lf = LayeredFile(test_fp)
+    lf.create_new(layer_dir / "friction_1.tif")
+
+    builder = LayerCreator(
+        lf,
+        mask_instance,
+        input_layer_dir=layer_dir,
+        output_tiff_dir=out_dir,
+    )
+
+    builder.build("friction", config, write_to_file=False)
+    builder.build(
+        "friction",
+        config,
+        write_to_file=False,
+        values_are_costs_per_mile=True,
+    )
+
+    expected = layers["friction_1.tif"] / METERS_IN_MILE * 1
+    with rioxarray.open_rasterio(
+        out_dir / "friction.tif", chunks="auto"
+    ) as ds:
+        assert np.allclose(ds.values, expected[np.newaxis, ...])
+
+    with rasterio.open(out_dir / "friction.tif") as tif:
+        tags = tif.tags()
+
+    assert tags[LayerCreator.CPM_CONFIG_ATTR] == "True"
 
 
 def test_forced_inclusion(lf_instance, builder_instance):
