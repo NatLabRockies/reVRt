@@ -25,6 +25,7 @@ from rasterio.transform import from_origin
 
 import revrt
 from revrt._cli import main
+from revrt.costs.layer_creator import LayerCreator
 from revrt.utilities import (
     LayeredFile,
     file_full_path,
@@ -438,7 +439,8 @@ def test_write_layer(sample_tiff_fp, sample_tiff_props, tmp_path):
         _validate_random_data_layer(width, height, transform, ds["test_layer"])
         assert np.allclose(ds["test_layer"], new_data)
         assert (
-            ds["test_layer"].attrs["build_config"] == '{"friction_1.tif": {}}'
+            ds["test_layer"].attrs[LayerCreator.BUILD_CONFIG_ATTR]
+            == '{"friction_1.tif": {}}'
         )
         assert "nodata" not in ds["test_layer"].attrs
         assert np.isnan(ds["test_layer"].rio.nodata)
