@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.costs.layer_creator.LayerCreator &#8212; reVRt 0.6.0 documentation</title>
+    <title>revrt.costs.layer_creator.LayerCreator &#8212; reVRt 0.7.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
+    <script src="../_static/documentation_options.js?v=fe7df9b0"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="revrt.costs.layer_creator" href="revrt.costs.layer_creator.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.6.0" />
+  <meta name="docsearch:version" content="0.7.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.6.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.0 documentation</p>
   
 </a></div>
     
@@ -356,7 +356,7 @@
 </ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="revrt.constants.html">revrt.constants</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="revrt.constants.BARRIER_H5_LAYER_NAME.html">revrt.constants.BARRIER_H5_LAYER_NAME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.BARRIER_LAYER_NAME.html">revrt.constants.BARRIER_LAYER_NAME</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.DEFAULT_DTYPE.html">revrt.constants.DEFAULT_DTYPE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.METERS_IN_MILE.html">revrt.constants.METERS_IN_MILE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.SHORT_MULT.html">revrt.constants.SHORT_MULT</a></li>
@@ -372,7 +372,7 @@
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.cli.html">revrt.costs.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_masks.html">revrt.costs.cli.build_masks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_routing_layers.html">revrt.costs.cli.build_routing_layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_routing_layer_file.html">revrt.costs.cli.build_routing_layer_file</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.config.html">revrt.costs.config</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -461,7 +461,7 @@
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_costs.html">revrt.routing.cli.build_costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.build_costs.build_routing_layer.html">revrt.routing.cli.build_costs.build_routing_layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.build_costs.build_final_routing_layers.html">revrt.routing.cli.build_costs.build_final_routing_layers</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_route_table.html">revrt.routing.cli.build_route_table</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -528,6 +528,7 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_array_to_geotiff.html">revrt.utilities.base.save_data_array_to_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.transform_xy.html">revrt.utilities.base.transform_xy</a></li>
@@ -546,6 +547,7 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.chunked_read_gpkg.html">revrt.utilities.handlers.chunked_read_gpkg</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.gpkg_crs.html">revrt.utilities.handlers.gpkg_crs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.num_feats_in_gpkg.html">revrt.utilities.handlers.num_feats_in_gpkg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.serialize_layer_build_dict.html">revrt.utilities.handlers.serialize_layer_build_dict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.IncrementalWriter.html">revrt.utilities.handlers.IncrementalWriter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
@@ -673,6 +675,12 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <p class="rubric">Attributes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.costs.layer_creator.LayerCreator.BUILD_CONFIG_ATTR" title="revrt.costs.layer_creator.LayerCreator.BUILD_CONFIG_ATTR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BUILD_CONFIG_ATTR</span></code></a></p></td>
+<td><p>Attribute key containing the serialized build config</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.costs.layer_creator.LayerCreator.CPM_CONFIG_ATTR" title="revrt.costs.layer_creator.LayerCreator.CPM_CONFIG_ATTR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CPM_CONFIG_ATTR</span></code></a></p></td>
+<td><p>Attribute key containing 'values are cost per mile' flag</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.costs.layer_creator.LayerCreator.cell_size" title="revrt.costs.layer_creator.LayerCreator.cell_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cell_size</span></code></a></p></td>
 <td><p>Size of cell in layer file</p></td>
 </tr>
@@ -688,6 +696,28 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 </tbody>
 </table>
 </div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.costs.layer_creator.LayerCreator.BUILD_CONFIG_ATTR">
+<span class="sig-name descname"><span class="pre">BUILD_CONFIG_ATTR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'build_config'</span></span><a class="headerlink" href="#revrt.costs.layer_creator.LayerCreator.BUILD_CONFIG_ATTR" title="Link to this definition">#</a></dt>
+<dd><p>Attribute key containing the serialized build config</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.costs.layer_creator.LayerCreator.CPM_CONFIG_ATTR">
+<span class="sig-name descname"><span class="pre">CPM_CONFIG_ATTR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'input_values_are_costs_per_mile'</span></span><a class="headerlink" href="#revrt.costs.layer_creator.LayerCreator.CPM_CONFIG_ATTR" title="Link to this definition">#</a></dt>
+<dd><p>Attribute key containing ‘values are cost per mile’ flag</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="revrt.costs.layer_creator.LayerCreator.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_are_costs_per_mile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_to_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiff_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'file'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">profile_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/costs/layer_creator.html#LayerCreator.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.costs.layer_creator.LayerCreator.build" title="Link to this definition">#</a></dt>
@@ -695,11 +725,11 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of layer to use in H5 and for output tiff.</p></li>
+<li><p><strong>layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of layer to use in Zarr and for output tiff.</p></li>
 <li><p><strong>build_config</strong> (<a class="reference internal" href="revrt.models.cost_layers.LayerBuildComponents.html#revrt.models.cost_layers.LayerBuildComponents" title="revrt.models.cost_layers.LayerBuildComponents"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerBuildComponents</span></code></a>) – Dict of LayerBuildConfig keyed by GeoTIFF/vector filenames.</p></li>
 <li><p><strong>values_are_costs_per_mile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Option to convert values into costs per cell under the
 assumption that the resulting values are costs in $/mile.
-By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>, which writes raw values to TIFF/H5.</p></li>
+By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>, which writes raw values to TIFF/Zarr.</p></li>
 <li><p><strong>write_to_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>) – <p>Option to write the layer to file after creation.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
@@ -708,7 +738,7 @@ already in the file.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </p></li>
-<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Optional description to store with this layer in the H5
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Optional description to store with this layer in the Zarr
 file. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>tiff_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;file&quot;</span></code>) – Chunk size to use when reading the GeoTIFF file. This will
 be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to
@@ -830,6 +860,8 @@ using properties of the
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.layer_creator.LayerCreator"><code class="docutils literal notranslate"><span class="pre">LayerCreator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.layer_creator.LayerCreator.BUILD_CONFIG_ATTR"><code class="docutils literal notranslate"><span class="pre">LayerCreator.BUILD_CONFIG_ATTR</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.layer_creator.LayerCreator.CPM_CONFIG_ATTR"><code class="docutils literal notranslate"><span class="pre">LayerCreator.CPM_CONFIG_ATTR</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.layer_creator.LayerCreator.build"><code class="docutils literal notranslate"><span class="pre">LayerCreator.build()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.layer_creator.LayerCreator.cell_size"><code class="docutils literal notranslate"><span class="pre">LayerCreator.cell_size</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.costs.layer_creator.LayerCreator.chunks"><code class="docutils literal notranslate"><span class="pre">LayerCreator.chunks</span></code></a></li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.utilities.handlers.num_feats_in_gpkg &#8212; reVRt 0.6.0 documentation</title>
+    <title>revrt.utilities.handlers.num_feats_in_gpkg &#8212; reVRt 0.7.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
+    <script src="../_static/documentation_options.js?v=fe7df9b0"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -48,11 +48,11 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="revrt.utilities.handlers.IncrementalWriter" href="revrt.utilities.handlers.IncrementalWriter.html" />
+    <link rel="next" title="revrt.utilities.handlers.serialize_layer_build_dict" href="revrt.utilities.handlers.serialize_layer_build_dict.html" />
     <link rel="prev" title="revrt.utilities.handlers.gpkg_crs" href="revrt.utilities.handlers.gpkg_crs.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.6.0" />
+  <meta name="docsearch:version" content="0.7.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.6.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.0 documentation</p>
   
 </a></div>
     
@@ -356,7 +356,7 @@
 </ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="revrt.constants.html">revrt.constants</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="revrt.constants.BARRIER_H5_LAYER_NAME.html">revrt.constants.BARRIER_H5_LAYER_NAME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="revrt.constants.BARRIER_LAYER_NAME.html">revrt.constants.BARRIER_LAYER_NAME</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.DEFAULT_DTYPE.html">revrt.constants.DEFAULT_DTYPE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.METERS_IN_MILE.html">revrt.constants.METERS_IN_MILE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="revrt.constants.SHORT_MULT.html">revrt.constants.SHORT_MULT</a></li>
@@ -372,7 +372,7 @@
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.cli.html">revrt.costs.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_masks.html">revrt.costs.cli.build_masks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_routing_layers.html">revrt.costs.cli.build_routing_layers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.costs.cli.build_routing_layer_file.html">revrt.costs.cli.build_routing_layer_file</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.costs.config.html">revrt.costs.config</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -461,7 +461,7 @@
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_costs.html">revrt.routing.cli.build_costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.build_costs.build_routing_layer.html">revrt.routing.cli.build_costs.build_routing_layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.build_costs.build_final_routing_layers.html">revrt.routing.cli.build_costs.build_final_routing_layers</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_route_table.html">revrt.routing.cli.build_route_table</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -528,6 +528,7 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.file_full_path.html">revrt.utilities.base.file_full_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.load_data_using_layer_file_profile.html">revrt.utilities.base.load_data_using_layer_file_profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.region_mapper.html">revrt.utilities.base.region_mapper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_array_to_geotiff.html">revrt.utilities.base.save_data_array_to_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_custom_props.html">revrt.utilities.base.save_data_using_custom_props</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.save_data_using_layer_file_profile.html">revrt.utilities.base.save_data_using_layer_file_profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.transform_xy.html">revrt.utilities.base.transform_xy</a></li>
@@ -546,6 +547,7 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.chunked_read_gpkg.html">revrt.utilities.handlers.chunked_read_gpkg</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.gpkg_crs.html">revrt.utilities.handlers.gpkg_crs</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">revrt.utilities.handlers.num_feats_in_gpkg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.serialize_layer_build_dict.html">revrt.utilities.handlers.serialize_layer_build_dict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.IncrementalWriter.html">revrt.utilities.handlers.IncrementalWriter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html">revrt.utilities.handlers.LayeredFile</a></li>
 </ul>
@@ -681,11 +683,11 @@ of features.</p>
       </div>
     </a>
     <a class="right-next"
-       href="revrt.utilities.handlers.IncrementalWriter.html"
+       href="revrt.utilities.handlers.serialize_layer_build_dict.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">revrt.utilities.handlers.IncrementalWriter</p>
+        <p class="prev-next-title">revrt.utilities.handlers.serialize_layer_build_dict</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

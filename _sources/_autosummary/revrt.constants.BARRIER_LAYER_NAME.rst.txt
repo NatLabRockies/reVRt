@@ -1,0 +1,6 @@
+revrt.constants.BARRIER\_LAYER\_NAME
+====================================
+
+.. currentmodule:: revrt.constants
+
+.. autodata:: BARRIER_LAYER_NAME

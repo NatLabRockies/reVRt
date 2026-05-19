@@ -29,6 +29,7 @@ revrt.utilities.base
       file_full_path
       load_data_using_layer_file_profile
       region_mapper
+      save_data_array_to_geotiff
       save_data_using_custom_props
       save_data_using_layer_file_profile
       transform_xy

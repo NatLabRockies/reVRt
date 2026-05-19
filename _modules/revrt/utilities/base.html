@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.utilities.base &#8212; reVRt 0.6.0 documentation</title>
+    <title>revrt.utilities.base &#8212; reVRt 0.7.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=8fa8b3e9"></script>
+    <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.6.0" />
+  <meta name="docsearch:version" content="0.7.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.6.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.0 documentation</p>
   
 </a></div>
     
@@ -1158,7 +1158,13 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="save_data_using_layer_file_profile">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.save_data_using_layer_file_profile.html#revrt.utilities.base.save_data_using_layer_file_profile">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">save_data_using_layer_file_profile</span><span class="p">(</span>
-    <span class="n">layer_fp</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">profile_kwargs</span>
+    <span class="n">layer_fp</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">geotiff</span><span class="p">,</span>
+    <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">lock</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write to GeoTIFF file</span>
 
@@ -1178,6 +1184,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Lock to use to write data using dask. If not supplied, a single</span>
 <span class="sd">        process is used for writing data to the GeoTIFF.</span>
 <span class="sd">        By default, ``None``.</span>
+<span class="sd">    metadata : dict, optional</span>
+<span class="sd">        Optional metadata tags to add to the output GeoTIFF. By</span>
+<span class="sd">        default, ``None``.</span>
 <span class="sd">    **profile_kwargs</span>
 <span class="sd">        Additional keyword arguments to pass into writing the</span>
 <span class="sd">        raster. The following attributes ar ignored (they are set</span>
@@ -1210,6 +1219,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
         <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span>
         <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
         <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
     <span class="p">)</span></div>
 
@@ -1225,6 +1235,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">transform</span><span class="p">,</span>
     <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">lock</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write to GeoTIFF file</span>
@@ -1249,6 +1260,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Lock to use to write data using dask. If not supplied, a single</span>
 <span class="sd">        process is used for writing data to the GeoTIFF.</span>
 <span class="sd">        By default, ``None``.</span>
+<span class="sd">    metadata : dict, optional</span>
+<span class="sd">        Optional metadata tags to add to the output GeoTIFF. By</span>
+<span class="sd">        default, ``None``.</span>
 <span class="sd">    **profile_kwargs</span>
 <span class="sd">        Additional keyword arguments to pass into writing the</span>
 <span class="sd">        raster. The following attributes ar ignored (they are set</span>
@@ -1284,6 +1298,70 @@ window.runMermaid = runMermaid;</script>
     <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span>
     <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
+
+    <span class="n">save_data_array_to_geotiff</span><span class="p">(</span>
+        <span class="n">da</span><span class="p">,</span>
+        <span class="n">geotiff</span><span class="p">,</span>
+        <span class="n">nodata</span><span class="o">=</span><span class="n">nodata</span><span class="p">,</span>
+        <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="save_data_array_to_geotiff">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.save_data_array_to_geotiff.html#revrt.utilities.base.save_data_array_to_geotiff">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_data_array_to_geotiff</span><span class="p">(</span>
+    <span class="n">da</span><span class="p">,</span>
+    <span class="n">geotiff</span><span class="p">,</span>
+    <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">lock</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write xarray DataArray to GeoTIFF file</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    da : xarray.DataArray</span>
+<span class="sd">        DataArray to write to GeoTIFF. This should have &quot;y&quot; and &quot;x&quot;</span>
+<span class="sd">        dimensions, and optionally a &quot;band&quot; dimension (if not provided,</span>
+<span class="sd">        one will be added).</span>
+<span class="sd">    geotiff : path-like</span>
+<span class="sd">        Path to output GeoTIFF file.</span>
+<span class="sd">    nodata : int or float, optional</span>
+<span class="sd">        Optional nodata value for the raster layer. By default,</span>
+<span class="sd">        ``None``, which does not add a &quot;nodata&quot; value.</span>
+<span class="sd">    lock : bool or `dask.distributed.Lock`, optional</span>
+<span class="sd">        Lock to use to write data using dask. If not supplied, a single</span>
+<span class="sd">        process is used for writing data to the GeoTIFF.</span>
+<span class="sd">        By default, ``None``.</span>
+<span class="sd">    metadata : dict, optional</span>
+<span class="sd">        Optional metadata tags to add to the output GeoTIFF. By</span>
+<span class="sd">        default, ``None``.</span>
+<span class="sd">    **profile_kwargs</span>
+<span class="sd">        Additional keyword arguments to pass into writing the</span>
+<span class="sd">        raster. The following attributes ar ignored (they are set</span>
+<span class="sd">        using properties of the source</span>
+<span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile`):</span>
+
+<span class="sd">            - nodata</span>
+<span class="sd">            - transform</span>
+<span class="sd">            - crs</span>
+<span class="sd">            - count</span>
+<span class="sd">            - width</span>
+<span class="sd">            - height</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">da</span> <span class="o">=</span> <span class="n">expand_dim_if_needed</span><span class="p">(</span><span class="n">da</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;y&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">da</span><span class="o">.</span><span class="n">dims</span> <span class="ow">or</span> <span class="s2">&quot;x&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">da</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;DataArray must have &#39;y&#39; and &#39;x&#39; dimensions!&quot;</span>
+        <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span><span class="p">:</span>
+        <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">nodata</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
         <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
@@ -1296,16 +1374,19 @@ window.runMermaid = runMermaid;</script>
         <span class="s2">&quot;tiled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="s2">&quot;compress&quot;</span><span class="p">:</span> <span class="s2">&quot;lzw&quot;</span><span class="p">,</span>
         <span class="s2">&quot;interleave&quot;</span><span class="p">:</span> <span class="s2">&quot;band&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">pk</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">profile_kwargs</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">&quot;Saving TIFF with shape </span><span class="si">%r</span><span class="s2"> and dtype </span><span class="si">%r</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Saving TIFF with shape </span><span class="si">%r</span><span class="s2">, dtype </span><span class="si">%r</span><span class="s2">, and metadata </span><span class="si">%r</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="n">da</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
         <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="p">,</span>
         <span class="n">geotiff</span><span class="p">,</span>
     <span class="p">)</span>
-
-    <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">to_raster</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GTiff&quot;</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">,</span> <span class="o">**</span><span class="n">pk</span><span class="p">)</span></div>
+    <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">to_raster</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="o">**</span><span class="n">pk</span><span class="p">)</span></div>
 
 
 

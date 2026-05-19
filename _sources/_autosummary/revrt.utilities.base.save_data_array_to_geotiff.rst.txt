@@ -1,0 +1,6 @@
+revrt.utilities.base.save\_data\_array\_to\_geotiff
+===================================================
+
+.. currentmodule:: revrt.utilities.base
+
+.. autofunction:: save_data_array_to_geotiff

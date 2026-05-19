@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.utilities.handlers &#8212; reVRt 0.6.0 documentation</title>
+    <title>revrt.utilities.handlers &#8212; reVRt 0.7.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=8fa8b3e9"></script>
+    <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.6.0" />
+  <meta name="docsearch:version" content="0.7.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.6.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.0 documentation</p>
   
 </a></div>
     
@@ -824,12 +824,12 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for revrt.utilities.handlers</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Handler for file containing GeoTIFF layers&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
@@ -852,10 +852,10 @@ window.runMermaid = runMermaid;</script>
     <span class="n">delete_data_file</span><span class="p">,</span>
     <span class="n">expand_dim_if_needed</span><span class="p">,</span>
     <span class="n">transform_xy</span><span class="p">,</span>
+    <span class="n">save_data_array_to_geotiff</span><span class="p">,</span>
     <span class="n">TRANSFORM_ATOL</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.monitoring</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_mem</span><span class="p">,</span> <span class="n">log_runtime</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -1079,9 +1079,45 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">                - &quot;transform&quot;: :class:`affine.Affine` transform for</span>
 <span class="sd">                               layer</span>
 
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        revrtKeyError</span>
+<span class="sd">            If layer is not present in file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">layer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="si">!r}</span><span class="s2"> is not present in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
         <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_layer_profile_from_open_ds</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">ds</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LayeredFile.layer_attrs">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.layer_attrs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">layer_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get layer attributes</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        layer : str</span>
+<span class="sd">            Name of layer in file to get attributes for.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            _description_</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        revrtKeyError</span>
+<span class="sd">            If layer is not present in file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">layer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="si">!r}</span><span class="s2"> is not present in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LayeredFile.create_new">
@@ -1159,6 +1195,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">layer_attrs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a layer to the file</span>
 
@@ -1174,13 +1211,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        overwrite : bool, default=False</span>
 <span class="sd">            Option to overwrite layer data if layer already exists in</span>
 <span class="sd">            :class:`~revrt.utilities.handlers.LayeredFile`.</span>
-
-<span class="sd">            .. IMPORTANT::</span>
-<span class="sd">              When overwriting data, the encoding (and therefore things</span>
-<span class="sd">              like data type, nodata value, etc) is not allowed to</span>
-<span class="sd">              change. If you need to overwrite an existing layer with a</span>
-<span class="sd">              new type of data, manually remove it from the file first.</span>
-
 <span class="sd">            By default, ``False``.</span>
 <span class="sd">        nodata : int or float, optional</span>
 <span class="sd">            Optional nodata value for the raster layer. This value will</span>
@@ -1198,6 +1228,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">               and if present, use ``da.rio.write_nodata`` to write the</span>
 <span class="sd">               nodata value so that ``da.rio.nodata`` gives the right</span>
 <span class="sd">               value.</span>
+
+<span class="sd">        **layer_attrs</span>
+<span class="sd">            Additional attributes to store on the written layer.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -1217,8 +1250,6 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing layer </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing layer </span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_existing_layer</span><span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">)</span>
-
             <span class="n">values</span> <span class="o">=</span> <span class="n">expand_dim_if_needed</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
@@ -1232,10 +1263,15 @@ window.runMermaid = runMermaid;</script>
                 <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span>
             <span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
                 <span class="n">attrs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span>
-                <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
-                <span class="n">transform</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">()</span>
-                <span class="n">layer_is_new</span> <span class="o">=</span> <span class="n">layer_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span>
                 <span class="n">coords</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span>
+                <span class="n">layer_exists</span> <span class="o">=</span> <span class="n">layer_name</span> <span class="ow">in</span> <span class="n">ds</span>
+
+            <span class="k">if</span> <span class="n">layer_exists</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_name</span><span class="si">!r}</span><span class="s2"> is already present in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2"> and &#39;overwrite=False&#39;&quot;</span>
+                    <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_delete_layer</span><span class="p">(</span><span class="n">layer_name</span><span class="p">)</span>
 
             <span class="n">chunks</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">][</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;chunks&quot;</span><span class="p">][</span><span class="s2">&quot;x&quot;</span><span class="p">])</span>
 
@@ -1244,35 +1280,21 @@ window.runMermaid = runMermaid;</script>
             <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
             <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">layer_attrs</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">layer_is_new</span><span class="p">:</span>
-                    <span class="n">nodata</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
-                    <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
-                    <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;nodata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodata</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="s2">&quot;Attempting to set ``nodata`` value when overwriting &quot;</span>
-                        <span class="s2">&quot;layer - this is not allowed. ``nodata`` value must &quot;</span>
-                        <span class="s2">&quot;be set when layer is first created. User-provided &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;``nodata`` value (</span><span class="si">{</span><span class="n">nodata</span><span class="si">}</span><span class="s2">) will be ignored.&quot;</span>
-                    <span class="p">)</span>
-                    <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
+                <span class="n">nodata</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
+                <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_nodata</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
+                <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;nodata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodata</span>
 
             <span class="n">ds_to_add</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span><span class="n">layer_name</span><span class="p">:</span> <span class="n">da</span><span class="p">},</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
-            <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span>
-            <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
-            <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_grid_mapping</span><span class="p">()</span>
-
-            <span class="n">encoding</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">layer_is_new</span><span class="p">:</span>
-                <span class="n">encoding</span> <span class="o">=</span> <span class="p">{</span><span class="n">layer_name</span><span class="p">:</span> <span class="n">da</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="p">{}}</span>
-                <span class="n">encoding</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                    <span class="p">{</span>
-                        <span class="s2">&quot;compressors&quot;</span><span class="p">:</span> <span class="n">ZARR_COMPRESSORS</span><span class="p">,</span>
-                        <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                        <span class="s2">&quot;chunks&quot;</span><span class="p">:</span> <span class="n">chunks</span><span class="p">,</span>
-                    <span class="p">}</span>
-                <span class="p">)</span>
+            <span class="n">encoding</span> <span class="o">=</span> <span class="p">{</span><span class="n">layer_name</span><span class="p">:</span> <span class="n">da</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="p">{}}</span>
+            <span class="n">encoding</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;compressors&quot;</span><span class="p">:</span> <span class="n">ZARR_COMPRESSORS</span><span class="p">,</span>
+                    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                    <span class="s2">&quot;chunks&quot;</span><span class="p">:</span> <span class="n">chunks</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
 
             <span class="n">log_mem</span><span class="p">()</span>
             <span class="n">ds_to_add</span><span class="o">.</span><span class="n">to_zarr</span><span class="p">(</span>
@@ -1285,18 +1307,10 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_for_existing_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Warn about existing layers&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">layer_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_name</span><span class="si">!r}</span><span class="s2"> is already present in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2"> and &#39;overwrite=False&#39;&quot;</span>
-            <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2"> and will be replaced&quot;</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_delete_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete a layer from the backing Zarr file&quot;&quot;&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">zarr</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">group</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span>
 
 <div class="viewcode-block" id="LayeredFile.write_geotiff_to_file">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.write_geotiff_to_file">[docs]</a>
@@ -1424,8 +1438,8 @@ window.runMermaid = runMermaid;</script>
         <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">ds_chunks</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
-            <span class="n">ds</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">to_raster</span><span class="p">(</span>
-                <span class="n">geotiff</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GTiff&quot;</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">,</span> <span class="o">**</span><span class="n">profile_kwargs</span>
+            <span class="n">save_data_array_to_geotiff</span><span class="p">(</span>
+                <span class="n">ds</span><span class="p">[</span><span class="n">layer</span><span class="p">],</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="n">lock</span><span class="p">,</span> <span class="o">**</span><span class="n">profile_kwargs</span>
             <span class="p">)</span></div>
 
 
@@ -1610,6 +1624,31 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">layers</span></div>
 </div>
+
+
+
+<div class="viewcode-block" id="serialize_layer_build_dict">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.serialize_layer_build_dict.html#revrt.utilities.handlers.serialize_layer_build_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">serialize_layer_build_dict</span><span class="p">(</span><span class="n">build_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Serialize layer config for storing in file attrs</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    build_dict : dict</span>
+<span class="sd">        Dictionary mapping layer names to layer build configs.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Serialized layer build config dictionary as a JSON string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">normalized_config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">layer_name</span><span class="p">):</span> <span class="n">component_config</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">component_config</span> <span class="ow">in</span> <span class="n">build_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">normalized_config</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 

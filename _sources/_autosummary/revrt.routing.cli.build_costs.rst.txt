@@ -14,7 +14,7 @@ revrt.routing.cli.build\_costs
    .. autosummary::
       :toctree:
    
-      build_routing_layer
+      build_final_routing_layers
    
    
 

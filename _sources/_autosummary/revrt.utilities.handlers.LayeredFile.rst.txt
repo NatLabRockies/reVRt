@@ -18,6 +18,7 @@ revrt.utilities.handlers.LayeredFile
       ~LayeredFile.create_new
       ~LayeredFile.extract_all_layers
       ~LayeredFile.extract_layers
+      ~LayeredFile.layer_attrs
       ~LayeredFile.layer_profile
       ~LayeredFile.layer_to_geotiff
       ~LayeredFile.layers_to_file

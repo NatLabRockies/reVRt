@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; reVRt 0.6.0 documentation</title>
+    <title>Index &#8212; reVRt 0.7.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
+    <script src="_static/documentation_options.js?v=fe7df9b0"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.6.0" />
+  <meta name="docsearch:version" content="0.7.0" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.6.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.0 documentation</p>
   
 </a></div>
     
@@ -861,11 +861,11 @@ window.runMermaid = runMermaid;</script>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-feature-route-table-c">reVRt-build-feature-route-table command line option</a>
 </li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-final-routing-layers-c">reVRt-build-final-routing-layers command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-masks-c">reVRt-build-masks command line option</a>
 </li>
-        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-route-costs-c">reVRt-build-route-costs command line option</a>
-</li>
-        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layers-c">reVRt-build-routing-layers command line option</a>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layer-file-c">reVRt-build-routing-layer-file command line option</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-convert-pois-to-lines-c">reVRt-convert-pois-to-lines command line option</a>
 </li>
@@ -995,11 +995,11 @@ window.runMermaid = runMermaid;</script>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-feature-route-table-c">reVRt-build-feature-route-table command line option</a>
 </li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-final-routing-layers-c">reVRt-build-final-routing-layers command line option</a>
+</li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-masks-c">reVRt-build-masks command line option</a>
 </li>
-        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-route-costs-c">reVRt-build-route-costs command line option</a>
-</li>
-        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layers-c">reVRt-build-routing-layers command line option</a>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layer-file-c">reVRt-build-routing-layer-file command line option</a>
 </li>
         <li><a href="_cli/reVRt.html#cmdoption-reVRt-convert-pois-to-lines-c">reVRt-convert-pois-to-lines command line option</a>
 </li>
@@ -1119,11 +1119,11 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="glossary.html#term-barrier-multiplier"><strong>barrier multiplier</strong></a>
 </li>
-      <li><a href="_autosummary/revrt.constants.BARRIER_H5_LAYER_NAME.html#revrt.constants.BARRIER_H5_LAYER_NAME">BARRIER_H5_LAYER_NAME (in module revrt.constants)</a>
-</li>
       <li><a href="_autosummary/revrt.models.cost_layers.BarrierLayer.html#revrt.models.cost_layers.BarrierLayer.barrier_importance">barrier_importance (BarrierLayer attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.barrier_layer">barrier_layer (MergeFrictionBarriers attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.constants.BARRIER_LAYER_NAME.html#revrt.constants.BARRIER_LAYER_NAME">BARRIER_LAYER_NAME (in module revrt.constants)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers.barrier_multiplier">barrier_multiplier (MergeFrictionBarriers attribute)</a>
 </li>
@@ -1157,11 +1157,13 @@ window.runMermaid = runMermaid;</script>
         <li><a href="_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager.build">(RoutingLayerManager method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.costs.layer_creator.LayerCreator.html#revrt.costs.layer_creator.LayerCreator.BUILD_CONFIG_ATTR">BUILD_CONFIG_ATTR (LayerCreator attribute)</a>
+</li>
+      <li><a href="_autosummary/revrt.routing.cli.build_costs.build_final_routing_layers.html#revrt.routing.cli.build_costs.build_final_routing_layers">build_final_routing_layers() (in module revrt.routing.cli.build_costs)</a>
+</li>
       <li><a href="_autosummary/revrt.costs.cli.build_masks.html#revrt.costs.cli.build_masks">build_masks() (in module revrt.costs.cli)</a>
 </li>
-      <li><a href="_autosummary/revrt.routing.cli.build_costs.build_routing_layer.html#revrt.routing.cli.build_costs.build_routing_layer">build_routing_layer() (in module revrt.routing.cli.build_costs)</a>
-</li>
-      <li><a href="_autosummary/revrt.costs.cli.build_routing_layers.html#revrt.costs.cli.build_routing_layers">build_routing_layers() (in module revrt.costs.cli)</a>
+      <li><a href="_autosummary/revrt.costs.cli.build_routing_layer_file.html#revrt.costs.cli.build_routing_layer_file">build_routing_layer_file() (in module revrt.costs.cli)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1310,6 +1312,8 @@ window.runMermaid = runMermaid;</script>
         <li><a href="_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.count">(Stat method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.costs.layer_creator.LayerCreator.html#revrt.costs.layer_creator.LayerCreator.CPM_CONFIG_ATTR">CPM_CONFIG_ATTR (LayerCreator attribute)</a>
+</li>
       <li><a href="_autosummary/revrt.costs.masks.Masks.html#revrt.costs.masks.Masks.create">create() (Masks method)</a>
 </li>
       <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.create_new">create_new() (LayeredFile method)</a>
@@ -1701,6 +1705,8 @@ window.runMermaid = runMermaid;</script>
       <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.LATITUDE">LATITUDE (LayeredFile attribute)</a>
 </li>
       <li><a href="_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager.latitudes">latitudes (RoutingLayerManager property)</a>
+</li>
+      <li><a href="_autosummary/revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile.layer_attrs">layer_attrs() (LayeredFile method)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.BarrierLayer.html#revrt.models.cost_layers.BarrierLayer.layer_name">layer_name (BarrierLayer attribute)</a>
 
@@ -2183,6 +2189,15 @@ window.runMermaid = runMermaid;</script>
 </li>
       </ul></li>
       <li>
+    reVRt-build-final-routing-layers command line option
+
+      <ul>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-final-routing-layers-c">--config_file</a>
+</li>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-final-routing-layers-c">-c</a>
+</li>
+      </ul></li>
+      <li>
     reVRt-build-masks command line option
 
       <ul>
@@ -2192,21 +2207,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       </ul></li>
       <li>
-    reVRt-build-route-costs command line option
+    reVRt-build-routing-layer-file command line option
 
       <ul>
-        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-route-costs-c">--config_file</a>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layer-file-c">--config_file</a>
 </li>
-        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-route-costs-c">-c</a>
-</li>
-      </ul></li>
-      <li>
-    reVRt-build-routing-layers command line option
-
-      <ul>
-        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layers-c">--config_file</a>
-</li>
-        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layers-c">-c</a>
+        <li><a href="_cli/reVRt.html#cmdoption-reVRt-build-routing-layer-file-c">-c</a>
 </li>
       </ul></li>
       <li>
@@ -2719,9 +2725,13 @@ window.runMermaid = runMermaid;</script>
         <li><a href="_autosummary/revrt.utilities.handlers.IncrementalWriter.html#revrt.utilities.handlers.IncrementalWriter.save">(IncrementalWriter method)</a>
 </li>
       </ul></li>
+      <li><a href="_autosummary/revrt.utilities.base.save_data_array_to_geotiff.html#revrt.utilities.base.save_data_array_to_geotiff">save_data_array_to_geotiff() (in module revrt.utilities.base)</a>
+</li>
       <li><a href="_autosummary/revrt.utilities.base.save_data_using_custom_props.html#revrt.utilities.base.save_data_using_custom_props">save_data_using_custom_props() (in module revrt.utilities.base)</a>
 </li>
       <li><a href="_autosummary/revrt.utilities.base.save_data_using_layer_file_profile.html#revrt.utilities.base.save_data_using_layer_file_profile">save_data_using_layer_file_profile() (in module revrt.utilities.base)</a>
+</li>
+      <li><a href="_autosummary/revrt.utilities.handlers.serialize_layer_build_dict.html#revrt.utilities.handlers.serialize_layer_build_dict">serialize_layer_build_dict() (in module revrt.utilities.handlers)</a>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.setdefault">setdefault() (IsoMultipliers method)</a>
 
@@ -2753,10 +2763,10 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers.slope">slope (IsoMultipliers attribute)</a>
 </li>
-      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.slope_tiff">slope_tiff (DryCosts attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts.slope_tiff">slope_tiff (DryCosts attribute)</a>
+</li>
       <li><a href="_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers">SlopeMultipliers (class in revrt.models.cost_layers)</a>
 </li>
       <li><a href="_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.split">split() (FractionalStat method)</a>

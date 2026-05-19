@@ -1,0 +1,6 @@
+revrt.utilities.handlers.serialize\_layer\_build\_dict
+======================================================
+
+.. currentmodule:: revrt.utilities.handlers
+
+.. autofunction:: serialize_layer_build_dict

@@ -25,6 +25,8 @@ revrt.costs.layer\_creator.LayerCreator
 
    .. autosummary::
    
+      ~LayerCreator.BUILD_CONFIG_ATTR
+      ~LayerCreator.CPM_CONFIG_ATTR
       ~LayerCreator.cell_size
       ~LayerCreator.chunks
       ~LayerCreator.output_tiff_dir

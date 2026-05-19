@@ -24,6 +24,7 @@ revrt.utilities.handlers
       chunked_read_gpkg
       gpkg_crs
       num_feats_in_gpkg
+      serialize_layer_build_dict
    
    
 

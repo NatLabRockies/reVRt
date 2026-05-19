@@ -10,7 +10,7 @@ revrt.constants
    .. autosummary::
       :toctree:
    
-      BARRIER_H5_LAYER_NAME
+      BARRIER_LAYER_NAME
       DEFAULT_DTYPE
       METERS_IN_MILE
       SHORT_MULT
