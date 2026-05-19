@@ -291,6 +291,26 @@ def test_layered_file_handler_get_dne_layer(test_tl_fp):
         lf["non_existent_layer"]
 
 
+def test_layered_file_layer_profile_missing_layer(test_tl_fp):
+    """Test getting profile for a non-existent layer"""
+    lf = LayeredFile(test_tl_fp)
+
+    with pytest.raises(
+        revrtKeyError, match="'non_existent_layer' is not present in"
+    ):
+        lf.layer_profile("non_existent_layer")
+
+
+def test_layered_file_layer_attrs_missing_layer(test_tl_fp):
+    """Test getting attrs for a non-existent layer"""
+    lf = LayeredFile(test_tl_fp)
+
+    with pytest.raises(
+        revrtKeyError, match="'non_existent_layer' is not present in"
+    ):
+        lf.layer_attrs("non_existent_layer")
+
+
 def test_create_new_file(tmp_path, sample_tiff_fp, sample_tiff_props):
     """Test creating a new file"""
     *__, transform = sample_tiff_props
