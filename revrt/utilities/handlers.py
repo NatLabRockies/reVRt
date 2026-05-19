@@ -240,7 +240,15 @@ class LayeredFile:
                 - "transform": :class:`affine.Affine` transform for
                                layer
 
+        Raises
+        ------
+        revrtKeyError
+            If layer is not present in file.
         """
+        if layer not in self.layers:
+            msg = f"{layer!r} is not present in {self.fp}"
+            raise revrtKeyError(msg)
+
         with xr.open_dataset(self.fp, consolidated=False, engine="zarr") as ds:
             return _layer_profile_from_open_ds(layer, ds)
 
