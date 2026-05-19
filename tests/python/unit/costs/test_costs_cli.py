@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import platform
+import shutil
 import traceback
 from types import SimpleNamespace
 from pathlib import Path
@@ -17,12 +18,14 @@ from shapely.geometry import box
 from shapely.ops import unary_union
 
 from revrt._cli import main
-from revrt.constants import BARRIER_H5_LAYER_NAME
+from revrt.constants import BARRIER_H5_LAYER_NAME, METERS_IN_MILE
 from revrt.costs.cli import build_masks, build_routing_layer_file
+from revrt.costs.layer_creator import LayerCreator
 from revrt.costs.masks import Masks
+from revrt.models.cost_layers import LayerBuildConfig
 from revrt.exceptions import revrtConfigurationError
 from revrt.warn import revrtWarning
-from revrt.utilities import LayeredFile
+from revrt.utilities import LayeredFile, load_data_using_layer_file_profile
 
 
 @pytest.fixture(scope="module")
@@ -161,6 +164,32 @@ def basic_land_mask(tmp_path_factory):
     basic_shape = gpd.GeoDataFrame(geometry=[geometry], crs="ESRI:102008")
     basic_shape.to_file(land_mask_fp, driver="GPKG")
     return land_mask_fp
+
+
+def _copy_test_layers(source_dir, out_dir):
+    """Copy test input TIFFs into a temp directory"""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for layer_fp in source_dir.iterdir():
+        shutil.copy2(layer_fp, out_dir / layer_fp.name)
+
+
+def _overwrite_test_tiff(layer_fp, data):
+    """Overwrite a test TIFF while preserving its spatial metadata"""
+    with rioxarray.open_rasterio(layer_fp) as tif:
+        coords = {"x": tif.x.values, "y": tif.y.values}
+        crs = tif.rio.crs
+        transform = tif.rio.transform()
+        name = tif.name
+
+    da = xr.DataArray(
+        np.asarray(data, dtype=np.float32),
+        dims=("y", "x"),
+        coords=coords,
+        name=name,
+    )
+    da = da.rio.write_crs(crs)
+    da.rio.write_transform(transform)
+    da.rio.to_raster(layer_fp, driver="GTiff")
 
 
 def _template_metadata(template_file):
@@ -726,6 +755,210 @@ def test_build_layers_only(
             layers["friction_1.tif"] * masks_for_testing.dry_plus_mask,
         )
         assert np.allclose(ds["fi_1"], layers["fi_1.tif"])
+
+
+def test_build_layers_rebuilds_when_build_config_changes(
+    tmp_path, sample_extra_fp, tiff_layers_for_testing, masks_for_testing
+):
+    """Changed build config should rebuild an existing layer"""
+    test_fp = tmp_path / "test.zarr"
+    input_layer_dir = tmp_path / "layers"
+    out_tiff_dir = tmp_path / "out_tiffs"
+    source_layer_dir, layers = tiff_layers_for_testing
+    _copy_test_layers(source_layer_dir, input_layer_dir)
+
+    base_config = {
+        "routing_file": str(test_fp),
+        "template_file": str(sample_extra_fp),
+        "input_layer_dir": str(input_layer_dir),
+        "output_tiff_dir": str(out_tiff_dir),
+        "masks_dir": str(masks_for_testing._masks_dir),
+        "layers": [
+            {
+                "layer_name": "friction",
+                "build": {
+                    "friction_1.tif": {
+                        "extent": "dry+",
+                        "map": {x: x for x in range(20)},
+                    }
+                },
+            }
+        ],
+    }
+
+    build_routing_layer_file(**base_config)
+
+    updated_layer = np.full_like(layers["friction_1.tif"], 99)
+    _overwrite_test_tiff(input_layer_dir / "friction_1.tif", updated_layer)
+
+    build_routing_layer_file(**base_config)
+
+    with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
+        assert np.allclose(
+            ds["friction"],
+            layers["friction_1.tif"] * masks_for_testing.dry_plus_mask,
+        )
+        assert LayerCreator.BUILD_CONFIG_ATTR in ds["friction"].attrs
+        assert LayerCreator.CPM_CONFIG_ATTR in ds["friction"].attrs
+
+    rebuild_config = {
+        **base_config,
+        "layers": [
+            {
+                "layer_name": "friction",
+                "build": {
+                    "friction_1.tif": {
+                        "extent": "all",
+                        "pass_through": True,
+                    }
+                },
+            }
+        ],
+    }
+
+    build_routing_layer_file(**rebuild_config)
+
+    with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
+        assert np.allclose(ds["friction"], updated_layer)
+        assert LayerCreator.BUILD_CONFIG_ATTR in ds["friction"].attrs
+        assert LayerCreator.CPM_CONFIG_ATTR in ds["friction"].attrs
+
+
+def test_build_layers_rebuilds_without_stored_build_config(
+    tmp_path, sample_extra_fp, tiff_layers_for_testing, masks_for_testing
+):
+    """Existing layers without build metadata should be rebuilt"""
+    test_fp = tmp_path / "test.zarr"
+    input_layer_dir = tmp_path / "layers"
+    out_tiff_dir = tmp_path / "out_tiffs"
+    source_layer_dir, layers = tiff_layers_for_testing
+    _copy_test_layers(source_layer_dir, input_layer_dir)
+
+    config = {
+        "routing_file": str(test_fp),
+        "template_file": str(sample_extra_fp),
+        "input_layer_dir": str(input_layer_dir),
+        "output_tiff_dir": str(out_tiff_dir),
+        "masks_dir": str(masks_for_testing._masks_dir),
+        "layers": [
+            {
+                "layer_name": "friction",
+                "build": {
+                    "friction_1.tif": {
+                        "extent": "dry+",
+                        "map": {x: x for x in range(20)},
+                    }
+                },
+            }
+        ],
+    }
+
+    lf_handler = LayeredFile(test_fp)
+    lf_handler.create_new(sample_extra_fp)
+    LayerCreator(
+        lf_handler,
+        masks_for_testing,
+        input_layer_dir=input_layer_dir,
+        output_tiff_dir=out_tiff_dir,
+    ).build(
+        "friction",
+        {
+            "friction_1.tif": LayerBuildConfig(
+                extent="dry+", map={x: x for x in range(20)}
+            )
+        },
+        write_to_file=False,
+    )
+    legacy_data = load_data_using_layer_file_profile(
+        layer_fp=lf_handler.fp,
+        geotiff=out_tiff_dir / "friction.tif",
+        band_index=0,
+    )
+    lf_handler.write_layer(legacy_data, "friction", overwrite=True)
+
+    with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
+        assert ds["friction"].attrs.get(LayerCreator.BUILD_CONFIG_ATTR) is None
+        assert ds["friction"].attrs.get(LayerCreator.CPM_CONFIG_ATTR) is None
+
+    updated_layer = np.full_like(layers["friction_1.tif"], 7)
+    _overwrite_test_tiff(input_layer_dir / "friction_1.tif", updated_layer)
+
+    build_routing_layer_file(**config)
+
+    with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
+        assert np.allclose(
+            ds["friction"], updated_layer * masks_for_testing.dry_plus_mask
+        )
+        assert LayerCreator.BUILD_CONFIG_ATTR in ds["friction"].attrs
+        assert LayerCreator.CPM_CONFIG_ATTR in ds["friction"].attrs
+
+
+def test_build_layers_rebuilds_when_costs_per_mile_flag_changes(
+    tmp_path,
+    sample_extra_fp,
+    sample_tiff_props,
+    tiff_layers_for_testing,
+    masks_for_testing,
+):
+    """Changing values_are_costs_per_mile should rebuild a layer"""
+    test_fp = tmp_path / "test.zarr"
+    input_layer_dir = tmp_path / "layers"
+    out_tiff_dir = tmp_path / "out_tiffs"
+    source_layer_dir, layers = tiff_layers_for_testing
+    _copy_test_layers(source_layer_dir, input_layer_dir)
+
+    updated_layer = np.full_like(layers["friction_1.tif"], 10)
+    _overwrite_test_tiff(input_layer_dir / "friction_1.tif", updated_layer)
+
+    base_config = {
+        "routing_file": str(test_fp),
+        "template_file": str(sample_extra_fp),
+        "input_layer_dir": str(input_layer_dir),
+        "output_tiff_dir": str(out_tiff_dir),
+        "masks_dir": str(masks_for_testing._masks_dir),
+        "layers": [
+            {
+                "layer_name": "friction",
+                "values_are_costs_per_mile": False,
+                "build": {
+                    "friction_1.tif": {
+                        "extent": "all",
+                        "pass_through": True,
+                    }
+                },
+            }
+        ],
+    }
+
+    build_routing_layer_file(**base_config)
+
+    with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
+        assert np.allclose(ds["friction"], updated_layer)
+
+    rebuild_config = {
+        **base_config,
+        "layers": [
+            {
+                "layer_name": "friction",
+                "values_are_costs_per_mile": True,
+                "build": {
+                    "friction_1.tif": {
+                        "extent": "all",
+                        "pass_through": True,
+                    }
+                },
+            }
+        ],
+    }
+
+    build_routing_layer_file(**rebuild_config)
+
+    cell_size = sample_tiff_props[4]
+    expected = updated_layer / METERS_IN_MILE * cell_size
+    with xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds:
+        assert np.allclose(ds["friction"], expected)
+        assert LayerCreator.BUILD_CONFIG_ATTR in ds["friction"].attrs
+        assert LayerCreator.CPM_CONFIG_ATTR in ds["friction"].attrs
 
 
 @pytest.mark.skipif(

@@ -23,6 +23,7 @@ from revrt.utilities import (
     dask_performance_report,
     log_runtime,
     strip_path_keys,
+    serialize_layer_build_dict,
 )
 from revrt.exceptions import revrtAttributeError, revrtConfigurationError
 from revrt.warn import revrtWarning
@@ -315,22 +316,53 @@ def _build_layers(config, builder, lf_handler, lock):
     existing_layers = set(lf_handler.data_layers)
 
     for lc in config.layers or []:
-        if lc.layer_name in existing_layers:
-            logger.info(
-                "Layer %r already exists in %s! Skipping...",
-                lc.layer_name,
-                lf_handler.fp,
-            )
+        layer_exists = lc.layer_name in existing_layers
+        if layer_exists and _should_skip_layer(lf_handler, lc):
             continue
 
         builder.build(
             lc.layer_name,
             lc.build,
             values_are_costs_per_mile=lc.values_are_costs_per_mile,
-            write_to_file=lc.include_in_file,
+            write_to_file=lc.include_in_file or layer_exists,
             description=lc.description,
             lock=lock,
         )
+
+
+def _should_skip_layer(lf_handler, lc):
+    """Determine whether to skip building a layer"""
+    existing_attrs = lf_handler.layer_attrs(lc.layer_name)
+    existing_build_config = existing_attrs.get(LayerCreator.BUILD_CONFIG_ATTR)
+    cpm = existing_attrs.get(LayerCreator.CPM_CONFIG_ATTR)
+    serialized_build_config = serialize_layer_build_dict(lc.build)
+    should_skip = (
+        existing_build_config == serialized_build_config
+        and cpm == lc.values_are_costs_per_mile
+    )
+    if should_skip:
+        logger.info(
+            "Layer %r already exists in %s with matching stored "
+            "config. Skipping...",
+            lc.layer_name,
+            lf_handler.fp,
+        )
+        return True
+
+    logger.info(
+        "Layer %r exists in %s but build config does not match! Rebuilding...",
+        lc.layer_name,
+        lf_handler.fp,
+    )
+    logger.debug(
+        "Existing config:\n%r\nNew config:\n%r",
+        existing_build_config,
+        serialize_layer_build_dict,
+    )
+    logger.debug(
+        "Existing cpm:\n%r\nNew cpm:\n%r", cpm, lc.values_are_costs_per_mile
+    )
+    return False
 
 
 def _build_dry_costs(config, masks, lf_handler, lock):
