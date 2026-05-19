@@ -16,6 +16,7 @@ from revrt.utilities import (
     log_mem,
     log_array_backend,
     rasterize_shape_file,
+    serialize_layer_build_dict,
 )
 from revrt.constants import DEFAULT_DTYPE, ALL, METERS_IN_MILE
 from revrt.exceptions import revrtAttributeError, revrtValueError
@@ -104,6 +105,9 @@ class LayerCreator(BaseLayerCreator):
         description : str, optional
             Optional description to store with this layer in the H5
             file. By default, ``None``.
+        build_config_attr : str, optional
+            Serialized build config to store as a layer attribute. By
+            default, ``None``.
         tiff_chunks : int or str, default="file"
             Chunk size to use when reading the GeoTIFF file. This will
             be passed down as the ``chunks`` argument to
@@ -139,20 +143,26 @@ class LayerCreator(BaseLayerCreator):
             lock=lock,
             **profile_kwargs,
         )
-        if write_to_file:
-            out = load_data_using_layer_file_profile(
-                layer_fp=self._io_handler.fp,
-                geotiff=tiff_filename,
-                tiff_chunks=tiff_chunks,
-                layer_dirs=[self.input_layer_dir, self.output_tiff_dir],
-                band_index=0,
-            )
-            log_mem()
-            logger.debug("Writing %r to '%s'", layer_name, self._io_handler.fp)
-            self._io_handler.write_layer(
-                out, layer_name, description=description, overwrite=True
-            )
-            log_mem()
+        if not write_to_file:
+            return
+
+        out = load_data_using_layer_file_profile(
+            layer_fp=self._io_handler.fp,
+            geotiff=tiff_filename,
+            tiff_chunks=tiff_chunks,
+            layer_dirs=[self.input_layer_dir, self.output_tiff_dir],
+            band_index=0,
+        )
+        log_mem()
+        logger.debug("Writing %r to '%s'", layer_name, self._io_handler.fp)
+        kwargs = {
+            self.BUILD_CONFIG_ATTR: serialize_layer_build_dict(build_config),
+            self.CPM_CONFIG_ATTR: values_are_costs_per_mile,
+        }
+        self._io_handler.write_layer(
+            out, layer_name, description=description, overwrite=True, **kwargs
+        )
+        log_mem()
 
     def _process_and_write_as_tiff(
         self,
