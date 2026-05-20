@@ -247,7 +247,13 @@ def file_full_path(file_name, *layer_dirs):
 
 
 def load_data_using_layer_file_profile(
-    layer_fp, geotiff, tiff_chunks="file", layer_dirs=None, band_index=None
+    layer_fp,
+    geotiff,
+    tiff_chunks="file",
+    layer_dirs=None,
+    band_index=None,
+    check_tiff=True,
+    fillna=0,
 ):
     """Load GeoTIFF data, reprojecting to LayeredFile CRS if needed
 
@@ -269,6 +275,11 @@ def load_data_using_layer_file_profile(
         Optional index of band to load from the GeoTIFF. If provided,
         only that band will be returned. By default, ``None``, which
         means all bands will be returned.
+    fillna : int or float, optional
+        Value to fill NA cells with after loading the GeoTIFF. If
+        ``None``, NA cells will not be filled (and will typically be
+        represented as ``np.nan`` in the output array).
+        By default, ``0``.
 
     Returns
     -------
@@ -295,20 +306,24 @@ def load_data_using_layer_file_profile(
         "Using the following chunks to open '%s': %r", geotiff, tiff_chunks
     )
 
-    tif = rioxarray.open_rasterio(geotiff, chunks=tiff_chunks)
-    try:
-        check_geotiff(layer_fp, geotiff, transform_atol=TRANSFORM_ATOL)
-    except revrtProfileCheckError:
-        logger.info(
-            "Profile of '%s' does not match template, reprojecting...",
-            geotiff,
-        )
-        geo_box = odc.geo.geobox.GeoBox(
-            shape=(height, width), affine=transform, crs=crs
-        )
-        tif = tif.odc.reproject(
-            how=geo_box, resampling=Resampling.nearest, INIT_DEST=0
-        )
+    tif = rioxarray.open_rasterio(geotiff, chunks=tiff_chunks, masked=True)
+    if check_tiff:
+        try:
+            check_geotiff(layer_fp, geotiff, transform_atol=TRANSFORM_ATOL)
+        except revrtProfileCheckError:
+            logger.info(
+                "Profile of '%s' does not match template, reprojecting...",
+                geotiff,
+            )
+            geo_box = odc.geo.geobox.GeoBox(
+                shape=(height, width), affine=transform, crs=crs
+            )
+            tif = tif.astype("float32").odc.reproject(
+                how=geo_box, resampling=Resampling.nearest, dst_nodata=np.nan
+            )
+
+    if fillna is not None:
+        tif = tif.fillna(fillna)
 
     if band_index is not None:
         tif = tif.isel(band=band_index)
