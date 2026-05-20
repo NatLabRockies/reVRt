@@ -24,12 +24,11 @@ from revrt.exceptions import (
     revrtValueError,
 )
 from revrt.utilities.base import (
-    check_geotiff,
     delete_data_file,
     expand_dim_if_needed,
     transform_xy,
     save_data_array_to_geotiff,
-    TRANSFORM_ATOL,
+    load_data_using_layer_file_profile,
 )
 from revrt.utilities.monitoring import log_mem, log_runtime
 
@@ -529,21 +528,21 @@ class LayeredFile:
             geotiff,
         )
         with log_runtime(f"Writing GeoTIFF to {geotiff}"):
-            if check_tiff:
-                logger.debug("\t- Checking %s against %s", geotiff, self.fp)
-                check_geotiff(self.fp, geotiff, transform_atol=TRANSFORM_ATOL)
-
-            with rioxarray.open_rasterio(geotiff, chunks=tiff_chunks) as tif:
-                logger.debug(
-                    "\t- Writing data from %s to %s", geotiff, self.fp
-                )
-                self.write_layer(
-                    tif,
-                    layer_name,
-                    description=description,
-                    overwrite=overwrite,
-                    nodata=nodata,
-                )
+            tif = load_data_using_layer_file_profile(
+                self.fp,
+                geotiff,
+                tiff_chunks=tiff_chunks,
+                check_tiff=check_tiff,
+                fillna=None,
+            )
+            logger.debug("\t- Writing data from %s to %s", geotiff, self.fp)
+            self.write_layer(
+                tif,
+                layer_name,
+                description=description,
+                overwrite=overwrite,
+                nodata=nodata,
+            )
 
     def layer_to_geotiff(
         self, layer, geotiff, ds_chunks="auto", lock=None, **profile_kwargs
