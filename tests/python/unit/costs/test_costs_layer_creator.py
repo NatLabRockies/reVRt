@@ -428,6 +428,63 @@ def test_pass_through(builder_instance):
     assert (result == data).all()
 
 
+def test_process_raster_layer_fills_large_negative_nodata(
+    tmp_path, mask_instance
+):
+    """Test NA fill when GeoTIFF nodata is a large negative sentinel"""
+    layer_dir = tmp_path / "layers"
+    layer_dir.mkdir(parents=True, exist_ok=True)
+
+    nodata_value = np.float32(-3.4028235e38)
+    raster_data = np.array(
+        [
+            [nodata_value, 1, 2],
+            [nodata_value, 3, 4],
+            [nodata_value, 5, 6],
+        ],
+        dtype=np.float32,
+    )
+    layer_fp = layer_dir / "large_negative_nodata.tif"
+
+    with rasterio.open(
+        layer_fp,
+        "w",
+        driver="GTiff",
+        height=raster_data.shape[0],
+        width=raster_data.shape[1],
+        count=1,
+        dtype=raster_data.dtype,
+        crs="EPSG:4326",
+        transform=from_origin(10, 10, 1, 1),
+        nodata=float(nodata_value),
+    ) as src:
+        src.write(raster_data, 1)
+
+    with rasterio.open(layer_fp) as src:
+        loaded = src.read(1)
+
+    assert loaded[0, 0] == nodata_value
+
+    lf = LayeredFile(tmp_path / "test.zarr")
+    lf.create_new(layer_fp)
+
+    builder = LayerCreator(
+        lf,
+        mask_instance,
+        input_layer_dir=layer_dir,
+        output_tiff_dir=tmp_path / "out",
+    )
+    config = LayerBuildConfig(extent="wet", pass_through=True, na_fill=7)
+
+    result = builder._process_raster_layer(layer_fp.name, config)
+
+    assert isinstance(result, da.Array)
+    assert np.array_equal(
+        result.compute(),
+        np.array([[7, 0, 0], [7, 0, 0], [7, 0, 0]], dtype=np.float32),
+    )
+
+
 def test_bin_config_sanity_checking(builder_instance, tiff_layers_for_testing):
     """Test cost binning config sanity checking"""
     __, layers = tiff_layers_for_testing
