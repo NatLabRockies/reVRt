@@ -10,6 +10,7 @@ import rioxarray
 import rasterio
 import numpy as np
 import xarray as xr
+import dask.array as da
 import geopandas as gpd
 from shapely.geometry import box
 from rasterio.transform import Affine, from_origin
@@ -426,6 +427,51 @@ def test_pass_through(builder_instance):
     config = LayerBuildConfig(extent="all", pass_through=True)
     result = builder_instance._process_raster_data(data, config)
     assert (result == data).all()
+
+
+def test_process_raster_layer_fills_na_for_lazy_dask_output(
+    tmp_path, mask_instance
+):
+    """Test NA fill for pass-through rasters that become Dask arrays"""
+    layer_dir = tmp_path / "layers"
+    layer_dir.mkdir(parents=True, exist_ok=True)
+
+    data = xr.DataArray(
+        np.array(
+            [[np.nan, 1, 2], [np.nan, 3, 4], [np.nan, 5, 6]],
+            dtype=np.float32,
+        ),
+        dims=("y", "x"),
+        coords={
+            "x": 10 + np.arange(3) + 0.5,
+            "y": 10 - np.arange(3) - 0.5,
+        },
+        name="test_band",
+    )
+    data = data.rio.write_crs("EPSG:4326")
+    data.rio.write_transform(from_origin(10, 10, 1, 1))
+
+    layer_fp = layer_dir / "nan_pass_through.tif"
+    data.rio.to_raster(layer_fp, driver="GTiff")
+
+    lf = LayeredFile(tmp_path / "test.zarr")
+    lf.create_new(layer_fp)
+
+    builder = LayerCreator(
+        lf,
+        mask_instance,
+        input_layer_dir=layer_dir,
+        output_tiff_dir=tmp_path / "out",
+    )
+    config = LayerBuildConfig(extent="wet", pass_through=True, na_fill=7)
+
+    result = builder._process_raster_layer(layer_fp.name, config)
+
+    assert isinstance(result, da.Array)
+    assert np.array_equal(
+        result.compute(),
+        np.array([[7, 0, 0], [7, 0, 0], [7, 0, 0]], dtype=np.float32),
+    )
 
 
 def test_process_raster_layer_fills_large_negative_nodata(
