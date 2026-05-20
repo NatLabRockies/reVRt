@@ -25,8 +25,7 @@ from revrt.warn import revrtWarning
 
 logger = logging.getLogger(__name__)
 _NUM_GEOTIFF_DIMS = 3  # (band, y, x)
-TRANSFORM_ATOL = 0.01
-"""Tolerance in transform comparison when checking GeoTIFFs"""
+_TRANSFORM_ATOL = 0.01
 
 
 def buffer_routes(
@@ -309,7 +308,7 @@ def load_data_using_layer_file_profile(
     tif = rioxarray.open_rasterio(geotiff, chunks=tiff_chunks, masked=True)
     if check_tiff:
         try:
-            check_geotiff(layer_fp, geotiff, transform_atol=TRANSFORM_ATOL)
+            check_geotiff(layer_fp, geotiff, transform_atol=_TRANSFORM_ATOL)
         except revrtProfileCheckError:
             logger.info(
                 "Profile of '%s' does not match template, reprojecting...",
