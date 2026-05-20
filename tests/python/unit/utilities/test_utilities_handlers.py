@@ -757,6 +757,51 @@ def test_load_data_using_layer_file_profile(
     test_tif_2.close()
 
 
+def test_load_data_using_layer_file_profile_fillna(
+    sample_tiff_fp, sample_tiff_props, tmp_path
+):
+    """Test loading GeoTIFF data with masked nodata cells filled"""
+    x0, y0, width, height, cell_size, transform = sample_tiff_props
+    nodata_value = np.float32(-3.4028235e38)
+    raster_data = np.arange(width * height, dtype=np.float32).reshape(
+        (height, width)
+    )
+    raster_data[0, 0] = nodata_value
+    raster_data[1, 1] = nodata_value
+
+    geotiff = tmp_path / "nodata_fill.tif"
+    data = xr.DataArray(
+        raster_data,
+        dims=("y", "x"),
+        coords={
+            "x": x0 + np.arange(width) * cell_size + cell_size / 2,
+            "y": y0 - np.arange(height) * cell_size - cell_size / 2,
+        },
+        name="test_band",
+    )
+    data = data.rio.write_crs("EPSG:4326")
+    data = data.rio.write_transform(transform)
+    data = data.rio.write_nodata(nodata_value)
+    data.rio.to_raster(geotiff, driver="GTiff")
+
+    test_fp = tmp_path / "test.zarr"
+    LayeredFile(test_fp).write_geotiff_to_file(sample_tiff_fp, "test_layer")
+
+    unfilled = load_data_using_layer_file_profile(
+        test_fp, geotiff, fillna=None
+    )
+    filled = load_data_using_layer_file_profile(test_fp, geotiff, fillna=7)
+
+    assert np.isnan(unfilled.to_numpy()[0, 0, 0])
+    assert np.isnan(unfilled.to_numpy()[0, 1, 1])
+    assert filled.to_numpy()[0, 0, 0] == 7
+    assert filled.to_numpy()[0, 1, 1] == 7
+    assert filled.to_numpy()[0, 0, 1] == raster_data[0, 1]
+
+    unfilled.close()
+    filled.close()
+
+
 @pytest.mark.parametrize("in_layer_dir", [True, False])
 @pytest.mark.parametrize("band", [None, 0])
 def test_load_data_using_file_full_path(
