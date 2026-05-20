@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_final_routing_layers(
-    lcp_config_fp, out_dir, polarity=None, voltage=None
+    lcp_config_fp, output_dir, polarity=None, voltage=None
 ):
     """Build out the final routing layers based on an LCP config file
 
@@ -34,7 +34,7 @@ def build_final_routing_layers(
     lcp_config_fp : path-like
         Path to LCP config file for which the routing layer should be
         created.
-    out_dir : path-like
+    output_dir : path-like
         Path to directory where to store the outputs.
     polarity : str, optional
         Polarity to use when building the routing layer. This input is
@@ -55,7 +55,7 @@ def build_final_routing_layers(
         List of paths to the GeoTIFF files that were created.
     """
     # TODO: Add dask client here??
-    out_dir = Path(out_dir)
+    out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     config = load_config(lcp_config_fp)
@@ -89,20 +89,42 @@ def build_final_routing_layers(
     rl = RoutingLayerManager(routing_scenario)
     rl.build()
 
-    cost_out_fp = out_dir / "agg_costs.tif"
+    cost_out_fp = out_dir / f"{out_dir.name}_agg_costs.tif"
     logger.debug("Writing costs to %s", cost_out_fp)
     save_data_array_to_geotiff(rl.cost, cost_out_fp, nodata=-1)
 
-    frl_out_fp = out_dir / "final_routing_layer.tif"
+    frl_out_fp = out_dir / f"{out_dir.name}_final_routing_layer.tif"
     logger.debug("Writing final routing layer to %s", frl_out_fp)
     save_data_array_to_geotiff(rl.final_routing_layer, frl_out_fp, nodata=-1)
 
     return [str(cost_out_fp), str(frl_out_fp)]
 
 
-def _preprocess_build_final_routing_layers(config):
-    """Preprocess config for build_routing_layer command"""
-    return strip_path_keys(config, keys_to_fix={"lcp_config_fp", "out_dir"})
+def _preprocess_build_final_routing_layers(
+    config, project_dir, output_directory=None
+):
+    """Preprocess config for build_routing_layer command
+
+    Parameters
+    ----------
+    config : dict
+        Dictionary containing the config for the command.
+    project_dir : path-like
+        Path to the project directory. This is used as the default
+        output directory if `output_directory` is not provided.
+    output_directory : path-like, optional
+        Path to directory where output files should be stored. If not
+        provided, the output files will be stored in the project
+        directory. The directory name will be prepended to each output
+        file. By default, ``None``.
+
+    Returns
+    -------
+    dict
+        Updated config dictionary.
+    """
+    config["output_dir"] = Path(output_directory or project_dir).as_posix()
+    return strip_path_keys(config, keys_to_fix={"lcp_config_fp", "output_dir"})
 
 
 build_final_routing_layers_command = CLICommandFromFunction(
@@ -110,4 +132,5 @@ build_final_routing_layers_command = CLICommandFromFunction(
     name="build-final-routing-layers",
     add_collect=False,
     config_preprocessor=_preprocess_build_final_routing_layers,
+    skip_doc_params=["output_dir"],
 )
