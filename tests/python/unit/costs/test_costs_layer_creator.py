@@ -825,6 +825,59 @@ def test_rasterizing_shape_file_uses_column_values(tmp_path, mask_instance):
         ), f"{np.array(ds.values)}"
 
 
+def test_rasterizing_shape_file_uses_na_fill_for_background(
+    tmp_path, mask_instance
+):
+    """Rasterize vector features using na_fill for untouched cells"""
+    fn = "test_background_fill.gpkg"
+    vector_file = tmp_path / fn
+    tiff_fp = tmp_path / "friction.tif"
+
+    template_tiff = tmp_path / "template.tif"
+    crs = "ESRI:102008"
+    transform = Affine(5.0, 0.0, -12.5, 0.0, -5.0, 12.5)
+    width = height = 3
+    x0, y0 = -12.5, 12.5
+
+    data = xr.DataArray(
+        np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]]),
+        dims=("y", "x"),
+        coords={
+            "x": x0 + np.arange(width) * 5 + 2.5,
+            "y": y0 - np.arange(height) * 5 - 2.5,
+        },
+        name="test_band",
+    )
+    data = data.rio.write_crs(crs)
+    data.rio.write_transform(transform)
+    data.rio.to_raster(template_tiff, driver="GTiff")
+
+    gpd.GeoDataFrame(
+        geometry=[box(-2.4, -2.4, 2.4, 12.4)],
+        crs=crs,
+    ).to_file(vector_file, driver="GPKG")
+
+    lf = LayeredFile(tmp_path / "test.zarr").create_new(template_tiff)
+    builder = LayerCreator(
+        lf, mask_instance, input_layer_dir=tmp_path, output_tiff_dir=tmp_path
+    )
+    config = {
+        fn: LayerBuildConfig(
+            extent="all",
+            rasterize=Rasterize(value=1000, reproject=False),
+            na_fill=7,
+        )
+    }
+
+    builder.build("friction", config, write_to_file=False)
+
+    with rioxarray.open_rasterio(tiff_fp, chunks="auto") as ds:
+        assert np.allclose(
+            np.array([[[7, 7, 1000], [7, 7, 1000], [7, 7, 1000]]]),
+            ds,
+        ), f"{np.array(ds.values)}"
+
+
 def test_rasterizing_shape_file_rejects_missing_value_column(
     tmp_path, mask_instance
 ):
