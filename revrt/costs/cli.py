@@ -226,7 +226,7 @@ def build_routing_layer_file(  # noqa: PLR0917, PLR0913
             ),
             log_runtime("Building routing layers"),
         ):
-            _build_routing_layer_file(
+            out_layer_fp = _build_routing_layer_file(
                 config,
                 lock,
                 validate_masks=validate_masks,
@@ -236,6 +236,8 @@ def build_routing_layer_file(  # noqa: PLR0917, PLR0913
     finally:
         if client is not None:
             close_dask_client(client)
+
+    return out_layer_fp
 
 
 def _build_routing_layer_file(
@@ -261,6 +263,8 @@ def _build_routing_layer_file(
 
     if config.merge_friction_and_barriers is not None:
         _combine_friction_and_barriers(config, lf_handler, lock=lock)
+
+    return str(lf_handler.fp)
 
 
 def _validated_config(**config_dict):
