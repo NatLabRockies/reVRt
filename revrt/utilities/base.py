@@ -270,6 +270,13 @@ def load_data_using_layer_file_profile(
         Directories to search for `geotiff` in, if not found in current
         directory. By default, ``None``, which means only the current
         directory is searched.
+    check_tiff : bool, default=True
+        Whether to check that the GeoTIFF profile matches the template
+        defined by the layered file. If ``True``, the GeoTIFF profile is
+        compared to the template, and if they don't match, the GeoTIFF
+        is re-projected to match the template. If ``False``, no checks
+        are performed and the GeoTIFF is loaded as-is.
+        By default, ``True``.
     band_index : int, optional
         Optional index of band to load from the GeoTIFF. If provided,
         only that band will be returned. By default, ``None``, which

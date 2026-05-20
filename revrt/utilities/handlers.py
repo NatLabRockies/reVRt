@@ -536,13 +536,16 @@ class LayeredFile:
                 fillna=None,
             )
             logger.debug("\t- Writing data from %s to %s", geotiff, self.fp)
-            self.write_layer(
-                tif,
-                layer_name,
-                description=description,
-                overwrite=overwrite,
-                nodata=nodata,
-            )
+            try:
+                self.write_layer(
+                    tif,
+                    layer_name,
+                    description=description,
+                    overwrite=overwrite,
+                    nodata=nodata,
+                )
+            finally:
+                tif.close()
 
     def layer_to_geotiff(
         self, layer, geotiff, ds_chunks="auto", lock=None, **profile_kwargs

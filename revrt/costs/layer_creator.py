@@ -393,6 +393,7 @@ class LayerCreator(BaseLayerCreator):
             tiff_chunks=tiff_chunks,
             layer_dirs=[self.output_tiff_dir],
             band_index=0,
+            fillna=config.na_fill,
         )
 
     def _rasterize_vector_layer(self, fname, config, out_tiff):
