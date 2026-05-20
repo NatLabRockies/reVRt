@@ -427,9 +427,7 @@ class LayerCreator(BaseLayerCreator):
 
         logger.debug("Writing rasterized vector '%s' to '%s'", fname, out_tiff)
         save_data_using_layer_file_profile(
-            layer_fp=self._io_handler.fp,
-            data=temp,
-            geotiff=out_tiff,
+            layer_fp=self._io_handler.fp, data=temp, geotiff=out_tiff
         )
 
     def _apply_mask(self, config, data):
