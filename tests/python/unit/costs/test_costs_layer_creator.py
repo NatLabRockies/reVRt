@@ -10,6 +10,7 @@ import rioxarray
 import rasterio
 import numpy as np
 import xarray as xr
+import dask.array as da
 import geopandas as gpd
 from shapely.geometry import box
 from rasterio.transform import Affine, from_origin
@@ -428,6 +429,108 @@ def test_pass_through(builder_instance):
     assert (result == data).all()
 
 
+def test_process_raster_layer_fills_na_for_lazy_dask_output(
+    tmp_path, mask_instance
+):
+    """Test NA fill for pass-through rasters that become Dask arrays"""
+    layer_dir = tmp_path / "layers"
+    layer_dir.mkdir(parents=True, exist_ok=True)
+
+    data = xr.DataArray(
+        np.array(
+            [[np.nan, 1, 2], [np.nan, 3, 4], [np.nan, 5, 6]],
+            dtype=np.float32,
+        ),
+        dims=("y", "x"),
+        coords={
+            "x": 10 + np.arange(3) + 0.5,
+            "y": 10 - np.arange(3) - 0.5,
+        },
+        name="test_band",
+    )
+    data = data.rio.write_crs("EPSG:4326")
+    data.rio.write_transform(from_origin(10, 10, 1, 1))
+
+    layer_fp = layer_dir / "nan_pass_through.tif"
+    data.rio.to_raster(layer_fp, driver="GTiff")
+
+    lf = LayeredFile(tmp_path / "test.zarr")
+    lf.create_new(layer_fp)
+
+    builder = LayerCreator(
+        lf,
+        mask_instance,
+        input_layer_dir=layer_dir,
+        output_tiff_dir=tmp_path / "out",
+    )
+    config = LayerBuildConfig(extent="wet", pass_through=True, na_fill=7)
+
+    result = builder._process_raster_layer(layer_fp.name, config)
+
+    assert isinstance(result, da.Array)
+    assert np.array_equal(
+        result.compute(),
+        np.array([[7, 0, 0], [7, 0, 0], [7, 0, 0]], dtype=np.float32),
+    )
+
+
+def test_process_raster_layer_fills_large_negative_nodata(
+    tmp_path, mask_instance
+):
+    """Test NA fill when GeoTIFF nodata is a large negative sentinel"""
+    layer_dir = tmp_path / "layers"
+    layer_dir.mkdir(parents=True, exist_ok=True)
+
+    nodata_value = np.float32(-3.4028235e38)
+    raster_data = np.array(
+        [
+            [nodata_value, 1, 2],
+            [nodata_value, 3, 4],
+            [nodata_value, 5, 6],
+        ],
+        dtype=np.float32,
+    )
+    layer_fp = layer_dir / "large_negative_nodata.tif"
+
+    with rasterio.open(
+        layer_fp,
+        "w",
+        driver="GTiff",
+        height=raster_data.shape[0],
+        width=raster_data.shape[1],
+        count=1,
+        dtype=raster_data.dtype,
+        crs="EPSG:4326",
+        transform=from_origin(10, 10, 1, 1),
+        nodata=float(nodata_value),
+    ) as src:
+        src.write(raster_data, 1)
+
+    with rasterio.open(layer_fp) as src:
+        loaded = src.read(1)
+
+    assert loaded[0, 0] == nodata_value
+
+    lf = LayeredFile(tmp_path / "test.zarr")
+    lf.create_new(layer_fp)
+
+    builder = LayerCreator(
+        lf,
+        mask_instance,
+        input_layer_dir=layer_dir,
+        output_tiff_dir=tmp_path / "out",
+    )
+    config = LayerBuildConfig(extent="wet", pass_through=True, na_fill=7)
+
+    result = builder._process_raster_layer(layer_fp.name, config)
+
+    assert isinstance(result, da.Array)
+    assert np.array_equal(
+        result.compute(),
+        np.array([[7, 0, 0], [7, 0, 0], [7, 0, 0]], dtype=np.float32),
+    )
+
+
 def test_bin_config_sanity_checking(builder_instance, tiff_layers_for_testing):
     """Test cost binning config sanity checking"""
     __, layers = tiff_layers_for_testing
@@ -764,6 +867,59 @@ def test_rasterizing_shape_file_uses_column_values(tmp_path, mask_instance):
     with rioxarray.open_rasterio(tiff_fp, chunks="auto") as ds:
         assert np.allclose(
             np.array([[[0, 0, 10], [0, 0, 20], [0, 0, 30]]]),
+            ds,
+        ), f"{np.array(ds.values)}"
+
+
+def test_rasterizing_shape_file_uses_na_fill_for_background(
+    tmp_path, mask_instance
+):
+    """Rasterize vector features using na_fill for untouched cells"""
+    fn = "test_background_fill.gpkg"
+    vector_file = tmp_path / fn
+    tiff_fp = tmp_path / "friction.tif"
+
+    template_tiff = tmp_path / "template.tif"
+    crs = "ESRI:102008"
+    transform = Affine(5.0, 0.0, -12.5, 0.0, -5.0, 12.5)
+    width = height = 3
+    x0, y0 = -12.5, 12.5
+
+    data = xr.DataArray(
+        np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]]),
+        dims=("y", "x"),
+        coords={
+            "x": x0 + np.arange(width) * 5 + 2.5,
+            "y": y0 - np.arange(height) * 5 - 2.5,
+        },
+        name="test_band",
+    )
+    data = data.rio.write_crs(crs)
+    data.rio.write_transform(transform)
+    data.rio.to_raster(template_tiff, driver="GTiff")
+
+    gpd.GeoDataFrame(
+        geometry=[box(-2.4, -2.4, 2.4, 12.4)],
+        crs=crs,
+    ).to_file(vector_file, driver="GPKG")
+
+    lf = LayeredFile(tmp_path / "test.zarr").create_new(template_tiff)
+    builder = LayerCreator(
+        lf, mask_instance, input_layer_dir=tmp_path, output_tiff_dir=tmp_path
+    )
+    config = {
+        fn: LayerBuildConfig(
+            extent="all",
+            rasterize=Rasterize(value=1000, reproject=False),
+            na_fill=7,
+        )
+    }
+
+    builder.build("friction", config, write_to_file=False)
+
+    with rioxarray.open_rasterio(tiff_fp, chunks="auto") as ds:
+        assert np.allclose(
+            np.array([[[7, 7, 1000], [7, 7, 1000], [7, 7, 1000]]]),
             ds,
         ), f"{np.array(ds.values)}"
 

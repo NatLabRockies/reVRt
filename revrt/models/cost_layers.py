@@ -140,12 +140,6 @@ class Rasterize(BaseModel, extra="forbid"):
     rasterization. By default, ``False``.
     """
 
-    fill: float | int | None = 0
-    """Value used to fill raster cells not burned by vector
-
-    If None, uses np.nan. By default, ``0``.
-    """
-
 
 class LayerBuildConfig(BaseModel, extra="forbid"):
     """Friction and barrier layers config model
@@ -196,6 +190,9 @@ class LayerBuildConfig(BaseModel, extra="forbid"):
     force the final value of corresponding cells to 0. Multiple forced
     inclusions are allowed.
     """
+
+    na_fill: float | int | None = 0
+    """Value to fill NA cells with after processing"""
 
 
 def parse_barrier_values(barrier_values):

@@ -302,8 +302,12 @@ class LayerCreator(BaseLayerCreator):
             tiff_chunks=tiff_chunks,
             layer_dirs=[self.input_layer_dir, self.output_tiff_dir],
             band_index=0,
+            fillna=None,  # filled below _after_ processing
         )
-        return self._process_raster_data(data, config)
+        data = self._process_raster_data(data, config)
+        if config.na_fill is not None:
+            data = da.where(da.isnan(data), config.na_fill, data)
+        return data
 
     def _process_raster_data(self, data, config):
         """Create the desired layer from the data array"""
@@ -389,6 +393,7 @@ class LayerCreator(BaseLayerCreator):
             tiff_chunks=tiff_chunks,
             layer_dirs=[self.output_tiff_dir],
             band_index=0,
+            fillna=config.na_fill,
         )
 
     def _rasterize_vector_layer(self, fname, config, out_tiff):
@@ -415,7 +420,7 @@ class LayerCreator(BaseLayerCreator):
             all_touched=config.rasterize.all_touched,
             tile_size=config.rasterize.tile_size,
             simply_before_rasterize=config.rasterize.simply_before_rasterize,
-            fill=config.rasterize.fill,
+            fill=config.na_fill,
             dtype=vector_dtype,
             **kwargs,
         )
@@ -427,9 +432,7 @@ class LayerCreator(BaseLayerCreator):
 
         logger.debug("Writing rasterized vector '%s' to '%s'", fname, out_tiff)
         save_data_using_layer_file_profile(
-            layer_fp=self._io_handler.fp,
-            data=temp,
-            geotiff=out_tiff,
+            layer_fp=self._io_handler.fp, data=temp, geotiff=out_tiff
         )
 
     def _apply_mask(self, config, data):
