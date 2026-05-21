@@ -260,10 +260,10 @@ def test_geotiff_to_layer_file(tif, tmp_path, test_utility_data_dir):
     lf.write_geotiff_to_file(in_tiff_fp, layer)
 
     with (
-        rioxarray.open_rasterio(in_tiff_fp) as truth_tif,
+        rioxarray.open_rasterio(in_tiff_fp, masked=True) as truth_tif,
         xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds,
     ):
-        assert np.allclose(ds[layer], truth_tif)
+        assert np.allclose(ds[layer], truth_tif, equal_nan=True)
         assert np.allclose(
             ds[layer].rio.transform(), truth_tif.rio.transform()
         )
@@ -293,12 +293,12 @@ def test_roundtrip(as_list, tmp_path, test_utility_data_dir):
     for layer, truth_fp in layer_names.items():
         test_tiff_fp = tmp_path / f"{layer}.tif"
         with (
-            rioxarray.open_rasterio(truth_fp) as truth_tif,
-            rioxarray.open_rasterio(test_tiff_fp) as test_tif,
+            rioxarray.open_rasterio(truth_fp, masked=True) as truth_tif,
+            rioxarray.open_rasterio(test_tiff_fp, masked=True) as test_tif,
             xr.open_dataset(test_fp, consolidated=False, engine="zarr") as ds,
         ):
-            assert np.allclose(ds[layer], truth_tif)
-            assert np.allclose(test_tif, truth_tif)
+            assert np.allclose(ds[layer], truth_tif, equal_nan=True)
+            assert np.allclose(test_tif, truth_tif, equal_nan=True)
             assert np.allclose(
                 ds[layer].rio.transform(), truth_tif.rio.transform()
             )
@@ -358,14 +358,14 @@ def test_roundtrip_cli(cli_runner, tmp_path, test_utility_data_dir, as_list):
     for layer, truth_fp in layer_names.items():
         test_tiff_fp = tmp_path / f"{layer}.tif"
         with (
-            rioxarray.open_rasterio(truth_fp) as truth_tif,
-            rioxarray.open_rasterio(test_tiff_fp) as test_tif,
+            rioxarray.open_rasterio(truth_fp, masked=True) as truth_tif,
+            rioxarray.open_rasterio(test_tiff_fp, masked=True) as test_tif,
             xr.open_dataset(
                 out_file_fp, consolidated=False, engine="zarr"
             ) as ds,
         ):
-            assert np.allclose(ds[layer], truth_tif)
-            assert np.allclose(test_tif, truth_tif)
+            assert np.allclose(ds[layer], truth_tif, equal_nan=True)
+            assert np.allclose(test_tif, truth_tif, equal_nan=True)
             assert np.allclose(
                 ds[layer].rio.transform(), truth_tif.rio.transform()
             )

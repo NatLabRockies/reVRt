@@ -18923,8 +18923,8 @@ packages:
   requires_python: '>=3.9'
 - pypi: ./
   name: nlr-revrt
-  version: 0.7.0
-  sha256: b47a59913cf2bb64f2bb96fecaa44a84be4eaf1e24708678a64086419f9e1def
+  version: 0.7.1
+  sha256: 7669c1bc9a7802c7a31dda362899342b3d684b2364d420bb1c4e91c1272609ce
   requires_dist:
   - affine>=2.4.0,<3
   - bokeh>=3.9.0,<4
