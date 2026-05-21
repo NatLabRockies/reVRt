@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.routing.cli.build_costs &#8212; reVRt 0.7.0 documentation</title>
+    <title>revrt.routing.cli.build_costs &#8212; reVRt 0.7.1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../../_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="../../../../_static/documentation_options.js?v=5a057da9"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.7.0" />
+  <meta name="docsearch:version" content="0.7.1" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.7.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.1 documentation</p>
   
 </a></div>
     
@@ -841,7 +841,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="build_final_routing_layers">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.build_costs.build_final_routing_layers.html#revrt.routing.cli.build_costs.build_final_routing_layers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_final_routing_layers</span><span class="p">(</span>
-    <span class="n">lcp_config_fp</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">polarity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voltage</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">lcp_config_fp</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">polarity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voltage</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build out the final routing layers based on an LCP config file</span>
 
@@ -860,7 +860,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    lcp_config_fp : path-like</span>
 <span class="sd">        Path to LCP config file for which the routing layer should be</span>
 <span class="sd">        created.</span>
-<span class="sd">    out_dir : path-like</span>
+<span class="sd">    output_dir : path-like</span>
 <span class="sd">        Path to directory where to store the outputs.</span>
 <span class="sd">    polarity : str, optional</span>
 <span class="sd">        Polarity to use when building the routing layer. This input is</span>
@@ -881,7 +881,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        List of paths to the GeoTIFF files that were created.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># TODO: Add dask client here??</span>
-    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
     <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">lcp_config_fp</span><span class="p">)</span>
@@ -915,11 +915,11 @@ window.runMermaid = runMermaid;</script>
     <span class="n">rl</span> <span class="o">=</span> <span class="n">RoutingLayerManager</span><span class="p">(</span><span class="n">routing_scenario</span><span class="p">)</span>
     <span class="n">rl</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
 
-    <span class="n">cost_out_fp</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="s2">&quot;agg_costs.tif&quot;</span>
+    <span class="n">cost_out_fp</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_dir</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_agg_costs.tif&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Writing costs to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">cost_out_fp</span><span class="p">)</span>
     <span class="n">save_data_array_to_geotiff</span><span class="p">(</span><span class="n">rl</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="n">cost_out_fp</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="n">frl_out_fp</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="s2">&quot;final_routing_layer.tif&quot;</span>
+    <span class="n">frl_out_fp</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_dir</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_final_routing_layer.tif&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Writing final routing layer to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">frl_out_fp</span><span class="p">)</span>
     <span class="n">save_data_array_to_geotiff</span><span class="p">(</span><span class="n">rl</span><span class="o">.</span><span class="n">final_routing_layer</span><span class="p">,</span> <span class="n">frl_out_fp</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
@@ -927,9 +927,31 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_build_final_routing_layers</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for build_routing_layer command&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;lcp_config_fp&quot;</span><span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">})</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_build_final_routing_layers</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for build_routing_layer command</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config : dict</span>
+<span class="sd">        Dictionary containing the config for the command.</span>
+<span class="sd">    project_dir : path-like</span>
+<span class="sd">        Path to the project directory. This is used as the default</span>
+<span class="sd">        output directory if `output_directory` is not provided.</span>
+<span class="sd">    output_directory : path-like, optional</span>
+<span class="sd">        Path to directory where output files should be stored. If not</span>
+<span class="sd">        provided, the output files will be stored in the project</span>
+<span class="sd">        directory. The directory name will be prepended to each output</span>
+<span class="sd">        file. By default, ``None``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Updated config dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;output_dir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_directory</span> <span class="ow">or</span> <span class="n">project_dir</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;lcp_config_fp&quot;</span><span class="p">,</span> <span class="s2">&quot;output_dir&quot;</span><span class="p">})</span>
 
 
 <span class="n">build_final_routing_layers_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
@@ -937,6 +959,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;build-final-routing-layers&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_build_final_routing_layers</span><span class="p">,</span>
+    <span class="n">skip_doc_params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;output_dir&quot;</span><span class="p">],</span>
 <span class="p">)</span>
 </pre></div>
 

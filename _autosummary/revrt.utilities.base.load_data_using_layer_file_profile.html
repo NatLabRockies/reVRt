@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.utilities.base.load_data_using_layer_file_profile &#8212; reVRt 0.7.0 documentation</title>
+    <title>revrt.utilities.base.load_data_using_layer_file_profile &#8212; reVRt 0.7.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="../_static/documentation_options.js?v=5a057da9"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="revrt.utilities.base.file_full_path" href="revrt.utilities.base.file_full_path.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.7.0" />
+  <meta name="docsearch:version" content="0.7.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.7.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.1 documentation</p>
   
 </a></div>
     
@@ -519,7 +519,6 @@
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="revrt.utilities.html">revrt.utilities</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.utilities.base.html">revrt.utilities.base</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.TRANSFORM_ATOL.html">revrt.utilities.base.TRANSFORM_ATOL</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.check_geotiff.html">revrt.utilities.base.check_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
@@ -646,7 +645,7 @@
 <h1>revrt.utilities.base.load_data_using_layer_file_profile<a class="headerlink" href="#revrt-utilities-base-load-data-using-layer-file-profile" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="revrt.utilities.base.load_data_using_layer_file_profile">
-<span class="sig-name descname"><span class="pre">load_data_using_layer_file_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geotiff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiff_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'file'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_dirs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/utilities/base.html#load_data_using_layer_file_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.utilities.base.load_data_using_layer_file_profile" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">load_data_using_layer_file_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geotiff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiff_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'file'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_dirs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_tiff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillna</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/utilities/base.html#load_data_using_layer_file_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.utilities.base.load_data_using_layer_file_profile" title="Link to this definition">#</a></dt>
 <dd><p>Load GeoTIFF data, reprojecting to LayeredFile CRS if needed</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -659,9 +658,19 @@ passed down as the <code class="docutils literal notranslate"><span class="pre">
 <li><p><strong>layer_dirs</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directories to search for <cite>geotiff</cite> in, if not found in current
 directory. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which means only the current
 directory is searched.</p></li>
+<li><p><strong>check_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>) – Whether to check that the GeoTIFF profile matches the template
+defined by the layered file. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the GeoTIFF profile is
+compared to the template, and if they don’t match, the GeoTIFF
+is re-projected to match the template. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, no checks
+are performed and the GeoTIFF is loaded as-is.
+By default, <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><strong>band_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Optional index of band to load from the GeoTIFF. If provided,
 only that band will be returned. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which
 means all bands will be returned.</p></li>
+<li><p><strong>fillna</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Value to fill NA cells with after loading the GeoTIFF. If
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, NA cells will not be filled (and will typically be
+represented as <code class="docutils literal notranslate"><span class="pre">np.nan</span></code> in the output array).
+By default, <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

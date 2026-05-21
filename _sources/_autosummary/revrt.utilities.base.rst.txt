@@ -5,13 +5,6 @@ revrt.utilities.base
 
    
    
-   .. rubric:: Module attributes
-
-   .. autosummary::
-      :toctree:
-   
-      TRANSFORM_ATOL
-   
    
 
    

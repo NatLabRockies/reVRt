@@ -36,5 +36,6 @@ revrt.models.cost\_layers.LayerBuildConfig
       ~LayerBuildConfig.pass_through
       ~LayerBuildConfig.rasterize
       ~LayerBuildConfig.forced_inclusion
+      ~LayerBuildConfig.na_fill
    
    

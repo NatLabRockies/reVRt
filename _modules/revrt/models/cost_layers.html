@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.models.cost_layers &#8212; reVRt 0.7.0 documentation</title>
+    <title>revrt.models.cost_layers &#8212; reVRt 0.7.1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="../../../_static/documentation_options.js?v=5a057da9"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.7.0" />
+  <meta name="docsearch:version" content="0.7.1" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.7.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.1 documentation</p>
   
 </a></div>
     
@@ -976,12 +976,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is ``True``. This can help speed up rasterization and reduce memory</span>
 <span class="sd">    usage for very complex vectors, but may result in less accurate</span>
 <span class="sd">    rasterization. By default, ``False``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">fill</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value used to fill raster cells not burned by vector</span>
-
-<span class="sd">    If None, uses np.nan. By default, ``0``.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
 
 
@@ -1036,7 +1030,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    If `forced_inclusion` is ``True``, any cells with a value &gt; 0 will</span>
 <span class="sd">    force the final value of corresponding cells to 0. Multiple forced</span>
 <span class="sd">    inclusions are allowed.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">na_fill</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value to fill NA cells with after processing&quot;&quot;&quot;</span></div>
 
 
 

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.utilities.base &#8212; reVRt 0.7.0 documentation</title>
+    <title>revrt.utilities.base &#8212; reVRt 0.7.1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="../../../_static/documentation_options.js?v=5a057da9"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.7.0" />
+  <meta name="docsearch:version" content="0.7.1" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.7.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.1 documentation</p>
   
 </a></div>
     
@@ -849,8 +849,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">_NUM_GEOTIFF_DIMS</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># (band, y, x)</span>
-<span class="n">TRANSFORM_ATOL</span> <span class="o">=</span> <span class="mf">0.01</span>
-<span class="sd">&quot;&quot;&quot;Tolerance in transform comparison when checking GeoTIFFs&quot;&quot;&quot;</span>
+<span class="n">_TRANSFORM_ATOL</span> <span class="o">=</span> <span class="mf">0.01</span>
 
 
 <div class="viewcode-block" id="buffer_routes">
@@ -1085,7 +1084,13 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="load_data_using_layer_file_profile">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.load_data_using_layer_file_profile.html#revrt.utilities.base.load_data_using_layer_file_profile">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_data_using_layer_file_profile</span><span class="p">(</span>
-    <span class="n">layer_fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="n">layer_dirs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">band_index</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">layer_fp</span><span class="p">,</span>
+    <span class="n">geotiff</span><span class="p">,</span>
+    <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">&quot;file&quot;</span><span class="p">,</span>
+    <span class="n">layer_dirs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">band_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">check_tiff</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fillna</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load GeoTIFF data, reprojecting to LayeredFile CRS if needed</span>
 
@@ -1103,10 +1108,22 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Directories to search for `geotiff` in, if not found in current</span>
 <span class="sd">        directory. By default, ``None``, which means only the current</span>
 <span class="sd">        directory is searched.</span>
+<span class="sd">    check_tiff : bool, default=True</span>
+<span class="sd">        Whether to check that the GeoTIFF profile matches the template</span>
+<span class="sd">        defined by the layered file. If ``True``, the GeoTIFF profile is</span>
+<span class="sd">        compared to the template, and if they don&#39;t match, the GeoTIFF</span>
+<span class="sd">        is re-projected to match the template. If ``False``, no checks</span>
+<span class="sd">        are performed and the GeoTIFF is loaded as-is.</span>
+<span class="sd">        By default, ``True``.</span>
 <span class="sd">    band_index : int, optional</span>
 <span class="sd">        Optional index of band to load from the GeoTIFF. If provided,</span>
 <span class="sd">        only that band will be returned. By default, ``None``, which</span>
 <span class="sd">        means all bands will be returned.</span>
+<span class="sd">    fillna : int or float, optional</span>
+<span class="sd">        Value to fill NA cells with after loading the GeoTIFF. If</span>
+<span class="sd">        ``None``, NA cells will not be filled (and will typically be</span>
+<span class="sd">        represented as ``np.nan`` in the output array).</span>
+<span class="sd">        By default, ``0``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1133,20 +1150,24 @@ window.runMermaid = runMermaid;</script>
         <span class="s2">&quot;Using the following chunks to open &#39;</span><span class="si">%s</span><span class="s2">&#39;: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">tiff_chunks</span>
     <span class="p">)</span>
 
-    <span class="n">tif</span> <span class="o">=</span> <span class="n">rioxarray</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">tiff_chunks</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">check_geotiff</span><span class="p">(</span><span class="n">layer_fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">transform_atol</span><span class="o">=</span><span class="n">TRANSFORM_ATOL</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">revrtProfileCheckError</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Profile of &#39;</span><span class="si">%s</span><span class="s2">&#39; does not match template, reprojecting...&quot;</span><span class="p">,</span>
-            <span class="n">geotiff</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">geo_box</span> <span class="o">=</span> <span class="n">odc</span><span class="o">.</span><span class="n">geo</span><span class="o">.</span><span class="n">geobox</span><span class="o">.</span><span class="n">GeoBox</span><span class="p">(</span>
-            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">),</span> <span class="n">affine</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span>
-        <span class="p">)</span>
-        <span class="n">tif</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">odc</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span>
-            <span class="n">how</span><span class="o">=</span><span class="n">geo_box</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">,</span> <span class="n">INIT_DEST</span><span class="o">=</span><span class="mi">0</span>
-        <span class="p">)</span>
+    <span class="n">tif</span> <span class="o">=</span> <span class="n">rioxarray</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">tiff_chunks</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">check_tiff</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">check_geotiff</span><span class="p">(</span><span class="n">layer_fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">transform_atol</span><span class="o">=</span><span class="n">_TRANSFORM_ATOL</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">revrtProfileCheckError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Profile of &#39;</span><span class="si">%s</span><span class="s2">&#39; does not match template, reprojecting...&quot;</span><span class="p">,</span>
+                <span class="n">geotiff</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">geo_box</span> <span class="o">=</span> <span class="n">odc</span><span class="o">.</span><span class="n">geo</span><span class="o">.</span><span class="n">geobox</span><span class="o">.</span><span class="n">GeoBox</span><span class="p">(</span>
+                <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">),</span> <span class="n">affine</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span>
+            <span class="p">)</span>
+            <span class="n">tif</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">odc</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span>
+                <span class="n">how</span><span class="o">=</span><span class="n">geo_box</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">,</span> <span class="n">dst_nodata</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fillna</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tif</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fillna</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">band_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">tif</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">band</span><span class="o">=</span><span class="n">band_index</span><span class="p">)</span>

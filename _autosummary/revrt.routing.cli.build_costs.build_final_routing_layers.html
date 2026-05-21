@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.routing.cli.build_costs.build_final_routing_layers &#8212; reVRt 0.7.0 documentation</title>
+    <title>revrt.routing.cli.build_costs.build_final_routing_layers &#8212; reVRt 0.7.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="../_static/documentation_options.js?v=5a057da9"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="revrt.routing.cli.build_costs" href="revrt.routing.cli.build_costs.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.7.0" />
+  <meta name="docsearch:version" content="0.7.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.7.0 documentation</p>
+    <p class="title logo__title">reVRt 0.7.1 documentation</p>
   
 </a></div>
     
@@ -519,7 +519,6 @@
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="revrt.utilities.html">revrt.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.base.html">revrt.utilities.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.TRANSFORM_ATOL.html">revrt.utilities.base.TRANSFORM_ATOL</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.buffer_routes.html">revrt.utilities.base.buffer_routes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.check_geotiff.html">revrt.utilities.base.check_geotiff</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.base.delete_data_file.html">revrt.utilities.base.delete_data_file</a></li>
@@ -649,7 +648,7 @@
 <h1>revrt.routing.cli.build_costs.build_final_routing_layers<a class="headerlink" href="#revrt-routing-cli-build-costs-build-final-routing-layers" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="revrt.routing.cli.build_costs.build_final_routing_layers">
-<span class="sig-name descname"><span class="pre">build_final_routing_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lcp_config_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polarity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voltage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/build_costs.html#build_final_routing_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.build_costs.build_final_routing_layers" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build_final_routing_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lcp_config_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polarity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voltage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/build_costs.html#build_final_routing_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.build_costs.build_final_routing_layers" title="Link to this definition">#</a></dt>
 <dd><p>Build out the final routing layers based on an LCP config file</p>
 <p>Given an LCP config file, build out the final routing layers used by
 <code class="docutils literal notranslate"><span class="pre">reVRt</span></code>. The routing layers include the aggregated cost layer and
@@ -665,7 +664,7 @@ on each type of action.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lcp_config_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to LCP config file for which the routing layer should be
 created.</p></li>
-<li><p><strong>out_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to directory where to store the outputs.</p></li>
+<li><p><strong>output_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to directory where to store the outputs.</p></li>
 <li><p><strong>polarity</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Polarity to use when building the routing layer. This input is
 required if any cost or friction layers that have
 <cite>apply_polarity_mult</cite> set to <cite>True</cite> - they will have the
