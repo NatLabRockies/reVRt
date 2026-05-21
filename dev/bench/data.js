@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779236195277,
+  "lastUpdate": 1779326159615,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -10583,6 +10583,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 478798872,
             "range": "± 4684099",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f9ec058a8aad9c88061c7b7b56d83e1a82772200",
+          "message": "nodata bug fix (#277)\n\n* Update to `na_fill`\n\n* Formatting\n\n* Add test\n\n* Add test\n\n* Layer creator now uses `na_fill` config value\n\n* Add test\n\n* Add test\n\n* add `fillna` option\n\n* Update tests\n\n* Use `load_data_using_layer_file_profile`\n\n* Make var private\n\n* Return file path\n\n* bump version\n\n* PR review",
+          "timestamp": "2026-05-20T19:02:46-06:00",
+          "tree_id": "3ff261ba558ed4d4aba6482d2ce0e8a4aa33adae",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/f9ec058a8aad9c88061c7b7b56d83e1a82772200"
+        },
+        "date": 1779326158410,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 92800962,
+            "range": "± 2084368",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 113208578,
+            "range": "± 5082929",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 134829830,
+            "range": "± 2527680",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 202481952,
+            "range": "± 2941840",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 799324994,
+            "range": "± 11366629",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 152291166,
+            "range": "± 2020894",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 158739249,
+            "range": "± 2335969",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 176553211,
+            "range": "± 1389437",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 236182362,
+            "range": "± 3791908",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 456201836,
+            "range": "± 5868413",
             "unit": "ns/iter"
           }
         ]
