@@ -5,7 +5,7 @@ use serde_json::{Map, Value};
 use std::collections::HashMap;
 
 use crate::cost::CostFunction;
-use crate::cost_new::components::{
+use crate::cost::components::{
     BarrierLayer, BarrierOperator, CostLayer, DriverRuleSet, DriverZoneRule, FrictionLayer,
     TransitionCostTable,
 };
