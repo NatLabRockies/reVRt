@@ -58,7 +58,10 @@ fn main() {
     trace!("Starting point: {:?}", start);
 
     assert_eq!(cli.end.len(), 2);
-    let end = vec![revrt::ArrayIndex::new_ij(cli.end[0] as u64, cli.end[1] as u64)];
+    let end = vec![revrt::ArrayIndex::new_ij(
+        cli.end[0] as u64,
+        cli.end[1] as u64,
+    )];
     trace!("Ending point: {:?}", end);
 
     let result = resolve(
