@@ -1,0 +1,230 @@
+//! Cost function inputs and parsing
+
+use serde::de::DeserializeOwned;
+use serde_json::{Map, Value};
+use std::collections::HashMap;
+
+use crate::cost::{BarrierLayer, BarrierOperator, CostFunction, CostLayer, FrictionLayer};
+use crate::error::Result;
+
+fn true_option() -> bool {
+    true
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+pub(crate) struct CostFunctionInput {
+    #[serde(default)]
+    routing_options: RoutingOptionsInput,
+    #[serde(default)]
+    drivers: DriversConfig,
+    #[serde(default)]
+    transition_costs: TransitionCostsConfig,
+    #[serde(default = "true_option")]
+    ignore_invalid_costs: bool,
+}
+
+#[derive(Clone, Debug, Default, serde::Deserialize)]
+#[serde(untagged)]
+pub(crate) enum RoutingOptionsInput {
+    Definitions(Map<String, Value>),
+    #[default]
+    Missing,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct RoutingOptionEntry<TDefinition> {
+    pub(crate) name: String,
+    pub(crate) index: u32,
+    pub(crate) definition: TDefinition,
+}
+
+#[derive(Clone, Debug, Default, serde::Deserialize)]
+pub(crate) struct RoutingOptionDefinition {
+    #[serde(default)]
+    cost_layers: Vec<CostLayer>,
+    #[serde(default)]
+    friction_layers: Vec<FrictionLayerInput>,
+    #[serde(default)]
+    barrier_layers: Vec<BarrierLayer>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub(crate) struct RoutingOptionLayerSet {
+    pub(crate) cost_layers: Vec<CostLayer>,
+    pub(crate) friction_layers: Vec<FrictionLayer>,
+    pub(crate) barrier_layers: Vec<BarrierLayer>,
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+struct FrictionLayerInput {
+    #[serde(default)]
+    layer_name: Option<String>,
+    #[serde(default)]
+    multiplier_layer: Option<String>,
+    #[serde(default)]
+    multiplier_scalar: Option<f32>,
+}
+
+#[derive(Clone, Debug, Default, serde::Deserialize)]
+pub(crate) struct TransitionCostsConfig {
+    #[serde(default)]
+    pub(crate) default: f32,
+    #[serde(default)]
+    pub(crate) pairwise: Vec<TransitionCostRule>,
+}
+
+#[derive(Clone, Debug, Default, serde::Deserialize)]
+pub(crate) struct DriversConfig {
+    #[serde(default)]
+    pub(crate) default: HashMap<String, DriverRuleValue>,
+    #[serde(default)]
+    pub(crate) zones: Vec<DriverZoneConfig>,
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+pub(crate) struct DriverZoneConfig {
+    pub(crate) layer_name: String,
+    pub(crate) mask_operator: BarrierOperator,
+    pub(crate) mask_threshold: f32,
+    #[serde(flatten)]
+    pub(crate) options: HashMap<String, DriverRuleValue>,
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(untagged)]
+pub(crate) enum DriverRuleValue {
+    Keyword(String),
+    Multiplier(f32),
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+pub(crate) struct TransitionCostRule {
+    pub(crate) from: TransitionOptionRef,
+    pub(crate) to: TransitionOptionRef,
+    pub(crate) cost: f32,
+    #[serde(default)]
+    pub(crate) applies_bidirectionally: bool,
+}
+
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(untagged)]
+pub(crate) enum TransitionOptionRef {
+    Index(u32),
+    Name(String),
+}
+
+impl RoutingOptionsInput {
+    pub(crate) fn into_entries<TDefinition>(self) -> Result<Vec<RoutingOptionEntry<TDefinition>>>
+    where
+        TDefinition: DeserializeOwned,
+    {
+        match self {
+            Self::Definitions(definitions) => {
+                if definitions.is_empty() {
+                    return Err(crate::error::Error::Undefined(
+                        "routing_options must define at least one routing option".to_string(),
+                    ));
+                }
+
+                let mut entries = Vec::with_capacity(definitions.len());
+                for (name, value) in definitions {
+                    let definition = serde_json::from_value(value)
+                        .map_err(|error| crate::error::Error::Undefined(error.to_string()))?;
+                    entries.push(RoutingOptionEntry {
+                        name,
+                        index: entries.len() as u32,
+                        definition,
+                    });
+                }
+
+                Ok(entries)
+            }
+            Self::Missing => Err(crate::error::Error::Undefined(
+                "routing_options must be provided and all layer definitions must be nested under a routing option"
+                    .to_string(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<CostFunctionInput> for CostFunction {
+    type Error = crate::error::Error;
+
+    fn try_from(input: CostFunctionInput) -> Result<Self> {
+        let CostFunctionInput {
+            routing_options,
+            drivers,
+            transition_costs,
+            ignore_invalid_costs,
+        } = input;
+        let mut cost_layers = Vec::new();
+        let mut friction_layers = Vec::new();
+        let mut barrier_layers = Vec::new();
+        let mut routing_option_names = Vec::new();
+
+        for RoutingOptionEntry {
+            name,
+            index,
+            definition,
+        } in routing_options.into_entries::<RoutingOptionDefinition>()?
+        {
+            let RoutingOptionLayerSet {
+                cost_layers: option_cost_layers,
+                friction_layers: option_friction_layers,
+                barrier_layers: option_barrier_layers,
+            } = definition.into_layers(index)?;
+            routing_option_names.push(name);
+            cost_layers.extend(option_cost_layers);
+            friction_layers.extend(option_friction_layers);
+            barrier_layers.extend(option_barrier_layers);
+        }
+
+        Ok(CostFunction::from_input_parts(
+            cost_layers,
+            friction_layers,
+            barrier_layers,
+            routing_option_names,
+            drivers,
+            transition_costs,
+            ignore_invalid_costs,
+        ))
+    }
+}
+
+impl RoutingOptionDefinition {
+    pub(crate) fn into_layers(self, option: u32) -> Result<RoutingOptionLayerSet> {
+        Ok(RoutingOptionLayerSet {
+            cost_layers: self
+                .cost_layers
+                .into_iter()
+                .map(|layer| layer.with_option(option))
+                .collect(),
+            friction_layers: self
+                .friction_layers
+                .into_iter()
+                .map(|layer| layer.into_layer(option))
+                .collect::<Result<_>>()?,
+            barrier_layers: self
+                .barrier_layers
+                .into_iter()
+                .map(|layer| layer.with_option(option))
+                .collect(),
+        })
+    }
+}
+
+impl FrictionLayerInput {
+    fn into_layer(self, option: u32) -> Result<FrictionLayer> {
+        let multiplier_layer = self.layer_name.or(self.multiplier_layer).ok_or_else(|| {
+            crate::error::Error::Undefined(
+                "friction layer requires layer_name or multiplier_layer".to_string(),
+            )
+        })?;
+
+        Ok(FrictionLayer::new(
+            multiplier_layer,
+            self.multiplier_scalar,
+            option,
+        ))
+    }
+}
