@@ -4,9 +4,10 @@ use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
-use crate::cost::{
-    BarrierLayer, BarrierOperator, CostFunction, CostLayer, DriverRuleSet, DriverZoneRule,
-    FrictionLayer, TransitionCostTable,
+use crate::cost::CostFunction;
+use crate::cost_new::components::{
+    BarrierLayer, BarrierOperator, CostLayer, DriverRuleSet, DriverZoneRule, FrictionLayer,
+    TransitionCostTable,
 };
 use crate::error::Result;
 
