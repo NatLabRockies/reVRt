@@ -1,14 +1,15 @@
-//! Cost function
+pub(crate) mod components;
+pub(crate) mod inputs;
 
 use core::f32;
 use ndarray::{ArrayD, Axis, IxDyn, stack};
 use std::convert::TryFrom;
 use tracing::{debug, trace};
 
-pub(crate) use crate::cost_new::components::{
+pub(crate) use crate::cost::components::{
     BarrierLayer, BarrierOperator, CostLayer, DriverRuleSet, FrictionLayer, TransitionCostTable,
 };
-use crate::cost_new::inputs::CostFunctionInput;
+use crate::cost::inputs::CostFunctionInput;
 use crate::dataset::LazySubset;
 use crate::error::Result;
 
@@ -374,7 +375,7 @@ pub(crate) mod sample {
 
 #[cfg(test)]
 mod test_builder {
-    use crate::cost_new::components::CostLayerBuilder;
+    use crate::cost::components::CostLayerBuilder;
 
     #[test]
     fn costlayer() {
