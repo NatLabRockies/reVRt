@@ -4,7 +4,10 @@ use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
-use crate::cost::{BarrierLayer, BarrierOperator, CostFunction, CostLayer, FrictionLayer};
+use crate::cost::{
+    BarrierLayer, BarrierOperator, CostFunction, CostLayer, DriverRuleSet, DriverZoneRule,
+    FrictionLayer,
+};
 use crate::error::Result;
 
 fn true_option() -> bool {
@@ -179,6 +182,8 @@ impl TryFrom<CostFunctionInput> for CostFunction {
             barrier_layers.extend(option_barrier_layers);
         }
 
+        let drivers = drivers.into_rule_set(&routing_option_names)?;
+
         Ok(CostFunction::from_input_parts(
             cost_layers,
             friction_layers,
@@ -213,6 +218,36 @@ impl RoutingOptionDefinition {
     }
 }
 
+impl DriversConfig {
+    pub(crate) fn into_rule_set(self, routing_options: &[String]) -> Result<DriverRuleSet> {
+        let mut default = vec![Some(1.0); routing_options.len()];
+
+        for (name, value) in self.default {
+            let option = resolve_routing_option(&name, routing_options, "drivers.default")?;
+            default[option as usize] = resolve_driver_rule_value(&value)?;
+        }
+
+        let mut zones = Vec::with_capacity(self.zones.len());
+        for zone in self.zones {
+            let mut options = HashMap::new();
+
+            for (name, value) in zone.options {
+                let option = resolve_routing_option(&name, routing_options, "drivers.zones")?;
+                options.insert(option, resolve_driver_rule_value(&value)?);
+            }
+
+            zones.push(DriverZoneRule::new(
+                zone.layer_name,
+                zone.mask_operator,
+                zone.mask_threshold,
+                options,
+            ));
+        }
+
+        Ok(DriverRuleSet::new(default, zones))
+    }
+}
+
 impl FrictionLayerInput {
     fn into_layer(self, option: u32) -> Result<FrictionLayer> {
         let multiplier_layer = self.layer_name.or(self.multiplier_layer).ok_or_else(|| {
@@ -226,5 +261,25 @@ impl FrictionLayerInput {
             self.multiplier_scalar,
             option,
         ))
+    }
+}
+
+fn resolve_routing_option(name: &str, routing_options: &[String], context: &str) -> Result<u32> {
+    routing_options
+        .iter()
+        .position(|option_name| option_name == name)
+        .map(|index| index as u32)
+        .ok_or_else(|| {
+            crate::error::Error::Undefined(format!("unknown routing option {name:?} in {context}"))
+        })
+}
+
+fn resolve_driver_rule_value(value: &DriverRuleValue) -> Result<Option<f32>> {
+    match value {
+        DriverRuleValue::Multiplier(multiplier) => Ok(Some(*multiplier)),
+        DriverRuleValue::Keyword(keyword) if keyword == "excluded" => Ok(None),
+        DriverRuleValue::Keyword(keyword) => Err(crate::error::Error::Undefined(format!(
+            "unsupported driver rule value {keyword:?}"
+        ))),
     }
 }
