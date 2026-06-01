@@ -59,8 +59,8 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
-        let driver_rules = cost_function.driver_rule_set()?;
-        let transition_costs = cost_function.transition_cost_table()?;
+        let driver_rules = cost_function.drivers.clone();
+        let transition_costs = cost_function.transition_costs.clone();
         let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open_with_swap(
             store_path,
@@ -94,8 +94,8 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
-        let driver_rules = cost_function.driver_rule_set()?;
-        let transition_costs = cost_function.transition_cost_table()?;
+        let driver_rules = cost_function.drivers.clone();
+        let transition_costs = cost_function.transition_costs.clone();
         let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open(store_path, cost_function, cache_size)?;
 
