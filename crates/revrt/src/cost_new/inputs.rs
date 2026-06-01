@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use crate::cost::{
     BarrierLayer, BarrierOperator, CostFunction, CostLayer, DriverRuleSet, DriverZoneRule,
-    FrictionLayer,
+    FrictionLayer, TransitionCostTable,
 };
 use crate::error::Result;
 
@@ -183,6 +183,7 @@ impl TryFrom<CostFunctionInput> for CostFunction {
         }
 
         let drivers = drivers.into_rule_set(&routing_option_names)?;
+        let transition_costs = transition_costs.into_table(&routing_option_names)?;
 
         Ok(CostFunction::from_input_parts(
             cost_layers,
@@ -248,6 +249,23 @@ impl DriversConfig {
     }
 }
 
+impl TransitionCostsConfig {
+    pub(crate) fn into_table(self, routing_options: &[String]) -> Result<TransitionCostTable> {
+        let mut pairwise = HashMap::new();
+
+        for rule in self.pairwise {
+            let from = resolve_transition_option(&rule.from, routing_options)?;
+            let to = resolve_transition_option(&rule.to, routing_options)?;
+            pairwise.insert((from, to), rule.cost);
+            if rule.applies_bidirectionally {
+                pairwise.insert((to, from), rule.cost);
+            }
+        }
+
+        Ok(TransitionCostTable::new(self.default, pairwise))
+    }
+}
+
 impl FrictionLayerInput {
     fn into_layer(self, option: u32) -> Result<FrictionLayer> {
         let multiplier_layer = self.layer_name.or(self.multiplier_layer).ok_or_else(|| {
@@ -272,6 +290,18 @@ fn resolve_routing_option(name: &str, routing_options: &[String], context: &str)
         .ok_or_else(|| {
             crate::error::Error::Undefined(format!("unknown routing option {name:?} in {context}"))
         })
+}
+
+fn resolve_transition_option(
+    option: &TransitionOptionRef,
+    routing_options: &[String],
+) -> Result<u32> {
+    match option {
+        TransitionOptionRef::Index(index) => Ok(*index),
+        TransitionOptionRef::Name(name) => {
+            resolve_routing_option(name, routing_options, "transition_costs")
+        }
+    }
 }
 
 fn resolve_driver_rule_value(value: &DriverRuleValue) -> Result<Option<f32>> {
