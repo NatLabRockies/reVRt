@@ -72,7 +72,7 @@ def routing_layer_mover(
     with tfc as temp_zarr_file_str:
         logger.debug("Setting swap file location to %r", temp_zarr_file_str)
         temp_zarr_file = Path(temp_zarr_file_str)
-        yield temp_zarr_file
+        yield temp_zarr_file  # noqa
 
         if not save:
             return
