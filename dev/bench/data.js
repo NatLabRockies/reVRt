@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779326159615,
+  "lastUpdate": 1780370144219,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -10667,6 +10667,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 456201836,
             "range": "± 5868413",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f1376847a4900fc121905909ca1a0aca8a5b6c28",
+          "message": "Add z-level routing option (Rust) (#281)\n\n* ArrayIndex stores z value\n\nCo-authored-by: Copilot <copilot@github.com>\n\n* Update grid shape to be 3D\n\n* Array index update\n\n* New method\n\n* UPdate layout to track options dimension\n\n* Derived writer now pulls from 3 dimensions\n\n* Pass correct function args\n\n* Reader is now option-aware\n\n* Rename struct\n\n* Rename var\n\n* Add `get_cell_cost` for derived data reader\n\n* Add comment\n\n* Dataset can now get center cell cost\n\n* Allow dataset to get non-cost layer cells\n\n* Add comment\n\n* Grid indexer is now 3D\n\n* Add helper methods\n\n* Add `allowed_states_at`\n\n* Successors now determined by driver layer and can include transitions between routing options\n\n* Return an iter now\n\n* Drop routes with barriered or driver excluded start points\n\n* Tests for new functionality\n\n* Add feature\n\n* minor bug fix\n\n* Minor docstring\n\n* Add inputs file\n\n* Formatting\n\n* input now in charge of creating the driver rule set\n\n* inputs in charge of creating pieces\n\n* Add components\n\n* Cost function uses new components\n\n* Use new components\n\n* Pull directly from cost function\n\n* Rename module\n\n* Move to new module\n\n* Privatize components and methods\n\n* Minimal wire up on python side\n\n* Temp patch for FFI\n\n* disable ruff lint\n\n* Linter\n\n---------\n\nCo-authored-by: Copilot <copilot@github.com>",
+          "timestamp": "2026-06-01T21:02:37-06:00",
+          "tree_id": "2bac9695e705fe042c9d155f7d895c4d31521918",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/f1376847a4900fc121905909ca1a0aca8a5b6c28"
+        },
+        "date": 1780370143230,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 92912391,
+            "range": "± 726344",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 104437144,
+            "range": "± 1099122",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 134889201,
+            "range": "± 3266658",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 202728781,
+            "range": "± 2424157",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 783053798,
+            "range": "± 28789612",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 156291103,
+            "range": "± 1103792",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 156655120,
+            "range": "± 659578",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 174971598,
+            "range": "± 1353588",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 233257356,
+            "range": "± 2037840",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 451435776,
+            "range": "± 4730710",
             "unit": "ns/iter"
           }
         ]
