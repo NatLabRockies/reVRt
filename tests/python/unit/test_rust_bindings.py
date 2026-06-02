@@ -41,7 +41,9 @@ def test_find_paths_basic_single_route(tmp_path):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        },
         "ignore_invalid_costs": True,
     }
     results = find_paths(
@@ -96,14 +98,18 @@ def test_find_paths_respects_explicit_barrier_layers(tmp_path):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "test_barrier",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1,
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "test_barrier",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1,
+                    }
+                ],
             }
-        ],
+        },
         "ignore_invalid_costs": False,
     }
     results = find_paths(
@@ -150,14 +156,18 @@ def test_find_paths_respects_not_equal_barrier_layers(tmp_path):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "test_barrier",
-                "barrier_operator": "ne",
-                "barrier_threshold": 1,
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "test_barrier",
+                        "barrier_operator": "ne",
+                        "barrier_threshold": 1,
+                    }
+                ],
             }
-        ],
+        },
         "ignore_invalid_costs": False,
     }
     results = find_paths(
@@ -208,7 +218,11 @@ def test_route_finder_basic_single_route(tmp_path, algorithm):
         test_cost_fp, mode="w", zarr_format=3, consolidated=False
     )
 
-    cost_definition = {"cost_layers": [{"layer_name": "test_costs"}]}
+    cost_definition = {
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        }
+    }
     routing_results = RouteFinder(
         zarr_fp=test_cost_fp,
         cost_function=json.dumps(cost_definition),
@@ -279,7 +293,9 @@ def test_route_finder_writes_routing_layer_to_expected_path(
     routing_layer_out_fp = tmp_path / "routing_layer.zarr"
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        },
         "ignore_invalid_costs": True,
     }
     routing_results = RouteFinder(
@@ -368,7 +384,9 @@ def test_find_paths_supports_explicit_algorithm(tmp_path, algorithm):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        },
         "ignore_invalid_costs": True,
     }
     results = find_paths(
@@ -427,7 +445,11 @@ def test_route_finder_supports_explicit_algorithm(tmp_path, algorithm):
         test_cost_fp, mode="w", zarr_format=3, consolidated=False
     )
 
-    cost_definition = {"cost_layers": [{"layer_name": "test_costs"}]}
+    cost_definition = {
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        }
+    }
     results = list(
         RouteFinder(
             zarr_fp=test_cost_fp,
@@ -501,20 +523,24 @@ def test_route_finder_tracks_dropped_barriers_per_start_point(tmp_path):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "hard_barrier",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1.0,
-            },
-            {
-                "layer_name": "soft_barrier",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1.0,
-                "barrier_importance": 1,
-            },
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "hard_barrier",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0,
+                    },
+                    {
+                        "layer_name": "soft_barrier",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0,
+                        "barrier_importance": 1,
+                    },
+                ],
+            }
+        },
         "ignore_invalid_costs": False,
     }
     results = list(
@@ -586,15 +612,19 @@ def test_route_finder_retries_not_equal_soft_barriers(tmp_path):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "soft_barrier",
-                "barrier_operator": "ne",
-                "barrier_threshold": 1,
-                "barrier_importance": 1,
-            },
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "soft_barrier",
+                        "barrier_operator": "ne",
+                        "barrier_threshold": 1,
+                        "barrier_importance": 1,
+                    },
+                ],
+            }
+        },
         "ignore_invalid_costs": False,
     }
     results = list(
@@ -681,21 +711,25 @@ def test_route_finder_drops_soft_barriers_by_importance(tmp_path, algorithm):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "soft_barrier_low",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1.0,
-                "barrier_importance": 1,
-            },
-            {
-                "layer_name": "soft_barrier_high",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1.0,
-                "barrier_importance": 2,
-            },
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "soft_barrier_low",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0,
+                        "barrier_importance": 1,
+                    },
+                    {
+                        "layer_name": "soft_barrier_high",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1.0,
+                        "barrier_importance": 2,
+                    },
+                ],
+            }
+        },
         "ignore_invalid_costs": False,
     }
     results = list(
@@ -742,7 +776,11 @@ def test_find_paths_supports_a_star_alias(tmp_path):
     results = find_paths(
         zarr_fp=test_cost_fp,
         cost_function=json.dumps(
-            {"cost_layers": [{"layer_name": "test_costs"}]}
+            {
+                "routing_options": {
+                    "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+                }
+            }
         ),
         start=[(0, 0)],
         end=[(1, 1)],
@@ -777,7 +815,13 @@ def test_find_paths_rejects_invalid_algorithm(tmp_path):
         find_paths(
             zarr_fp=test_cost_fp,
             cost_function=json.dumps(
-                {"cost_layers": [{"layer_name": "test_costs"}]}
+                {
+                    "routing_options": {
+                        "default": {
+                            "cost_layers": [{"layer_name": "test_costs"}]
+                        }
+                    }
+                }
             ),
             start=[(0, 0)],
             end=[(1, 1)],

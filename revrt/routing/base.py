@@ -112,10 +112,18 @@ class RoutingScenario:
         """str: JSON string describing configured cost layers"""
         return json.dumps(
             {
-                "cost_layers": list(self._cost_layers_for_rust()),
-                "friction_layers": list(self._friction_layers_for_rust()),
-                "barrier_layers": list(self._barrier_layers_for_rust()),
                 "ignore_invalid_costs": self.ignore_invalid_costs,
+                "routing_options": {
+                    "default": {
+                        "cost_layers": list(self._cost_layers_for_rust()),
+                        "friction_layers": list(
+                            self._friction_layers_for_rust()
+                        ),
+                        "barrier_layers": list(
+                            self._barrier_layers_for_rust()
+                        ),
+                    }
+                },
             }
         )
 

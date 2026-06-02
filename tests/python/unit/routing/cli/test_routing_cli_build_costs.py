@@ -112,10 +112,14 @@ def test_build_final_routing_layers_command_writes_expected_layers(
 
     config = {
         "cost_fpath": str(sample_layered_data),
-        "cost_layers": [
-            {"layer_name": "layer_1", "multiplier_scalar": 1.5},
-            {"layer_name": "layer_2", "multiplier_scalar": 0.5},
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1", "multiplier_scalar": 1.5},
+                    {"layer_name": "layer_2", "multiplier_scalar": 0.5},
+                ],
+            }
+        },
         "cost_multiplier_scalar": 2.0,
         "ignore_invalid_costs": True,
     }
@@ -127,6 +131,7 @@ def test_build_final_routing_layers_command_writes_expected_layers(
     outputs = build_final_routing_layers_command.runner(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
+        routing_option="default",
         polarity=None,
         voltage=None,
     )
@@ -164,12 +169,16 @@ def test_build_final_routing_layers_command_applies_explicit_barriers(
 
     config = {
         "cost_fpath": str(sample_layered_data),
-        "cost_layers": [
-            {"layer_name": "layer_2"},
-        ],
-        "barrier_layers": [
-            {"layer_name": "layer_1", "barrier_values": "==0"},
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_2"},
+                ],
+                "barrier_layers": [
+                    {"layer_name": "layer_1", "barrier_values": "==0"},
+                ],
+            }
+        },
         "ignore_invalid_costs": False,
     }
 
@@ -180,6 +189,7 @@ def test_build_final_routing_layers_command_applies_explicit_barriers(
     outputs = build_final_routing_layers_command.runner(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
+        routing_option="default",
         polarity=None,
         voltage=None,
     )
@@ -216,10 +226,14 @@ def test_build_final_routing_layers_parses_transmission_config_path(
 
     config = {
         "cost_fpath": str(sample_layered_data),
-        "cost_layers": [
-            {"layer_name": "layer_1", "apply_row_mult": True},
-            {"layer_name": "layer_2", "apply_polarity_mult": True},
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1", "apply_row_mult": True},
+                    {"layer_name": "layer_2", "apply_polarity_mult": True},
+                ]
+            }
+        },
         "transmission_config": str(transmission_config_fp),
         "ignore_invalid_costs": True,
     }
@@ -231,6 +245,7 @@ def test_build_final_routing_layers_parses_transmission_config_path(
     outputs = build_final_routing_layers(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
+        routing_option="default",
         polarity="ac",
         voltage=138,
     )
@@ -264,7 +279,9 @@ def test_build_final_routing_layers_writes_to_supplied_output_directory(
 
     config = {
         "cost_fpath": str(sample_layered_data),
-        "cost_layers": [{"layer_name": "layer_1"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         "ignore_invalid_costs": True,
     }
 
@@ -276,6 +293,7 @@ def test_build_final_routing_layers_writes_to_supplied_output_directory(
     outputs = build_final_routing_layers(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
+        routing_option="default",
         polarity=None,
         voltage=None,
     )
@@ -305,10 +323,14 @@ def test_cli_build_final_routing_layers_command(
 
     lcp_config = {
         "cost_fpath": str(sample_layered_data),
-        "cost_layers": [
-            {"layer_name": "layer_1", "multiplier_scalar": 1.5},
-            {"layer_name": "layer_2", "multiplier_scalar": 0.5},
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1", "multiplier_scalar": 1.5},
+                    {"layer_name": "layer_2", "multiplier_scalar": 0.5},
+                ]
+            }
+        },
         "cost_multiplier_scalar": 2.0,
         "ignore_invalid_costs": True,
     }
@@ -316,7 +338,10 @@ def test_cli_build_final_routing_layers_command(
     lcp_config_fp = tmp_path / "cli_lcp_config.json"
     lcp_config_fp.write_text(json.dumps(lcp_config))
 
-    cli_config = {"lcp_config_fp": str(lcp_config_fp)}
+    cli_config = {
+        "lcp_config_fp": str(lcp_config_fp),
+        "routing_option": "default",
+    }
 
     cli_config_fp = tmp_path / "cli_command_config.json"
     cli_config_fp.write_text(json.dumps(cli_config))
@@ -361,14 +386,19 @@ def test_cli_build_route_costs_strips_required_path_whitespace(
 
     lcp_config = {
         "cost_fpath": str(sample_layered_data),
-        "cost_layers": [{"layer_name": "layer_1"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         "ignore_invalid_costs": True,
     }
 
     lcp_config_fp = tmp_path / "cli_trimmed_lcp_config.json"
     lcp_config_fp.write_text(json.dumps(lcp_config))
 
-    cli_config = {"lcp_config_fp": f"  {lcp_config_fp}  "}
+    cli_config = {
+        "lcp_config_fp": f"  {lcp_config_fp}  ",
+        "routing_option": "default",
+    }
 
     cli_config_fp = tmp_path / "cli_trimmed_command_config.json"
     cli_config_fp.write_text(json.dumps(cli_config))
@@ -393,7 +423,9 @@ def test_cli_build_final_routing_layers_honors_output_directory(
 
     lcp_config = {
         "cost_fpath": str(sample_layered_data),
-        "cost_layers": [{"layer_name": "layer_1"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         "ignore_invalid_costs": True,
     }
 
@@ -404,6 +436,7 @@ def test_cli_build_final_routing_layers_honors_output_directory(
     cli_config = {
         "lcp_config_fp": str(lcp_config_fp),
         "output_directory": str(output_dir),
+        "routing_option": "default",
     }
 
     cli_config_fp = tmp_path / "cli_custom_output_command_config.json"

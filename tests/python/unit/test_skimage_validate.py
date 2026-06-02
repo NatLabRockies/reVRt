@@ -40,7 +40,9 @@ def validate_find_paths_single_var(data, start, end, tmp_path, algorithm):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        },
         "ignore_invalid_costs": True,
     }
     results = find_paths(
@@ -86,7 +88,11 @@ def validate_route_finder_single_var(data, start, end, tmp_path, algorithm):
         test_cost_fp, mode="w", zarr_format=3, consolidated=False
     )
 
-    cost_definition = {"cost_layers": [{"layer_name": "test_costs"}]}
+    cost_definition = {
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        }
+    }
     routing_results = RouteFinder(
         zarr_fp=test_cost_fp,
         cost_function=json.dumps(cost_definition),
