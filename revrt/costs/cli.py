@@ -361,7 +361,7 @@ def _should_skip_layer(lf_handler, lc):
     logger.debug(
         "Existing config:\n%r\nNew config:\n%r",
         existing_build_config,
-        serialize_layer_build_dict,
+        serialized_build_config,
     )
     logger.debug(
         "Existing cpm:\n%r\nNew cpm:\n%r", cpm, lc.values_are_costs_per_mile

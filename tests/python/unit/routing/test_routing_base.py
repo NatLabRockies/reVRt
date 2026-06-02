@@ -2072,7 +2072,7 @@ def test_barrier_layers_are_normalized_for_rust(sample_layered_data):
     )
 
     cost_function = json.loads(scenario.cost_function_json)
-    assert cost_function["barrier_layers"] == [
+    assert cost_function["routing_options"]["default"]["barrier_layers"] == [
         {
             "layer_name": "layer_4",
             "barrier_operator": "eq",
@@ -2104,7 +2104,7 @@ def test_barrier_layers_normalize_not_equal_for_rust(sample_layered_data):
     )
 
     cost_function = json.loads(scenario.cost_function_json)
-    assert cost_function["barrier_layers"] == [
+    assert cost_function["routing_options"]["default"]["barrier_layers"] == [
         {
             "layer_name": "layer_4",
             "barrier_operator": "ne",

@@ -86,8 +86,8 @@ mod tests {
 
     #[test]
     fn octile_distance_uses_shortest_goal() {
-        let goals = [ArrayIndex::new(3, 3), ArrayIndex::new(8, 8)];
-        let distance = super::octile_distance(&ArrayIndex::new(0, 1), &goals);
+        let goals = [ArrayIndex::new_ij(3, 3), ArrayIndex::new_ij(8, 8)];
+        let distance = super::octile_distance(&ArrayIndex::new_ij(0, 1), &goals);
 
         assert_eq!(distance, 1.0 + 2.0 * std::f64::consts::SQRT_2);
     }
@@ -95,9 +95,10 @@ mod tests {
     #[test]
     fn octile_heuristic_defaults_to_one_when_min_cost_unknown() {
         let min_cost = Cell::new(None);
-        let goals = [ArrayIndex::new(3, 3)];
+        let goals = [ArrayIndex::new_ij(3, 3)];
 
-        let heuristic = super::octile_heuristic::<u64>(&ArrayIndex::new(0, 1), &goals, &min_cost);
+        let heuristic =
+            super::octile_heuristic::<u64>(&ArrayIndex::new_ij(0, 1), &goals, &min_cost);
 
         assert_eq!(heuristic, 3);
     }
@@ -107,12 +108,80 @@ mod tests {
         let min_cost = Cell::new(Some(70));
 
         let neighbors = super::astar_successors(
-            &ArrayIndex::new(1, 1),
-            &mut |_| vec![(ArrayIndex::new(1, 2), 15_u64), (ArrayIndex::new(2, 2), 12)],
+            &ArrayIndex::new_ij(1, 1),
+            &mut |_| {
+                vec![
+                    (ArrayIndex::new_ij(1, 2), 15_u64),
+                    (ArrayIndex::new_ij(2, 2), 12),
+                ]
+            },
             &min_cost,
         );
 
         assert_eq!(neighbors.len(), 2);
         assert_eq!(min_cost.get(), Some(12));
+    }
+
+    #[test]
+    fn layered_octile_distance_ignores_option_dimension() {
+        let goals = [
+            ArrayIndex {
+                i: 3,
+                j: 3,
+                option: 1,
+            },
+            ArrayIndex {
+                i: 8,
+                j: 8,
+                option: 2,
+            },
+        ];
+        let distance = super::octile_distance(
+            &ArrayIndex {
+                i: 0,
+                j: 1,
+                option: 0,
+            },
+            &goals,
+        );
+
+        assert_eq!(distance, 1.0 + 2.0 * std::f64::consts::SQRT_2);
+    }
+
+    #[test]
+    fn layered_astar_successors_tracks_lowest_seen_cost() {
+        let min_cost = Cell::new(None);
+
+        let neighbors = super::astar_successors(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            &mut |_| {
+                vec![
+                    (
+                        ArrayIndex {
+                            i: 1,
+                            j: 2,
+                            option: 0,
+                        },
+                        15_u64,
+                    ),
+                    (
+                        ArrayIndex {
+                            i: 1,
+                            j: 1,
+                            option: 1,
+                        },
+                        8_u64,
+                    ),
+                ]
+            },
+            &min_cost,
+        );
+
+        assert_eq!(neighbors.len(), 2);
+        assert_eq!(min_cost.get(), Some(8));
     }
 }

@@ -13,11 +13,11 @@ const TEST_DATA: &str = concat!(
 #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
 fn basic_routing_in_data(algorithm: &str) {
     let layers_path = PathBuf::from(TEST_DATA);
-    let start = &revrt::ArrayIndex::new(10, 10);
-    let end = vec![revrt::ArrayIndex::new(20, 20)];
+    let start = &revrt::ArrayIndex::new_ij(10, 10);
+    let end = vec![revrt::ArrayIndex::new_ij(20, 20)];
     let result = resolve(
         layers_path.to_str().expect("test data path is valid UTF-8"),
-        r#"{"cost_layers": [{"layer_name": "tie_line_costs_102MW"}]}"#,
+        r#"{"routing_options": {"default": {"cost_layers": [{"layer_name": "tie_line_costs_102MW"}]}}}"#,
         algorithm,
         std::slice::from_ref(start),
         end,
@@ -37,15 +37,19 @@ fn basic_routing_in_data(algorithm: &str) {
 #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
 fn basic_routing_in_data_with_friction(algorithm: &str) {
     let layers_path = PathBuf::from(TEST_DATA);
-    let start = &revrt::ArrayIndex::new(10, 10);
-    let end = vec![revrt::ArrayIndex::new(20, 20)];
+    let start = &revrt::ArrayIndex::new_ij(10, 10);
+    let end = vec![revrt::ArrayIndex::new_ij(20, 20)];
     let result = resolve(
         layers_path.to_str().expect("test data path is valid UTF-8"),
         r#"{
-            "cost_layers": [{"layer_name": "tie_line_costs_102MW"}],
-            "friction_layers": [
-                {"multiplier_layer": "transmission_barrier", "multiplier_scalar": 100}
-            ]
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "tie_line_costs_102MW"}],
+                    "friction_layers": [
+                        {"multiplier_layer": "transmission_barrier", "multiplier_scalar": 100}
+                    ]
+                }
+            }
         }"#,
         algorithm,
         std::slice::from_ref(start),

@@ -261,7 +261,8 @@ class LayeredFile:
         Returns
         -------
         dict
-            _description_
+            Dictionary of attribute metadata for the requested layer
+            as stored in the Zarr variable attrs.
 
         Raises
         ------

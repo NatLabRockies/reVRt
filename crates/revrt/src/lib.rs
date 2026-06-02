@@ -25,18 +25,29 @@ use solution::{RevrtRoutingSolutions, Solution};
 pub struct ArrayIndex {
     i: u64,
     j: u64,
+    option: u32,
 }
 
 impl ArrayIndex {
     #[allow(missing_docs)]
     pub fn new(i: u64, j: u64) -> Self {
-        Self { i, j }
+        Self { i, j, option: 0 }
+    }
+
+    pub fn new_ij(i: u64, j: u64) -> Self {
+        Self { i, j, option: 0 }
     }
 }
 
 impl From<ArrayIndex> for (u64, u64) {
-    fn from(ArrayIndex { i, j }: ArrayIndex) -> (u64, u64) {
+    fn from(ArrayIndex { i, j, .. }: ArrayIndex) -> (u64, u64) {
         (i, j)
+    }
+}
+
+impl From<ArrayIndex> for (u64, u64, u32) {
+    fn from(ArrayIndex { i, j, option }: ArrayIndex) -> (u64, u64, u32) {
+        (i, j, option)
     }
 }
 
@@ -104,23 +115,46 @@ mod tests {
 
     #[test]
     fn tuple_from_index() {
-        let index_tuple: (u64, u64) = From::from(ArrayIndex { i: 2, j: 3 });
+        let index_tuple: (u64, u64) = From::from(ArrayIndex::new_ij(2, 3));
         assert_eq!(index_tuple.0, 2);
         assert_eq!(index_tuple.1, 3);
     }
 
     #[test]
     fn index_into_tuple() {
-        let index_tuple: (u64, u64) = ArrayIndex { i: 2, j: 3 }.into();
+        let index_tuple: (u64, u64) = ArrayIndex::new_ij(2, 3).into();
         assert_eq!(index_tuple.0, 2);
         assert_eq!(index_tuple.1, 3);
     }
 
     #[test]
     fn vec_contains_index() {
-        let vec_of_indices = [ArrayIndex { i: 2, j: 3 }, ArrayIndex { i: 5, j: 6 }];
-        assert!(vec_of_indices.contains(&ArrayIndex { i: 5, j: 6 }));
-        assert!(!vec_of_indices.contains(&ArrayIndex { i: 8, j: 9 }));
+        let vec_of_indices = [ArrayIndex::new_ij(2, 3), ArrayIndex::new_ij(5, 6)];
+        assert!(vec_of_indices.contains(&ArrayIndex::new_ij(5, 6)));
+        assert!(!vec_of_indices.contains(&ArrayIndex::new_ij(8, 9)));
+    }
+
+    #[test]
+    fn index_with_option_into_tuple() {
+        let index_tuple: (u64, u64, u32) = ArrayIndex {
+            i: 2,
+            j: 3,
+            option: 4,
+        }
+        .into();
+        assert_eq!(index_tuple, (2, 3, 4));
+    }
+
+    #[test]
+    fn index_with_option_still_converts_to_2d_tuple() {
+        let index_tuple: (u64, u64) = ArrayIndex {
+            i: 5,
+            j: 6,
+            option: 2,
+        }
+        .into();
+
+        assert_eq!(index_tuple, (5, 6));
     }
 
     #[test_case("astar"; "astar")]
@@ -135,8 +169,8 @@ mod tests {
             dataset::samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = cost::sample::cost_function();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
-        let start = vec![ArrayIndex { i: 2, j: 3 }];
-        let end = vec![ArrayIndex { i: 6, j: 6 }];
+        let start = vec![ArrayIndex::new_ij(2, 3)];
+        let end = vec![ArrayIndex::new_ij(6, 6)];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
         dbg!(&solutions);
         assert_eq!(solutions.len(), 1);
@@ -179,11 +213,13 @@ mod tests {
         algorithm: &str,
     ) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
-        let start = vec![ArrayIndex { i: si, j: sj }];
-        let end = vec![ArrayIndex { i: ei, j: ej }];
+        let start = vec![ArrayIndex::new_ij(si, sj)];
+        let end = vec![ArrayIndex::new_ij(ei, ej)];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
         dbg!(&solutions);
         assert_eq!(solutions.len(), 1);
@@ -205,14 +241,16 @@ mod tests {
         algorithm: &str,
     ) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
-        let start = vec![ArrayIndex { i: si, j: sj }];
+        let start = vec![ArrayIndex::new_ij(si, sj)];
         let end = endpoints
             .clone()
             .into_iter()
-            .map(|(i, j)| ArrayIndex { i, j })
+            .map(|(i, j)| ArrayIndex::new_ij(i, j))
             .collect();
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
         dbg!(&solutions);
@@ -221,7 +259,7 @@ mod tests {
         assert_eq!(solutions[0].total_cost(), &expected_cost);
         assert_eq!(solutions[0].route()[0], start[0]);
 
-        let &ArrayIndex { i: ei, j: ej } = solutions[0].route().last().unwrap();
+        let &ArrayIndex { i: ei, j: ej, .. } = solutions[0].route().last().unwrap();
         assert_eq!((ei, ej), expected_endpoint);
     }
 
@@ -243,19 +281,23 @@ mod tests {
 
         let cost_function = CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost"}],
-                "barrier_layers": [{
-                    "layer_name": "barrier",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0
-                }],
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [{
+                            "layer_name": "barrier",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0
+                        }]
+                    }
+                },
                 "ignore_invalid_costs": false
             }"#,
         )
         .unwrap();
         let mut simulation = Routing::new(store_path, cost_function, 1_000, "dijkstra").unwrap();
-        let start = vec![ArrayIndex { i: 1, j: 1 }];
-        let end = vec![ArrayIndex { i: 0, j: 0 }];
+        let start = vec![ArrayIndex::new_ij(1, 1)];
+        let end = vec![ArrayIndex::new_ij(0, 0)];
 
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
 
@@ -284,14 +326,16 @@ mod tests {
         algorithm: &str,
     ) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, cost_array_fill);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
-        let start = vec![ArrayIndex { i: si, j: sj }];
+        let start = vec![ArrayIndex::new_ij(si, sj)];
         let end = endpoints
             .clone()
             .into_iter()
-            .map(|(i, j)| ArrayIndex { i, j })
+            .map(|(i, j)| ArrayIndex::new_ij(i, j))
             .collect();
         let mut solutions = simulation.compute(&start, end).collect::<Vec<_>>();
         dbg!(&solutions);
@@ -302,7 +346,7 @@ mod tests {
         assert_eq!(s.total_cost(), &(2. * cost_array_fill));
         assert_eq!(s.route()[0], start[0]);
 
-        let &ArrayIndex { i: ei, j: ej } = s.route().last().unwrap();
+        let &ArrayIndex { i: ei, j: ej, .. } = s.route().last().unwrap();
         assert!(endpoints.contains(&(ei, ej)));
     }
 
@@ -315,27 +359,29 @@ mod tests {
     // Due to truncation solution to handle f32 costs.
     fn routing_many_to_many(algorithm: &str) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
         let start = vec![
-            ArrayIndex { i: 1, j: 1 },
-            ArrayIndex { i: 3, j: 3 },
-            ArrayIndex { i: 5, j: 5 },
+            ArrayIndex::new_ij(1, 1),
+            ArrayIndex::new_ij(3, 3),
+            ArrayIndex::new_ij(5, 5),
         ];
         let end = vec![
-            ArrayIndex { i: 1, j: 2 },
-            ArrayIndex { i: 4, j: 4 },
-            ArrayIndex { i: 7, j: 7 },
+            ArrayIndex::new_ij(1, 2),
+            ArrayIndex::new_ij(4, 4),
+            ArrayIndex::new_ij(7, 7),
         ];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
         dbg!(&solutions);
         assert_eq!(solutions.len(), 3);
 
         let expected_solution = vec![
-            (ArrayIndex { i: 1, j: 2 }, 1.0),
-            (ArrayIndex { i: 4, j: 4 }, 1.4142),
-            (ArrayIndex { i: 4, j: 4 }, 1.4142),
+            (ArrayIndex::new_ij(1, 2), 1.0),
+            (ArrayIndex::new_ij(4, 4), 1.4142),
+            (ArrayIndex::new_ij(4, 4), 1.4142),
         ];
         for (s, eep) in solutions.into_iter().zip(expected_solution) {
             assert_eq!(s.route().len(), 2);
@@ -351,11 +397,13 @@ mod tests {
     #[test_case("bidirectional-long-range-dijkstra"; "bidirectional-long-range")]
     fn routing_many_to_one(algorithm: &str) {
         let store_path = dataset::samples::uniform_cost_zarr(1, 8, 8, 1, 4, 4, 1.0);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
-        let start = vec![ArrayIndex { i: 1, j: 1 }, ArrayIndex { i: 5, j: 5 }];
-        let end = vec![ArrayIndex { i: 3, j: 3 }];
+        let start = vec![ArrayIndex::new_ij(1, 1), ArrayIndex::new_ij(5, 5)];
+        let end = vec![ArrayIndex::new_ij(3, 3)];
         let solutions = simulation.compute(&start, end).collect::<Vec<_>>();
         dbg!(&solutions);
         assert_eq!(solutions.len(), 2);
@@ -363,7 +411,7 @@ mod tests {
         for s in solutions {
             assert_eq!(s.route().len(), 3);
             assert_eq!(s.total_cost(), &2.8284);
-            assert_eq!(*s.route().last().unwrap(), ArrayIndex { i: 3, j: 3 });
+            assert_eq!(*s.route().last().unwrap(), ArrayIndex::new_ij(3, 3));
         }
     }
 
@@ -390,12 +438,14 @@ mod tests {
             .build()
             .expect("failed to build zarr test dataset");
 
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let mut simulation = Routing::new(&store_path, cost_function, 1_000, algorithm).unwrap();
 
-        let start = vec![ArrayIndex { i: 0, j: 0 }];
-        let end = vec![ArrayIndex { i: 0, j: 2 }];
+        let start = vec![ArrayIndex::new_ij(0, 0)];
+        let end = vec![ArrayIndex::new_ij(0, 2)];
         let mut solutions = simulation.compute(&start, end).collect::<Vec<_>>();
         assert_eq!(solutions.len(), 1);
 
@@ -404,14 +454,14 @@ mod tests {
         assert_eq!(s.total_cost(), &8.2426);
 
         let expected_track = vec![
-            ArrayIndex { i: 0, j: 0 },
-            ArrayIndex { i: 1, j: 0 },
-            ArrayIndex { i: 2, j: 0 },
-            ArrayIndex { i: 3, j: 1 },
-            ArrayIndex { i: 3, j: 2 },
-            ArrayIndex { i: 2, j: 3 },
-            ArrayIndex { i: 1, j: 3 },
-            ArrayIndex { i: 0, j: 2 },
+            ArrayIndex::new_ij(0, 0),
+            ArrayIndex::new_ij(1, 0),
+            ArrayIndex::new_ij(2, 0),
+            ArrayIndex::new_ij(3, 1),
+            ArrayIndex::new_ij(3, 2),
+            ArrayIndex::new_ij(2, 3),
+            ArrayIndex::new_ij(1, 3),
+            ArrayIndex::new_ij(0, 2),
         ];
         assert_eq!(s.route(), &expected_track);
     }

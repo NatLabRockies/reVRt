@@ -18,12 +18,16 @@ pub fn bench_minimalist(
 ) {
     // temporary solution for a cost function until we have a builder
     let cost_json = r#"{
-        "cost_layers": [
-            {"layer_name": "A"},
-            {"layer_name": "B", "multiplier_scalar": 100},
-            {"layer_name": "A", "multiplier_layer": "B"},
-            {"layer_name": "C", "multiplier_layer": "A", "multiplier_scalar": 2}
-        ]
+        "routing_options": {
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "A"},
+                    {"layer_name": "B", "multiplier_scalar": 100},
+                    {"layer_name": "A", "multiplier_layer": "B"},
+                    {"layer_name": "C", "multiplier_layer": "A", "multiplier_scalar": 2}
+                ]
+            }
+        }
     }"#
     .to_string();
     let cost_function = CostFunction::from_json(&cost_json).unwrap();

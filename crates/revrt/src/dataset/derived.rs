@@ -7,7 +7,7 @@
 
 use std::sync::RwLock;
 
-use ndarray::Array2;
+use ndarray::Array3;
 use tracing::trace;
 use zarrs::storage::{ReadableListableStorage, ReadableWritableListableStorage};
 
@@ -15,7 +15,8 @@ use super::LazySubset;
 use super::reader::DerivedDataMaterializer;
 use super::swap::SourceLayout;
 use super::swap::cumulative_soft_barrier_mask_name;
-use crate::cost::{BarrierLayer, CostFunction};
+use crate::cost::CostFunction;
+use crate::cost::components::BarrierLayer;
 
 /// Writes derived chunk-level arrays into the swap dataset.
 ///
@@ -29,8 +30,8 @@ pub(super) struct DerivedDataWriter {
     source: ReadableListableStorage,
     /// Writable swap storage where derived arrays are materialized.
     swap: ReadableWritableListableStorage,
-    /// Boolean materialization state indexed by chunk row and chunk column.
-    swap_chunk_idx: RwLock<ndarray::Array2<bool>>,
+    /// Boolean materialization state indexed by band, row, and column chunk.
+    swap_chunk_idx: RwLock<ndarray::Array3<bool>>,
     /// Barrier layers that always behave as hard exclusions.
     hard_barrier_layers: Vec<BarrierLayer>,
     /// Soft barrier layers grouped by importance in ascending retry order.
@@ -63,8 +64,15 @@ impl DerivedDataWriter {
         let hard_barrier_layers = cost_function.hard_barrier_layers();
         let soft_barrier_groups = cost_function.soft_barrier_groups();
         let cost_function = cost_function.without_barriers();
-        let swap_chunk_idx =
-            Array2::from_elem((layout.chunk_grid_rows, layout.chunk_grid_cols), false).into();
+        let swap_chunk_idx = Array3::from_elem(
+            (
+                layout.chunk_grid_bands,
+                layout.chunk_grid_rows,
+                layout.chunk_grid_cols,
+            ),
+            false,
+        )
+        .into();
 
         Self {
             source,
@@ -79,23 +87,27 @@ impl DerivedDataWriter {
     /// Materialize every derived array for a single chunk.
     ///
     /// This computes both cost layers and all barrier masks for the chunk
-    /// identified by the chunk-grid coordinates `ci` and `cj`, then stores
-    /// the results into the swap dataset.
+    /// identified by the chunk-grid coordinates `cb`, `ci`, and `cj`, then
+    /// stores the results into the swap dataset.
     ///
     /// # Arguments
+    /// `cb`: Chunk band index in the swap dataset.
     /// `ci`: Chunk row index in the swap dataset.
     /// `cj`: Chunk column index in the swap dataset.
-    fn materialize_chunk(&self, ci: u64, cj: u64) {
-        trace!("Creating a LazySubset for ({}, {})", ci, cj);
+    fn materialize_chunk(&self, cb: u64, ci: u64, cj: u64) {
+        trace!("Creating a LazySubset for ({}, {}, {})", cb, ci, cj);
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
-        let subset = variable.chunk_subset(&[0, ci, cj]).unwrap();
-        let chunk_subset =
-            zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
+        let subset = variable.chunk_subset(&[cb, ci, cj]).unwrap();
+        let chunk_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            cb..(cb + 1),
+            ci..(ci + 1),
+            cj..(cj + 1),
+        ]);
         let mut data = LazySubset::<f32>::new(self.source.clone(), subset.clone());
 
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, true);
-        self.calculate_chunk_cost_single_layer(ci, cj, &mut data, &chunk_subset, false);
+        self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, true);
+        self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, false);
         self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
         self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
     }
@@ -107,6 +119,7 @@ impl DerivedDataWriter {
     /// destination array in the swap dataset.
     ///
     /// # Arguments
+    /// `cb`: Chunk band index in the swap dataset.
     /// `ci`: Chunk row index in the swap dataset.
     /// `cj`: Chunk column index in the swap dataset.
     /// `features`: Lazily loaded source features for the target chunk.
@@ -116,6 +129,7 @@ impl DerivedDataWriter {
     ///                 otherwise compute length-dependent terms.
     fn calculate_chunk_cost_single_layer(
         &self,
+        cb: u64,
         ci: u64,
         cj: u64,
         features: &mut LazySubset<f32>,
@@ -125,13 +139,16 @@ impl DerivedDataWriter {
         let output;
         let layer_name;
         if is_invariant {
-            trace!("Calculating invariant cost for chunk ({}, {})", ci, cj);
+            trace!(
+                "Calculating invariant cost for chunk ({}, {}, {})",
+                cb, ci, cj
+            );
             output = self.cost_function.compute(features, true);
             layer_name = "/cost_invariant";
         } else {
             trace!(
-                "Calculating length-dependent cost for chunk ({}, {})",
-                ci, cj
+                "Calculating length-dependent cost for chunk ({}, {}, {})",
+                cb, ci, cj
             );
             output = self.cost_function.compute(features, false);
             layer_name = "/cost";
@@ -141,7 +158,7 @@ impl DerivedDataWriter {
 
         let cost = zarrs::array::Array::open(self.swap.clone(), layer_name).unwrap();
         cost.store_metadata().unwrap();
-        let chunk_indices: Vec<u64> = vec![0, ci, cj];
+        let chunk_indices: Vec<u64> = vec![cb, ci, cj];
         trace!("Storing chunk at {:?}", chunk_indices);
         trace!("Target chunk subset: {:?}", chunk_subset);
         cost.store_chunks_ndarray(chunk_subset, output).unwrap();
@@ -270,35 +287,42 @@ impl DerivedDataMaterializer for DerivedDataWriter {
             chunks.num_elements_usize()
         );
 
-        for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
-            for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
-                trace!(
-                    "Checking if derived data for chunk ({}, {}) has been calculated",
-                    ci, cj
-                );
-                if self.swap_chunk_idx.read().unwrap()[[ci as usize, cj as usize]] {
-                    trace!("Derived data for chunk ({}, {}) already calculated", ci, cj);
-                    continue;
-                }
+        for cb in chunks.start()[0]..(chunks.start()[0] + chunks.shape()[0]) {
+            for ci in chunks.start()[1]..(chunks.start()[1] + chunks.shape()[1]) {
+                for cj in chunks.start()[2]..(chunks.start()[2] + chunks.shape()[2]) {
+                    trace!(
+                        "Checking if derived data for chunk ({}, {}, {}) has been calculated",
+                        cb, ci, cj
+                    );
+                    if self.swap_chunk_idx.read().unwrap()[[cb as usize, ci as usize, cj as usize]]
+                    {
+                        trace!(
+                            "Derived data for chunk ({}, {}, {}) already calculated",
+                            cb, ci, cj
+                        );
+                        continue;
+                    }
 
-                let mut chunk_idx = self
-                    .swap_chunk_idx
-                    .write()
-                    .expect("Failed to acquire write lock");
-                if chunk_idx[[ci as usize, cj as usize]] {
-                    trace!(
-                        "Derived data for chunk ({}, {}) already calculated while waiting for the lock",
-                        ci, cj
-                    );
-                } else {
-                    self.materialize_chunk(ci, cj);
-                    chunk_idx[[ci as usize, cj as usize]] = true;
-                    trace!(
-                        "Recorded derived data for chunk ({}, {}) as calculated. Total number of computed chunks: {}",
-                        ci,
-                        cj,
-                        chunk_idx.iter().filter(|&&value| value).count()
-                    );
+                    let mut chunk_idx = self
+                        .swap_chunk_idx
+                        .write()
+                        .expect("Failed to acquire write lock");
+                    if chunk_idx[[cb as usize, ci as usize, cj as usize]] {
+                        trace!(
+                            "Derived data for chunk ({}, {}, {}) already calculated while waiting for the lock",
+                            cb, ci, cj
+                        );
+                    } else {
+                        self.materialize_chunk(cb, ci, cj);
+                        chunk_idx[[cb as usize, ci as usize, cj as usize]] = true;
+                        trace!(
+                            "Recorded derived data for chunk ({}, {}, {}) as calculated. Total number of computed chunks: {}",
+                            cb,
+                            ci,
+                            cj,
+                            chunk_idx.iter().filter(|&&value| value).count()
+                        );
+                    }
                 }
             }
         }
@@ -464,19 +488,23 @@ mod tests {
         let mut features = LazySubset::<f32>::new(source.clone(), subset.clone());
         let cost_function = CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost_length"}],
-                "barrier_layers": [
-                    {
-                        "layer_name": "hard_barrier_a",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
-                    },
-                    {
-                        "layer_name": "hard_barrier_b",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost_length"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier_a",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            },
+                            {
+                                "layer_name": "hard_barrier_b",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
                     }
-                ]
+                }
             }"#,
         )
         .unwrap();
@@ -495,41 +523,45 @@ mod tests {
         let (_source_tmp, source) = make_source_store();
         let cost_function = CostFunction::from_json(
             r#"{
-                "cost_layers": [
-                    {"layer_name": "cost_length"},
-                    {
-                        "layer_name": "cost_invariant_src",
-                        "is_invariant": true
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [
+                            {"layer_name": "cost_length"},
+                            {
+                                "layer_name": "cost_invariant_src",
+                                "is_invariant": true
+                            }
+                        ],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier_a",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            },
+                            {
+                                "layer_name": "hard_barrier_b",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            },
+                            {
+                                "layer_name": "soft_barrier_low",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 1
+                            },
+                            {
+                                "layer_name": "soft_barrier_high",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 2
+                            }
+                        ]
                     }
-                ],
-                "barrier_layers": [
-                    {
-                        "layer_name": "hard_barrier_a",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
-                    },
-                    {
-                        "layer_name": "hard_barrier_b",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
-                    },
-                    {
-                        "layer_name": "soft_barrier_low",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 1
-                    },
-                    {
-                        "layer_name": "soft_barrier_high",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 2
-                    }
-                ]
+                }
             }"#,
         )
         .unwrap();
-        let layout = super::super::swap::inspect_source_layout(&source).unwrap();
+        let layout = super::super::swap::inspect_source_layout(&source, 1).unwrap();
         let swap_tmp = TempDir::new().unwrap();
         let swap = super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2).unwrap();
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
@@ -538,7 +570,7 @@ mod tests {
         assert!(writer.has_hard_barriers());
         assert_eq!(writer.soft_barrier_groups.len(), 2);
 
-        writer.materialize_chunk(0, 0);
+        writer.materialize_chunk(0, 0, 0);
 
         assert_eq!(
             read_subset_values::<f32>(&swap, "/cost", &subset),
@@ -570,14 +602,18 @@ mod tests {
     fn materialize_chunk_extracts_hard_barriers_and_preserves_costs() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0
+                        }
+                    ]
                 }
-            ]
+            }
         }
         "#;
 
@@ -594,7 +630,7 @@ mod tests {
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(source_dir.path()).expect("could not open source"));
         let cost_function = CostFunction::from_json(json).unwrap();
-        let layout = inspect_source_layout(&source).expect("Error inspecting source layout");
+        let layout = inspect_source_layout(&source, 1).expect("Error inspecting source layout");
         let swap_dir = tempfile::TempDir::new().expect("could not create swap dir");
         let swap = initialize_swap(
             swap_dir.path(),
@@ -606,7 +642,7 @@ mod tests {
 
         assert!(writer.has_hard_barriers());
 
-        writer.materialize_chunk(0, 0);
+        writer.materialize_chunk(0, 0, 0);
 
         let subset = ArraySubset::new_with_ranges(&[0..1, 0..3, 0..3]);
         let cost_values: Vec<f32> = Array::open(swap.clone(), "/cost")
@@ -633,12 +669,14 @@ mod tests {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
-        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
         let swap = initialize_swap(swap_tmp.path(), &layout, 0)
             .expect("failed to initialize swap dataset");
-        let cost_function = CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#)
-            .expect("failed to construct cost function");
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .expect("failed to construct cost function");
 
         let writer = DerivedDataWriter::new(&layout, source, swap, cost_function);
         let chunk_idx = writer
@@ -646,7 +684,7 @@ mod tests {
             .read()
             .expect("failed to acquire read lock");
 
-        assert_eq!(chunk_idx.dim(), (2, 2));
+        assert_eq!(chunk_idx.dim(), (1, 2, 2));
         assert!(chunk_idx.iter().all(|&value| !value));
     }
 
@@ -655,7 +693,7 @@ mod tests {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
-        let layout = inspect_source_layout(&source).expect("source layout inspection failed");
+        let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
         let readable_source: Arc<dyn zarrs::storage::ReadableStorageTraits> = Arc::new(
             FilesystemStore::new(tmp.path()).expect("could not reopen readable test store"),
         );
@@ -664,8 +702,10 @@ mod tests {
         let swap_tmp = TempDir::new().expect("could not create swap dir");
         let swap = initialize_swap(swap_tmp.path(), &layout, 0)
             .expect("failed to initialize swap dataset");
-        let cost_function = CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#)
-            .expect("failed to construct cost function");
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .expect("failed to construct cost function");
         let writer = DerivedDataWriter::new(&layout, source, swap, cost_function);
         let materialized = Mutex::new(Vec::new());
 
@@ -677,7 +717,7 @@ mod tests {
                 .read()
                 .expect("failed to acquire read lock");
             for (ci, cj) in [(0, 0), (1, 0)] {
-                if chunk_idx[[ci, cj]] {
+                if chunk_idx[[0, ci, cj]] {
                     materialized
                         .lock()
                         .expect("failed to record materialized chunk")
@@ -694,7 +734,7 @@ mod tests {
                 .read()
                 .expect("failed to acquire read lock");
             for (ci, cj) in [(0, 1), (1, 1)] {
-                if chunk_idx[[ci, cj]] {
+                if chunk_idx[[0, ci, cj]] {
                     materialized
                         .lock()
                         .expect("failed to record materialized chunk")
@@ -716,6 +756,66 @@ mod tests {
             .swap_chunk_idx
             .read()
             .expect("failed to acquire read lock");
-        assert_eq!(*chunk_idx, Array2::from_elem((2, 2), true));
+        assert_eq!(*chunk_idx, Array3::from_elem((1, 2, 2), true));
+    }
+
+    #[test]
+    fn ensure_derived_data_for_subset_materializes_each_band_chunk_once() {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(2, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(LayerConfig::custom("A", |band, _, _| (band + 1) as f32))
+            .build()
+            .expect("failed to create multi-band source dataset");
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(source_tmp.path()).expect("could not open test store"));
+        let readable_source: Arc<dyn zarrs::storage::ReadableStorageTraits> = Arc::new(
+            FilesystemStore::new(source_tmp.path()).expect("could not reopen readable test store"),
+        );
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"overhead":{"cost_layers":[{"layer_name":"A"}]},"underground":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .expect("failed to construct cost function");
+        let layout = inspect_source_layout(&source, cost_function.routing_options.len() as u32)
+            .expect("source layout inspection failed");
+        let array =
+            zarrs::array::Array::open(readable_source, "/A").expect("failed to open source array");
+        let swap_tmp = TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+            .expect("failed to initialize swap dataset");
+        let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
+
+        let first_option_subset = ArraySubset::new_with_ranges(&[0..1, 0..2, 0..2]);
+        writer.ensure_derived_data_for_subset(&array, &first_option_subset);
+
+        {
+            let chunk_idx = writer
+                .swap_chunk_idx
+                .read()
+                .expect("failed to acquire read lock");
+            assert!(chunk_idx[[0, 0, 0]]);
+            assert!(!chunk_idx[[1, 0, 0]]);
+        }
+
+        let second_option_subset = ArraySubset::new_with_ranges(&[1..2, 0..2, 0..2]);
+        writer.ensure_derived_data_for_subset(&array, &second_option_subset);
+
+        let chunk_idx = writer
+            .swap_chunk_idx
+            .read()
+            .expect("failed to acquire read lock");
+        assert_eq!(*chunk_idx, Array3::from_elem((2, 1, 1), true));
+
+        let cost_band_0: Vec<f32> = Array::open(swap.clone(), "/cost")
+            .expect("could not open derived cost array")
+            .retrieve_array_subset_elements(&first_option_subset)
+            .expect("could not read first option cost array");
+        let cost_band_1: Vec<f32> = Array::open(swap, "/cost")
+            .expect("could not open derived cost array")
+            .retrieve_array_subset_elements(&second_option_subset)
+            .expect("could not read second option cost array");
+
+        assert_eq!(cost_band_0, vec![1.0; 4]);
+        assert_eq!(cost_band_1, vec![2.0; 4]);
     }
 }

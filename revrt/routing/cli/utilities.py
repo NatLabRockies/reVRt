@@ -72,7 +72,7 @@ def routing_layer_mover(
     with tfc as temp_zarr_file_str:
         logger.debug("Setting swap file location to %r", temp_zarr_file_str)
         temp_zarr_file = Path(temp_zarr_file_str)
-        yield temp_zarr_file
+        yield temp_zarr_file  # noqa
 
         if not save:
             return
@@ -156,9 +156,13 @@ def _route_layer_hash(cost_layers, friction_layers, barrier_layers):
     """Compute short hash for layer definitions"""
     payload = json.dumps(
         {
-            "cost_layers": cost_layers,
-            "friction_layers": friction_layers,
-            "barrier_layers": barrier_layers,
+            "routing_options": {
+                "default": {
+                    "cost_layers": cost_layers,
+                    "friction_layers": friction_layers,
+                    "barrier_layers": barrier_layers,
+                }
+            }
         },
         sort_keys=True,
         separators=(",", ":"),

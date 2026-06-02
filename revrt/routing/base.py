@@ -112,10 +112,18 @@ class RoutingScenario:
         """str: JSON string describing configured cost layers"""
         return json.dumps(
             {
-                "cost_layers": list(self._cost_layers_for_rust()),
-                "friction_layers": list(self._friction_layers_for_rust()),
-                "barrier_layers": list(self._barrier_layers_for_rust()),
                 "ignore_invalid_costs": self.ignore_invalid_costs,
+                "routing_options": {
+                    "default": {
+                        "cost_layers": list(self._cost_layers_for_rust()),
+                        "friction_layers": list(
+                            self._friction_layers_for_rust()
+                        ),
+                        "barrier_layers": list(
+                            self._barrier_layers_for_rust()
+                        ),
+                    }
+                },
             }
         )
 
@@ -859,32 +867,7 @@ class BatchRouteProcessor:
             num_complete += 1
             try:
                 route_id, solutions = next(results_iter)
-                start_points, end_points = self.route_definitions[route_id]
-                if not solutions:
-                    msg = (
-                        f"Unable to find route from {start_points} to any of "
-                        f"{end_points} (route ID: {route_id}). Please verify "
-                        "that the start and end points are not separated by "
-                        "hard barriers or invalid cost cells."
-                    )
-                    logger.error(msg)
-                    continue
-
-                logger.debug(
-                    "Got result from Rust for route_id %d. Processing..."
-                    "\n\t- Start points: %r\n\t- End points: %r",
-                    route_id,
-                    start_points,
-                    end_points,
-                )
-                for indices, optimized_objective, dbl in solutions:
-                    attrs_key = (route_id, indices[0])
-                    attrs = {
-                        **self.route_attrs.get(attrs_key, self.default_attrs),
-                        "dropped_barrier_layers": json.dumps(dbl),
-                    }
-                    yield indices, optimized_objective, attrs
-
+                yield from self._formatted_solutions(solutions, route_id)
                 time_elapsed = f"{(time.monotonic() - ts) / 60:.2f} minute(s)"
                 logger.info(
                     "%d/%d (%.2f%%) route definitions processed in %s",
@@ -899,6 +882,34 @@ class BatchRouteProcessor:
             except StopIteration:
                 logger.info("Routing complete")
                 break
+
+    def _formatted_solutions(self, solutions, route_id):
+        """Format reVRt output solutions and log any failures"""
+        start_points, end_points = self.route_definitions[route_id]
+        if not solutions:
+            msg = (
+                f"Unable to find route from {start_points} to any of "
+                f"{end_points} (route ID: {route_id}). Please verify "
+                "that the start and end points are not separated by "
+                "hard barriers or invalid cost cells."
+            )
+            logger.error(msg)
+            return
+
+        logger.debug(
+            "Got result from Rust for route_id %d. Processing..."
+            "\n\t- Start points: %r\n\t- End points: %r",
+            route_id,
+            start_points,
+            end_points,
+        )
+        for indices, optimized_objective, dbl in solutions:
+            attrs_key = (route_id, indices[0])
+            attrs = {
+                **self.route_attrs.get(attrs_key, self.default_attrs),
+                "dropped_barrier_layers": json.dumps(dbl),
+            }
+            yield indices, optimized_objective, attrs
 
     def _validate_start_points(self, points):
         """Validate start points by removing cells invalid cost"""

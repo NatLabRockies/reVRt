@@ -214,8 +214,17 @@ fn compute_solution_for_start(
             );
         }
 
+        let start_state = scenario
+            .allowed_states_at(start_point, dropped_soft_groups)
+            .find(|state| *state == *start_point);
+
+        let start_point = match start_state {
+            Some(state) => state,
+            None => continue,
+        };
+
         let solution = algorithm.compute(
-            start_point,
+            &start_point,
             end,
             |p| scenario.successors_for_attempt(p, dropped_soft_groups),
             |p| end.contains(p),
@@ -230,6 +239,64 @@ fn compute_solution_for_start(
 
     None
 }
+
+// fn compute_solution_for_start(
+//     scenario: &Scenario,
+//     algorithm: &Algorithm,
+//     start_point: &ArrayIndex,
+//     end: &[ArrayIndex],
+// ) -> Option<Solution<ArrayIndex, f32>> {
+//     let grid_shape = scenario.grid_shape();
+//     let goal_requires_explicit_option = end.iter().any(|goal| goal.option != 0);
+
+//     for dropped_soft_groups in 0..=scenario.soft_barrier_group_count() {
+//         if dropped_soft_groups > 0 {
+//             info!(
+//                 "Retrying route from {:?} with {} soft-barrier group(s) dropped",
+//                 start_point, dropped_soft_groups
+//             );
+//         }
+
+//         let start_requires_explicit_option =
+//             start_point.option != 0 || goal_requires_explicit_option;
+
+//         let start_states = if start_requires_explicit_option {
+//             scenario
+//                 .allowed_states_at(start_point, dropped_soft_groups)
+//                 .into_iter()
+//                 .filter(|state| *state == *start_point)
+//                 .collect()
+//         } else {
+//             scenario.allowed_states_at(start_point, dropped_soft_groups)
+//         };
+
+//         let solution = start_states
+//             .iter()
+//             .filter_map(|start_state| {
+//                 algorithm.compute(
+//                     start_state,
+//                     end,
+//                     |p| scenario.successors_for_attempt(p, dropped_soft_groups),
+//                     |p| {
+//                         if goal_requires_explicit_option {
+//                             end.iter().any(|goal| goal == p)
+//                         } else {
+//                             end.iter().any(|goal| goal.i == p.i && goal.j == p.j)
+//                         }
+//                     },
+//                     grid_shape,
+//                 )
+//             })
+//             .min_by(|left, right| left.total_cost.total_cmp(&right.total_cost));
+
+//         if let Some(solution) = solution {
+//             let dropped_barrier_layers = scenario.dropped_barrier_layers(dropped_soft_groups);
+//             return Some(solution.record_dropped_barriers(dropped_barrier_layers));
+//         }
+//     }
+
+//     None
+// }
 
 const PRECISION_SCALAR: f32 = 1e4;
 fn cost_as_u64(cost: f32) -> u64 {
@@ -264,6 +331,10 @@ mod tests {
     use super::{Algorithm, AlgorithmType, Scenario, compute_route_attempt_result};
     use crate::ArrayIndex;
 
+    fn layered_switch_cost(band: u64, _row: u64, _col: u64) -> f32 {
+        if band == 0 { 1.0 } else { 4.0 }
+    }
+
     #[test]
     fn compute_route_attempt_result_tracks_dropped_barriers_per_start() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
@@ -286,28 +357,32 @@ mod tests {
             .unwrap();
         let cost_function = crate::cost::CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost"}],
-                "barrier_layers": [
-                    {
-                        "layer_name": "hard_barrier",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
-                    },
-                    {
-                        "layer_name": "soft_barrier",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 1
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            },
+                            {
+                                "layer_name": "soft_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 1
+                            }
+                        ]
                     }
-                ],
+                },
                 "ignore_invalid_costs": false
             }"#,
         )
         .unwrap();
         let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
         let algorithm = Algorithm::from_selection(AlgorithmType::Dijkstra, 8 * 1024 * 1024);
-        let start = [ArrayIndex::new(0, 0), ArrayIndex::new(2, 0)];
-        let end = [ArrayIndex::new(0, 4), ArrayIndex::new(2, 4)];
+        let start = [ArrayIndex::new_ij(0, 0), ArrayIndex::new_ij(2, 0)];
+        let end = [ArrayIndex::new_ij(0, 4), ArrayIndex::new_ij(2, 4)];
 
         let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
 
@@ -315,9 +390,9 @@ mod tests {
 
         let top_solution = result
             .iter()
-            .find(|solution| solution.route().first() == Some(&ArrayIndex::new(0, 0)))
+            .find(|solution| solution.route().first() == Some(&ArrayIndex::new_ij(0, 0)))
             .unwrap();
-        assert_eq!(top_solution.route().last(), Some(&ArrayIndex::new(0, 4)));
+        assert_eq!(top_solution.route().last(), Some(&ArrayIndex::new_ij(0, 4)));
         assert_eq!(
             top_solution.dropped_barrier_layers(),
             &vec!["soft_barrier".to_string()]
@@ -325,9 +400,274 @@ mod tests {
 
         let bottom_solution = result
             .iter()
-            .find(|solution| solution.route().first() == Some(&ArrayIndex::new(2, 0)))
+            .find(|solution| solution.route().first() == Some(&ArrayIndex::new_ij(2, 0)))
             .unwrap();
-        assert_eq!(bottom_solution.route().last(), Some(&ArrayIndex::new(2, 4)));
+        assert_eq!(
+            bottom_solution.route().last(),
+            Some(&ArrayIndex::new_ij(2, 4))
+        );
         assert!(bottom_solution.dropped_barrier_layers().is_empty());
     }
+
+    #[test]
+    fn compute_route_attempt_result_can_switch_options_in_place() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 1, 1)
+            .chunks(2, 1, 1)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                layered_switch_cost,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+        let algorithm = Algorithm::from_selection(AlgorithmType::Dijkstra, 8 * 1024 * 1024);
+        let start = [ArrayIndex {
+            i: 0,
+            j: 0,
+            option: 0,
+        }];
+        let end = [ArrayIndex {
+            i: 0,
+            j: 0,
+            option: 1,
+        }];
+
+        let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(
+            result[0].route(),
+            &vec![
+                ArrayIndex {
+                    i: 0,
+                    j: 0,
+                    option: 0
+                },
+                ArrayIndex {
+                    i: 0,
+                    j: 0,
+                    option: 1
+                },
+            ]
+        );
+        assert_eq!(*result[0].total_cost(), 4.0);
+    }
+
+    #[test]
+    fn compute_route_attempt_result_applies_transition_costs() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 1, 1)
+            .chunks(2, 1, 1)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                layered_switch_cost,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "transition_costs": {
+                    "pairwise": [
+                        {
+                            "from": "overhead",
+                            "to": "underground",
+                            "cost": 3.0
+                        }
+                    ]
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+        let algorithm = Algorithm::from_selection(AlgorithmType::Dijkstra, 8 * 1024 * 1024);
+        let start = [ArrayIndex {
+            i: 0,
+            j: 0,
+            option: 0,
+        }];
+        let end = [ArrayIndex {
+            i: 0,
+            j: 0,
+            option: 1,
+        }];
+
+        let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(*result[0].total_cost(), 7.0);
+    }
+
+    // fn any_option_start_cost(band: u64, _row: u64, _col: u64) -> f32 {
+    //     if band == 0 { 1.0 } else { 2.0 }
+    // }
+
+    // fn first_option_blocked_everywhere(band: u64, _row: u64, _col: u64) -> f32 {
+    //     if band == 0 { 1.0 } else { 0.0 }
+    // }
+
+    // #[test]
+    // fn compute_route_attempt_result_can_start_on_any_allowed_option() {
+    //     let store = crate::dataset::samples::ZarrTestBuilder::new()
+    //         .dimensions(2, 1, 2)
+    //         .chunks(2, 1, 2)
+    //         .layer(crate::dataset::samples::LayerConfig::custom(
+    //             "cost",
+    //             any_option_start_cost,
+    //         ))
+    //         .layer(crate::dataset::samples::LayerConfig::custom(
+    //             "hard_barrier",
+    //             first_option_blocked_everywhere,
+    //         ))
+    //         .build()
+    //         .unwrap();
+    //     let cost_function = crate::cost::CostFunction::from_json(
+    //         r#"{
+    //             "routing_options": {
+    //                 "overhead": {
+    //                     "cost_layers": [{"layer_name": "cost"}],
+    //                     "barrier_layers": [
+    //                         {
+    //                             "layer_name": "hard_barrier",
+    //                             "barrier_operator": "eq",
+    //                             "barrier_threshold": 1.0
+    //                         }
+    //                     ]
+    //                 },
+    //                 "underground": {
+    //                     "cost_layers": [{"layer_name": "cost"}],
+    //                     "barrier_layers": [
+    //                         {
+    //                             "layer_name": "hard_barrier",
+    //                             "barrier_operator": "eq",
+    //                             "barrier_threshold": 1.0
+    //                         }
+    //                     ]
+    //                 }
+    //             },
+    //             "ignore_invalid_costs": false
+    //         }"#,
+    //     )
+    //     .unwrap();
+    //     let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+    //     let algorithm = Algorithm::from_selection(AlgorithmType::Dijkstra, 8 * 1024 * 1024);
+    //     let start = [ArrayIndex::new_ij(0, 0)];
+    //     let end = [ArrayIndex::new_ij(0, 1)];
+
+    //     let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
+
+    //     assert_eq!(result.len(), 1);
+    //     assert_eq!(
+    //         result[0].route(),
+    //         &vec![
+    //             ArrayIndex {
+    //                 i: 0,
+    //                 j: 0,
+    //                 option: 1
+    //             },
+    //             ArrayIndex {
+    //                 i: 0,
+    //                 j: 1,
+    //                 option: 1
+    //             },
+    //         ]
+    //     );
+    //     assert_eq!(*result[0].total_cost(), 2.0);
+    // }
+
+    // #[test]
+    // fn compute_route_attempt_result_can_end_on_any_allowed_option() {
+    //     let store = crate::dataset::samples::ZarrTestBuilder::new()
+    //         .dimensions(2, 1, 2)
+    //         .chunks(2, 1, 2)
+    //         .layer(crate::dataset::samples::LayerConfig::custom(
+    //             "cost",
+    //             any_option_start_cost,
+    //         ))
+    //         .layer(crate::dataset::samples::LayerConfig::custom(
+    //             "hard_barrier",
+    //             first_option_blocked_everywhere,
+    //         ))
+    //         .build()
+    //         .unwrap();
+    //     let cost_function = crate::cost::CostFunction::from_json(
+    //         r#"{
+    //             "routing_options": {
+    //                 "overhead": {
+    //                     "cost_layers": [{"layer_name": "cost"}],
+    //                     "barrier_layers": [
+    //                         {
+    //                             "layer_name": "hard_barrier",
+    //                             "barrier_operator": "eq",
+    //                             "barrier_threshold": 1.0
+    //                         }
+    //                     ]
+    //                 },
+    //                 "underground": {
+    //                     "cost_layers": [{"layer_name": "cost"}],
+    //                     "barrier_layers": [
+    //                         {
+    //                             "layer_name": "hard_barrier",
+    //                             "barrier_operator": "eq",
+    //                             "barrier_threshold": 1.0
+    //                         }
+    //                     ]
+    //                 }
+    //             },
+    //             "ignore_invalid_costs": false
+    //         }"#,
+    //     )
+    //     .unwrap();
+    //     let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+    //     let algorithm = Algorithm::from_selection(AlgorithmType::Dijkstra, 8 * 1024 * 1024);
+    //     let start = [ArrayIndex {
+    //         i: 0,
+    //         j: 0,
+    //         option: 1,
+    //     }];
+    //     let end = [ArrayIndex::new_ij(0, 1)];
+
+    //     let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
+
+    //     assert_eq!(result.len(), 1);
+    //     assert_eq!(
+    //         result[0].route(),
+    //         &vec![
+    //             ArrayIndex {
+    //                 i: 0,
+    //                 j: 0,
+    //                 option: 1
+    //             },
+    //             ArrayIndex {
+    //                 i: 0,
+    //                 j: 1,
+    //                 option: 1
+    //             },
+    //         ]
+    //     );
+    //     assert_eq!(*result[0].total_cost(), 2.0);
+    // }
 }

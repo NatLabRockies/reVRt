@@ -45,12 +45,12 @@ struct CacheBudgets {
     per_soft_barrier_cache: u64,
 }
 
-/// Cached access to derived 3x3 neighborhoods from the swap dataset.
+/// Cached access to derived data from the swap dataset.
 ///
 /// The reader keeps decoded chunk caches for each derived array needed during
 /// routing so repeated neighborhood lookups can avoid reopening and decoding
 /// the same swap chunks.
-pub(super) struct NeighborhoodReader {
+pub(super) struct DerivedDataReader {
     /// Decoded chunk cache for the main per-cell routing cost.
     cost_cache: ChunkCacheDecodedLruSizeLimit,
     /// Decoded chunk cache for invariant movement costs.
@@ -59,13 +59,15 @@ pub(super) struct NeighborhoodReader {
     hard_barrier_cache: ChunkCacheDecodedLruSizeLimit,
     /// Decoded chunk caches for cumulative soft barrier masks by retry state.
     cumulative_soft_barrier_caches: Vec<ChunkCacheDecodedLruSizeLimit>,
+    /// Number of routing options on the leading band axis.
+    grid_noptions: u32,
     /// Number of rows in the routing grid.
     grid_nrows: u64,
     /// Number of columns in the routing grid.
     grid_ncols: u64,
 }
 
-impl NeighborhoodReader {
+impl DerivedDataReader {
     /// Open cached readers for the derived swap arrays.
     ///
     /// This initializes one decoded chunk cache per derived array used during
@@ -82,7 +84,7 @@ impl NeighborhoodReader {
     /// `layout`: Source grid layout metadata used to record dataset shape.
     ///
     /// # Returns
-    /// A `NeighborhoodReader` with initialized chunk caches for every derived
+    /// A `DerivedDataReader` with initialized chunk caches for every derived
     /// neighborhood array.
     pub(super) fn open(
         swap: ReadableWritableListableStorage,
@@ -135,6 +137,7 @@ impl NeighborhoodReader {
             cost_invariant_cache,
             hard_barrier_cache,
             cumulative_soft_barrier_caches,
+            grid_noptions: layout.grid_noptions,
             grid_nrows: layout.grid_nrows,
             grid_ncols: layout.grid_ncols,
         })
@@ -161,9 +164,12 @@ impl NeighborhoodReader {
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<(ArrayIndex, f32)> {
-        let &ArrayIndex { i, j } = index;
+        let &ArrayIndex { i, j, option } = index;
 
-        trace!("Getting 3x3 neighborhood for (i={}, j={})", i, j);
+        trace!(
+            "Getting 3x3 neighborhood for (i={}, j={}, option={})",
+            i, j, option
+        );
 
         trace!("Opening cost dataset via cache");
         let cost_array = self.cost_cache.array();
@@ -198,7 +204,9 @@ impl NeighborhoodReader {
                 }
             })
             .unwrap();
+
         if center.2 {
+            // center cell is barrier, so no neighbors
             return Vec::new();
         }
         trace!("Center point: {:?}", center);
@@ -220,7 +228,14 @@ impl NeighborhoodReader {
                 } else {
                     v
                 };
-                (ArrayIndex { i: *ir, j: *jr }, scaled + inv_cost)
+                (
+                    ArrayIndex {
+                        i: *ir,
+                        j: *jr,
+                        option,
+                    },
+                    scaled + inv_cost,
+                )
             })
             .collect::<Vec<_>>();
 
@@ -263,19 +278,68 @@ impl NeighborhoodReader {
             .zip(barrier_values)
         {
             if is_barrier {
-                barrier_cells.push(ArrayIndex { i: ir, j: jr });
+                barrier_cells.push(ArrayIndex {
+                    i: ir,
+                    j: jr,
+                    option: index.option,
+                });
             }
         }
 
         barrier_cells
     }
 
-    /// Return the grid shape backing this reader as `(rows, cols)`.
+    /// Return the center-cell entry cost for a single option state.
+    ///
+    /// The returned value includes the length-dependent center-cell cost and
+    /// the invariant adders for the destination option. Hard barriers and
+    /// invalid costs return `None`.
+    pub(super) fn get_cell_cost(
+        &self,
+        index: &ArrayIndex,
+        data_materializer: &impl DerivedDataMaterializer,
+    ) -> Option<f32> {
+        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            u64::from(index.option)..u64::from(index.option) + 1,
+            index.i..index.i + 1,
+            index.j..index.j + 1,
+        ]);
+        let cost_array = self.cost_cache.array();
+        data_materializer.ensure_derived_data_for_subset(&cost_array, &subset);
+
+        let cost = self
+            .cost_cache
+            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+            .ok()?
+            .into_iter()
+            .next()?;
+        let is_hard_barrier = data_materializer.has_hard_barriers()
+            && self
+                .hard_barrier_cache
+                .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
+                .ok()?
+                .into_iter()
+                .next()?;
+
+        if is_hard_barrier || cost.is_nan() || cost <= 0.0 {
+            None
+        } else {
+            let invariant = self
+                .cost_invariant_cache
+                .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+                .ok()?
+                .into_iter()
+                .next()?;
+            Some(cost + invariant)
+        }
+    }
+
+    /// Return the grid shape backing this reader as `(rows, cols, options)`.
     ///
     /// # Returns
     /// The routing grid dimensions recorded when the reader was opened.
-    pub(super) fn grid_shape(&self) -> (u64, u64) {
-        (self.grid_nrows, self.grid_ncols)
+    pub(super) fn grid_shape(&self) -> (u64, u64, u32) {
+        (self.grid_nrows, self.grid_ncols, self.grid_noptions)
     }
 
     /// Build the row and column ranges for a clipped 3x3 neighborhood.
@@ -297,9 +361,10 @@ impl NeighborhoodReader {
         std::ops::Range<u64>,
         zarrs::array_subset::ArraySubset,
     ) {
-        let &ArrayIndex { i, j } = index;
+        let &ArrayIndex { i, j, option } = index;
         debug_assert!(self.grid_nrows > 0);
         debug_assert!(self.grid_ncols > 0);
+        debug_assert!(option < self.grid_noptions);
 
         let max_i = self.grid_nrows - 1;
         let max_j = self.grid_ncols - 1;
@@ -318,7 +383,7 @@ impl NeighborhoodReader {
         };
 
         let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-            0..1,
+            u64::from(option)..u64::from(option) + 1,
             i_range.clone(),
             j_range.clone(),
         ]);
@@ -482,7 +547,7 @@ mod tests {
     ) {
         let reader = reader_for_grid(grid_nrows, grid_ncols);
 
-        let (i_range, j_range, subset) = reader.neighborhood_subset(&ArrayIndex { i, j });
+        let (i_range, j_range, subset) = reader.neighborhood_subset(&ArrayIndex::new_ij(i, j));
 
         assert_eq!(i_range, expected_i_range.clone());
         assert_eq!(j_range, expected_j_range.clone());
@@ -507,19 +572,19 @@ mod tests {
         );
 
         let neighbors = fixture.reader.get_3x3(
-            &ArrayIndex { i: 1, j: 1 },
+            &ArrayIndex::new_ij(1, 1),
             &NoOpMaterializer {
                 has_hard_barriers: true,
             },
         );
 
         let expected = [
-            (ArrayIndex { i: 0, j: 0 }, 3.0 * SQRT_2 + 1.0),
-            (ArrayIndex { i: 0, j: 2 }, 4.0 * SQRT_2 + 1.0),
-            (ArrayIndex { i: 1, j: 0 }, 5.5),
-            (ArrayIndex { i: 2, j: 0 }, 6.0 * SQRT_2 + 1.0),
-            (ArrayIndex { i: 2, j: 1 }, 7.5),
-            (ArrayIndex { i: 2, j: 2 }, 7.0 * SQRT_2 + 1.0),
+            (ArrayIndex::new_ij(0, 0), 3.0 * SQRT_2 + 1.0),
+            (ArrayIndex::new_ij(0, 2), 4.0 * SQRT_2 + 1.0),
+            (ArrayIndex::new_ij(1, 0), 5.5),
+            (ArrayIndex::new_ij(2, 0), 6.0 * SQRT_2 + 1.0),
+            (ArrayIndex::new_ij(2, 1), 7.5),
+            (ArrayIndex::new_ij(2, 2), 7.0 * SQRT_2 + 1.0),
         ];
 
         assert_eq!(neighbors.len(), expected.len());
@@ -542,7 +607,7 @@ mod tests {
         );
 
         let neighbors = fixture.reader.get_3x3(
-            &ArrayIndex { i: 1, j: 1 },
+            &ArrayIndex::new_ij(1, 1),
             &NoOpMaterializer {
                 has_hard_barriers: true,
             },
@@ -560,7 +625,7 @@ mod tests {
             vec![false; 9],
             vec![false; 9],
         );
-        let index = ArrayIndex { i: 1, j: 1 };
+        let index = ArrayIndex::new_ij(1, 1);
 
         let (i_range, j_range, subset) = fixture.reader.neighborhood_subset(&index);
         let raw_costs = fixture
@@ -591,10 +656,10 @@ mod tests {
         assert_eq!(
             neighbors,
             vec![
-                (ArrayIndex { i: 0, j: 0 }, 3.0 * SQRT_2),
-                (ArrayIndex { i: 0, j: 2 }, 4.0 * SQRT_2),
-                (ArrayIndex { i: 2, j: 0 }, 6.0 * SQRT_2),
-                (ArrayIndex { i: 2, j: 2 }, 7.0 * SQRT_2),
+                (ArrayIndex::new_ij(0, 0), 3.0 * SQRT_2),
+                (ArrayIndex::new_ij(0, 2), 4.0 * SQRT_2),
+                (ArrayIndex::new_ij(2, 0), 6.0 * SQRT_2),
+                (ArrayIndex::new_ij(2, 2), 7.0 * SQRT_2),
             ]
         );
     }
@@ -610,14 +675,14 @@ mod tests {
         );
 
         let retry_zero = fixture.reader.get_3x3_soft_barrier_cells(
-            &ArrayIndex { i: 1, j: 1 },
+            &ArrayIndex::new_ij(1, 1),
             0,
             &NoOpMaterializer {
                 has_hard_barriers: false,
             },
         );
         let retry_one = fixture.reader.get_3x3_soft_barrier_cells(
-            &ArrayIndex { i: 1, j: 1 },
+            &ArrayIndex::new_ij(1, 1),
             1,
             &NoOpMaterializer {
                 has_hard_barriers: false,
@@ -626,16 +691,109 @@ mod tests {
 
         assert_eq!(
             retry_zero,
-            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 2, j: 0 }]
+            vec![ArrayIndex::new_ij(0, 1), ArrayIndex::new_ij(2, 0)]
         );
         assert_eq!(
             retry_one,
-            vec![ArrayIndex { i: 0, j: 0 }, ArrayIndex { i: 2, j: 1 }]
+            vec![ArrayIndex::new_ij(0, 0), ArrayIndex::new_ij(2, 1)]
         );
     }
 
-    fn reader_for_grid(grid_nrows: u64, grid_ncols: u64) -> NeighborhoodReader {
+    #[test]
+    fn get_3x3_reads_from_requested_option_band() {
         let fixture = reader_fixture_with_shape(
+            2,
+            3,
+            3,
+            vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+                17.0, 18.0, 19.0,
+            ],
+            vec![0.0; 18],
+            vec![false; 18],
+            vec![false; 18],
+            vec![false; 18],
+        );
+
+        let neighbors = fixture.reader.get_3x3(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 1,
+            },
+            &NoOpMaterializer {
+                has_hard_barriers: false,
+            },
+        );
+
+        assert!(neighbors.iter().all(|(index, _)| index.option == 1));
+        assert!(neighbors.contains(&(
+            ArrayIndex {
+                i: 0,
+                j: 1,
+                option: 1
+            },
+            13.5
+        )));
+        assert!(neighbors.contains(&(
+            ArrayIndex {
+                i: 1,
+                j: 2,
+                option: 1
+            },
+            15.5
+        )));
+    }
+
+    #[test]
+    fn grid_shape_reports_option_count() {
+        let fixture = reader_fixture_with_shape(
+            2,
+            3,
+            4,
+            vec![1.0; 24],
+            vec![0.0; 24],
+            vec![false; 24],
+            vec![false; 24],
+            vec![false; 24],
+        );
+
+        assert_eq!(fixture.reader.grid_shape(), (3, 4, 2));
+    }
+
+    #[test]
+    fn get_cell_cost_reads_requested_option_band() {
+        let fixture = reader_fixture_with_shape(
+            2,
+            2,
+            2,
+            vec![1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 30.0, 40.0],
+            vec![0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0],
+            vec![false; 8],
+            vec![false; 8],
+            vec![false; 8],
+        );
+
+        let cost = fixture
+            .reader
+            .get_cell_cost(
+                &ArrayIndex {
+                    i: 1,
+                    j: 0,
+                    option: 1,
+                },
+                &NoOpMaterializer {
+                    has_hard_barriers: false,
+                },
+            )
+            .unwrap();
+
+        assert_eq!(cost, 31.0);
+    }
+
+    fn reader_for_grid(grid_nrows: u64, grid_ncols: u64) -> DerivedDataReader {
+        let fixture = reader_fixture_with_shape(
+            1,
             grid_nrows,
             grid_ncols,
             vec![1.0; (grid_nrows * grid_ncols) as usize],
@@ -655,6 +813,7 @@ mod tests {
         soft_retry_one_values: Vec<bool>,
     ) -> ReaderFixture {
         reader_fixture_with_shape(
+            1,
             3,
             3,
             cost_values,
@@ -665,7 +824,9 @@ mod tests {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn reader_fixture_with_shape(
+        grid_noptions: u64,
         grid_nrows: u64,
         grid_ncols: u64,
         cost_values: Vec<f32>,
@@ -675,25 +836,33 @@ mod tests {
         soft_retry_one_values: Vec<bool>,
     ) -> ReaderFixture {
         let source_tmp = ZarrTestBuilder::new()
-            .dimensions(1, grid_nrows, grid_ncols)
-            .chunks(1, grid_nrows, grid_ncols)
+            .dimensions(grid_noptions, grid_nrows, grid_ncols)
+            .chunks(grid_noptions, grid_nrows, grid_ncols)
             .layer(LayerConfig::ones("source"))
             .build()
             .expect("failed to create source test dataset");
         let source: ReadableListableStorage = Arc::new(
             FilesystemStore::new(source_tmp.path()).expect("could not open source test store"),
         );
-        let layout =
-            inspect_source_layout(&source).expect("source layout inspection should succeed");
+        let layout = inspect_source_layout(&source, grid_noptions as u32)
+            .expect("source layout inspection should succeed");
 
         let swap_tmp = TempDir::new().expect("could not create temporary swap");
         let swap = initialize_swap(swap_tmp.path(), &layout, 1)
             .expect("swap initialization should succeed");
 
-        store_f32_layer(swap.clone(), "/cost", grid_nrows, grid_ncols, cost_values);
+        store_f32_layer(
+            swap.clone(),
+            "/cost",
+            grid_noptions,
+            grid_nrows,
+            grid_ncols,
+            cost_values,
+        );
         store_f32_layer(
             swap.clone(),
             "/cost_invariant",
+            grid_noptions,
             grid_nrows,
             grid_ncols,
             invariant_values,
@@ -701,6 +870,7 @@ mod tests {
         store_bool_layer(
             swap.clone(),
             "/hard_barrier_mask",
+            grid_noptions,
             grid_nrows,
             grid_ncols,
             hard_barrier_values,
@@ -708,6 +878,7 @@ mod tests {
         store_bool_layer(
             swap.clone(),
             "/soft_barrier_mask_retry_0",
+            grid_noptions,
             grid_nrows,
             grid_ncols,
             soft_retry_zero_values,
@@ -715,12 +886,13 @@ mod tests {
         store_bool_layer(
             swap.clone(),
             "/soft_barrier_mask_retry_1",
+            grid_noptions,
             grid_nrows,
             grid_ncols,
             soft_retry_one_values,
         );
 
-        let reader = NeighborhoodReader::open(swap, 90, 1, layout).expect("reader should open");
+        let reader = DerivedDataReader::open(swap, 90, 1, layout).expect("reader should open");
 
         ReaderFixture {
             _source_tmp: source_tmp,
@@ -732,13 +904,20 @@ mod tests {
     fn store_f32_layer(
         swap: ReadableWritableListableStorage,
         path: &str,
+        grid_noptions: u64,
         grid_nrows: u64,
         grid_ncols: u64,
         values: Vec<f32>,
     ) {
-        let data =
-            Array3::from_shape_vec((1_usize, grid_nrows as usize, grid_ncols as usize), values)
-                .expect("f32 layer values should match requested shape");
+        let data = Array3::from_shape_vec(
+            (
+                grid_noptions as usize,
+                grid_nrows as usize,
+                grid_ncols as usize,
+            ),
+            values,
+        )
+        .expect("f32 layer values should match requested shape");
         let array = Array::open(swap, path).expect("expected f32 layer to exist");
         let subset = chunk_subset(&array);
 
@@ -750,13 +929,20 @@ mod tests {
     fn store_bool_layer(
         swap: ReadableWritableListableStorage,
         path: &str,
+        grid_noptions: u64,
         grid_nrows: u64,
         grid_ncols: u64,
         values: Vec<bool>,
     ) {
-        let data =
-            Array3::from_shape_vec((1_usize, grid_nrows as usize, grid_ncols as usize), values)
-                .expect("bool layer values should match requested shape");
+        let data = Array3::from_shape_vec(
+            (
+                grid_noptions as usize,
+                grid_nrows as usize,
+                grid_ncols as usize,
+            ),
+            values,
+        )
+        .expect("bool layer values should match requested shape");
         let array = Array::open(swap, path).expect("expected bool layer to exist");
         let subset = chunk_subset(&array);
 
@@ -778,6 +964,6 @@ mod tests {
     struct ReaderFixture {
         _source_tmp: TempDir,
         _swap_tmp: TempDir,
-        reader: NeighborhoodReader,
+        reader: DerivedDataReader,
     }
 }

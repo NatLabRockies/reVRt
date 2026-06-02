@@ -25,11 +25,11 @@ impl From<&PyRouteDefinition> for RouteDefinition {
             route_id: *id,
             start_inds: start_points
                 .iter()
-                .map(|(i, j)| ArrayIndex { i: *i, j: *j })
+                .map(|(i, j)| ArrayIndex::new_ij(*i, *j))
                 .collect(),
             end_inds: end_points
                 .iter()
-                .map(|(i, j)| ArrayIndex { i: *i, j: *j })
+                .map(|(i, j)| ArrayIndex::new_ij(*i, *j))
                 .collect(),
         }
     }
@@ -192,9 +192,12 @@ fn find_paths(
     py_tracing::configure(log_level).map_err(PyErr::from)?;
     let start: Vec<ArrayIndex> = start
         .into_iter()
-        .map(|(i, j)| ArrayIndex { i, j })
+        .map(|(i, j)| ArrayIndex::new_ij(i, j))
         .collect();
-    let end: Vec<ArrayIndex> = end.into_iter().map(|(i, j)| ArrayIndex { i, j }).collect();
+    let end: Vec<ArrayIndex> = end
+        .into_iter()
+        .map(|(i, j)| ArrayIndex::new_ij(i, j))
+        .collect();
     let paths = resolve(
         zarr_fp,
         &cost_function,
@@ -205,6 +208,8 @@ fn find_paths(
         mem_limit_bytes,
     )
     .map_err(PyErr::from)?;
+    // TODO: have cost function return the layer mapping so that
+    // python can perform conversion on it's end
     Ok(paths.into_iter().map(Into::into).collect())
 }
 

@@ -1,11 +1,15 @@
-//! Cost function
+pub(crate) mod components;
+mod inputs;
 
 use core::f32;
-use derive_builder::Builder;
 use ndarray::{ArrayD, Axis, IxDyn, stack};
 use std::convert::TryFrom;
 use tracing::{debug, trace};
 
+use crate::cost::components::{
+    BarrierLayer, BarrierOperator, CostLayer, DriverRuleSet, FrictionLayer, TransitionCostTable,
+};
+use crate::cost::inputs::CostFunctionInput;
 use crate::dataset::LazySubset;
 use crate::error::Result;
 
@@ -16,11 +20,7 @@ type BarrierArray = ndarray::Array<bool, ndarray::Dim<ndarray::IxDynImpl>>;
 /// Large friction value to use for invalid costs that can be routed through
 const HIGH_FRICTION_INVALID_COST: f32 = 1e10;
 
-fn true_option() -> bool {
-    true
-}
-
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug)]
 /// A cost function definition
 ///
 /// `cost_layers`: A collection of cost layers with equal weight.
@@ -34,87 +34,34 @@ pub(crate) struct CostFunction {
     cost_layers: Vec<CostLayer>,
     friction_layers: Option<Vec<FrictionLayer>>,
     barrier_layers: Option<Vec<BarrierLayer>>,
+    pub(crate) routing_options: Vec<String>,
+    pub(crate) drivers: DriverRuleSet,
+    pub(crate) transition_costs: TransitionCostTable,
     /// Option to completely ignore <=0 cost cells
-    #[serde(default = "true_option")]
     pub(crate) ignore_invalid_costs: bool,
 }
 
-#[derive(Clone, Copy, Debug, serde::Deserialize)]
-pub(crate) enum BarrierOperator {
-    #[serde(rename = "ne")]
-    NotEqual,
-    #[serde(rename = "gt")]
-    GreaterThan,
-    #[serde(rename = "ge")]
-    GreaterThanOrEqual,
-    #[serde(rename = "lt")]
-    LessThan,
-    #[serde(rename = "le")]
-    LessThanOrEqual,
-    #[serde(rename = "eq")]
-    Equal,
-}
-
-#[derive(Builder, Clone, Debug, serde::Deserialize)]
-/// A cost layer
-///
-/// Each cost layer is a raster dataset, i.e. a regular grid, composed by
-/// operating on input features. Following the original `revX` structure,
-/// the possible compositions are limited to combinations of the relation
-/// `weight * layer_name * multiplier_layer`, where the `weight` and the
-/// `multiplier_layer` are optional. Each layer can also be marked as invariant,
-/// meaning that its value does not get scaled by the distance traveled
-/// through the cell. Instead, the value of the layer is added once, right
-/// when the path enters the cell.
-struct CostLayer {
-    layer_name: String,
-    #[builder(setter(strip_option), default)]
-    multiplier_scalar: Option<f32>,
-    #[builder(setter(strip_option, into), default)]
-    multiplier_layer: Option<String>,
-    #[builder(setter(strip_option), default)]
-    is_invariant: Option<bool>,
-}
-
-#[derive(Builder, Clone, Debug, serde::Deserialize)]
-/// A friction layer
-///
-/// Each friction layer is a raster dataset, i.e. a regular grid, that
-/// represents multipliers that should be applied to the cost routing
-/// layer. These multipliers affect the output route but will not be
-/// reported in the output cost. Each friction layer is defined by a
-/// `multiplier_layer` and an optional `multiplier_scalar`. The friction
-/// value at each cell is computed as `multiplier_layer * multiplier_scalar`.
-/// If the `multiplier_scalar` is not provided, it defaults to 1.0.
-/// Friction layers are summed together to produce the final friction
-/// layer that is applied to the cost layer. A clamp is applied to the
-/// final friction layer to ensure that no values are below -1.0, which
-/// would lead to negative routing costs.
-struct FrictionLayer {
-    multiplier_layer: String,
-    #[builder(setter(strip_option), default)]
-    multiplier_scalar: Option<f32>,
-}
-
-#[derive(Clone, Debug, serde::Deserialize)]
-pub(crate) struct BarrierLayer {
-    layer_name: String,
-    barrier_operator: BarrierOperator,
-    barrier_threshold: f32,
-    barrier_importance: Option<u32>,
-}
-
-impl BarrierLayer {
-    pub(crate) fn layer_name(&self) -> &str {
-        &self.layer_name
-    }
-
-    pub(crate) fn importance(&self) -> Option<u32> {
-        self.barrier_importance
-    }
-}
-
 impl CostFunction {
+    fn from_input_parts(
+        cost_layers: Vec<CostLayer>,
+        friction_layers: Vec<FrictionLayer>,
+        barrier_layers: Vec<BarrierLayer>,
+        routing_options: Vec<String>,
+        drivers: DriverRuleSet,
+        transition_costs: TransitionCostTable,
+        ignore_invalid_costs: bool,
+    ) -> Self {
+        Self {
+            cost_layers,
+            friction_layers: (!friction_layers.is_empty()).then_some(friction_layers),
+            barrier_layers: (!barrier_layers.is_empty()).then_some(barrier_layers),
+            routing_options,
+            drivers,
+            transition_costs,
+            ignore_invalid_costs,
+        }
+    }
+
     /// Create a new cost function from a JSON string (reVX format)
     ///
     /// # Arguments
@@ -124,30 +71,35 @@ impl CostFunction {
     /// # Returns
     /// A `CostFunction` object.
     ///
-    /// The JSON pattern used by reVX was the following:
+    /// Layer definitions must be nested under `routing_options`.
     /// ```json
     /// {
-    ///   "cost_layers": [
-    ///     {"layer_name": "A"},
-    ///     {
-    ///       "layer_name": "A",
-    ///       "multiplier_scalar": 2,
-    ///       "multiplier_layer": "B"
+    ///   "routing_options": {
+    ///     "default": {
+    ///       "cost_layers": [
+    ///         {"layer_name": "A"},
+    ///         {
+    ///           "layer_name": "A",
+    ///           "multiplier_scalar": 2,
+    ///           "multiplier_layer": "B"
+    ///         }
+    ///       ],
+    ///       "barrier_layers": [
+    ///         {
+    ///           "layer_name": "barrier_mask",
+    ///           "barrier_operator": "eq",
+    ///           "barrier_threshold": 1.0
+    ///         }
+    ///       ]
     ///     }
-    ///   ],
-    ///   "barrier_layers": [
-    ///     {
-    ///       "layer_name": "barrier_mask",
-    ///       "barrier_operator": "eq",
-    ///       "barrier_threshold": 1.0
-    ///     }
-    ///   ]
+    ///   }
     /// }
     /// ```
     pub(super) fn from_json(json: &str) -> Result<Self> {
         trace!("Parsing cost definition from json: {}", json);
-        let cost = serde_json::from_str(json).unwrap();
-        Ok(cost)
+        let cost_input: CostFunctionInput = serde_json::from_str(json)
+            .map_err(|error| crate::error::Error::Undefined(error.to_string()))?;
+        Self::try_from(cost_input)
     }
 
     /// Return a copy of this cost function with all barrier layers removed.
@@ -304,7 +256,7 @@ fn build_single_cost_layer(layer: &CostLayer, features: &mut LazySubset<f32>) ->
         cost = cost * multiplier_value;
         // trace!( "Cost for chunk ({}, {}) in layer {}: {}", ci, cj, layer_name, cost);
     }
-    cost
+    select_option_for_subset(cost, layer.option, features)
 }
 
 fn build_single_friction_layer(layer: &FrictionLayer, features: &mut LazySubset<f32>) -> CostArray {
@@ -321,7 +273,7 @@ fn build_single_friction_layer(layer: &FrictionLayer, features: &mut LazySubset<
         friction *= multiplier_scalar;
     }
 
-    friction
+    select_option_for_subset(friction, layer.option, features)
 }
 
 pub(crate) fn build_single_barrier_layer(
@@ -332,16 +284,51 @@ pub(crate) fn build_single_barrier_layer(
 
     let barrier_values = features
         .get(&layer.layer_name)
-        .expect("Barrier layer not found in features");
+        .expect("Barrier layer not found in features")
+        .mapv(|value| match layer.barrier_operator {
+            BarrierOperator::NotEqual => value != layer.barrier_threshold,
+            BarrierOperator::GreaterThan => value > layer.barrier_threshold,
+            BarrierOperator::GreaterThanOrEqual => value >= layer.barrier_threshold,
+            BarrierOperator::LessThan => value < layer.barrier_threshold,
+            BarrierOperator::LessThanOrEqual => value <= layer.barrier_threshold,
+            BarrierOperator::Equal => value == layer.barrier_threshold,
+        });
 
-    barrier_values.mapv(|value| match layer.barrier_operator {
-        BarrierOperator::NotEqual => value != layer.barrier_threshold,
-        BarrierOperator::GreaterThan => value > layer.barrier_threshold,
-        BarrierOperator::GreaterThanOrEqual => value >= layer.barrier_threshold,
-        BarrierOperator::LessThan => value < layer.barrier_threshold,
-        BarrierOperator::LessThanOrEqual => value <= layer.barrier_threshold,
-        BarrierOperator::Equal => value == layer.barrier_threshold,
-    })
+    select_option_for_subset(barrier_values, layer.option, features)
+}
+
+fn select_option_for_subset<T>(
+    values: ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>,
+    option: u32,
+    features: &LazySubset<f32>,
+) -> ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>
+where
+    T: Clone + Default,
+{
+    let band_start = features.subset().start()[0];
+    let band_end = band_start + features.subset().shape()[0];
+    let option = u64::from(option);
+
+    if option < band_start || option >= band_end {
+        return ndarray::ArrayD::<T>::default(ndarray::IxDyn(values.shape()));
+    }
+
+    select_option(values, (option - band_start) as u32)
+}
+
+fn select_option<T>(
+    values: ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>,
+    option: u32,
+) -> ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>
+where
+    T: Clone + Default,
+{
+    let option_index = option as usize;
+    let mut selected = ndarray::ArrayD::<T>::default(ndarray::IxDyn(values.shape()));
+    selected
+        .index_axis_mut(Axis(0), option_index)
+        .assign(&values.index_axis(Axis(0), option_index));
+    selected
 }
 
 fn reduce_layers(data: Vec<CostArray>) -> CostArray {
@@ -361,16 +348,20 @@ pub(crate) mod sample {
     pub(crate) fn as_text_v1() -> String {
         r#"
         {
-            "cost_layers": [
-                {"layer_name": "A"},
-                {"layer_name": "B", "multiplier_scalar": 100},
-                {"layer_name": "A",
-                    "multiplier_layer": "B"},
-                {"layer_name": "C", "multiplier_scalar": 2,
-                    "multiplier_layer": "A"},
-                {"layer_name": "C", "multiplier_scalar": 100,
-                    "is_invariant": true}
-            ]
+            "routing_options": {
+                "default": {
+                    "cost_layers": [
+                        {"layer_name": "A"},
+                        {"layer_name": "B", "multiplier_scalar": 100},
+                        {"layer_name": "A",
+                            "multiplier_layer": "B"},
+                        {"layer_name": "C", "multiplier_scalar": 2,
+                            "multiplier_layer": "A"},
+                        {"layer_name": "C", "multiplier_scalar": 100,
+                            "is_invariant": true}
+                    ]
+                }
+            }
         }
         "#
         .to_string()
@@ -384,7 +375,7 @@ pub(crate) mod sample {
 
 #[cfg(test)]
 mod test_builder {
-    use super::*;
+    use crate::cost::components::CostLayerBuilder;
 
     #[test]
     fn costlayer() {
@@ -400,6 +391,7 @@ mod test_builder {
         assert_eq!(layer.multiplier_scalar, Some(2.0));
         assert_eq!(layer.multiplier_layer, Some("B".to_string()));
         assert_eq!(layer.is_invariant, Some(false));
+        assert_eq!(layer.option, 0);
     }
 
     #[test]
@@ -413,6 +405,7 @@ mod test_builder {
         assert_eq!(layer.multiplier_scalar, None);
         assert_eq!(layer.multiplier_layer, None);
         assert_eq!(layer.is_invariant, None);
+        assert_eq!(layer.option, 0);
     }
 }
 
@@ -449,20 +442,25 @@ mod test {
         assert_eq!(cost.cost_layers.len(), 5);
         assert_eq!(cost.cost_layers[0].layer_name, "A".to_string());
         assert_eq!(cost.cost_layers[0].is_invariant, None);
+        assert_eq!(cost.cost_layers[0].option, 0);
         assert_eq!(cost.cost_layers[1].layer_name, "B".to_string());
         assert_eq!(cost.cost_layers[1].multiplier_scalar, Some(100.0));
         assert_eq!(cost.cost_layers[1].is_invariant, None);
+        assert_eq!(cost.cost_layers[1].option, 0);
         assert_eq!(cost.cost_layers[2].layer_name, "A".to_string());
         assert_eq!(cost.cost_layers[2].multiplier_layer, Some("B".to_string()));
         assert_eq!(cost.cost_layers[2].is_invariant, None);
+        assert_eq!(cost.cost_layers[2].option, 0);
         assert_eq!(cost.cost_layers[3].layer_name, "C".to_string());
         assert_eq!(cost.cost_layers[3].multiplier_layer, Some("A".to_string()));
         assert_eq!(cost.cost_layers[3].multiplier_scalar, Some(2.0));
         assert_eq!(cost.cost_layers[3].is_invariant, None);
+        assert_eq!(cost.cost_layers[3].option, 0);
         assert_eq!(cost.cost_layers[4].layer_name, "C".to_string());
         assert_eq!(cost.cost_layers[4].multiplier_layer, None);
         assert_eq!(cost.cost_layers[4].multiplier_scalar, Some(100.0));
         assert_eq!(cost.cost_layers[4].is_invariant, Some(true));
+        assert_eq!(cost.cost_layers[4].option, 0);
     }
 
     #[test]
@@ -484,6 +482,7 @@ mod test {
             barrier_operator: BarrierOperator::NotEqual,
             barrier_threshold: 0.0,
             barrier_importance: None,
+            option: 0,
         };
 
         let barrier = build_single_barrier_layer(&layer, &mut features);
@@ -501,10 +500,14 @@ mod test {
         // friction-only (no `layer_name`) should return an empty cost array (zeros)
         let json = r#"
         {
-            "cost_layers": [],
-            "friction_layers": [
-                {"multiplier_layer": "B", "multiplier_scalar": -3.0}
-            ]
+            "routing_options": {
+                "default": {
+                    "cost_layers": [],
+                    "friction_layers": [
+                        {"multiplier_layer": "B", "multiplier_scalar": -3.0}
+                    ]
+                }
+            }
         }
         "#;
 
@@ -526,12 +529,16 @@ mod test {
         // cost layer A with a friction layer defined by B * -3.0
         let json = r#"
         {
-            "cost_layers": [
-                {"layer_name": "A"}
-            ],
-            "friction_layers": [
-                {"multiplier_layer": "B", "multiplier_scalar": -3.0}
-            ]
+            "routing_options": {
+                "default": {
+                    "cost_layers": [
+                        {"layer_name": "A"}
+                    ],
+                    "friction_layers": [
+                        {"multiplier_layer": "B", "multiplier_scalar": -3.0}
+                    ]
+                }
+            }
         }
         "#;
 
@@ -560,5 +567,138 @@ mod test {
                 let diff = (*r - truth).abs();
                 assert!(diff < 1e-6, "mismatch {} vs {} (diff={})", r, truth, diff);
             });
+    }
+
+    #[test]
+    fn routing_options_object_builds_ordered_names_and_band_specific_costs() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(2, 2, 2)
+            .chunks(2, 2, 2)
+            .layer(samples::LayerConfig::custom(
+                "overhead_cost",
+                |band, _, _| {
+                    if band == 0 { 1.0 } else { 9.0 }
+                },
+            ))
+            .layer(samples::LayerConfig::custom(
+                "underground_cost",
+                |band, _, _| {
+                    if band == 1 { 2.0 } else { 8.0 }
+                },
+            ))
+            .build()
+            .expect("Failed to create routing option zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![2, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "underground_cost"}]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let result = cost_fn.compute(&mut features, false);
+
+        assert_eq!(cost_fn.routing_options, ["overhead", "underground"]);
+        assert_eq!(
+            result.index_axis(Axis(0), 0).to_owned(),
+            ArrayD::from_elem(IxDyn(&[2, 2]), 1.0)
+        );
+        assert_eq!(
+            result.index_axis(Axis(0), 1).to_owned(),
+            ArrayD::from_elem(IxDyn(&[2, 2]), 2.0)
+        );
+    }
+
+    #[test]
+    fn routing_options_object_reuses_same_source_layer_across_options() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(2, 2, 2)
+            .chunks(2, 2, 2)
+            .layer(samples::LayerConfig::custom("shared_cost", |band, _, _| {
+                if band == 0 { 3.0 } else { 4.0 }
+            }))
+            .build()
+            .expect("Failed to create shared routing option zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![2, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "shared_cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "shared_cost", "multiplier_scalar": 2.0}]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let result = cost_fn.compute(&mut features, false);
+
+        assert_eq!(cost_fn.routing_options, ["overhead", "underground"]);
+        assert_eq!(
+            result.index_axis(Axis(0), 0).to_owned(),
+            ArrayD::from_elem(IxDyn(&[2, 2]), 3.0)
+        );
+        assert_eq!(
+            result.index_axis(Axis(0), 1).to_owned(),
+            ArrayD::from_elem(IxDyn(&[2, 2]), 8.0)
+        );
+    }
+
+    #[test]
+    fn routing_options_object_supports_sample_barrier_and_friction_syntax() {
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "A"}],
+                        "friction_layers": [{"layer_name": "wet_friction", "multiplier_scalar": 1.1}],
+                        "barrier_layers": [{"layer_name": "barrier_mask", "barrier_operator": "eq", "barrier_threshold": 1.0}]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(cost_fn.routing_options, ["overhead"]);
+        assert_eq!(
+            cost_fn.friction_layers.as_ref().unwrap()[0].multiplier_layer,
+            "wet_friction"
+        );
+        assert_eq!(
+            cost_fn.hard_barrier_layers()[0].barrier_operator as u8,
+            BarrierOperator::Equal as u8
+        );
+        assert_eq!(cost_fn.hard_barrier_layers()[0].barrier_threshold, 1.0);
+    }
+
+    #[test]
+    fn barrier_layers_require_split_operator_and_threshold_inputs() {
+        let error = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "A"}],
+                        "barrier_layers": [{"layer_name": "barrier_mask", "barrier_values": "==1"}]
+                    }
+                }
+            }"#,
+        )
+        .unwrap_err();
+
+        assert!(matches!(error, crate::error::Error::Undefined(_)));
     }
 }

@@ -100,7 +100,9 @@ def test_find_paths_basic_single_route_layered_file(tmp_path):
         overwrite=True,
     )
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        },
         "ignore_invalid_costs": True,
     }
     results = find_paths(
@@ -142,14 +144,18 @@ def test_find_paths_respects_hard_barrier_layered_file(tmp_path):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "test_barrier",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1,
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "test_barrier",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1,
+                    }
+                ],
             }
-        ],
+        },
         "ignore_invalid_costs": False,
     }
     results = find_paths(
@@ -183,14 +189,18 @@ def test_find_paths_respects_not_equal_barrier_layered_file(tmp_path):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "test_barrier",
-                "barrier_operator": "ne",
-                "barrier_threshold": 0,
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "test_barrier",
+                        "barrier_operator": "ne",
+                        "barrier_threshold": 0,
+                    }
+                ],
             }
-        ],
+        },
         "ignore_invalid_costs": False,
     }
     results = find_paths(
@@ -260,7 +270,11 @@ def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
         "test_costs",
         overwrite=True,
     )
-    cost_definition = {"cost_layers": [{"layer_name": "test_costs"}]}
+    cost_definition = {
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        }
+    }
     routing_results = RouteFinder(
         zarr_fp=layered_fp,
         cost_function=json.dumps(cost_definition),
@@ -330,20 +344,24 @@ def test_route_finder_retries_soft_barriers_layered_file(tmp_path, algorithm):
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "hard_barrier",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1,
-            },
-            {
-                "layer_name": "soft_barrier",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1,
-                "barrier_importance": 1,
-            },
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "hard_barrier",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1,
+                    },
+                    {
+                        "layer_name": "soft_barrier",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1,
+                        "barrier_importance": 1,
+                    },
+                ],
+            }
+        },
         "ignore_invalid_costs": False,
     }
     results = list(
@@ -422,21 +440,25 @@ def test_route_finder_drops_multiple_soft_barrier_groups_layered_file(
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
-        "barrier_layers": [
-            {
-                "layer_name": "soft_barrier_low",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1,
-                "barrier_importance": 1,
-            },
-            {
-                "layer_name": "soft_barrier_high",
-                "barrier_operator": "eq",
-                "barrier_threshold": 1,
-                "barrier_importance": 2,
-            },
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "soft_barrier_low",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1,
+                        "barrier_importance": 1,
+                    },
+                    {
+                        "layer_name": "soft_barrier_high",
+                        "barrier_operator": "eq",
+                        "barrier_threshold": 1,
+                        "barrier_importance": 2,
+                    },
+                ],
+            }
+        },
         "ignore_invalid_costs": False,
     }
     results = list(
@@ -519,7 +541,9 @@ def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
     )
 
     cost_definition = {
-        "cost_layers": [{"layer_name": "test_costs"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "test_costs"}]}
+        },
         "ignore_invalid_costs": True,
     }
     routing_layer_out_fp = tmp_path / "routing_layer.zarr"

@@ -18,6 +18,7 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use super::cost_as_u64;
+use crate::cost::components::{DriverRuleSet, TransitionCostTable};
 use crate::routing::features::Features;
 use crate::{ArrayIndex, Result};
 
@@ -30,6 +31,8 @@ use crate::{ArrayIndex, Result};
 pub(super) struct Scenario {
     /// Derived dataset containing cost arrays and barrier masks.
     pub dataset: crate::dataset::Dataset,
+    transition_costs: TransitionCostTable,
+    driver_rules: DriverRuleSet,
     #[allow(dead_code)]
     /// Source feature metadata kept alive for scenario lifetime management.
     features: Features,
@@ -56,6 +59,8 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
+        let driver_rules = cost_function.drivers.clone();
+        let transition_costs = cost_function.transition_costs.clone();
         let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open_with_swap(
             store_path,
@@ -64,7 +69,12 @@ impl Scenario {
             swap_fp,
         )?;
 
-        Ok(Self { dataset, features })
+        Ok(Self {
+            dataset,
+            transition_costs,
+            driver_rules,
+            features,
+        })
     }
 
     /// Open a scenario that derives routing data directly from the source.
@@ -84,10 +94,17 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
+        let driver_rules = cost_function.drivers.clone();
+        let transition_costs = cost_function.transition_costs.clone();
         let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open(store_path, cost_function, cache_size)?;
 
-        Ok(Self { dataset, features })
+        Ok(Self {
+            dataset,
+            transition_costs,
+            driver_rules,
+            features,
+        })
     }
 
     /// Return retry-aware successor cells for a routing attempt.
@@ -110,7 +127,7 @@ impl Scenario {
         position: &ArrayIndex,
         dropped_soft_groups: usize,
     ) -> Vec<(ArrayIndex, u64)> {
-        let neighbors = self.dataset.get_3x3(position);
+        let spatial_neighbors = self.dataset.get_3x3(position);
         let soft_barrier_cells: HashSet<_> = self
             .dataset
             .get_3x3_soft_barrier_cells(position, dropped_soft_groups)
@@ -121,11 +138,54 @@ impl Scenario {
             return Vec::new();
         }
 
-        let neighbors = neighbors
+        if self.driver_multiplier(position).is_none() {
+            return Vec::new();
+        }
+
+        let mut neighbors = spatial_neighbors
             .into_iter()
             .filter(|(p, c)| c.is_finite() && *c > 0.0 && !soft_barrier_cells.contains(p))
-            .map(|(p, c)| (p, cost_as_u64(c)))
-            .collect();
+            .filter_map(|(p, c)| {
+                self.driver_multiplier(&p)
+                    .map(|multiplier| (p, cost_as_u64(c * multiplier)))
+            })
+            .collect::<Vec<_>>();
+
+        let (_, _, noptions) = self.grid_shape();
+        for option in 0..noptions {
+            if option == position.option {
+                continue;
+            }
+
+            let destination = ArrayIndex {
+                i: position.i,
+                j: position.j,
+                option,
+            };
+            let destination_soft_barriers: HashSet<_> = self
+                .dataset
+                .get_3x3_soft_barrier_cells(&destination, dropped_soft_groups)
+                .into_iter()
+                .collect();
+            if destination_soft_barriers.contains(&destination) {
+                continue;
+            }
+
+            let Some(destination_center_cost) = self.dataset.get_cell_cost(&destination) else {
+                continue; // destination is hard barriered
+            };
+            let Some(driver_multiplier) = self.driver_multiplier(&destination) else {
+                continue; // destination is excluded by the driver
+            };
+
+            let transition_cost = self.transition_cost(position.option, option);
+            neighbors.push((
+                destination,
+                transition_cost
+                    .saturating_add(cost_as_u64(destination_center_cost * driver_multiplier)),
+            ));
+        }
+
         trace!("Adjusting neighbors' types: {:?}", neighbors);
         neighbors
     }
@@ -157,18 +217,87 @@ impl Scenario {
             .take(dropped_soft_groups)
         {
             for layer in layers {
-                dropped_barrier_layers.push(layer.layer_name().to_string());
+                dropped_barrier_layers.push(layer.layer_name.clone());
             }
         }
 
         dropped_barrier_layers
     }
 
+    /// Return the routing states allowed at a grid position.
+    ///
+    /// # Arguments
+    /// `position`: Grid position whose routing options should be checked.
+    /// `dropped_soft_groups`: Number of lowest-importance soft barrier
+    ///                        groups that should be ignored for this retry.
+    ///
+    /// # Returns
+    /// All routing-option states at the given cell that are not blocked by
+    /// active soft barriers, hard barriers, or driver exclusions.
+    pub(super) fn allowed_states_at(
+        &self,
+        position: &ArrayIndex,
+        dropped_soft_groups: usize,
+    ) -> impl Iterator<Item = ArrayIndex> + '_ {
+        let (_, _, noptions) = self.grid_shape();
+        let row = position.i;
+        let col = position.j;
+
+        (0..noptions).filter_map(move |option| {
+            let candidate = ArrayIndex {
+                i: row,
+                j: col,
+                option,
+            };
+            let soft_barrier_cells: HashSet<_> = self
+                .dataset
+                .get_3x3_soft_barrier_cells(&candidate, dropped_soft_groups)
+                .into_iter()
+                .collect();
+            if soft_barrier_cells.contains(&candidate) {
+                return None;
+            }
+
+            self.dataset
+                .get_cell_cost(&candidate) // checks for hard barriers
+                .filter(|_| self.driver_multiplier(&candidate).is_some()) // drops `None` values from `get_cell_cost`
+                .map(|_| candidate) // drops `None` values from `driver_multiplier`
+        })
+    }
+
+    /// Resolve the driver multiplier for a cell state.
+    ///
+    /// # Arguments
+    /// `position`: Grid index whose routing option and source-layer values
+    ///             should be evaluated against the configured driver rules.
+    ///
+    /// # Returns
+    /// The multiplier for the state's routing option, or `None` when that
+    /// option is excluded at the given position.
+    fn driver_multiplier(&self, position: &ArrayIndex) -> Option<f32> {
+        self.driver_rules.multiplier(position.option, |layer_name| {
+            self.dataset.get_source_cell_value(layer_name, position)
+        })
+    }
+
+    /// Return the integer-encoded cost of changing routing options.
+    ///
+    /// # Arguments
+    /// `from_option`: Source routing option index.
+    /// `to_option`: Destination routing option index.
+    ///
+    /// # Returns
+    /// The configured transition cost between the two options, converted to
+    /// the internal integer routing-cost representation.
+    fn transition_cost(&self, from_option: u32, to_option: u32) -> u64 {
+        cost_as_u64(self.transition_costs.cost(from_option, to_option))
+    }
+
     /// Return the scenario grid dimensions.
     ///
     /// # Returns
-    /// Tuple of `(rows, cols)` describing the routing grid shape.
-    pub(super) fn grid_shape(&self) -> (u64, u64) {
+    /// Tuple of `(rows, cols, options)` describing the routing grid shape.
+    pub(super) fn grid_shape(&self) -> (u64, u64, u32) {
         self.dataset.grid_shape
     }
 }
@@ -177,6 +306,30 @@ impl Scenario {
 mod tests {
     use super::Scenario;
     use crate::ArrayIndex;
+
+    fn option_cost(band: u64, _row: u64, _col: u64) -> f32 {
+        if band == 0 { 1.0 } else { 5.0 }
+    }
+
+    fn second_option_center_barrier(band: u64, row: u64, col: u64) -> f32 {
+        if band == 1 && row == 1 && col == 1 {
+            1.0
+        } else {
+            0.0
+        }
+    }
+
+    fn option_zone(row: u64, col: u64) -> f32 {
+        if row == 1 && col == 1 { 1.0 } else { 0.0 }
+    }
+
+    fn overhead_option_cost(band: u64, _row: u64, _col: u64) -> f32 {
+        if band == 0 { 1.0 } else { 9.0 }
+    }
+
+    fn underground_option_cost(band: u64, _row: u64, _col: u64) -> f32 {
+        if band == 1 { 5.0 } else { 8.0 }
+    }
 
     #[test]
     fn successors_keep_hard_barriers_after_soft_groups_drop() {
@@ -200,50 +353,54 @@ mod tests {
             .unwrap();
         let cost_function = crate::cost::CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost"}],
-                "barrier_layers": [
-                    {
-                        "layer_name": "hard_barrier",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
-                    },
-                    {
-                        "layer_name": "soft_barrier",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 1
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            },
+                            {
+                                "layer_name": "soft_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 1
+                            }
+                        ]
                     }
-                ],
+                },
                 "ignore_invalid_costs": false
             }"#,
         )
         .unwrap();
         let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
 
-        let start = ArrayIndex { i: 1, j: 1 };
+        let start = ArrayIndex::new_ij(1, 1);
         let initial_successors = scenario.successors_for_attempt(&start, 0);
         let relaxed_successors = scenario.successors_for_attempt(&start, 1);
 
         assert!(
             !initial_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
         assert!(
             !initial_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
 
         assert!(
             !relaxed_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
         assert!(
             relaxed_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
     }
 
@@ -263,23 +420,392 @@ mod tests {
             .unwrap();
         let cost_function = crate::cost::CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost"}],
-                "barrier_layers": [
-                    {
-                        "layer_name": "hard_barrier",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
                     }
-                ],
+                },
                 "ignore_invalid_costs": false
             }"#,
         )
         .unwrap();
         let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
 
-        let successors = scenario.successors_for_attempt(&ArrayIndex { i: 1, j: 1 }, 0);
+        let successors = scenario.successors_for_attempt(&ArrayIndex::new_ij(1, 1), 0);
 
         assert!(successors.is_empty());
+    }
+
+    #[test]
+    fn successors_include_same_pixel_option_transitions() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                option_cost,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let successors = scenario.successors_for_attempt(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            0,
+        );
+
+        assert!(successors.iter().any(|(index, cost)| {
+            *index
+                == ArrayIndex {
+                    i: 1,
+                    j: 1,
+                    option: 1,
+                }
+                && *cost == 50_000
+        }));
+    }
+
+    #[test]
+    fn successors_skip_same_pixel_transitions_into_blocked_options() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                option_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "hard_barrier",
+                second_option_center_barrier,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
+                    }
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let successors = scenario.successors_for_attempt(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            0,
+        );
+
+        assert!(!successors.iter().any(|(index, _)| *index
+            == ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 1
+            }));
+    }
+
+    #[test]
+    fn successors_apply_configured_transition_costs() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                option_cost,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "transition_costs": {
+                    "default": 1.0,
+                    "pairwise": [
+                        {
+                            "from": "overhead",
+                            "to": "underground",
+                            "cost": 3.0,
+                            "applies_bidirectionally": true
+                        }
+                    ]
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let successors = scenario.successors_for_attempt(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            0,
+        );
+
+        assert!(successors.iter().any(|(index, cost)| {
+            *index
+                == ArrayIndex {
+                    i: 1,
+                    j: 1,
+                    option: 1,
+                }
+                && *cost == 80_000
+        }));
+    }
+
+    #[test]
+    fn successors_apply_transition_costs_from_object_routing_options() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "overhead_cost",
+                overhead_option_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "underground_cost",
+                underground_option_cost,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "underground_cost"}]
+                    }
+                },
+                "transition_costs": {
+                    "pairwise": [
+                        {
+                            "from": "overhead",
+                            "to": "underground",
+                            "cost": 3.0,
+                            "applies_bidirectionally": true
+                        }
+                    ]
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let successors = scenario.successors_for_attempt(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            0,
+        );
+
+        assert!(successors.iter().any(|(index, cost)| {
+            *index
+                == ArrayIndex {
+                    i: 1,
+                    j: 1,
+                    option: 1,
+                }
+                && *cost == 80_000
+        }));
+    }
+
+    #[test]
+    fn allowed_states_respect_driver_exclusions() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                option_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "zone",
+                |_band, row, col| option_zone(row, col),
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "drivers": {
+                    "default": {
+                        "overhead": 1,
+                        "underground": "excluded"
+                    },
+                    "zones": [
+                        {
+                            "layer_name": "zone",
+                            "mask_operator": "eq",
+                            "mask_threshold": 1,
+                            "overhead": "excluded",
+                            "underground": 1
+                        }
+                    ]
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let outside_zone = scenario
+            .allowed_states_at(&ArrayIndex::new_ij(0, 0), 0)
+            .collect::<Vec<_>>();
+        let inside_zone = scenario
+            .allowed_states_at(&ArrayIndex::new_ij(1, 1), 0)
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            outside_zone,
+            vec![ArrayIndex {
+                i: 0,
+                j: 0,
+                option: 0
+            }]
+        );
+        assert_eq!(
+            inside_zone,
+            vec![ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 1
+            }]
+        );
+    }
+
+    #[test]
+    fn successors_apply_driver_multipliers() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                option_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "zone",
+                |_band, row, col| option_zone(row, col),
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "drivers": {
+                    "default": {
+                        "overhead": 1,
+                        "underground": 1
+                    },
+                    "zones": [
+                        {
+                            "layer_name": "zone",
+                            "mask_operator": "eq",
+                            "mask_threshold": 1,
+                            "overhead": 10,
+                            "underground": 1
+                        }
+                    ]
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let successors = scenario.successors_for_attempt(
+            &ArrayIndex {
+                i: 0,
+                j: 1,
+                option: 0,
+            },
+            0,
+        );
+
+        assert!(successors.iter().any(|(index, cost)| {
+            *index
+                == ArrayIndex {
+                    i: 1,
+                    j: 1,
+                    option: 0,
+                }
+                && *cost == 100_000
+        }));
     }
 
     #[test]
@@ -304,28 +830,32 @@ mod tests {
             .unwrap();
         let cost_function = crate::cost::CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost"}],
-                "barrier_layers": [
-                    {
-                        "layer_name": "soft_barrier_low",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 1
-                    },
-                    {
-                        "layer_name": "soft_barrier_high",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 2
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "soft_barrier_low",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 1
+                            },
+                            {
+                                "layer_name": "soft_barrier_high",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 2
+                            }
+                        ]
                     }
-                ],
+                },
                 "ignore_invalid_costs": false
             }"#,
         )
         .unwrap();
         let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
 
-        let start = ArrayIndex { i: 1, j: 1 };
+        let start = ArrayIndex::new_ij(1, 1);
         let initial_successors = scenario.successors_for_attempt(&start, 0);
         let retry_one_successors = scenario.successors_for_attempt(&start, 1);
         let retry_two_successors = scenario.successors_for_attempt(&start, 2);
@@ -334,32 +864,32 @@ mod tests {
         assert!(
             !initial_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
         assert!(
             !initial_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
         assert!(
             retry_one_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
         assert!(
             !retry_one_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
         assert!(
             retry_two_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 1, j: 0 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(1, 0))
         );
         assert!(
             retry_two_successors
                 .iter()
-                .any(|(p, _)| *p == ArrayIndex { i: 0, j: 1 })
+                .any(|(p, _)| *p == ArrayIndex::new_ij(0, 1))
         );
     }
 
@@ -379,15 +909,19 @@ mod tests {
             .unwrap();
         let cost_function = crate::cost::CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost"}],
-                "barrier_layers": [
-                    {
-                        "layer_name": "soft_barrier",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 1
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "soft_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 1
+                            }
+                        ]
                     }
-                ],
+                },
                 "ignore_invalid_costs": false
             }"#,
         )
@@ -396,12 +930,12 @@ mod tests {
 
         assert!(
             scenario
-                .successors_for_attempt(&ArrayIndex { i: 1, j: 1 }, 0)
+                .successors_for_attempt(&ArrayIndex::new_ij(1, 1), 0)
                 .is_empty()
         );
         assert!(
             !scenario
-                .successors_for_attempt(&ArrayIndex { i: 1, j: 1 }, 1)
+                .successors_for_attempt(&ArrayIndex::new_ij(1, 1), 1)
                 .is_empty()
         );
     }
@@ -428,27 +962,31 @@ mod tests {
             .unwrap();
         let cost_function = crate::cost::CostFunction::from_json(
             r#"{
-                "cost_layers": [{"layer_name": "cost"}],
-                "barrier_layers": [
-                    {
-                        "layer_name": "soft_barrier_low_a",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 1
-                    },
-                    {
-                        "layer_name": "soft_barrier_low_b",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 1
-                    },
-                    {
-                        "layer_name": "soft_barrier_high",
-                        "barrier_operator": "eq",
-                        "barrier_threshold": 1.0,
-                        "barrier_importance": 2
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "soft_barrier_low_a",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 1
+                            },
+                            {
+                                "layer_name": "soft_barrier_low_b",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 1
+                            },
+                            {
+                                "layer_name": "soft_barrier_high",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0,
+                                "barrier_importance": 2
+                            }
+                        ]
                     }
-                ],
+                },
                 "ignore_invalid_costs": false
             }"#,
         )

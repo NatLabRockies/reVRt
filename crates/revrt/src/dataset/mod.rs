@@ -23,15 +23,18 @@ mod swap;
 
 use std::path::PathBuf;
 
+use num_traits::AsPrimitive;
 use tracing::{debug, info, trace};
+use zarrs::array::{Array, DataType, ElementOwned};
 use zarrs::storage::ReadableListableStorage;
 
 use crate::ArrayIndex;
-use crate::cost::{BarrierLayer, CostFunction};
+use crate::cost::CostFunction;
+use crate::cost::components::BarrierLayer;
 use crate::error::Result;
 use derived::DerivedDataWriter;
 pub(crate) use lazy_subset::LazySubset;
-use reader::NeighborhoodReader;
+use reader::DerivedDataReader;
 use swap::{initialize_swap, inspect_source_layout};
 
 /// Manage source features together with derived swap-backed routing data.
@@ -52,10 +55,10 @@ pub(super) struct Dataset {
     cost_path: Option<tempfile::TempDir>,
     /// Derived-data materializer responsible for chunk tracking and writes.
     derived_data_writer: DerivedDataWriter,
-    /// Reader responsible for cached neighborhood access to derived data.
-    neighborhood_reader: NeighborhoodReader,
-    /// Shape of the source routing grid as `(rows, cols)`.
-    pub(super) grid_shape: (u64, u64),
+    /// Reader responsible for cached access to derived data.
+    derived_data_reader: DerivedDataReader,
+    /// Shape of the source routing grid as `(rows, cols, options)`.
+    pub(super) grid_shape: (u64, u64, u32),
 }
 
 impl Dataset {
@@ -126,31 +129,35 @@ impl Dataset {
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
         let soft_barrier_group_count = cost_function.soft_barrier_groups().len();
+        let routing_option_count =
+            u32::try_from(cost_function.routing_options.len()).map_err(|_| {
+                crate::error::Error::IO(std::io::Error::other("routing option count exceeds u32"))
+            })?;
 
         let filesystem =
             zarrs::filesystem::FilesystemStore::new(path).expect("could not open filesystem store");
         let source: ReadableListableStorage = std::sync::Arc::new(filesystem);
 
-        let source_layout = inspect_source_layout(&source)?;
+        let source_layout = inspect_source_layout(&source, routing_option_count)?;
         let swap = initialize_swap(swap_fp, &source_layout, soft_barrier_group_count)?;
 
         let derived_data_writer =
             DerivedDataWriter::new(&source_layout, source.clone(), swap.clone(), cost_function);
 
-        let neighborhood_reader = NeighborhoodReader::open(
+        let derived_data_reader = DerivedDataReader::open(
             swap.clone(),
             cache_size,
             soft_barrier_group_count,
             source_layout,
         )?;
-        let grid_shape = neighborhood_reader.grid_shape();
+        let grid_shape = derived_data_reader.grid_shape();
 
         trace!("Dataset opened successfully");
         Ok(Self {
             source,
             cost_path: None,
             derived_data_writer,
-            neighborhood_reader,
+            derived_data_reader,
             grid_shape,
         })
     }
@@ -167,7 +174,7 @@ impl Dataset {
     /// A vector of neighboring indices paired with movement costs from the
     /// center cell.
     pub(super) fn get_3x3(&self, index: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
-        self.neighborhood_reader
+        self.derived_data_reader
             .get_3x3(index, &self.derived_data_writer)
     }
 
@@ -191,11 +198,40 @@ impl Dataset {
     ) -> Vec<ArrayIndex> {
         let retry_state =
             dropped_soft_groups.min(self.derived_data_writer.soft_barrier_groups.len());
-        self.neighborhood_reader.get_3x3_soft_barrier_cells(
+        self.derived_data_reader.get_3x3_soft_barrier_cells(
             index,
             retry_state,
             &self.derived_data_writer,
         )
+    }
+
+    /// Return the center-cell entry cost for a single option state.
+    pub(super) fn get_cell_cost(&self, index: &ArrayIndex) -> Option<f32> {
+        self.derived_data_reader
+            .get_cell_cost(index, &self.derived_data_writer)
+    }
+
+    /// Return a single source-layer cell as `f32` for the requested index.
+    /// Useful for reading non-cost (i.e. not derived) features
+    pub(super) fn get_source_cell_value(
+        &self,
+        layer_name: &str,
+        index: &ArrayIndex,
+    ) -> Option<f32> {
+        let array = Array::open(self.source.clone(), &format!("/{layer_name}")).ok()?;
+        let subset = match array.shape().len() {
+            2 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                index.i..(index.i + 1),
+                index.j..(index.j + 1),
+            ]),
+            3 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                u64::from(index.option)..(u64::from(index.option) + 1),
+                index.i..(index.i + 1),
+                index.j..(index.j + 1),
+            ]),
+            _ => return None,
+        };
+        read_source_cell_as_f32(&array, &subset)
     }
 
     /// Return the number of soft barrier importance groups.
@@ -206,6 +242,44 @@ impl Dataset {
     pub(super) fn soft_barrier_groups(&self) -> &Vec<(u32, Vec<BarrierLayer>)> {
         &self.derived_data_writer.soft_barrier_groups
     }
+}
+
+fn read_source_cell_as_f32<TStorage>(
+    array: &Array<TStorage>,
+    subset: &zarrs::array_subset::ArraySubset,
+) -> Option<f32>
+where
+    TStorage: ?Sized + zarrs::storage::ReadableListableStorageTraits + 'static,
+{
+    match array.data_type() {
+        DataType::Float32 => read_typed_cell::<f32, _>(array, subset),
+        DataType::Float64 => read_typed_cell::<f64, _>(array, subset),
+        DataType::Int8 => read_typed_cell::<i8, _>(array, subset),
+        DataType::Int16 => read_typed_cell::<i16, _>(array, subset),
+        DataType::Int32 => read_typed_cell::<i32, _>(array, subset),
+        DataType::Int64 => read_typed_cell::<i64, _>(array, subset),
+        DataType::UInt8 => read_typed_cell::<u8, _>(array, subset),
+        DataType::UInt16 => read_typed_cell::<u16, _>(array, subset),
+        DataType::UInt32 => read_typed_cell::<u32, _>(array, subset),
+        DataType::UInt64 => read_typed_cell::<u64, _>(array, subset),
+        _ => None,
+    }
+}
+
+fn read_typed_cell<T, TStorage>(
+    array: &Array<TStorage>,
+    subset: &zarrs::array_subset::ArraySubset,
+) -> Option<f32>
+where
+    T: ElementOwned + Clone + AsPrimitive<f32>,
+    TStorage: ?Sized + zarrs::storage::ReadableListableStorageTraits + 'static,
+{
+    array
+        .retrieve_array_subset_elements::<T>(subset)
+        .ok()?
+        .into_iter()
+        .next()
+        .map(|value| value.as_())
 }
 
 #[cfg(test)]
@@ -239,12 +313,14 @@ mod tests {
     #[test]
     fn test_simple_cost_function_get_3x3() {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
+        let test_points = [ArrayIndex::new_ij(3, 1), ArrayIndex::new_ij(2, 2)];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
         for point in test_points {
             let results = dataset.get_3x3(&point);
@@ -253,9 +329,9 @@ mod tests {
             assert!(
                 !results
                     .iter()
-                    .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                    .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
             );
-            let ArrayIndex { i: ci, j: cj } = point;
+            let ArrayIndex { i: ci, j: cj, .. } = point;
             let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                 0..1,
                 ci..(ci + 1),
@@ -265,7 +341,7 @@ mod tests {
                 .retrieve_array_subset_elements(&center_subset)
                 .expect("Error reading zarr data")[0];
 
-            for (ArrayIndex { i, j }, val) in results {
+            for (ArrayIndex { i, j, .. }, val) in results {
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
@@ -311,8 +387,10 @@ mod tests {
         .store_metadata()
         .unwrap();
 
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "A"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .unwrap();
 
         let error = Dataset::open(tmp_path.path(), cost_function, 1_000)
             .err()
@@ -332,18 +410,18 @@ mod tests {
     fn test_simple_invariant_cost_function_get_3x3() {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "C", "cost"]);
         let cost_function = CostFunction::from_json(
-            r#"{"cost_layers": [{"layer_name": "A", "is_invariant": true}]}"#,
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A","is_invariant":true}]}}}"#,
         )
         .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
+        let test_points = [ArrayIndex::new_ij(3, 1), ArrayIndex::new_ij(2, 2)];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
         for point in test_points {
             let results = dataset.get_3x3(&point);
 
-            for (ArrayIndex { i, j }, val) in results {
+            for (ArrayIndex { i, j, .. }, val) in results {
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
@@ -365,7 +443,7 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let test_points = [ArrayIndex { i: 3, j: 1 }, ArrayIndex { i: 2, j: 2 }];
+        let test_points = [ArrayIndex::new_ij(3, 1), ArrayIndex::new_ij(2, 2)];
         let array_a = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
         let array_b = zarrs::array::Array::open(dataset.source.clone(), "/B").unwrap();
         let array_c = zarrs::array::Array::open(dataset.source.clone(), "/C").unwrap();
@@ -376,9 +454,9 @@ mod tests {
             assert!(
                 !results
                     .iter()
-                    .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                    .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
             );
-            let ArrayIndex { i: ci, j: cj } = point;
+            let ArrayIndex { i: ci, j: cj, .. } = point;
             let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                 0..1,
                 ci..(ci + 1),
@@ -397,7 +475,7 @@ mod tests {
             let center_cost: f32 =
                 center_a + center_b * 100. + center_a * center_b + center_c * center_a * 2.;
 
-            for (ArrayIndex { i, j }, val) in results {
+            for (ArrayIndex { i, j, .. }, val) in results {
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
@@ -445,18 +523,20 @@ mod tests {
     #[test]
     fn test_get_3x3_single_item_array() {
         let tmp = samples::cost_as_index_zarr(1, 1, 1, 1, 1, 1);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 0, j: 0 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(0, 0));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
             !results
                 .iter()
-                .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
         );
 
         assert_eq!(results, vec![]);
@@ -468,25 +548,27 @@ mod tests {
     #[test_case((1, 1), vec![(0, 1, 2.), (1, 0, 2.5)] ; "bottom right corner")]
     fn test_get_3x3_two_by_two_array((si, sj): (u64, u64), expected_output: Vec<(u64, u64, f32)>) {
         let tmp = samples::cost_as_index_zarr(1, 2, 2, 1, 2, 2);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
             !results
                 .iter()
-                .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
         );
 
         assert_eq!(
             results,
             expected_output
                 .into_iter()
-                .map(|(i, j, v)| (ArrayIndex { i, j }, v))
+                .map(|(i, j, v)| (ArrayIndex::new_ij(i, j), v))
                 .collect::<Vec<_>>()
         );
     }
@@ -505,25 +587,27 @@ mod tests {
         expected_output: Vec<(u64, u64, f32)>,
     ) {
         let tmp = samples::cost_as_index_zarr(1, 3, 3, 1, 3, 3);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
             !results
                 .iter()
-                .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
         );
 
         assert_eq!(
             results,
             expected_output
                 .into_iter()
-                .map(|(i, j, v)| (ArrayIndex { i, j }, v))
+                .map(|(i, j, v)| (ArrayIndex::new_ij(i, j), v))
                 .collect::<Vec<_>>()
         );
     }
@@ -545,25 +629,27 @@ mod tests {
         expected_output: Vec<(u64, u64, f32)>,
     ) {
         let tmp = samples::cost_as_index_zarr(1, 4, 4, 1, 2, 2);
-        let cost_function =
-            CostFunction::from_json(r#"{"cost_layers": [{"layer_name": "cost"}]}"#).unwrap();
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#,
+        )
+        .unwrap();
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: si, j: sj });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
             !results
                 .iter()
-                .any(|(ArrayIndex { i, j }, _)| *i == 0 && *j == 0)
+                .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
         );
 
         assert_eq!(
             results,
             expected_output
                 .into_iter()
-                .map(|(i, j, v)| (ArrayIndex { i, j }, v))
+                .map(|(i, j, v)| (ArrayIndex::new_ij(i, j), v))
                 .collect::<Vec<_>>()
         );
     }
@@ -573,13 +659,17 @@ mod tests {
         // Define cost function: A normal, C invariant, friction from B * 0.5
         let json = r#"
         {
-            "cost_layers": [
-                {"layer_name": "A"},
-                {"layer_name": "C", "is_invariant": true}
-            ],
-            "friction_layers": [
-                {"multiplier_layer": "B", "multiplier_scalar": 0.5}
-            ]
+            "routing_options": {
+                "default": {
+                    "cost_layers": [
+                        {"layer_name": "A"},
+                        {"layer_name": "C", "is_invariant": true}
+                    ],
+                    "friction_layers": [
+                        {"multiplier_layer": "B", "multiplier_scalar": 0.5}
+                    ]
+                }
+            }
         }
         "#;
 
@@ -596,7 +686,7 @@ mod tests {
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
         // Request center neighbors
-        let point = ArrayIndex { i: 1, j: 1 };
+        let point = ArrayIndex::new_ij(1, 1);
         let results = dataset.get_3x3(&point);
 
         // Build expected results: for each neighbor (excluding center),
@@ -637,7 +727,7 @@ mod tests {
                 let total_before = averaged + c_n;
                 let friction = b_n * 0.5_f32;
                 let expected_val = total_before * (1.0_f32 + friction);
-                expected.push((ArrayIndex { i: ir, j: jr }, expected_val));
+                expected.push((ArrayIndex::new_ij(ir, jr), expected_val));
             }
         }
 
@@ -661,8 +751,8 @@ mod tests {
         }
     }
 
-    #[test_case(r#"{"cost_layers": [{"layer_name": "B"}], "ignore_invalid_costs": true}"# ; "zero layer")]
-    #[test_case(r#"{"cost_layers": [{"layer_name": "C"}], "ignore_invalid_costs": true}"# ; "negative layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"ignore_invalid_costs":true}"# ; "zero layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"ignore_invalid_costs":true}"# ; "negative layer")]
     fn test_get_3x3_with_hard_barriered_layers(json: &str) {
         let tmp = samples::ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
@@ -676,15 +766,15 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
         assert!(
             results.is_empty(),
             "Found data with `ignore_invalid_costs=true`"
         );
     }
 
-    #[test_case(r#"{"cost_layers": [{"layer_name": "B"}], "ignore_invalid_costs": false}"# ; "zero layer")]
-    #[test_case(r#"{"cost_layers": [{"layer_name": "C"}], "ignore_invalid_costs": false}"# ; "negative layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"ignore_invalid_costs":false}"# ; "zero layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"ignore_invalid_costs":false}"# ; "negative layer")]
     fn test_get_3x3_with_soft_barrier_layers(json: &str) {
         let tmp = samples::ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
@@ -698,7 +788,7 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
         assert_eq!(results.len(), 8);
 
         let mut expected: Vec<(ArrayIndex, f32)> = vec![];
@@ -712,7 +802,7 @@ mod tests {
                 if ir != 1 && jr != 1 {
                     averaged *= std::f32::consts::SQRT_2;
                 }
-                expected.push((ArrayIndex { i: ir, j: jr }, averaged));
+                expected.push((ArrayIndex::new_ij(ir, jr), averaged));
             }
         }
 
@@ -738,14 +828,18 @@ mod tests {
     fn test_get_3x3_keeps_explicit_barriers_out_of_cached_costs() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0
+                        }
+                    ]
                 }
-            ]
+            }
         }
         "#;
 
@@ -763,14 +857,14 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
         assert_eq!(
             results,
             vec![
-                (ArrayIndex { i: 0, j: 0 }, 3.0 * std::f32::consts::SQRT_2),
-                (ArrayIndex { i: 0, j: 2 }, 4.0 * std::f32::consts::SQRT_2),
-                (ArrayIndex { i: 2, j: 0 }, 6.0 * std::f32::consts::SQRT_2),
-                (ArrayIndex { i: 2, j: 2 }, 7.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex::new_ij(0, 0), 3.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex::new_ij(0, 2), 4.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex::new_ij(2, 0), 6.0 * std::f32::consts::SQRT_2),
+                (ArrayIndex::new_ij(2, 2), 7.0 * std::f32::consts::SQRT_2),
             ]
         );
     }
@@ -779,15 +873,19 @@ mod tests {
     fn test_explicit_barriers_do_not_modify_cached_costs_when_invalid_costs_are_soft() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 1
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 1
+                        }
+                    ]
                 }
-            ],
+            },
             "ignore_invalid_costs": false
         }
         "#;
@@ -806,7 +904,7 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex { i: 1, j: 1 });
+        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
         assert_eq!(results.len(), 8);
     }
 
@@ -814,21 +912,25 @@ mod tests {
     fn test_cumulative_soft_barrier_masks_follow_retry_state() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 1
-                },
-                {
-                    "layer_name": "C",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 2
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 1
+                        },
+                        {
+                            "layer_name": "C",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 2
+                        }
+                    ]
                 }
-            ]
+            }
         }
         "#;
 
@@ -849,16 +951,16 @@ mod tests {
         let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
             .expect("Error opening dataset");
 
-        let center = ArrayIndex { i: 1, j: 1 };
+        let center = ArrayIndex::new_ij(1, 1);
         dataset.get_3x3(&center);
 
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 0),
-            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
+            vec![ArrayIndex::new_ij(0, 1), ArrayIndex::new_ij(1, 0)]
         );
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 1),
-            vec![ArrayIndex { i: 0, j: 1 }]
+            vec![ArrayIndex::new_ij(0, 1)]
         );
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 2).is_empty());
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 99).is_empty());
@@ -868,21 +970,25 @@ mod tests {
     fn test_cumulative_soft_barrier_masks_or_tied_importance_groups() {
         let json = r#"
         {
-            "cost_layers": [{"layer_name": "A"}],
-            "barrier_layers": [
-                {
-                    "layer_name": "B",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 1
-                },
-                {
-                    "layer_name": "C",
-                    "barrier_operator": "eq",
-                    "barrier_threshold": 1.0,
-                    "barrier_importance": 1
+            "routing_options": {
+                "default": {
+                    "cost_layers": [{"layer_name": "A"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "B",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 1
+                        },
+                        {
+                            "layer_name": "C",
+                            "barrier_operator": "eq",
+                            "barrier_threshold": 1.0,
+                            "barrier_importance": 1
+                        }
+                    ]
                 }
-            ]
+            }
         }
         "#;
 
@@ -903,12 +1009,12 @@ mod tests {
         let dataset = Dataset::open(tmp.path(), CostFunction::from_json(json).unwrap(), 1_000)
             .expect("Error opening dataset");
 
-        let center = ArrayIndex { i: 1, j: 1 };
+        let center = ArrayIndex::new_ij(1, 1);
         dataset.get_3x3(&center);
 
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 0),
-            vec![ArrayIndex { i: 0, j: 1 }, ArrayIndex { i: 1, j: 0 }]
+            vec![ArrayIndex::new_ij(0, 1), ArrayIndex::new_ij(1, 0)]
         );
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 1).is_empty());
     }

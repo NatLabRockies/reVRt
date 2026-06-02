@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_final_routing_layers(
-    lcp_config_fp, output_dir, polarity=None, voltage=None
+    lcp_config_fp, output_dir, routing_option, polarity=None, voltage=None
 ):
     """Build out the final routing layers based on an LCP config file
 
@@ -36,6 +36,11 @@ def build_final_routing_layers(
         created.
     output_dir : path-like
         Path to directory where to store the outputs.
+    routing_option : str
+        Routing option to use when building the routing layer. This
+        input is used to determine which cost and friction layers to use
+        when building the routing layer. The routing option must be one
+        of the options specified in the config file.
     polarity : str, optional
         Polarity to use when building the routing layer. This input is
         required if any cost or friction layers that have
@@ -63,14 +68,15 @@ def build_final_routing_layers(
         config=config.get("transmission_config")
     )
 
+    route_layer_config = config["routing_options"][routing_option]
     route_cl = update_multipliers(
-        config["cost_layers"],
+        route_layer_config["cost_layers"],
         polarity,
         voltage,
         transmission_config,
     )
     route_fl = update_multipliers(
-        config.get("friction_layers") or [],
+        route_layer_config.get("friction_layers") or [],
         polarity,
         voltage,
         transmission_config,
@@ -80,7 +86,7 @@ def build_final_routing_layers(
         cost_fpath=config["cost_fpath"],
         cost_layers=route_cl,
         friction_layers=route_fl,
-        barrier_layers=config.get("barrier_layers"),
+        barrier_layers=route_layer_config.get("barrier_layers"),
         cost_multiplier_layer=config.get("cost_multiplier_layer"),
         cost_multiplier_scalar=config.get("cost_multiplier_scalar", 1),
         ignore_invalid_costs=config.get("ignore_invalid_costs", False),

@@ -54,7 +54,7 @@ impl FrontierOnlySearchState {
     pub(crate) fn new(
         start: &ArrayIndex,
         memory_budget_bytes: u64,
-        grid_shape: (u64, u64),
+        grid_shape: (u64, u64, u32),
     ) -> Option<Self> {
         Self::new_many(std::slice::from_ref(start), memory_budget_bytes, grid_shape)
     }
@@ -62,9 +62,9 @@ impl FrontierOnlySearchState {
     pub(crate) fn new_many(
         starts: &[ArrayIndex],
         memory_budget_bytes: u64,
-        grid_shape: (u64, u64),
+        grid_shape: (u64, u64, u32),
     ) -> Option<Self> {
-        let grid = GridIndexer::new(grid_shape.0, grid_shape.1)?;
+        let grid = GridIndexer::new(grid_shape.0, grid_shape.1, grid_shape.2)?;
 
         let mut state = Self {
             grid,
@@ -328,7 +328,7 @@ impl BidirectionalSearchState {
         start: &ArrayIndex,
         goals: &[ArrayIndex],
         memory_budget_bytes: u64,
-        grid_shape: (u64, u64),
+        grid_shape: (u64, u64, u32),
     ) -> Option<Self> {
         let per_direction_budget = (memory_budget_bytes / 2).max(1);
 
@@ -503,9 +503,9 @@ mod tests {
 
     #[test]
     fn state_spills_when_pressure_exceeds_budget() {
-        let start = ArrayIndex::new(10, 10);
-        let goal = ArrayIndex::new(15, 15);
-        let mut state = FrontierOnlySearchState::new(&start, 2_000, (31, 31)).unwrap();
+        let start = ArrayIndex::new_ij(10, 10);
+        let goal = ArrayIndex::new_ij(15, 15);
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (31, 31, 1)).unwrap();
 
         let ans = run_to_goal(&mut state, goal.clone(), |p| {
             let mut out = Vec::new();
@@ -517,7 +517,7 @@ mod tests {
                     let ni = p.i as i64 + di;
                     let nj = p.j as i64 + dj;
                     if ni >= 0 && nj >= 0 && ni <= 30 && nj <= 30 {
-                        out.push((ArrayIndex::new(ni as u64, nj as u64), 1_u64));
+                        out.push((ArrayIndex::new_ij(ni as u64, nj as u64), 1_u64));
                     }
                 }
             }
@@ -531,16 +531,16 @@ mod tests {
 
     #[test]
     fn state_returns_none_when_frontier_never_reaches_goal() {
-        let start = ArrayIndex::new(0, 0);
-        let mut state = FrontierOnlySearchState::new(&start, 2_000, (21, 21)).unwrap();
+        let start = ArrayIndex::new_ij(0, 0);
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (21, 21, 1)).unwrap();
 
-        let ans = run_to_goal(&mut state, ArrayIndex::new(99, 99), |p| {
+        let ans = run_to_goal(&mut state, ArrayIndex::new_ij(99, 99), |p| {
             let mut out = Vec::new();
             if p.i < 20 {
-                out.push((ArrayIndex::new(p.i + 1, p.j), 1_u64));
+                out.push((ArrayIndex::new_ij(p.i + 1, p.j), 1_u64));
             }
             if p.j < 20 {
-                out.push((ArrayIndex::new(p.i, p.j + 1), 1_u64));
+                out.push((ArrayIndex::new_ij(p.i, p.j + 1), 1_u64));
             }
             out
         });
@@ -551,45 +551,48 @@ mod tests {
     #[test]
     fn multi_source_state_skips_invalid_roots() {
         let starts = vec![
-            ArrayIndex::new(0, 0),
-            ArrayIndex::new(0, 0),
-            ArrayIndex::new(999, 999),
+            ArrayIndex::new_ij(0, 0),
+            ArrayIndex::new_ij(0, 0),
+            ArrayIndex::new_ij(999, 999),
         ];
-        let mut state = FrontierOnlySearchState::new_many(&starts, 2_000, (3, 3)).unwrap();
+        let mut state = FrontierOnlySearchState::new_many(&starts, 2_000, (3, 3, 1)).unwrap();
 
         let node = state.pop_next_node().unwrap();
 
-        assert_eq!(node.array_index, ArrayIndex::new(0, 0));
+        assert_eq!(node.array_index, ArrayIndex::new_ij(0, 0));
         assert!(state.pop_next_node().is_none());
     }
 
     #[test]
     fn reconstruct_path_works_for_frontier_nodes() {
-        let start = ArrayIndex::new(0, 0);
-        let mut state = FrontierOnlySearchState::new(&start, 2_000, (3, 3)).unwrap();
+        let start = ArrayIndex::new_ij(0, 0);
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (3, 3, 1)).unwrap();
         let node = state.pop_next_node().unwrap();
         state
-            .add_successors(&node, vec![(ArrayIndex::new(0, 1), 1_u64)])
+            .add_successors(&node, vec![(ArrayIndex::new_ij(0, 1), 1_u64)])
             .unwrap();
 
-        let slot = state.grid.slot_of(&ArrayIndex::new(0, 1)).unwrap();
+        let slot = state.grid.slot_of(&ArrayIndex::new_ij(0, 1)).unwrap();
         let path = state.reconstruct_path_to(slot).unwrap();
 
-        assert_eq!(path, vec![ArrayIndex::new(0, 0), ArrayIndex::new(0, 1)]);
+        assert_eq!(
+            path,
+            vec![ArrayIndex::new_ij(0, 0), ArrayIndex::new_ij(0, 1)]
+        );
     }
 
     #[test]
     fn frontier_prefers_lower_estimated_cost() {
-        let start = ArrayIndex::new(0, 0);
-        let mut state = FrontierOnlySearchState::new(&start, 2_000, (3, 3)).unwrap();
+        let start = ArrayIndex::new_ij(0, 0);
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (3, 3, 1)).unwrap();
         let node = state.pop_next_node().unwrap();
 
         state
             .add_successors_tracking_with_estimator(
                 &node,
                 vec![
-                    (ArrayIndex::new(0, 1), 1_u64),
-                    (ArrayIndex::new(1, 0), 2_u64),
+                    (ArrayIndex::new_ij(0, 1), 1_u64),
+                    (ArrayIndex::new_ij(1, 0), 2_u64),
                 ],
                 |neighbor, cost| match (neighbor.i, neighbor.j) {
                     (0, 1) => cost.saturating_add(20),
@@ -602,30 +605,30 @@ mod tests {
 
         let next = state.pop_next_node().unwrap();
 
-        assert_eq!(next.array_index, ArrayIndex::new(1, 0));
+        assert_eq!(next.array_index, ArrayIndex::new_ij(1, 0));
         assert_eq!(next.cost, 2);
     }
 
     #[test]
     fn bidirectional_search_merges_forward_and_backward_paths() {
-        let start = ArrayIndex::new(0, 0);
-        let goals = vec![ArrayIndex::new(2, 2)];
-        let mut state = BidirectionalSearchState::new(&start, &goals, 2_000, (3, 3)).unwrap();
+        let start = ArrayIndex::new_ij(0, 0);
+        let goals = vec![ArrayIndex::new_ij(2, 2)];
+        let mut state = BidirectionalSearchState::new(&start, &goals, 2_000, (3, 3, 1)).unwrap();
 
         let (route, cost) = state
             .run(|p| {
                 let mut out = Vec::new();
                 if p.i > 0 {
-                    out.push((ArrayIndex::new(p.i - 1, p.j), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i - 1, p.j), 1_u64));
                 }
                 if p.i < 2 {
-                    out.push((ArrayIndex::new(p.i + 1, p.j), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i + 1, p.j), 1_u64));
                 }
                 if p.j > 0 {
-                    out.push((ArrayIndex::new(p.i, p.j - 1), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i, p.j - 1), 1_u64));
                 }
                 if p.j < 2 {
-                    out.push((ArrayIndex::new(p.i, p.j + 1), 1_u64));
+                    out.push((ArrayIndex::new_ij(p.i, p.j + 1), 1_u64));
                 }
                 out
             })
@@ -633,6 +636,31 @@ mod tests {
 
         assert_eq!(cost, 4);
         assert_eq!(route.first(), Some(&start));
-        assert_eq!(route.last(), Some(&ArrayIndex::new(2, 2)));
+        assert_eq!(route.last(), Some(&ArrayIndex::new_ij(2, 2)));
+    }
+
+    #[test]
+    fn state_supports_nonzero_option_indices() {
+        let start = ArrayIndex {
+            i: 0,
+            j: 0,
+            option: 1,
+        };
+        let goal = ArrayIndex {
+            i: 0,
+            j: 1,
+            option: 1,
+        };
+        let mut state = FrontierOnlySearchState::new(&start, 2_000, (2, 2, 2)).unwrap();
+        let node = state.pop_next_node().unwrap();
+
+        state
+            .add_successors(&node, vec![(goal.clone(), 1_u64)])
+            .unwrap();
+
+        let slot = state.grid.slot_of(&goal).unwrap();
+        let path = state.reconstruct_path_to(slot).unwrap();
+
+        assert_eq!(path, vec![start, goal]);
     }
 }
