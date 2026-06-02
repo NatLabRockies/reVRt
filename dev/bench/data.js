@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780370144219,
+  "lastUpdate": 1780376103736,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -10751,6 +10751,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 451435776,
             "range": "± 4730710",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0addd5d1d360763ccc01f628e84607a5c7cfe8a2",
+          "message": "Update deps and GHA (#282)\n\n* Fix windows rust checks\n\n* Update lockfile\n\n* Update ruff\n\n* Bump pixi version in GHA\n\n* Add concurrency guards\n\n* Bump action versions",
+          "timestamp": "2026-06-01T22:40:41-06:00",
+          "tree_id": "58bb3ec26b541c9527244c7d2c2017ff1c343bb9",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/0addd5d1d360763ccc01f628e84607a5c7cfe8a2"
+        },
+        "date": 1780376100858,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 121751777,
+            "range": "± 79202891",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 184776016,
+            "range": "± 115111279",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 149626088,
+            "range": "± 85367723",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 333530287,
+            "range": "± 296328060",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 1072606263,
+            "range": "± 455490803",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 143336410,
+            "range": "± 46344914",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 142832947,
+            "range": "± 54300112",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 172355802,
+            "range": "± 70019391",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 446068186,
+            "range": "± 315833444",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 687646694,
+            "range": "± 314950076",
             "unit": "ns/iter"
           }
         ]
