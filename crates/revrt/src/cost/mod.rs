@@ -1,12 +1,12 @@
 pub(crate) mod components;
-pub(crate) mod inputs;
+mod inputs;
 
 use core::f32;
 use ndarray::{ArrayD, Axis, IxDyn, stack};
 use std::convert::TryFrom;
 use tracing::{debug, trace};
 
-pub(crate) use crate::cost::components::{
+use crate::cost::components::{
     BarrierLayer, BarrierOperator, CostLayer, DriverRuleSet, FrictionLayer, TransitionCostTable,
 };
 use crate::cost::inputs::CostFunctionInput;
@@ -42,7 +42,7 @@ pub(crate) struct CostFunction {
 }
 
 impl CostFunction {
-    pub(crate) fn from_input_parts(
+    fn from_input_parts(
         cost_layers: Vec<CostLayer>,
         friction_layers: Vec<FrictionLayer>,
         barrier_layers: Vec<BarrierLayer>,

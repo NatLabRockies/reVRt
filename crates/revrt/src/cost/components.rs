@@ -6,12 +6,12 @@ use std::collections::HashMap;
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct TransitionCostTable {
-    pub(crate) default: f32,
-    pub(crate) pairwise: HashMap<(u32, u32), f32>,
+    pub(super) default: f32,
+    pub(super) pairwise: HashMap<(u32, u32), f32>,
 }
 
 impl TransitionCostTable {
-    pub(crate) fn new(default: f32, pairwise: HashMap<(u32, u32), f32>) -> Self {
+    pub(super) fn new(default: f32, pairwise: HashMap<(u32, u32), f32>) -> Self {
         Self { default, pairwise }
     }
 
@@ -25,12 +25,12 @@ impl TransitionCostTable {
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct DriverRuleSet {
-    pub(crate) default: Vec<Option<f32>>,
-    pub(crate) zones: Vec<DriverZoneRule>,
+    pub(super) default: Vec<Option<f32>>,
+    pub(super) zones: Vec<DriverZoneRule>,
 }
 
 impl DriverRuleSet {
-    pub(crate) fn new(default: Vec<Option<f32>>, zones: Vec<DriverZoneRule>) -> Self {
+    pub(super) fn new(default: Vec<Option<f32>>, zones: Vec<DriverZoneRule>) -> Self {
         Self { default, zones }
     }
 
@@ -61,15 +61,15 @@ impl DriverRuleSet {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct DriverZoneRule {
-    pub(crate) layer_name: String,
-    pub(crate) operator: BarrierOperator,
-    pub(crate) threshold: f32,
-    pub(crate) options: HashMap<u32, Option<f32>>,
+pub(super) struct DriverZoneRule {
+    pub(super) layer_name: String,
+    pub(super) operator: BarrierOperator,
+    pub(super) threshold: f32,
+    pub(super) options: HashMap<u32, Option<f32>>,
 }
 
 impl DriverZoneRule {
-    pub(crate) fn new(
+    pub(super) fn new(
         layer_name: String,
         operator: BarrierOperator,
         threshold: f32,
@@ -96,7 +96,7 @@ impl DriverZoneRule {
 }
 
 #[derive(Clone, Copy, Debug, serde::Deserialize)]
-pub(crate) enum BarrierOperator {
+pub(super) enum BarrierOperator {
     #[serde(rename = "ne")]
     NotEqual,
     #[serde(rename = "gt")]
@@ -122,21 +122,21 @@ pub(crate) enum BarrierOperator {
 /// meaning that its value does not get scaled by the distance traveled
 /// through the cell. Instead, the value of the layer is added once, right
 /// when the path enters the cell.
-pub(crate) struct CostLayer {
+pub(super) struct CostLayer {
     pub(crate) layer_name: String,
     #[builder(setter(strip_option), default)]
-    pub(crate) multiplier_scalar: Option<f32>,
+    pub(super) multiplier_scalar: Option<f32>,
     #[builder(setter(strip_option, into), default)]
-    pub(crate) multiplier_layer: Option<String>,
+    pub(super) multiplier_layer: Option<String>,
     #[builder(setter(strip_option), default)]
-    pub(crate) is_invariant: Option<bool>,
+    pub(super) is_invariant: Option<bool>,
     #[builder(default, setter(skip))]
     #[serde(skip)]
-    pub(crate) option: u32,
+    pub(super) option: u32,
 }
 
 impl CostLayer {
-    pub(crate) fn with_option(mut self, option: u32) -> Self {
+    pub(super) fn with_option(mut self, option: u32) -> Self {
         self.option = option;
         self
     }
@@ -156,16 +156,16 @@ impl CostLayer {
 /// layer that is applied to the cost layer. A clamp is applied to the
 /// final friction layer to ensure that no values are below -1.0, which
 /// would lead to negative routing costs.
-pub(crate) struct FrictionLayer {
-    pub(crate) multiplier_layer: String,
+pub(super) struct FrictionLayer {
+    pub(super) multiplier_layer: String,
     #[builder(setter(strip_option), default)]
-    pub(crate) multiplier_scalar: Option<f32>,
+    pub(super) multiplier_scalar: Option<f32>,
     #[serde(skip)]
-    pub(crate) option: u32,
+    pub(super) option: u32,
 }
 
 impl FrictionLayer {
-    pub(crate) fn new(
+    pub(super) fn new(
         multiplier_layer: String,
         multiplier_scalar: Option<f32>,
         option: u32,
@@ -181,23 +181,19 @@ impl FrictionLayer {
 #[derive(Clone, Debug, serde::Deserialize)]
 pub(crate) struct BarrierLayer {
     pub(crate) layer_name: String,
-    pub(crate) barrier_operator: BarrierOperator,
-    pub(crate) barrier_threshold: f32,
-    pub(crate) barrier_importance: Option<u32>,
+    pub(super) barrier_operator: BarrierOperator,
+    pub(super) barrier_threshold: f32,
+    pub(super) barrier_importance: Option<u32>,
     #[serde(skip)]
-    pub(crate) option: u32,
+    pub(super) option: u32,
 }
 
 impl BarrierLayer {
-    pub(crate) fn layer_name(&self) -> &str {
-        &self.layer_name
-    }
-
-    pub(crate) fn importance(&self) -> Option<u32> {
+    pub(super) fn importance(&self) -> Option<u32> {
         self.barrier_importance
     }
 
-    pub(crate) fn with_option(mut self, option: u32) -> Self {
+    pub(super) fn with_option(mut self, option: u32) -> Self {
         self.option = option;
         self
     }

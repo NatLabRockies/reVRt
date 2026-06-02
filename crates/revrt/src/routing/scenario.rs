@@ -18,7 +18,7 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use super::cost_as_u64;
-use crate::cost::{DriverRuleSet, TransitionCostTable};
+use crate::cost::components::{DriverRuleSet, TransitionCostTable};
 use crate::routing::features::Features;
 use crate::{ArrayIndex, Result};
 
@@ -217,7 +217,7 @@ impl Scenario {
             .take(dropped_soft_groups)
         {
             for layer in layers {
-                dropped_barrier_layers.push(layer.layer_name().to_string());
+                dropped_barrier_layers.push(layer.layer_name.clone());
             }
         }
 

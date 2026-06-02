@@ -15,7 +15,8 @@ use super::LazySubset;
 use super::reader::DerivedDataMaterializer;
 use super::swap::SourceLayout;
 use super::swap::cumulative_soft_barrier_mask_name;
-use crate::cost::{BarrierLayer, CostFunction};
+use crate::cost::CostFunction;
+use crate::cost::components::BarrierLayer;
 
 /// Writes derived chunk-level arrays into the swap dataset.
 ///

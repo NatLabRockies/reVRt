@@ -16,7 +16,7 @@ fn true_option() -> bool {
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
-pub(crate) struct CostFunctionInput {
+pub(super) struct CostFunctionInput {
     #[serde(default)]
     routing_options: RoutingOptionsInput,
     #[serde(default)]
@@ -29,21 +29,21 @@ pub(crate) struct CostFunctionInput {
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
 #[serde(untagged)]
-pub(crate) enum RoutingOptionsInput {
+pub(super) enum RoutingOptionsInput {
     Definitions(Map<String, Value>),
     #[default]
     Missing,
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct RoutingOptionEntry<TDefinition> {
-    pub(crate) name: String,
-    pub(crate) index: u32,
-    pub(crate) definition: TDefinition,
+pub(super) struct RoutingOptionEntry<TDefinition> {
+    pub(super) name: String,
+    pub(super) index: u32,
+    pub(super) definition: TDefinition,
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
-pub(crate) struct RoutingOptionDefinition {
+pub(super) struct RoutingOptionDefinition {
     #[serde(default)]
     cost_layers: Vec<CostLayer>,
     #[serde(default)]
@@ -53,10 +53,10 @@ pub(crate) struct RoutingOptionDefinition {
 }
 
 #[derive(Clone, Debug, Default)]
-pub(crate) struct RoutingOptionLayerSet {
-    pub(crate) cost_layers: Vec<CostLayer>,
-    pub(crate) friction_layers: Vec<FrictionLayer>,
-    pub(crate) barrier_layers: Vec<BarrierLayer>,
+pub(super) struct RoutingOptionLayerSet {
+    pub(super) cost_layers: Vec<CostLayer>,
+    pub(super) friction_layers: Vec<FrictionLayer>,
+    pub(super) barrier_layers: Vec<BarrierLayer>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -70,55 +70,55 @@ struct FrictionLayerInput {
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
-pub(crate) struct TransitionCostsConfig {
+pub(super) struct TransitionCostsConfig {
     #[serde(default)]
-    pub(crate) default: f32,
+    pub(super) default: f32,
     #[serde(default)]
-    pub(crate) pairwise: Vec<TransitionCostRule>,
+    pub(super) pairwise: Vec<TransitionCostRule>,
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
-pub(crate) struct DriversConfig {
+pub(super) struct DriversConfig {
     #[serde(default)]
-    pub(crate) default: HashMap<String, DriverRuleValue>,
+    pub(super) default: HashMap<String, DriverRuleValue>,
     #[serde(default)]
-    pub(crate) zones: Vec<DriverZoneConfig>,
+    pub(super) zones: Vec<DriverZoneConfig>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
-pub(crate) struct DriverZoneConfig {
-    pub(crate) layer_name: String,
-    pub(crate) mask_operator: BarrierOperator,
-    pub(crate) mask_threshold: f32,
+pub(super) struct DriverZoneConfig {
+    pub(super) layer_name: String,
+    pub(super) mask_operator: BarrierOperator,
+    pub(super) mask_threshold: f32,
     #[serde(flatten)]
-    pub(crate) options: HashMap<String, DriverRuleValue>,
+    pub(super) options: HashMap<String, DriverRuleValue>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
 #[serde(untagged)]
-pub(crate) enum DriverRuleValue {
+pub(super) enum DriverRuleValue {
     Keyword(String),
     Multiplier(f32),
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
-pub(crate) struct TransitionCostRule {
-    pub(crate) from: TransitionOptionRef,
-    pub(crate) to: TransitionOptionRef,
-    pub(crate) cost: f32,
+pub(super) struct TransitionCostRule {
+    pub(super) from: TransitionOptionRef,
+    pub(super) to: TransitionOptionRef,
+    pub(super) cost: f32,
     #[serde(default)]
-    pub(crate) applies_bidirectionally: bool,
+    pub(super) applies_bidirectionally: bool,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
 #[serde(untagged)]
-pub(crate) enum TransitionOptionRef {
+pub(super) enum TransitionOptionRef {
     Index(u32),
     Name(String),
 }
 
 impl RoutingOptionsInput {
-    pub(crate) fn into_entries<TDefinition>(self) -> Result<Vec<RoutingOptionEntry<TDefinition>>>
+    pub(super) fn into_entries<TDefinition>(self) -> Result<Vec<RoutingOptionEntry<TDefinition>>>
     where
         TDefinition: DeserializeOwned,
     {
@@ -199,7 +199,7 @@ impl TryFrom<CostFunctionInput> for CostFunction {
 }
 
 impl RoutingOptionDefinition {
-    pub(crate) fn into_layers(self, option: u32) -> Result<RoutingOptionLayerSet> {
+    pub(super) fn into_layers(self, option: u32) -> Result<RoutingOptionLayerSet> {
         Ok(RoutingOptionLayerSet {
             cost_layers: self
                 .cost_layers
@@ -221,7 +221,7 @@ impl RoutingOptionDefinition {
 }
 
 impl DriversConfig {
-    pub(crate) fn into_rule_set(self, routing_options: &[String]) -> Result<DriverRuleSet> {
+    pub(super) fn into_rule_set(self, routing_options: &[String]) -> Result<DriverRuleSet> {
         let mut default = vec![Some(1.0); routing_options.len()];
 
         for (name, value) in self.default {
@@ -251,7 +251,7 @@ impl DriversConfig {
 }
 
 impl TransitionCostsConfig {
-    pub(crate) fn into_table(self, routing_options: &[String]) -> Result<TransitionCostTable> {
+    pub(super) fn into_table(self, routing_options: &[String]) -> Result<TransitionCostTable> {
         let mut pairwise = HashMap::new();
 
         for rule in self.pairwise {

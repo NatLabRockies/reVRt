@@ -29,7 +29,8 @@ use zarrs::array::{Array, DataType, ElementOwned};
 use zarrs::storage::ReadableListableStorage;
 
 use crate::ArrayIndex;
-use crate::cost::{BarrierLayer, CostFunction};
+use crate::cost::CostFunction;
+use crate::cost::components::BarrierLayer;
 use crate::error::Result;
 use derived::DerivedDataWriter;
 pub(crate) use lazy_subset::LazySubset;
