@@ -179,6 +179,10 @@ impl Scenario {
             };
 
             let transition_cost = self.transition_cost(position.option, option);
+            trace!(
+                "Center: {:?} Option neighbor: {:?} Cost: {} Multiplier: {} Transition cost {}",
+                position, destination, destination_center_cost, driver_multiplier, transition_cost
+            );
             neighbors.push((
                 destination,
                 transition_cost
@@ -186,7 +190,7 @@ impl Scenario {
             ));
         }
 
-        trace!("Adjusting neighbors' types: {:?}", neighbors);
+        trace!("Center: {:?} Adjusted neighbors: {:?}", position, neighbors);
         neighbors
     }
 
