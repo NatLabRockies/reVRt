@@ -291,10 +291,11 @@ def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
         else:
             assert route_id == 2
             assert len(solutions) == 1
-            test_path, test_cost, dropped_barrier_layers = solutions[0][:3]
+            test_path, test_cost, dropped_barrier_layers, option_ids = (
+                solutions[0]
+            )
             assert dropped_barrier_layers == []
-            if len(solutions[0]) > 3:
-                assert solutions[0][3] == []
+            assert option_ids == []
 
     mcp = MCP_Geometric(cost_values[0])
     costs, __ = mcp.find_costs(starts=[(1, 1)], ends=[(2, 6)])
@@ -386,15 +387,13 @@ def test_route_finder_retries_soft_barriers_layered_file(tmp_path, algorithm):
     assert top_solution[0][-1] == (0, 4)
     assert top_solution[1] > 0
     assert top_solution[2] == ["soft_barrier"]
-    if len(top_solution) > 3:
-        assert top_solution[3] == [1]
+    assert top_solution[3] == []
 
     bottom_solution = solutions_by_start[(2, 0)]
     assert bottom_solution[0][-1] == (2, 4)
     assert bottom_solution[1] > 0
     assert bottom_solution[2] == []
-    if len(bottom_solution) > 3:
-        assert bottom_solution[3] == []
+    assert bottom_solution[3] == []
 
 
 @pytest.mark.parametrize(
@@ -480,8 +479,7 @@ def test_route_finder_drops_multiple_soft_barrier_groups_layered_file(
     assert solution[0][-1] == (1, 4)
     assert solution[1] > 0
     assert solution[2] == ["soft_barrier_low", "soft_barrier_high"]
-    if len(solution) > 3:
-        assert solution[3] == [1, 2]
+    assert solution[3] == []
 
 
 @pytest.mark.parametrize(

@@ -310,24 +310,36 @@ where
     let option = u64::from(option);
 
     if option < band_start || option >= band_end {
-        return ndarray::ArrayD::<T>::default(ndarray::IxDyn(values.shape()));
+        let output_shape = features
+            .subset()
+            .shape()
+            .iter()
+            .map(|&dim| usize::try_from(dim).expect("subset dimension exceeds usize range"))
+            .collect::<Vec<_>>();
+        return ndarray::ArrayD::<T>::default(ndarray::IxDyn(&output_shape));
     }
 
-    select_option(values, (option - band_start) as u32)
-}
+    let local_option = (option - band_start) as usize;
+    let output_shape = features
+        .subset()
+        .shape()
+        .iter()
+        .map(|&dim| usize::try_from(dim).expect("subset dimension exceeds usize range"))
+        .collect::<Vec<_>>();
+    let mut selected = ndarray::ArrayD::<T>::default(ndarray::IxDyn(&output_shape));
+    let source_option = if values.shape()[0] == 1 {
+        0
+    } else {
+        local_option
+    };
 
-fn select_option<T>(
-    values: ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>,
-    option: u32,
-) -> ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>
-where
-    T: Clone + Default,
-{
-    let option_index = option as usize;
-    let mut selected = ndarray::ArrayD::<T>::default(ndarray::IxDyn(values.shape()));
+    if source_option >= values.shape()[0] {
+        return selected;
+    }
+
     selected
-        .index_axis_mut(Axis(0), option_index)
-        .assign(&values.index_axis(Axis(0), option_index));
+        .index_axis_mut(Axis(0), local_option)
+        .assign(&values.index_axis(Axis(0), source_option));
     selected
 }
 
@@ -656,6 +668,38 @@ mod test {
             result.index_axis(Axis(0), 1).to_owned(),
             ArrayD::from_elem(IxDyn(&[2, 2]), 8.0)
         );
+    }
+
+    #[test]
+    fn routing_option_specific_single_band_layers_use_local_band_zero() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("overhead_cost", 1.0))
+            .layer(samples::LayerConfig::constant("underground_cost", 2.0))
+            .build()
+            .expect("Failed to create single-band routing option zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![1, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "underground_cost"}]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let result = cost_fn.compute(&mut features, false);
+
+        assert_eq!(result.shape(), &[1, 2, 2]);
+        assert_eq!(result, ArrayD::from_elem(IxDyn(&[1, 2, 2]), 2.0));
     }
 
     #[test]

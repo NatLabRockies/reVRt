@@ -85,11 +85,14 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
 def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     cost_fpath,
     route_table_fpath,
-    cost_layers,
     out_dir,
     job_name,
+    cost_layers=None,
     friction_layers=None,
     barrier_layers=None,
+    routing_options=None,
+    drivers=None,
+    transition_costs=None,
     tracked_layers=None,
     cost_multiplier_layer=None,
     cost_multiplier_scalar=1,
@@ -418,6 +421,9 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             friction_layers=friction_layers,
             barrier_layers=barrier_layers,
             transmission_config=transmission_config,
+            routing_options=routing_options,
+            drivers=drivers,
+            transition_costs=transition_costs,
         )
 
         run_lcp(

@@ -280,6 +280,47 @@ def test_compute_lcp_routes_saves_routing_layer(sample_layered_data, tmp_path):
         _assert_shared_compressor(ds["longitude"].encoding["compressors"][0])
 
 
+def test_compute_lcp_routes_with_routing_options_writes_companion_gpkg(
+    sample_layered_data, tmp_path
+):
+    """routing_options configs should emit full and per-option outputs"""
+
+    routes = _build_route_table(
+        sample_layered_data,
+        rows_cols=[((1, 1), (2, 3))],
+    )
+    route_table_fp = tmp_path / "route_table_multi.csv"
+    routes.to_csv(route_table_fp, index=False)
+
+    out_dir = tmp_path / "multi_option_outputs"
+    result_fp = compute_lcp_routes(
+        cost_fpath=sample_layered_data,
+        route_table_fpath=route_table_fp,
+        out_dir=out_dir,
+        job_name="multi_option",
+        routing_options={
+            "overhead": {"cost_layers": [{"layer_name": "layer_1"}]},
+            "underground": {"cost_layers": [{"layer_name": "layer_2"}]},
+        },
+        drivers={"default": {"overhead": 1, "underground": 10}},
+        transition_costs={"default": 0},
+        save_paths=True,
+        _split_params=(0, 1),
+    )
+
+    full_fp = Path(result_fp)
+    split_fp = full_fp.with_name(f"{full_fp.stem}_routing_options.gpkg")
+
+    assert full_fp.exists()
+    assert split_fp.exists()
+
+    full_routes = gpd.read_file(full_fp)
+    split_routes = gpd.read_file(split_fp)
+    assert not full_routes.empty
+    assert not split_routes.empty
+    assert set(split_routes["routing_option"]) <= {"overhead", "underground"}
+
+
 def test_compute_lcp_routes_returns_none_on_empty_indices(
     sample_layered_data, tmp_path
 ):

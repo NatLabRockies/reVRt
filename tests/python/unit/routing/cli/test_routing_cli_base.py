@@ -353,6 +353,77 @@ def test_update_multipliers_applies_row_and_polarity():
     assert unchanged[0]["layer_name"] == "layer_3"
 
 
+def test_route_converter_updates_multi_option_layers(tmp_path):
+    """Route converter should update nested routing-option multipliers"""
+
+    route_points = pd.DataFrame(
+        {
+            "start_row": [0],
+            "start_col": [1],
+            "end_row": [2],
+            "end_col": [3],
+            "polarity": ["ac"],
+            "voltage": [138],
+        }
+    )
+    transmission_config = {
+        "row_width": {"138": 1.5},
+        "voltage_polarity_mult": {"138": {"ac": 0.5}},
+    }
+
+    converter = PointToPointRouteDefinitionConverter(
+        cost_fpath=None,
+        route_points=route_points,
+        out_fp=tmp_path / "unused.csv",
+        cost_layers=None,
+        routing_options={
+            "overhead": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_scalar": 2,
+                        "apply_row_mult": True,
+                    }
+                ],
+                "friction_layers": [
+                    {
+                        "mask": "layer_2",
+                        "apply_polarity_mult": True,
+                    }
+                ],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_3",
+                        "barrier_values": "==1",
+                    }
+                ],
+            }
+        },
+        transmission_config=transmission_config,
+        drivers={"default": {"overhead": 1}},
+        transition_costs={"default": 0},
+    )
+
+    route_cl, route_fl, route_bl, route_ro, route_definitions, route_attrs = (
+        next(iter(converter))
+    )
+
+    assert route_cl == []
+    assert route_fl == []
+    assert route_bl == []
+    assert route_ro["overhead"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(3)
+    assert route_ro["overhead"]["friction_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+    assert route_ro["overhead"]["barrier_layers"] == [
+        {"layer_name": "layer_3", "barrier_values": "==1"}
+    ]
+    assert route_definitions == [(0, [(0, 1)], [(2, 3)])]
+    assert route_attrs[(0, (0, 1))]["voltage"] == 138
+
+
 def test_get_row_multiplier_missing_config():
     """_get_row_multiplier should raise when configuration keys are absent"""
 

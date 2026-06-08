@@ -239,8 +239,11 @@ def test_route_finder_basic_single_route(tmp_path, algorithm):
         else:
             assert route_id == 2
             assert len(solutions) == 1
-            (test_path, test_cost, dropped_barrier_layers) = solutions[0]
+            (test_path, test_cost, dropped_barrier_layers, option_ids) = (
+                solutions[0]
+            )
             assert dropped_barrier_layers == []
+            assert option_ids == []
 
     mcp = MCP_Geometric(da.values[0])
     costs, __ = mcp.find_costs(starts=[(1, 1)], ends=[(2, 6)])
@@ -398,11 +401,12 @@ def test_find_paths_supports_explicit_algorithm(tmp_path, algorithm):
     )
 
     assert len(results) == 1
-    path, cost, dropped_barrier_layers = results[0]
+    path, cost, dropped_barrier_layers, option_ids = results[0]
     assert path[0] == (1, 1)
     assert path[-1] == (2, 6)
     assert cost > 0
     assert not dropped_barrier_layers
+    assert option_ids == []
 
 
 @pytest.mark.parametrize(
@@ -463,11 +467,12 @@ def test_route_finder_supports_explicit_algorithm(tmp_path, algorithm):
     route_id, solutions = results[0]
     assert route_id == 2
     assert len(solutions) == 1
-    path, cost, dropped_barrier_layers = solutions[0]
+    path, cost, dropped_barrier_layers, option_ids = solutions[0]
     assert dropped_barrier_layers == []
     assert path[0] == (1, 1)
     assert path[-1] == (2, 6)
     assert cost > 0
+    assert option_ids == []
 
 
 def test_route_finder_tracks_dropped_barriers_per_start_point(tmp_path):
@@ -558,19 +563,23 @@ def test_route_finder_tracks_dropped_barriers_per_start_point(tmp_path):
     assert len(solutions) == 2
 
     solutions_by_start = {
-        tuple(path[0]): (path, cost, dropped_layers)
-        for path, cost, dropped_layers in solutions
+        tuple(path[0]): (path, cost, dropped_layers, option_ids)
+        for path, cost, dropped_layers, option_ids in solutions
     }
 
-    top_path, top_cost, top_layers = solutions_by_start[(0, 0)]
+    top_path, top_cost, top_layers, top_option_ids = solutions_by_start[(0, 0)]
     assert top_path[-1] == (0, 4)
     assert top_cost > 0
     assert top_layers == ["soft_barrier"]
+    assert top_option_ids == []
 
-    bottom_path, bottom_cost, bottom_layers = solutions_by_start[(2, 0)]
+    bottom_path, bottom_cost, bottom_layers, bottom_option_ids = (
+        solutions_by_start[(2, 0)]
+    )
     assert bottom_path[-1] == (2, 4)
     assert bottom_cost > 0
     assert bottom_layers == []
+    assert bottom_option_ids == []
 
 
 def test_route_finder_retries_not_equal_soft_barriers(tmp_path):
@@ -641,11 +650,12 @@ def test_route_finder_retries_not_equal_soft_barriers(tmp_path):
     assert route_id == 11
     assert len(solutions) == 1
 
-    path, cost, dropped_layers = solutions[0]
+    path, cost, dropped_layers, option_ids = solutions[0]
     assert path[0] == (0, 0)
     assert path[-1] == (0, 4)
     assert cost > 0
     assert dropped_layers == ["soft_barrier"]
+    assert option_ids == []
 
 
 @pytest.mark.parametrize(
@@ -746,13 +756,99 @@ def test_route_finder_drops_soft_barriers_by_importance(tmp_path, algorithm):
     assert route_id == 9
     assert len(solutions) == 1
 
-    path, cost, dropped_layers = solutions[0][:3]
+    path, cost, dropped_layers, option_ids = solutions[0]
     assert path[0] == (1, 0)
     assert path[-1] == (1, 4)
     assert cost > 0
     assert dropped_layers == ["soft_barrier_low", "soft_barrier_high"]
-    if len(solutions[0]) > 3:
-        assert solutions[0][3] == [1, 2]
+    assert option_ids == []
+
+
+def test_find_paths_returns_option_ids_for_multi_option_routes(tmp_path):
+    """find_paths appends routing-option IDs for multi-option paths"""
+
+    option_a = xr.DataArray(
+        np.array([[[1, 9, 1]]], dtype=np.float32),
+        dims=("band", "y", "x"),
+    )
+    option_b = xr.DataArray(
+        np.array([[[9, 1, 9]]], dtype=np.float32),
+        dims=("band", "y", "x"),
+    )
+    zone = xr.DataArray(
+        np.array([[[0, 1, 0]]], dtype=np.float32),
+        dims=("band", "y", "x"),
+    )
+
+    test_cost_fp = tmp_path / "multi_option.zarr"
+    ds = xr.Dataset(
+        {
+            "overhead_cost": option_a,
+            "underground_cost": option_b,
+            "tech_zone": zone,
+        }
+    )
+    for layer_name in ds.data_vars:
+        ds[layer_name].encoding = {
+            "fill_value": 1_000.0,
+            "_FillValue": 1_000.0,
+        }
+
+    ds.chunk({"x": 3, "y": 1}).to_zarr(
+        test_cost_fp, mode="w", zarr_format=3, consolidated=False
+    )
+
+    cost_definition = {
+        "routing_options": {
+            "overhead": {"cost_layers": [{"layer_name": "overhead_cost"}]},
+            "underground": {
+                "cost_layers": [{"layer_name": "underground_cost"}]
+            },
+        },
+        "drivers": {
+            "default": {"overhead": 1, "underground": 10},
+            "zones": [
+                {
+                    "layer_name": "tech_zone",
+                    "mask_operator": "eq",
+                    "mask_threshold": 1,
+                    "overhead": "excluded",
+                    "underground": 1,
+                }
+            ],
+        },
+        "transition_costs": {
+            "default": 0,
+            "pairwise": [
+                {
+                    "from": "overhead",
+                    "to": "underground",
+                    "cost": 0,
+                    "applies_bidirectionally": True,
+                }
+            ],
+        },
+        "ignore_invalid_costs": True,
+    }
+
+    results = find_paths(
+        zarr_fp=test_cost_fp,
+        cost_function=json.dumps(cost_definition),
+        start=[(0, 0)],
+        end=[(0, 2)],
+        algorithm="dijkstra",
+    )
+
+    assert len(results) == 1
+    path, cost, dropped_barrier_layers, option_ids = results[0]
+    assert path[0] == (0, 0)
+    assert path[-1] == (0, 2)
+    assert cost > 0
+    assert dropped_barrier_layers == []
+    assert len(option_ids) == len(path)
+    assert 1 in option_ids
+    assert option_ids[0] == 0
+    assert option_ids[-1] == 0
 
 
 def test_find_paths_supports_a_star_alias(tmp_path):

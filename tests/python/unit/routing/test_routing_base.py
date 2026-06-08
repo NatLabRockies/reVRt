@@ -122,12 +122,12 @@ def sample_layered_data(tmp_path_factory):
         [
             [
                 [-1, -1, -1, -1, -1, -1, -1, -1],
-                [ 0, -1, -1, -1, -1, -1, -1,  0],  # noqa: E201, E241
-                [ 0, -1, -1, -1, -1, -1, -1,  3],  # noqa: E201, E241
-                [ 1, -1, -1, -1, -1, -1, -1,  1],  # noqa: E201, E241
-                [ 1, -1, -1, -1, -1, -1, -1,  1],  # noqa: E201, E241
-                [ 1, -1, -1, -1, -1, -1, -1,  1],  # noqa: E201, E241
-                [ 0,  1,  1,  1,  1,  1,  1,  1],  # noqa: E201, E241
+                [0, -1, -1, -1, -1, -1, -1, 0],
+                [0, -1, -1, -1, -1, -1, -1, 3],
+                [1, -1, -1, -1, -1, -1, -1, 1],
+                [1, -1, -1, -1, -1, -1, -1, 1],
+                [1, -1, -1, -1, -1, -1, -1, 1],
+                [0, 1, 1, 1, 1, 1, 1, 1],
             ]
         ],
         dtype=np.float32,
@@ -176,6 +176,121 @@ def sample_layered_data(tmp_path_factory):
             geotiff_fp, f"layer_{ind}", overwrite=True
         )
     return layered_fp
+
+
+def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
+    """RoutingScenario emits the Rust multi-option schema"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "overhead": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_scalar": 2,
+                        "include_in_report": False,
+                        "include_in_final_cost": False,
+                    }
+                ],
+                "friction_layers": [
+                    {
+                        "mask": "layer_4",
+                        "multiplier_scalar": 1.1,
+                        "include_in_report": False,
+                    }
+                ],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_5",
+                        "barrier_values": "==1",
+                    }
+                ],
+            },
+            "underground": {
+                "cost_layers": [{"layer_name": "layer_2"}],
+            },
+        },
+        drivers={
+            "default": {"overhead": 1, "underground": "excluded"},
+            "zones": [
+                {
+                    "layer_name": "layer_5",
+                    "mask_operator": "eq",
+                    "mask_threshold": 1,
+                    "overhead": "excluded",
+                    "underground": 2,
+                }
+            ],
+        },
+        transition_costs={
+            "default": 0,
+            "pairwise": [
+                {
+                    "from": "overhead",
+                    "to": "underground",
+                    "cost": 3,
+                    "applies_bidirectionally": True,
+                }
+            ],
+        },
+        ignore_invalid_costs=False,
+    )
+
+    payload = json.loads(scenario.cost_function_json)
+
+    assert payload["ignore_invalid_costs"] is False
+    assert payload["drivers"] == scenario.drivers
+    assert payload["transition_costs"] == scenario.transition_costs
+    assert set(payload["routing_options"]) == {"overhead", "underground"}
+    assert payload["routing_options"]["overhead"]["cost_layers"] == [
+        {"layer_name": "layer_1", "multiplier_scalar": 2}
+    ]
+    assert payload["routing_options"]["overhead"]["friction_layers"] == [
+        {"multiplier_layer": "layer_4", "multiplier_scalar": 1.1}
+    ]
+    assert payload["routing_options"]["overhead"]["barrier_layers"] == [
+        {
+            "layer_name": "layer_5",
+            "barrier_operator": "eq",
+            "barrier_threshold": 1.0,
+        }
+    ]
+    assert payload["routing_options"]["underground"]["cost_layers"] == [
+        {"layer_name": "layer_2"}
+    ]
+
+
+def test_multi_option_route_metrics_use_optimized_objective(
+    sample_layered_data,
+):
+    """Multi-option routes should trust the Rust objective for cost"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "overhead": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+            },
+            "underground": {
+                "cost_layers": [{"layer_name": "layer_2"}],
+            },
+        },
+        drivers={"default": {"overhead": 1, "underground": 10}},
+        transition_costs={"default": 0},
+        ignore_invalid_costs=True,
+    )
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        metrics = RouteMetrics(
+            routing_layers,
+            route=[(1, 1), (1, 2), (1, 3)],
+            optimized_objective=42.5,
+        )
+
+        assert metrics.cost == pytest.approx(42.5)
+    finally:
+        routing_layers.close()
 
 
 @pytest.mark.parametrize(
@@ -251,6 +366,67 @@ def test_route_results_passes_routing_layer_out_fp(
         )
     )
     assert recorded_kwargs["routing_layer_out_fp"] == routing_layer_out_fp
+
+
+def test_multi_option_routes_write_companion_gpkg(
+    sample_layered_data, tmp_path, monkeypatch
+):
+    """Multi-option routes should emit a companion routing-option file"""
+
+    class FakeRouteFinder:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def __iter__(self):
+            return iter(
+                [
+                    (
+                        7,
+                        [
+                            (
+                                [(1, 1), (1, 2), (1, 2), (1, 3)],
+                                12.0,
+                                [],
+                                [0, 0, 1, 1],
+                            )
+                        ],
+                    )
+                ]
+            )
+
+    monkeypatch.setattr("revrt.routing.base.RouteFinder", FakeRouteFinder)
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "overhead": {"cost_layers": [{"layer_name": "layer_1"}]},
+            "underground": {"cost_layers": [{"layer_name": "layer_2"}]},
+        },
+        drivers={"default": {"overhead": 1, "underground": 10}},
+        transition_costs={"default": 0},
+        ignore_invalid_costs=True,
+    )
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[(7, [(1, 1)], [(1, 3)])],
+        route_attrs={(7, (1, 1)): {"route_id": "route_7"}},
+    )
+
+    out_fp = tmp_path / "routes.gpkg"
+    route_computer.process(out_fp=out_fp, save_paths=True)
+
+    full_routes = gpd.read_file(out_fp)
+    option_routes = gpd.read_file(tmp_path / "routes_routing_options.gpkg")
+
+    assert len(full_routes) == 1
+    assert full_routes.iloc[0]["route_option_ids"] == "[0, 0, 1, 1]"
+    assert len(option_routes) == 2
+    assert set(option_routes["routing_option"]) == {
+        "overhead",
+        "underground",
+    }
+    assert set(option_routes["route_id"]) == {"route_7"}
+    assert np.all(option_routes["length_km"] > 0)
 
 
 def test_routing_scenario_normalizes_algorithm(sample_layered_data):

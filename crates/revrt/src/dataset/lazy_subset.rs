@@ -124,7 +124,9 @@ impl LazySubset<f32> {
                         )))
                     })?;
 
-                let values = self.load_as_f32(&variable, varname)?;
+                let source_subset = self.source_subset_for_variable(&variable);
+
+                let values = self.load_as_f32(&variable, varname, &source_subset)?;
 
                 self.data.insert(varname.to_string(), values.clone());
 
@@ -151,43 +153,78 @@ impl LazySubset<f32> {
     /// # Errors
     /// Returns an error if the variable data type is unsupported or the subset
     /// cannot be read.
+    fn source_subset_for_variable<TStorage: ?Sized + ReadableListableStorageTraits + 'static>(
+        &self,
+        variable: &Array<TStorage>,
+    ) -> ArraySubset {
+        let shape = variable.shape();
+        if shape.len() == 3 && shape[0] == 1 && self.subset.start()[0] != 0 {
+            return ArraySubset::new_with_ranges(&[
+                0..1,
+                self.subset.start()[1]..(self.subset.start()[1] + self.subset.shape()[1]),
+                self.subset.start()[2]..(self.subset.start()[2] + self.subset.shape()[2]),
+            ]);
+        }
+
+        self.subset.clone()
+    }
+
     fn load_as_f32<TStorage: ?Sized + ReadableListableStorageTraits + 'static>(
         &self,
         variable: &Array<TStorage>,
         varname: &str,
+        subset: &ArraySubset,
     ) -> Result<ndarray::ArrayBase<ndarray::OwnedRepr<f32>, ndarray::Dim<ndarray::IxDynImpl>>> {
         let dtype = variable.data_type();
 
         match dtype {
             DataType::Float32 => {
-                self.retrieve_and_convert::<f32, TStorage, _>(variable, varname, |v| v)
+                self.retrieve_and_convert::<f32, TStorage, _>(variable, varname, subset, |v| v)
             }
             DataType::Float64 => {
-                self.retrieve_and_convert::<f64, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<f64, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             DataType::Int8 => {
-                self.retrieve_and_convert::<i8, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<i8, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             DataType::Int16 => {
-                self.retrieve_and_convert::<i16, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<i16, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             DataType::Int32 => {
-                self.retrieve_and_convert::<i32, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<i32, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             DataType::Int64 => {
-                self.retrieve_and_convert::<i64, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<i64, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             DataType::UInt8 => {
-                self.retrieve_and_convert::<u8, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<u8, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             DataType::UInt16 => {
-                self.retrieve_and_convert::<u16, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<u16, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             DataType::UInt32 => {
-                self.retrieve_and_convert::<u32, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<u32, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             DataType::UInt64 => {
-                self.retrieve_and_convert::<u64, TStorage, _>(variable, varname, |v| v as f32)
+                self.retrieve_and_convert::<u64, TStorage, _>(variable, varname, subset, |v| {
+                    v as f32
+                })
             }
             other => Err(Error::IO(std::io::Error::other(format!(
                 "Unsupported data type {:?} for layer '{varname}'",
@@ -212,6 +249,7 @@ impl LazySubset<f32> {
         &self,
         variable: &Array<TStorage>,
         varname: &str,
+        subset: &ArraySubset,
         converter: F,
     ) -> Result<ndarray::ArrayBase<ndarray::OwnedRepr<f32>, ndarray::Dim<ndarray::IxDynImpl>>>
     where
@@ -220,7 +258,7 @@ impl LazySubset<f32> {
         F: Fn(T) -> f32 + Copy,
     {
         let raw = variable
-            .retrieve_array_subset_ndarray::<T>(&self.subset)
+            .retrieve_array_subset_ndarray::<T>(subset)
             .map_err(|err| {
                 Error::IO(std::io::Error::other(format!(
                     "Failed to retrieve array subset for layer '{varname}': {err}"

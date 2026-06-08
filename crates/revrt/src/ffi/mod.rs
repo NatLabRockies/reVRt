@@ -13,7 +13,7 @@ use crate::{ArrayIndex, RevrtRoutingSolutions, Solution, resolve, resolve_genera
 
 type PyRoutePoint = (u64, u64);
 type PyPossibleRouteNodes = Vec<PyRoutePoint>;
-type PyRouteResult = (Vec<PyRoutePoint>, f32, Vec<String>);
+type PyRouteResult = (Vec<PyRoutePoint>, f32, Vec<String>, Vec<u32>);
 type PyRoutingSolutions = Vec<PyRouteResult>;
 type PyRouteYield = PyResult<Option<(u32, PyRoutingSolutions)>>;
 type PyRouteDefinition = (u32, PyPossibleRouteNodes, PyPossibleRouteNodes);
@@ -42,8 +42,18 @@ impl From<Solution<ArrayIndex, f32>> for PyRouteResult {
             total_cost,
             dropped_barrier_layers,
         } = solution;
-        let path = route.into_iter().map(Into::into).collect();
-        (path, total_cost, dropped_barrier_layers)
+        let mut path = Vec::with_capacity(route.len());
+        let mut option_ids = Vec::with_capacity(route.len());
+        for index in route {
+            let point: (u64, u64) = index.clone().into();
+            let (_, _, option): (u64, u64, u32) = index.into();
+            path.push(point);
+            option_ids.push(option);
+        }
+        if option_ids.iter().all(|option| *option == 0) {
+            option_ids.clear();
+        }
+        (path, total_cost, dropped_barrier_layers, option_ids)
     }
 }
 
@@ -169,13 +179,16 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// -------
 /// list of tuple
 ///     List of path routing results. Each result is a tuple where the first
-///     element is a list of points that the route goes through, the
-///     second element is the final route cost, and the third element is
+///     element is a list of 2D grid points that the route goes through,
+///     the second element is the final route cost, the third element is
 ///     a list containing the names of any soft barriers dropped to obtain
-///     that specific path. The result list will contain multiple tuples if
-///     the path definition had multiple starting points. An empty list will
-///     be returned if no paths were found from any of the starting points to
-///     any of the ending points (even with soft barriers dropped).
+///     that specific path, and the optional fourth element is a list of
+///     routing-option IDs aligned with the returned path. The option list
+///     is empty when the route never leaves the default routing option.
+///     The result list will contain multiple tuples if the path definition
+///     had multiple starting points. An empty list will be returned if no
+///     paths were found from any of the starting points to any of the
+///     ending points (even with soft barriers dropped).
 #[pyfunction]
 #[pyo3(signature = (zarr_fp, cost_function, start, end, algorithm="long_range_dijkstra", routing_layer_out_fp=None, mem_limit_bytes=250_000_000, log_level=None))]
 #[allow(clippy::type_complexity, clippy::too_many_arguments)]
@@ -265,15 +278,18 @@ fn find_paths(
 ///     path definition. The first element is the route definition ID
 ///     (as given in the input) and the second element is a list of path
 ///     routing results. Each routing result is a tuple where the first
-///     element is a list of points that the route goes through, the
-///     second element is the final route cost, and the third element is
-///     a list containing the names of any soft barriers dropped to obtain
-///     that specific path. The result list will contain multiple tuples if
-///     the path definition had multiple starting points. An empty list will
-///     be returned if no paths were found from any of the starting points to
-///     any of the ending points (even with soft barriers dropped). This
-///     generator will yield one tuple per path definition. Order is not
-///     guaranteed, so use the route ID input to match results to inputs.
+///     element is a list of 2D grid points that the route goes through,
+///     the second element is the final route cost, the third element is a
+///     list containing the names of any soft barriers dropped to obtain
+///     that specific path, and the optional fourth element is a list of
+///     routing-option IDs aligned with the returned path. The option list
+///     is empty when the route never leaves the default routing option.
+///     The result list will contain multiple tuples if the path definition
+///     had multiple starting points. An empty list will be returned if no
+///     paths were found from any of the starting points to any of the
+///     ending points (even with soft barriers dropped). This generator
+///     will yield one tuple per path definition. Order is not guaranteed,
+///     so use the route ID input to match results to inputs.
 #[pyclass]
 struct RouteFinder {
     /// Path to the Zarr file containing the cost layers

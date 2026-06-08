@@ -49,6 +49,9 @@ class RouteToDefinitionConverter(ABC):
         friction_layers=None,
         barrier_layers=None,
         transmission_config=None,
+        routing_options=None,
+        drivers=None,
+        transition_costs=None,
     ):
         """
 
@@ -93,10 +96,13 @@ class RouteToDefinitionConverter(ABC):
         self.cost_fpath = cost_fpath
         self.route_points = route_points
         self.out_fp = Path(out_fp)
-        self.cost_layers = cost_layers
+        self.cost_layers = cost_layers or []
         self.friction_layers = friction_layers or []
         self.barrier_layers = barrier_layers or []
         self.transmission_config = transmission_config
+        self.routing_options = routing_options
+        self.drivers = drivers
+        self.transition_costs = transition_costs
 
     @property
     def num_routes(self):
@@ -145,10 +151,18 @@ class RouteToDefinitionConverter(ABC):
             route_cl = self._update_cl(polarity, voltage)
             route_fl = self._update_fl(polarity, voltage)
             route_bl = self.barrier_layers
+            route_ro = self._update_ro(polarity, voltage)
             route_definitions, route_attrs = (
                 self._convert_to_route_definitions(routes)
             )
-            yield route_cl, route_fl, route_bl, route_definitions, route_attrs
+            yield (
+                route_cl,
+                route_fl,
+                route_bl,
+                route_ro,
+                route_definitions,
+                route_attrs,
+            )
 
     @property
     def _paths_to_compute(self):
@@ -187,6 +201,31 @@ class RouteToDefinitionConverter(ABC):
         return update_multipliers(
             self.friction_layers, polarity, voltage, self.transmission_config
         )
+
+    def _update_ro(self, polarity, voltage):
+        """Update multipliers for multi-option routing inputs"""
+        if self.routing_options is None:
+            return None
+
+        updated_options = deepcopy(self.routing_options)
+        for option_config in updated_options.values():
+            option_config["cost_layers"] = update_multipliers(
+                option_config.get("cost_layers", []),
+                polarity,
+                voltage,
+                self.transmission_config,
+            )
+            option_config["friction_layers"] = update_multipliers(
+                option_config.get("friction_layers", []),
+                polarity,
+                voltage,
+                self.transmission_config,
+            )
+            option_config["barrier_layers"] = deepcopy(
+                option_config.get("barrier_layers", [])
+            )
+
+        return updated_options
 
     @abstractmethod
     def _route_as_tuple(self, row):
@@ -252,14 +291,22 @@ def _run_all_lcp_batches(  # noqa
     out_fp = Path(out_fp)
     save_paths = out_fp.suffix.lower() == ".gpkg"
     for route_batch in routes_to_compute:
-        route_cl, route_fl, route_bl, route_definitions, route_attrs = (
-            route_batch
-        )
+        (
+            route_cl,
+            route_fl,
+            route_bl,
+            route_ro,
+            route_definitions,
+            route_attrs,
+        ) = route_batch
         scenario = RoutingScenario(
             cost_fpath=cost_fpath,
             cost_layers=route_cl,
             friction_layers=route_fl,
             barrier_layers=route_bl,
+            routing_options=route_ro,
+            drivers=routes_to_compute.drivers,
+            transition_costs=routes_to_compute.transition_costs,
             tracked_layers=tracked_layers,
             cost_multiplier_layer=cost_multiplier_layer,
             cost_multiplier_scalar=cost_multiplier_scalar,

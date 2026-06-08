@@ -3,6 +3,7 @@
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
+use tracing::trace;
 
 use crate::cost::CostFunction;
 use crate::cost::components::{

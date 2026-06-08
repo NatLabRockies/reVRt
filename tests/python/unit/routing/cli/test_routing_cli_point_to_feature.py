@@ -287,6 +287,48 @@ def test_compute_lcp_routes_creates_geo_package_output(point_feature_dataset):
     assert not gdf.empty
 
 
+def test_compute_lcp_routes_with_routing_options_creates_companion_gpkg(
+    point_feature_dataset,
+):
+    """routing_options configs should emit full and per-option feature outputs"""
+
+    route_table = _build_route_table(
+        point_feature_dataset["metadata"], [(1, 2)], [1]
+    )
+    route_table_fp = point_feature_dataset["tmp_path"] / "routes_multi.csv"
+    route_table.to_csv(route_table_fp, index=False)
+
+    out_dir = point_feature_dataset["tmp_path"] / "gpkg_multi_outputs"
+    gpkg_path = compute_lcp_routes(
+        cost_fpath=point_feature_dataset["cost_fp"],
+        route_table_fpath=route_table_fp,
+        features_fpath=point_feature_dataset["features_fp"],
+        out_dir=out_dir,
+        job_name="feature_multi",
+        routing_options={
+            "overhead": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}]
+            },
+            "underground": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}]
+            },
+        },
+        drivers={"default": {"overhead": 1, "underground": 10}},
+        transition_costs={"default": 0},
+        save_paths=True,
+    )
+
+    output_fp = Path(gpkg_path)
+    split_fp = output_fp.with_name(f"{output_fp.stem}_routing_options.gpkg")
+
+    assert output_fp.exists()
+    assert split_fp.exists()
+    assert not gpd.read_file(output_fp).empty
+    split_gdf = gpd.read_file(split_fp)
+    assert not split_gdf.empty
+    assert set(split_gdf["routing_option"]) <= {"overhead", "underground"}
+
+
 def test_compute_lcp_routes_saves_routing_layer(point_feature_dataset):
     """compute_lcp_routes should persist routing layers when requested"""
 

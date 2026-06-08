@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
     """Convert route points DataFrame to route definition for Rust"""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         cost_fpath,
         route_points,
@@ -38,6 +38,9 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
         friction_layers=None,
         barrier_layers=None,
         transmission_config=None,
+        routing_options=None,
+        drivers=None,
+        transition_costs=None,
         connection_identifier_column="end_feat_id",
     ):
         """
@@ -83,6 +86,9 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
             friction_layers=friction_layers,
             barrier_layers=barrier_layers,
             transmission_config=transmission_config,
+            routing_options=routing_options,
+            drivers=drivers,
+            transition_costs=transition_costs,
         )
         self.features_fpath = features_fpath
         self.connection_identifier_column = connection_identifier_column
@@ -185,11 +191,14 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     cost_fpath,
     route_table_fpath,
     features_fpath,
-    cost_layers,
     out_dir,
     job_name,
+    cost_layers=None,
     friction_layers=None,
     barrier_layers=None,
+    routing_options=None,
+    drivers=None,
+    transition_costs=None,
     tracked_layers=None,
     cost_multiplier_layer=None,
     cost_multiplier_scalar=1,
@@ -540,6 +549,9 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             friction_layers=friction_layers,
             barrier_layers=barrier_layers,
             transmission_config=transmission_config,
+            routing_options=routing_options,
+            drivers=drivers,
+            transition_costs=transition_costs,
             connection_identifier_column=connection_identifier_column,
         )
 
