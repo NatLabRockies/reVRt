@@ -263,6 +263,11 @@ impl TransitionCostsConfig {
             }
         }
 
+        trace!(
+            "resolved transition cost table with default cost {} and pairwise costs: {:#?}",
+            self.default, pairwise
+        );
+
         Ok(TransitionCostTable::new(self.default, pairwise))
     }
 }
