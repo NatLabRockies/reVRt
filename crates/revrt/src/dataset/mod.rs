@@ -206,9 +206,9 @@ impl Dataset {
     }
 
     /// Return the center-cell entry cost for a single option state.
-    pub(super) fn get_cell_cost(&self, index: &ArrayIndex) -> Option<f32> {
+    pub(super) fn get_cell_cost_components(&self, index: &ArrayIndex) -> Option<(f32, f32)> {
         self.derived_data_reader
-            .get_cell_cost(index, &self.derived_data_writer)
+            .get_cell_cost_components(index, &self.derived_data_writer)
     }
 
     /// Return a single source-layer cell as `f32` for the requested index.
