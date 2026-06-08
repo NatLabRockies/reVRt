@@ -209,7 +209,6 @@ impl DerivedDataReader {
             // center cell is barrier, so no neighbors
             return Vec::new();
         }
-        trace!("Center point: {:?}", center);
 
         let cost_to_neighbors = neighbors
             .iter()
@@ -239,7 +238,10 @@ impl DerivedDataReader {
             })
             .collect::<Vec<_>>();
 
-        trace!("Neighbors {:?}", cost_to_neighbors);
+        trace!(
+            "Center point: {:?} Neighbors {:?}",
+            center, cost_to_neighbors
+        );
         cost_to_neighbors
     }
 
