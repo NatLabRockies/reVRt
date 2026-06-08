@@ -294,11 +294,11 @@ impl DerivedDataReader {
     /// The returned value includes the length-dependent center-cell cost and
     /// the invariant adders for the destination option. Hard barriers and
     /// invalid costs return `None`.
-    pub(super) fn get_cell_cost(
+    pub(super) fn get_cell_cost_components(
         &self,
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
-    ) -> Option<f32> {
+    ) -> Option<(f32, f32)> {
         let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
             u64::from(index.option)..u64::from(index.option) + 1,
             index.i..index.i + 1,
@@ -322,16 +322,17 @@ impl DerivedDataReader {
                 .next()?;
 
         if is_hard_barrier || cost.is_nan() || cost <= 0.0 {
-            None
-        } else {
-            let invariant = self
-                .cost_invariant_cache
-                .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
-                .ok()?
-                .into_iter()
-                .next()?;
-            Some(cost + invariant)
+            return None;
         }
+
+        let invariant = self
+            .cost_invariant_cache
+            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+            .ok()?
+            .into_iter()
+            .next()?;
+
+        Some((cost, invariant))
     }
 
     /// Return the grid shape backing this reader as `(rows, cols, options)`.
@@ -776,7 +777,7 @@ mod tests {
 
         let cost = fixture
             .reader
-            .get_cell_cost(
+            .get_cell_cost_components(
                 &ArrayIndex {
                     i: 1,
                     j: 0,
@@ -788,7 +789,38 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(cost, 31.0);
+        assert_eq!(cost.0 + cost.1, 31.0);
+    }
+
+    #[test]
+    fn get_cell_cost_components_split_primary_and_invariant_costs() {
+        let fixture = reader_fixture_with_shape(
+            2,
+            2,
+            2,
+            vec![1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 30.0, 40.0],
+            vec![0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0],
+            vec![false; 8],
+            vec![false; 8],
+            vec![false; 8],
+        );
+
+        let (primary_cost, invariant_cost) = fixture
+            .reader
+            .get_cell_cost_components(
+                &ArrayIndex {
+                    i: 1,
+                    j: 0,
+                    option: 1,
+                },
+                &NoOpMaterializer {
+                    has_hard_barriers: false,
+                },
+            )
+            .unwrap();
+
+        assert_eq!(primary_cost, 30.0);
+        assert_eq!(invariant_cost, 1.0);
     }
 
     fn reader_for_grid(grid_nrows: u64, grid_ncols: u64) -> DerivedDataReader {
