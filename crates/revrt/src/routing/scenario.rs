@@ -139,7 +139,9 @@ impl Scenario {
         }
 
         let option_neighborhoods = self.dataset.get_3x3_neighborhood_all_options(position);
-        let Some(current_option_neighborhood) = option_neighborhoods.get(position.option as usize)
+        let Some(current_option_neighborhood) = option_neighborhoods
+            .iter()
+            .find(|item| item.option == position.option)
         else {
             return Vec::new();
         };
@@ -152,8 +154,8 @@ impl Scenario {
 
         let mut neighbors = Vec::new();
 
-        for (option, option_neighborhood) in option_neighborhoods.iter().enumerate() {
-            let option = option as u32;
+        for option_neighborhood in &option_neighborhoods {
+            let option = option_neighborhood.option;
             if option == position.option {
                 neighbors.extend(self.same_option_successors(
                     &option_neighborhood.points,

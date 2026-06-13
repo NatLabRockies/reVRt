@@ -249,6 +249,7 @@ impl DerivedDataReader {
                     .collect::<Vec<_>>();
 
                 RoutingOptionNeighborhood {
+                    option: option_idx as u32,
                     center_primary_cost,
                     points,
                 }
@@ -757,6 +758,7 @@ mod tests {
         let neighbors = same_option_neighbors(&neighborhoods, index.option);
 
         assert_eq!(neighborhoods.len(), 2);
+        assert_eq!(neighborhoods[index.option as usize].option, 1);
         assert_eq!(
             neighborhoods[index.option as usize].center_primary_cost,
             Some(15.0)
@@ -809,6 +811,8 @@ mod tests {
         );
 
         assert_eq!(neighborhoods.len(), 2);
+        assert_eq!(neighborhoods[0].option, 0);
+        assert_eq!(neighborhoods[1].option, 1);
         assert_eq!(neighborhoods[0].center_primary_cost, Some(5.0));
         assert_eq!(neighborhoods[1].center_primary_cost, None);
         assert_eq!(neighborhoods[1].points.len(), 8);
@@ -1074,7 +1078,9 @@ mod tests {
         neighborhoods: &[RoutingOptionNeighborhood],
         option: u32,
     ) -> Vec<(ArrayIndex, f32)> {
-        let neighborhood = &neighborhoods[option as usize];
+        let Some(neighborhood) = neighborhoods.iter().find(|item| item.option == option) else {
+            return Vec::new();
+        };
         let Some(source_primary_cost) = neighborhood.center_primary_cost else {
             return Vec::new();
         };

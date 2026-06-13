@@ -87,6 +87,7 @@ impl NeighborhoodPoint {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct RoutingOptionNeighborhood {
+    pub(super) option: u32,
     pub(super) center_primary_cost: Option<f32>,
     pub(super) points: Vec<NeighborhoodPoint>,
 }
@@ -1136,7 +1137,9 @@ mod tests {
         option: u32,
         fallback_center_primary_cost: Option<f32>,
     ) -> Vec<(ArrayIndex, f32)> {
-        let neighborhood = &neighborhoods[option as usize];
+        let Some(neighborhood) = neighborhoods.iter().find(|item| item.option == option) else {
+            return Vec::new();
+        };
         let Some(source_primary_cost) = neighborhood
             .center_primary_cost
             .or(fallback_center_primary_cost)
