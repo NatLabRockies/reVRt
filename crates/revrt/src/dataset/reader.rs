@@ -392,55 +392,53 @@ impl DerivedDataReader {
         (i_range, j_range, subset)
     }
 
-    /// Read cost values for every cell in a neighborhood subset.
+    /// Build the row and column ranges for a clipped 3x3 neighborhood.
     ///
-    /// When `is_invariant` is true, values are read from the invariant cost
-    /// array. Otherwise values are read from the primary cost array.
+    /// Unlike `neighborhood_subset`, the returned subset spans every routing
+    /// option on the leading band axis so callers can read all option bands in
+    /// a single cached request.
     ///
     /// # Arguments
-    /// `i_range`: Row indices covered by the neighborhood subset.
-    /// `j_range`: Column indices covered by the neighborhood subset.
-    /// `subset`: Swap-array subset to read from the selected cache.
-    /// `is_invariant`: Whether to read from the invariant cost cache instead
-    ///                 of the primary cost cache.
+    /// `index`: Center grid index for the requested neighborhood.
     ///
     /// # Returns
-    /// A vector pairing each neighborhood cell coordinate with the decoded
-    /// cost value read from the selected cache.
-    pub(super) fn get_neighbor_costs(
+    /// A tuple containing the clipped row range, clipped column range, and
+    /// the corresponding swap-array subset including all option bands.
+    fn neighborhood_subset_all_options(
         &self,
-        i_range: std::ops::Range<u64>,
-        j_range: std::ops::Range<u64>,
-        subset: &zarrs::array_subset::ArraySubset,
-        is_invariant: bool,
-    ) -> Vec<((u64, u64), f32)> {
-        trace!("Opening cost dataset (is_invariant={})", is_invariant);
+        index: &ArrayIndex,
+    ) -> (
+        std::ops::Range<u64>,
+        std::ops::Range<u64>,
+        zarrs::array_subset::ArraySubset,
+    ) {
+        let &ArrayIndex { i, j, .. } = index;
+        debug_assert!(self.grid_nrows > 0);
+        debug_assert!(self.grid_ncols > 0);
 
-        let cache = if is_invariant {
-            &self.cost_invariant_cache
-        } else {
-            &self.cost_cache
+        let max_i = self.grid_nrows - 1;
+        let max_j = self.grid_ncols - 1;
+
+        let i_range = match i {
+            0 if max_i == 0 => 0..1,
+            0 => 0..2,
+            _ if i == max_i => i - 1..i + 1,
+            _ => i - 1..i + 2,
         };
-        let cost_array = cache.array();
-        trace!(
-            "Cost dataset (is_invariant={}) with shape: {:?}",
-            is_invariant,
-            cost_array.shape()
-        );
+        let j_range = match j {
+            0 if max_j == 0 => 0..1,
+            0 => 0..2,
+            _ if j == max_j => j - 1..j + 1,
+            _ => j - 1..j + 2,
+        };
 
-        let cost_values: Vec<f32> = cache
-            .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
-            .unwrap();
+        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            0..u64::from(self.grid_noptions),
+            i_range.clone(),
+            j_range.clone(),
+        ]);
 
-        trace!("Read values {:?}", cost_values);
-
-        let neighbor_costs = i_range
-            .flat_map(|row| iter::repeat(row).zip(j_range.clone()))
-            .zip(cost_values)
-            .collect();
-
-        trace!("Neighbors {:?}", neighbor_costs);
-        neighbor_costs
+        (i_range, j_range, subset)
     }
 }
 
