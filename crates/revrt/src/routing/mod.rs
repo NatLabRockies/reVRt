@@ -227,7 +227,7 @@ fn compute_solution_for_start(
             &start_point,
             end,
             |p| scenario.successors_for_attempt(p, dropped_soft_groups),
-            |p| end.contains(p),
+            |p| end.contains(p), // |p| end.iter().any(|goal| goal.i == p.i && goal.j == p.j),
             grid_shape,
         );
 
@@ -467,7 +467,11 @@ mod tests {
             j: 0,
             option: 0,
         }];
-        let end = [ArrayIndex::new_ij(0, 1)];
+        let end = [ArrayIndex {
+            i: 0,
+            j: 1,
+            option: 1,
+        }];
 
         let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
 
@@ -549,7 +553,11 @@ mod tests {
             j: 0,
             option: 0,
         }];
-        let end = [ArrayIndex::new_ij(0, 1)];
+        let end = [ArrayIndex {
+            i: 0,
+            j: 1,
+            option: 1,
+        }];
 
         let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
 
@@ -558,7 +566,7 @@ mod tests {
     }
 
     #[test]
-    fn compute_route_attempt_result_can_end_on_any_allowed_option() {
+    fn compute_route_attempt_result_requires_matching_end_option() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
             .dimensions(2, 1, 2)
             .chunks(2, 1, 2)
@@ -607,7 +615,11 @@ mod tests {
             j: 0,
             option: 1,
         }];
-        let end = [ArrayIndex::new_ij(0, 1)];
+        let end = [ArrayIndex {
+            i: 0,
+            j: 1,
+            option: 1,
+        }];
 
         let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
 
