@@ -335,6 +335,14 @@ mod tests {
         if band == 0 { 1.0 } else { 4.0 }
     }
 
+    fn first_option_destination_barrier(band: u64, row: u64, col: u64) -> f32 {
+        if band == 0 && row == 0 && col == 1 {
+            1.0
+        } else {
+            0.0
+        }
+    }
+
     #[test]
     fn compute_route_attempt_result_tracks_dropped_barriers_per_start() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
@@ -410,13 +418,17 @@ mod tests {
     }
 
     #[test]
-    fn compute_route_attempt_result_can_switch_options_in_place() {
+    fn compute_route_attempt_result_can_switch_options_while_moving() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 1, 1)
-            .chunks(2, 1, 1)
+            .dimensions(2, 1, 2)
+            .chunks(2, 1, 2)
             .layer(crate::dataset::samples::LayerConfig::custom(
                 "cost",
                 layered_switch_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "hard_barrier",
+                first_option_destination_barrier,
             ))
             .build()
             .unwrap();
@@ -424,10 +436,24 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
                     }
                 },
                 "ignore_invalid_costs": false
@@ -441,11 +467,7 @@ mod tests {
             j: 0,
             option: 0,
         }];
-        let end = [ArrayIndex {
-            i: 0,
-            j: 0,
-            option: 1,
-        }];
+        let end = [ArrayIndex::new_ij(0, 1)];
 
         let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
 
@@ -460,22 +482,26 @@ mod tests {
                 },
                 ArrayIndex {
                     i: 0,
-                    j: 0,
+                    j: 1,
                     option: 1
                 },
             ]
         );
-        assert_eq!(*result[0].total_cost(), 4.0);
+        assert_eq!(*result[0].total_cost(), 2.5);
     }
 
     #[test]
     fn compute_route_attempt_result_applies_transition_costs() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 1, 1)
-            .chunks(2, 1, 1)
+            .dimensions(2, 1, 2)
+            .chunks(2, 1, 2)
             .layer(crate::dataset::samples::LayerConfig::custom(
                 "cost",
                 layered_switch_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "hard_barrier",
+                first_option_destination_barrier,
             ))
             .build()
             .unwrap();
@@ -483,10 +509,24 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
                     }
                 },
                 "transition_costs": {
@@ -509,16 +549,85 @@ mod tests {
             j: 0,
             option: 0,
         }];
-        let end = [ArrayIndex {
-            i: 0,
-            j: 0,
-            option: 1,
-        }];
+        let end = [ArrayIndex::new_ij(0, 1)];
 
         let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
 
         assert_eq!(result.len(), 1);
-        assert_eq!(*result[0].total_cost(), 7.0);
+        assert_eq!(*result[0].total_cost(), 5.5);
+    }
+
+    #[test]
+    fn compute_route_attempt_result_can_end_on_any_allowed_option() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 1, 2)
+            .chunks(2, 1, 2)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                layered_switch_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "hard_barrier",
+                first_option_destination_barrier,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "barrier_layers": [
+                            {
+                                "layer_name": "hard_barrier",
+                                "barrier_operator": "eq",
+                                "barrier_threshold": 1.0
+                            }
+                        ]
+                    }
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+        let algorithm = Algorithm::from_selection(AlgorithmType::Dijkstra, 8 * 1024 * 1024);
+        let start = [ArrayIndex {
+            i: 0,
+            j: 0,
+            option: 1,
+        }];
+        let end = [ArrayIndex::new_ij(0, 1)];
+
+        let result = compute_route_attempt_result(&scenario, &algorithm, &start, &end);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(
+            result[0].route(),
+            &vec![
+                ArrayIndex {
+                    i: 0,
+                    j: 0,
+                    option: 1
+                },
+                ArrayIndex {
+                    i: 0,
+                    j: 1,
+                    option: 1
+                },
+            ]
+        );
+        assert_eq!(*result[0].total_cost(), 4.0);
     }
 
     // fn any_option_start_cost(band: u64, _row: u64, _col: u64) -> f32 {
