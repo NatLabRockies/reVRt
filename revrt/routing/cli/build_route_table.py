@@ -37,6 +37,7 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     region_identifier_column="rid",
     connection_identifier_column="end_feat_id",
     batch_size=500,
+    max_workers=1,
 ):
     """Create a route table mapping points to nearest features
 
@@ -127,6 +128,10 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
         Number of features to process before writing to output feature
         file. This can be used to tune the tradeoff between performance
         and memory requirements. By default, ``500``.
+    max_workers : int, optional
+        Number of parallel workers to use for point-to-feature clipping.
+        If ``None`` or >1, clipping is performed in parallel using Dask.
+        By default, ``1``.
 
     Returns
     -------
@@ -178,6 +183,7 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
             expand_radius=expand_radius,
             clip_points_to_regions=clip_points_to_regions,
             batch_size=batch_size,
+            max_workers=max_workers,
         )
         route_table.drop(columns="geometry").to_csv(
             route_table_out_fp, index=False
