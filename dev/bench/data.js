@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780968239952,
+  "lastUpdate": 1781487734042,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -11171,6 +11171,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 479796538,
             "range": "± 6029983",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8494a70a479a98c60df221bded474d57aa0cf4e2",
+          "message": "Allow diagonal traversal when switching routing options (#292)\n\n* reader now returns invariant cost as well\n\n* use new function\n\n* Add `neighborhood_subset_all_options`\n\n* Reader now gets all options around a neighborhood\n\n* Allow diagonal successors\n\n* Include option value\n\n* Update\n\n* Comment\n\n* PR comment\n\n* Update pytest version",
+          "timestamp": "2026-06-14T19:29:43-06:00",
+          "tree_id": "abe7380ac3d4a5d6591e7fb3de39092a57a2b394",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/8494a70a479a98c60df221bded474d57aa0cf4e2"
+        },
+        "date": 1781487732463,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 106232586,
+            "range": "± 1598647",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 146799259,
+            "range": "± 1901220",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 144560273,
+            "range": "± 3247492",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 214567323,
+            "range": "± 8025034",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 855072668,
+            "range": "± 12872662",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 148358485,
+            "range": "± 3188287",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 150439566,
+            "range": "± 1552955",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 170508477,
+            "range": "± 2269257",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 236640939,
+            "range": "± 2847136",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 485693602,
+            "range": "± 6710653",
             "unit": "ns/iter"
           }
         ]
