@@ -1,20 +1,22 @@
 """reVRt routing module utilities"""
 
-import logging
 import contextlib
+import logging
 from pathlib import Path
 from warnings import warn
+from itertools import batched
 
-import rasterio
+import dask
+import geopandas as gpd
 import numpy as np
 import pandas as pd
-import geopandas as gpd
+import rasterio
 from shapely.geometry import Point
 
-from revrt.warn import revrtWarning
+from revrt.exceptions import revrtValueError, revrtRuntimeError
 from revrt.utilities.base import region_mapper, transform_xy
 from revrt.utilities.handlers import IncrementalWriter
-from revrt.exceptions import revrtValueError, revrtRuntimeError
+from revrt.warn import revrtWarning
 
 
 logger = logging.getLogger(__name__)
@@ -31,6 +33,8 @@ class PointToFeatureMapper:
         regions=None,
         region_identifier_column="rid",
         connection_identifier_column="end_feat_id",
+        batch_size=500,
+        max_workers=1,
     ):
         """
 
@@ -57,6 +61,14 @@ class PointToFeatureMapper:
             Column in output data (both features and points) that will
             be used to link the points to the features that should be
             routed to. By default, ``"end_feat_id"``.
+        batch_size : int, default=500
+            Number of points to process in each batch when writing
+            clipped features to file. By default, ``500``.
+        max_workers : int, optional
+            Number of parallel workers to use for point-to-feature
+            clipping. If ``None`` or >1, clipping is performed in
+            parallel using Dask's threaded scheduler. By default,
+            ``1``.
         """
         self._crs = crs
         self._features_fp = features_fp
@@ -64,6 +76,8 @@ class PointToFeatureMapper:
         self._rid_column = region_identifier_column
         self._conn_id_column = connection_identifier_column
         self._set_regions(regions)
+        self._batch_size = batch_size
+        self._max_workers = max_workers
 
     def _set_regions(self, regions):
         """Set the regions GeoDataFrame"""
@@ -85,7 +99,6 @@ class PointToFeatureMapper:
         radius=None,
         expand_radius=True,
         clip_points_to_regions=False,
-        batch_size=500,
     ):
         """Map points to features within the point region
 
@@ -113,9 +126,6 @@ class PointToFeatureMapper:
             this parameter has no effect. If ``False``, all points are
             used as-is, which means points outside of the regions domain
             are mapped to the closest region. By default, ``False``.
-        batch_size : int, default=500
-            Number of points to process in each batch when writing
-            clipped features to file. By default, ``500``.
 
         Returns
         -------
@@ -138,28 +148,71 @@ class PointToFeatureMapper:
             )
 
         writer = _init_streaming_writer(feature_out_fp)
-        batches = []
-        for ind, (row_ind, point) in enumerate(points.iterrows()):
-            clipped_features = self._clip_to_point(
-                point, radius, expand_radius
-            )
+        for point_batch in self._iter_point_batches(points):
+            self._run_batch(points, point_batch, writer, radius, expand_radius)
+
+        return self._drop_unpaired_points(points)
+
+    def _iter_point_batches(self, points):
+        """Generate batches of points for processing"""
+        jobs = (
+            (ind, row_ind, point)
+            for ind, (row_ind, point) in enumerate(points.iterrows())
+        )
+        yield from batched(jobs, self._batch_size)
+
+    def _run_batch(self, points, point_batch, writer, radius, expand_radius):
+        """Process one point batch and flush complete feature chunks"""
+        results = []
+        for row_ind, conn_id, clipped_features in self._compute_point_batch(
+            point_batch, radius, expand_radius
+        ):
             if clipped_features.empty:
                 continue
 
-            clipped_features[self._conn_id_column] = ind
-            points.loc[row_ind, self._conn_id_column] = ind
-            batches.append(clipped_features)
+            clipped_features[self._conn_id_column] = conn_id
+            points.loc[row_ind, self._conn_id_column] = conn_id
+            results.append(clipped_features)
 
-            if len(batches) >= batch_size:
-                logger.debug("Dumping batch of features to file...")
-                writer.save(pd.concat(batches))
-                batches = []
+        if results:
+            logger.debug(
+                "Dumping batch of %d features to file...", len(results)
+            )
+            writer.save(pd.concat(results))
 
-        if batches:
-            logger.debug("Dumping batch of features to file...")
-            writer.save(pd.concat(batches))
+    def _compute_point_batch(self, point_batch, radius, expand_radius):
+        """Compute clipped features for a batch of points"""
+        if self._max_workers == 1:
+            return [
+                self._clip_point_job(job, radius, expand_radius)
+                for job in point_batch
+            ]
 
-        return self._drop_unpaired_points(points)
+        logger.debug(
+            "Processing %d point(s) with Dask max_workers=%r",
+            len(point_batch),
+            self._max_workers,
+        )
+        tasks = [
+            dask.delayed(self._clip_point_job)(job, radius, expand_radius)
+            for job in point_batch
+        ]
+        num_workers = (
+            None if self._max_workers in {None, 0} else self._max_workers
+        )
+        return list(
+            dask.compute(
+                *tasks,
+                scheduler="threads",
+                num_workers=num_workers,
+            )
+        )
+
+    def _clip_point_job(self, job, radius, expand_radius):
+        """Clip features for one point and return point metadata"""
+        conn_id, row_ind, point = job
+        clipped_features = self._clip_to_point(point, radius, expand_radius)
+        return row_ind, conn_id, clipped_features
 
     def _map_points_to_nearest_region(self, points, clip_points_to_regions):
         """Map points to nearest region; optionally clip to regions"""
