@@ -204,7 +204,7 @@ class PointToFeatureMapper:
         features[self._rid_column] = rid
 
         logger.debug(
-            "%d transmission features found in region with id %s ",
+            "%d transmission feature(s) found in region with id %s ",
             len(features),
             rid,
         )
