@@ -69,7 +69,7 @@ dev = [
 ]
 test = [
   "hypothesis>=6.152.1,<7",
-  "pytest>=9.0.3,<10",
+  "pytest>=8.0,<9",
   "pytest-cases>=3.10.1,<4",
   "pytest-cov>=7.1.0,<8",
   "pytest-mock>=3.15.1,<4",
@@ -301,7 +301,7 @@ maturin = ">=1.13.1,<2"
 
 [tool.pixi.feature.test.dependencies]
 hypothesis = ">=6.152.1,<7"
-pytest = ">=9.0.3,<10"
+pytest = ">=8.0,<9"
 pytest-cases = ">=3.10.1,<4"
 pytest-cov = ">=7.1.0,<8"
 pytest-mock = ">=3.15.1,<4"
