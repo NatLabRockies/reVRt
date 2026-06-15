@@ -14,6 +14,7 @@ use zarrs::storage::{ReadableStorageTraits, ReadableWritableListableStorage};
 
 use super::swap::SourceLayout;
 use super::swap::cumulative_soft_barrier_mask_name;
+use super::{NeighborhoodGeometry, NeighborhoodPoint, RoutingOptionNeighborhood};
 use crate::ArrayIndex;
 use crate::error::{Error, Result};
 
@@ -143,12 +144,15 @@ impl DerivedDataReader {
         })
     }
 
-    /// Read the valid 3x3 neighborhood movement costs around an index.
+    /// Read the clipped 3x3 neighborhood data for every routing option.
     ///
-    /// The returned costs combine the directional cost surface, the
-    /// invariant movement penalty, diagonal scaling, and optional hard
-    /// barrier filtering. If the center cell is itself a hard barrier,
-    /// an empty vector is returned.
+    /// The returned neighborhoods include the directional cost surface,
+    /// invariant movement penalty, and optional hard barrier state for
+    /// each neighboring cell in the clipped 3x3 window. The result always
+    /// contains one `RoutingOptionNeighborhood` per routing option. If a
+    /// center cell is blocked or otherwise invalid for an option, that
+    /// option's neighborhood is still returned with `center_primary_cost`
+    /// set to `None`.
     ///
     /// # Arguments
     /// `index`: Grid index whose neighborhood should be read.
@@ -157,91 +161,109 @@ impl DerivedDataReader {
     ///                      before the cached read occurs.
     ///
     /// # Returns
-    /// A vector of reachable neighboring indices paired with movement costs
-    /// from the center cell to each neighbor.
-    pub(super) fn get_3x3(
+    /// A vector containing one `RoutingOptionNeighborhood` per routing option.
+    pub(super) fn get_3x3_neighborhood_all_options(
         &self,
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
-    ) -> Vec<(ArrayIndex, f32)> {
-        let &ArrayIndex { i, j, option } = index;
+    ) -> Vec<RoutingOptionNeighborhood> {
+        let &ArrayIndex { i: ci, j: cj, .. } = index;
 
         trace!(
-            "Getting 3x3 neighborhood for (i={}, j={}, option={})",
-            i, j, option
+            "Getting 3x3 neighborhood points for all options at (i={}, j={})",
+            ci, cj
         );
 
         trace!("Opening cost dataset via cache");
         let cost_array = self.cost_cache.array();
         trace!("Cost dataset with shape: {:?}", cost_array.shape());
 
-        let (i_range, j_range, subset) = self.neighborhood_subset(index);
+        let (i_range, j_range, subset) = self.neighborhood_subset_all_options(index);
         trace!("Cost subset: {:?}", subset);
         data_materializer.ensure_derived_data_for_subset(&cost_array, &subset);
 
-        let neighbors = self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, false);
-        let invariant_neighbors =
-            self.get_neighbor_costs(i_range.clone(), j_range.clone(), &subset, true);
+        let primary_costs: Vec<f32> = self
+            .cost_cache
+            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+            .unwrap();
+        let invariant_costs: Vec<f32> = self
+            .cost_invariant_cache
+            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+            .unwrap();
         let hard_barrier_values: Vec<bool> = if data_materializer.has_hard_barriers() {
             self.hard_barrier_cache
                 .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
                 .unwrap()
         } else {
-            std::iter::repeat_n(false, neighbors.len()).collect()
+            std::iter::repeat_n(false, primary_costs.len()).collect()
         };
 
-        let center = neighbors
+        let ij_coordinates = i_range
+            .clone()
+            .flat_map(|row| iter::repeat(row).zip(j_range.clone()))
+            .collect::<Vec<(u64, u64)>>();
+        let per_option_len = ij_coordinates.len();
+        let center_index = ij_coordinates
             .iter()
-            .zip(hard_barrier_values.iter())
-            .find(|(((ir, jr), _), _)| *ir == i && *jr == j)
-            .map(|(((ir, jr), v), is_barrier)| {
-                if *is_barrier {
-                    ((ir, jr), &0_f32, true)
-                } else if v.is_nan() {
-                    ((ir, jr), &0_f32, false)
-                } else {
-                    ((ir, jr), v, false)
-                }
-            })
+            .position(|(row, col)| *row == ci && *col == cj)
             .unwrap();
 
-        if center.2 {
-            // center cell is barrier, so no neighbors
-            return Vec::new();
-        }
-
-        let cost_to_neighbors = neighbors
-            .iter()
-            .zip(invariant_neighbors.iter())
-            .zip(hard_barrier_values.iter())
-            .filter(|((((ir, jr), v), _), is_barrier)| {
-                !(**is_barrier || v.is_nan() || (*ir == i && *jr == j))
-            })
-            .map(|((((ir, jr), v), ((inv_ir, inv_jr), inv_cost)), _)| {
-                debug_assert_eq!((ir, jr), (inv_ir, inv_jr));
-                ((ir, jr), 0.5 * (v + center.1), inv_cost)
-            })
-            .map(|((ir, jr), v, inv_cost)| {
-                let scaled = if *ir != i && *jr != j {
-                    v * f32::sqrt(2.0)
+        let cost_to_neighbors = (0..self.grid_noptions as usize)
+            .map(|option_idx| {
+                let offset = option_idx * per_option_len;
+                let primary_slice = &primary_costs[offset..offset + per_option_len];
+                let invariant_slice = &invariant_costs[offset..offset + per_option_len];
+                let hard_barrier_slice = &hard_barrier_values[offset..offset + per_option_len];
+                let center_primary_cost = if hard_barrier_slice[center_index]
+                    || primary_slice[center_index].is_nan()
+                    || primary_slice[center_index] <= 0.0
+                {
+                    None
                 } else {
-                    v
+                    Some(primary_slice[center_index])
                 };
-                (
-                    ArrayIndex {
-                        i: *ir,
-                        j: *jr,
-                        option,
-                    },
-                    scaled + inv_cost,
-                )
+
+                let points = ij_coordinates
+                    .iter()
+                    .zip(primary_slice.iter())
+                    .zip(invariant_slice.iter())
+                    .zip(hard_barrier_slice.iter())
+                    .enumerate()
+                    .filter(|(cell_index, _)| *cell_index != center_index)
+                    .map(
+                        |(_, ((((row, col), primary_cost), invariant_cost), is_barrier))| {
+                            NeighborhoodPoint {
+                                destination: ArrayIndex {
+                                    i: *row,
+                                    j: *col,
+                                    option: option_idx as u32,
+                                },
+                                geometry: if *row != ci && *col != cj {
+                                    NeighborhoodGeometry::Corner
+                                } else {
+                                    NeighborhoodGeometry::Side
+                                },
+                                destination_primary_cost: *primary_cost,
+                                destination_invariant_cost: *invariant_cost,
+                                destination_is_hard_barrier: *is_barrier,
+                            }
+                        },
+                    )
+                    .collect::<Vec<_>>();
+
+                RoutingOptionNeighborhood {
+                    option: option_idx as u32,
+                    center_primary_cost,
+                    points,
+                }
             })
-            .collect::<Vec<_>>();
+            .collect();
 
         trace!(
             "Center point: {:?} Neighbors {:?}",
-            center, cost_to_neighbors
+            index, cost_to_neighbors
         );
+
         cost_to_neighbors
     }
 
@@ -296,11 +318,11 @@ impl DerivedDataReader {
     /// The returned value includes the length-dependent center-cell cost and
     /// the invariant adders for the destination option. Hard barriers and
     /// invalid costs return `None`.
-    pub(super) fn get_cell_cost(
+    pub(super) fn get_cell_cost_components(
         &self,
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
-    ) -> Option<f32> {
+    ) -> Option<(f32, f32)> {
         let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
             u64::from(index.option)..u64::from(index.option) + 1,
             index.i..index.i + 1,
@@ -324,16 +346,17 @@ impl DerivedDataReader {
                 .next()?;
 
         if is_hard_barrier || cost.is_nan() || cost <= 0.0 {
-            None
-        } else {
-            let invariant = self
-                .cost_invariant_cache
-                .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
-                .ok()?
-                .into_iter()
-                .next()?;
-            Some(cost + invariant)
+            return None;
         }
+
+        let invariant = self
+            .cost_invariant_cache
+            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+            .ok()?
+            .into_iter()
+            .next()?;
+
+        Some((cost, invariant))
     }
 
     /// Return the grid shape backing this reader as `(rows, cols, options)`.
@@ -393,55 +416,53 @@ impl DerivedDataReader {
         (i_range, j_range, subset)
     }
 
-    /// Read cost values for every cell in a neighborhood subset.
+    /// Build the row and column ranges for a clipped 3x3 neighborhood.
     ///
-    /// When `is_invariant` is true, values are read from the invariant cost
-    /// array. Otherwise values are read from the primary cost array.
+    /// Unlike `neighborhood_subset`, the returned subset spans every routing
+    /// option on the leading band axis so callers can read all option bands in
+    /// a single cached request.
     ///
     /// # Arguments
-    /// `i_range`: Row indices covered by the neighborhood subset.
-    /// `j_range`: Column indices covered by the neighborhood subset.
-    /// `subset`: Swap-array subset to read from the selected cache.
-    /// `is_invariant`: Whether to read from the invariant cost cache instead
-    ///                 of the primary cost cache.
+    /// `index`: Center grid index for the requested neighborhood.
     ///
     /// # Returns
-    /// A vector pairing each neighborhood cell coordinate with the decoded
-    /// cost value read from the selected cache.
-    pub(super) fn get_neighbor_costs(
+    /// A tuple containing the clipped row range, clipped column range, and
+    /// the corresponding swap-array subset including all option bands.
+    fn neighborhood_subset_all_options(
         &self,
-        i_range: std::ops::Range<u64>,
-        j_range: std::ops::Range<u64>,
-        subset: &zarrs::array_subset::ArraySubset,
-        is_invariant: bool,
-    ) -> Vec<((u64, u64), f32)> {
-        trace!("Opening cost dataset (is_invariant={})", is_invariant);
+        index: &ArrayIndex,
+    ) -> (
+        std::ops::Range<u64>,
+        std::ops::Range<u64>,
+        zarrs::array_subset::ArraySubset,
+    ) {
+        let &ArrayIndex { i, j, .. } = index;
+        debug_assert!(self.grid_nrows > 0);
+        debug_assert!(self.grid_ncols > 0);
 
-        let cache = if is_invariant {
-            &self.cost_invariant_cache
-        } else {
-            &self.cost_cache
+        let max_i = self.grid_nrows - 1;
+        let max_j = self.grid_ncols - 1;
+
+        let i_range = match i {
+            0 if max_i == 0 => 0..1,
+            0 => 0..2,
+            _ if i == max_i => i - 1..i + 1,
+            _ => i - 1..i + 2,
         };
-        let cost_array = cache.array();
-        trace!(
-            "Cost dataset (is_invariant={}) with shape: {:?}",
-            is_invariant,
-            cost_array.shape()
-        );
+        let j_range = match j {
+            0 if max_j == 0 => 0..1,
+            0 => 0..2,
+            _ if j == max_j => j - 1..j + 1,
+            _ => j - 1..j + 2,
+        };
 
-        let cost_values: Vec<f32> = cache
-            .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
-            .unwrap();
+        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            0..u64::from(self.grid_noptions),
+            i_range.clone(),
+            j_range.clone(),
+        ]);
 
-        trace!("Read values {:?}", cost_values);
-
-        let neighbor_costs = i_range
-            .flat_map(|row| iter::repeat(row).zip(j_range.clone()))
-            .zip(cost_values)
-            .collect();
-
-        trace!("Neighbors {:?}", neighbor_costs);
-        neighbor_costs
+        (i_range, j_range, subset)
     }
 }
 
@@ -573,12 +594,14 @@ mod tests {
             vec![true, false, false, false, false, false, false, true, false],
         );
 
-        let neighbors = fixture.reader.get_3x3(
-            &ArrayIndex::new_ij(1, 1),
+        let index = ArrayIndex::new_ij(1, 1);
+        let neighborhoods = fixture.reader.get_3x3_neighborhood_all_options(
+            &index,
             &NoOpMaterializer {
                 has_hard_barriers: true,
             },
         );
+        let neighbors = same_option_neighbors(&neighborhoods, index.option);
 
         let expected = [
             (ArrayIndex::new_ij(0, 0), 3.0 * SQRT_2 + 1.0),
@@ -608,14 +631,20 @@ mod tests {
             vec![false; 9],
         );
 
-        let neighbors = fixture.reader.get_3x3(
-            &ArrayIndex::new_ij(1, 1),
+        let index = ArrayIndex::new_ij(1, 1);
+        let neighborhoods = fixture.reader.get_3x3_neighborhood_all_options(
+            &index,
             &NoOpMaterializer {
                 has_hard_barriers: true,
             },
         );
+        let neighbors = same_option_neighbors(&neighborhoods, index.option);
 
         assert!(neighbors.is_empty());
+        assert_eq!(
+            neighborhoods[index.option as usize].center_primary_cost,
+            None
+        );
     }
 
     #[test]
@@ -629,18 +658,27 @@ mod tests {
         );
         let index = ArrayIndex::new_ij(1, 1);
 
-        let (i_range, j_range, subset) = fixture.reader.neighborhood_subset(&index);
-        let raw_costs = fixture
-            .reader
-            .get_neighbor_costs(i_range, j_range, &subset, false);
-        let neighbors = fixture.reader.get_3x3(
+        let neighborhoods = fixture.reader.get_3x3_neighborhood_all_options(
             &index,
             &NoOpMaterializer {
                 has_hard_barriers: true,
             },
         );
+        let option_neighborhood = &neighborhoods[index.option as usize];
+        let neighbors = same_option_neighbors(&neighborhoods, index.option);
 
-        assert_eq!(raw_costs.len(), 9);
+        let raw_costs = option_neighborhood
+            .points
+            .iter()
+            .map(|point| {
+                (
+                    (point.destination.i, point.destination.j),
+                    point.destination_primary_cost,
+                )
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(option_neighborhood.center_primary_cost, Some(5.0));
         assert_eq!(
             raw_costs,
             vec![
@@ -648,7 +686,6 @@ mod tests {
                 ((0, 1), 2.0),
                 ((0, 2), 3.0),
                 ((1, 0), 4.0),
-                ((1, 1), 5.0),
                 ((1, 2), 6.0),
                 ((2, 0), 7.0),
                 ((2, 1), 8.0),
@@ -717,18 +754,30 @@ mod tests {
             vec![false; 18],
         );
 
-        let neighbors = fixture.reader.get_3x3(
-            &ArrayIndex {
-                i: 1,
-                j: 1,
-                option: 1,
-            },
+        let index = ArrayIndex {
+            i: 1,
+            j: 1,
+            option: 1,
+        };
+        let neighborhoods = fixture.reader.get_3x3_neighborhood_all_options(
+            &index,
             &NoOpMaterializer {
                 has_hard_barriers: false,
             },
         );
+        let neighbors = same_option_neighbors(&neighborhoods, index.option);
 
-        assert!(neighbors.iter().all(|(index, _)| index.option == 1));
+        assert_eq!(neighborhoods.len(), 2);
+        assert_eq!(neighborhoods[index.option as usize].option, 1);
+        assert_eq!(
+            neighborhoods[index.option as usize].center_primary_cost,
+            Some(15.0)
+        );
+        assert!(
+            neighbors
+                .iter()
+                .all(|(neighbor_index, _)| neighbor_index.option == 1)
+        );
         assert!(neighbors.contains(&(
             ArrayIndex {
                 i: 0,
@@ -741,10 +790,51 @@ mod tests {
             ArrayIndex {
                 i: 1,
                 j: 2,
-                option: 1
+                option: 1,
             },
             15.5
         )));
+    }
+
+    #[test]
+    fn get_3x3_neighborhood_all_options_reads_each_option_once_and_keeps_points_for_blocked_centers()
+     {
+        let fixture = reader_fixture_with_shape(
+            2,
+            3,
+            3,
+            vec![
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 11.0, 12.0, 13.0, 14.0, -1.0, 16.0,
+                17.0, 18.0, 19.0,
+            ],
+            vec![0.0; 18],
+            vec![false; 18],
+            vec![false; 18],
+            vec![false; 18],
+        );
+
+        let neighborhoods = fixture.reader.get_3x3_neighborhood_all_options(
+            &ArrayIndex::new_ij(1, 1),
+            &NoOpMaterializer {
+                has_hard_barriers: false,
+            },
+        );
+
+        assert_eq!(neighborhoods.len(), 2);
+        assert_eq!(neighborhoods[0].option, 0);
+        assert_eq!(neighborhoods[1].option, 1);
+        assert_eq!(neighborhoods[0].center_primary_cost, Some(5.0));
+        assert_eq!(neighborhoods[1].center_primary_cost, None);
+        assert_eq!(neighborhoods[1].points.len(), 8);
+        assert!(neighborhoods[1].points.iter().any(|point| {
+            point.destination
+                == ArrayIndex {
+                    i: 1,
+                    j: 2,
+                    option: 1,
+                }
+                && point.destination_primary_cost == 16.0
+        }));
     }
 
     #[test]
@@ -778,7 +868,7 @@ mod tests {
 
         let cost = fixture
             .reader
-            .get_cell_cost(
+            .get_cell_cost_components(
                 &ArrayIndex {
                     i: 1,
                     j: 0,
@@ -790,7 +880,38 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(cost, 31.0);
+        assert_eq!(cost.0 + cost.1, 31.0);
+    }
+
+    #[test]
+    fn get_cell_cost_components_split_primary_and_invariant_costs() {
+        let fixture = reader_fixture_with_shape(
+            2,
+            2,
+            2,
+            vec![1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 30.0, 40.0],
+            vec![0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0],
+            vec![false; 8],
+            vec![false; 8],
+            vec![false; 8],
+        );
+
+        let (primary_cost, invariant_cost) = fixture
+            .reader
+            .get_cell_cost_components(
+                &ArrayIndex {
+                    i: 1,
+                    j: 0,
+                    option: 1,
+                },
+                &NoOpMaterializer {
+                    has_hard_barriers: false,
+                },
+            )
+            .unwrap();
+
+        assert_eq!(primary_cost, 30.0);
+        assert_eq!(invariant_cost, 1.0);
     }
 
     fn reader_for_grid(grid_nrows: u64, grid_ncols: u64) -> DerivedDataReader {
@@ -961,6 +1082,28 @@ mod tests {
             0..chunk_grid_shape[1],
             0..chunk_grid_shape[2],
         ])
+    }
+
+    fn same_option_neighbors(
+        neighborhoods: &[RoutingOptionNeighborhood],
+        option: u32,
+    ) -> Vec<(ArrayIndex, f32)> {
+        let Some(neighborhood) = neighborhoods.iter().find(|item| item.option == option) else {
+            return Vec::new();
+        };
+        let Some(source_primary_cost) = neighborhood.center_primary_cost else {
+            return Vec::new();
+        };
+
+        neighborhood
+            .points
+            .iter()
+            .filter_map(|point| {
+                point
+                    .traversal_cost(source_primary_cost, 1.0, 1.0)
+                    .map(|cost| (point.destination.clone(), cost))
+            })
+            .collect()
     }
 
     struct ReaderFixture {
