@@ -77,6 +77,9 @@ impl From<Error> for PyErr {
             invalid_dataset_shape @ Error::InvalidDatasetShape { .. } => {
                 PyValueError::new_err(invalid_dataset_shape.to_string())
             }
+            invalid_source_band_count @ Error::InvalidSourceBandCount { .. } => {
+                PyValueError::new_err(invalid_source_band_count.to_string())
+            }
             invalid_algorithm @ Error::InvalidAlgorithm { .. } => {
                 PyValueError::new_err(invalid_algorithm.to_string())
             }

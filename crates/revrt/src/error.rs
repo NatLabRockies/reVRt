@@ -48,6 +48,15 @@ pub enum Error {
         shape: Vec<u64>,
     },
 
+    #[error(
+        "Invalid source band count for variable {variable:?}: expected {expected} band but found {found}"
+    )]
+    InvalidSourceBandCount {
+        variable: String,
+        expected: u64,
+        found: u64,
+    },
+
     #[allow(dead_code)]
     #[error("Undefined error")]
     // Used during development while it is not clear a category of error
