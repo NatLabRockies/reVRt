@@ -37,6 +37,61 @@ pub(crate) use lazy_subset::LazySubset;
 use reader::DerivedDataReader;
 use swap::{initialize_swap, inspect_source_layout};
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum NeighborhoodGeometry {
+    Side,
+    Corner,
+}
+
+impl NeighborhoodGeometry {
+    pub(super) fn edge_scale(self) -> f32 {
+        match self {
+            Self::Side => 0.5,
+            Self::Corner => f32::sqrt(2.0) / 2.0,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct NeighborhoodPoint {
+    pub(super) destination: ArrayIndex,
+    pub(super) geometry: NeighborhoodGeometry,
+    pub(super) destination_primary_cost: f32,
+    pub(super) destination_invariant_cost: f32,
+    pub(super) destination_is_hard_barrier: bool,
+}
+
+impl NeighborhoodPoint {
+    pub(super) fn edge_scale(&self) -> f32 {
+        self.geometry.edge_scale()
+    }
+
+    pub(super) fn traversal_cost(
+        &self,
+        source_primary_cost: f32,
+        source_multiplier: f32,
+        destination_multiplier: f32,
+    ) -> Option<f32> {
+        if self.destination_is_hard_barrier || self.destination_primary_cost.is_nan() {
+            return None;
+        }
+
+        Some(
+            self.edge_scale()
+                * (source_primary_cost * source_multiplier
+                    + self.destination_primary_cost * destination_multiplier)
+                + self.destination_invariant_cost * destination_multiplier,
+        )
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(super) struct RoutingOptionNeighborhood {
+    pub(super) option: u32,
+    pub(super) center_primary_cost: Option<f32>,
+    pub(super) points: Vec<NeighborhoodPoint>,
+}
+
 /// Manage source features together with derived swap-backed routing data.
 ///
 /// A `Dataset` owns access to the original feature store, the temporary swap
@@ -162,7 +217,7 @@ impl Dataset {
         })
     }
 
-    /// Return reachable movement costs in the 3x3 neighborhood of an index.
+    /// Return 3x3 routing neighborhoods for all option states at an index.
     ///
     /// Derived data is materialized on demand for the needed swap chunks
     /// before the neighborhood is read.
@@ -171,11 +226,15 @@ impl Dataset {
     /// `index`: Center cell whose 3x3 neighborhood should be queried.
     ///
     /// # Returns
-    /// A vector of neighboring indices paired with movement costs from the
-    /// center cell.
-    pub(super) fn get_3x3(&self, index: &ArrayIndex) -> Vec<(ArrayIndex, f32)> {
+    /// A vector containing one `RoutingOptionNeighborhood` per routing option,
+    /// each with the center primary cost and the reachable neighboring
+    /// cells for that option.
+    pub(super) fn get_3x3_neighborhood_all_options(
+        &self,
+        index: &ArrayIndex,
+    ) -> Vec<RoutingOptionNeighborhood> {
         self.derived_data_reader
-            .get_3x3(index, &self.derived_data_writer)
+            .get_3x3_neighborhood_all_options(index, &self.derived_data_writer)
     }
 
     /// Return soft-barrier cells in the 3x3 neighborhood of an index.
@@ -206,9 +265,9 @@ impl Dataset {
     }
 
     /// Return the center-cell entry cost for a single option state.
-    pub(super) fn get_cell_cost(&self, index: &ArrayIndex) -> Option<f32> {
+    pub(super) fn get_cell_cost_components(&self, index: &ArrayIndex) -> Option<(f32, f32)> {
         self.derived_data_reader
-            .get_cell_cost(index, &self.derived_data_writer)
+            .get_cell_cost_components(index, &self.derived_data_writer)
     }
 
     /// Return a single source-layer cell as `f32` for the requested index.
@@ -323,13 +382,14 @@ mod tests {
         let test_points = [ArrayIndex::new_ij(3, 1), ArrayIndex::new_ij(2, 2)];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
         for point in test_points {
-            let results = dataset.get_3x3(&point);
+            let neighborhoods = dataset.get_3x3_neighborhood_all_options(&point);
 
             // index 0, 0 has a cost of 0 and should therefore be filtered out
             assert!(
-                !results
+                !neighborhoods[point.option as usize]
+                    .points
                     .iter()
-                    .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
+                    .any(|point| point.destination.i == 0 && point.destination.j == 0)
             );
             let ArrayIndex { i: ci, j: cj, .. } = point;
             let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
@@ -340,6 +400,7 @@ mod tests {
             let center_cost: f32 = array
                 .retrieve_array_subset_elements(&center_subset)
                 .expect("Error reading zarr data")[0];
+            let results = same_option_neighbors(&neighborhoods, point.option, Some(center_cost));
 
             for (ArrayIndex { i, j, .. }, val) in results {
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
@@ -419,9 +480,11 @@ mod tests {
         let test_points = [ArrayIndex::new_ij(3, 1), ArrayIndex::new_ij(2, 2)];
         let array = zarrs::array::Array::open(dataset.source.clone(), "/A").unwrap();
         for point in test_points {
-            let results = dataset.get_3x3(&point);
+            let neighborhoods = dataset.get_3x3_neighborhood_all_options(&point);
+            let results = &neighborhoods[point.option as usize].points;
 
-            for (ArrayIndex { i, j, .. }, val) in results {
+            for neighborhood_point in results {
+                let ArrayIndex { i, j, .. } = neighborhood_point.destination;
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
@@ -431,7 +494,10 @@ mod tests {
                     .retrieve_array_subset_elements(&subset)
                     .expect("Error reading zarr data");
                 assert_eq!(subset_elements.len(), 1);
-                assert_eq!(subset_elements[0], val)
+                assert_eq!(
+                    subset_elements[0],
+                    neighborhood_point.destination_invariant_cost
+                )
             }
         }
     }
@@ -448,13 +514,14 @@ mod tests {
         let array_b = zarrs::array::Array::open(dataset.source.clone(), "/B").unwrap();
         let array_c = zarrs::array::Array::open(dataset.source.clone(), "/C").unwrap();
         for point in test_points {
-            let results = dataset.get_3x3(&point);
+            let neighborhoods = dataset.get_3x3_neighborhood_all_options(&point);
 
             // index 0, 0 has a cost of 0 and should therefore be filtered out
             assert!(
-                !results
+                !neighborhoods[point.option as usize]
+                    .points
                     .iter()
-                    .any(|(ArrayIndex { i, j, .. }, _)| *i == 0 && *j == 0)
+                    .any(|point| point.destination.i == 0 && point.destination.j == 0)
             );
             let ArrayIndex { i: ci, j: cj, .. } = point;
             let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
@@ -474,6 +541,7 @@ mod tests {
 
             let center_cost: f32 =
                 center_a + center_b * 100. + center_a * center_b + center_c * center_a * 2.;
+            let results = same_option_neighbors(&neighborhoods, point.option, Some(center_cost));
 
             for (ArrayIndex { i, j, .. }, val) in results {
                 let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
@@ -530,7 +598,13 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex::new_ij(0, 0));
+        let index = ArrayIndex::new_ij(0, 0);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
+        let results = same_option_neighbors(
+            &neighborhoods,
+            index.option,
+            dataset.get_source_cell_value("cost", &index),
+        );
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
@@ -555,7 +629,13 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
+        let index = ArrayIndex::new_ij(si, sj);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
+        let results = same_option_neighbors(
+            &neighborhoods,
+            index.option,
+            dataset.get_source_cell_value("cost", &index),
+        );
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
@@ -594,7 +674,13 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
+        let index = ArrayIndex::new_ij(si, sj);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
+        let results = same_option_neighbors(
+            &neighborhoods,
+            index.option,
+            dataset.get_source_cell_value("cost", &index),
+        );
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
@@ -636,7 +722,13 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex::new_ij(si, sj));
+        let index = ArrayIndex::new_ij(si, sj);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
+        let results = same_option_neighbors(
+            &neighborhoods,
+            index.option,
+            dataset.get_source_cell_value("cost", &index),
+        );
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
@@ -687,7 +779,12 @@ mod tests {
 
         // Request center neighbors
         let point = ArrayIndex::new_ij(1, 1);
-        let results = dataset.get_3x3(&point);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&point);
+        let results = same_option_neighbors(
+            &neighborhoods,
+            point.option,
+            dataset.get_source_cell_value("A", &point),
+        );
 
         // Build expected results: for each neighbor (excluding center),
         // averaged = 0.5 * (A_neighbor + A_center)
@@ -766,7 +863,9 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
+        let index = ArrayIndex::new_ij(1, 1);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
+        let results = same_option_neighbors(&neighborhoods, index.option, None);
         assert!(
             results.is_empty(),
             "Found data with `ignore_invalid_costs=true`"
@@ -788,7 +887,9 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
+        let index = ArrayIndex::new_ij(1, 1);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
+        let results = same_option_neighbors(&neighborhoods, index.option, None);
         assert_eq!(results.len(), 8);
 
         let mut expected: Vec<(ArrayIndex, f32)> = vec![];
@@ -857,7 +958,13 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
+        let index = ArrayIndex::new_ij(1, 1);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
+        let results = same_option_neighbors(
+            &neighborhoods,
+            index.option,
+            dataset.get_source_cell_value("A", &index),
+        );
         assert_eq!(
             results,
             vec![
@@ -904,7 +1011,13 @@ mod tests {
         let dataset =
             Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
 
-        let results = dataset.get_3x3(&ArrayIndex::new_ij(1, 1));
+        let index = ArrayIndex::new_ij(1, 1);
+        let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
+        let results = same_option_neighbors(
+            &neighborhoods,
+            index.option,
+            dataset.get_source_cell_value("A", &index),
+        );
         assert_eq!(results.len(), 8);
     }
 
@@ -952,7 +1065,7 @@ mod tests {
             .expect("Error opening dataset");
 
         let center = ArrayIndex::new_ij(1, 1);
-        dataset.get_3x3(&center);
+        dataset.get_3x3_neighborhood_all_options(&center);
 
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 0),
@@ -1010,12 +1123,38 @@ mod tests {
             .expect("Error opening dataset");
 
         let center = ArrayIndex::new_ij(1, 1);
-        dataset.get_3x3(&center);
+        dataset.get_3x3_neighborhood_all_options(&center);
 
         assert_eq!(
             dataset.get_3x3_soft_barrier_cells(&center, 0),
             vec![ArrayIndex::new_ij(0, 1), ArrayIndex::new_ij(1, 0)]
         );
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 1).is_empty());
+    }
+
+    fn same_option_neighbors(
+        neighborhoods: &[RoutingOptionNeighborhood],
+        option: u32,
+        fallback_center_primary_cost: Option<f32>,
+    ) -> Vec<(ArrayIndex, f32)> {
+        let Some(neighborhood) = neighborhoods.iter().find(|item| item.option == option) else {
+            return Vec::new();
+        };
+        let Some(source_primary_cost) = neighborhood
+            .center_primary_cost
+            .or(fallback_center_primary_cost)
+        else {
+            return Vec::new();
+        };
+
+        neighborhood
+            .points
+            .iter()
+            .filter_map(|point| {
+                point
+                    .traversal_cost(source_primary_cost, 1.0, 1.0)
+                    .map(|cost| (point.destination.clone(), cost))
+            })
+            .collect()
     }
 }

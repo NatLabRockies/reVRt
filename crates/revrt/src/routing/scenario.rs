@@ -19,6 +19,7 @@ use tracing::trace;
 
 use super::cost_as_u64;
 use crate::cost::components::{DriverRuleSet, TransitionCostTable};
+use crate::dataset::NeighborhoodPoint;
 use crate::routing::features::Features;
 use crate::{ArrayIndex, Result};
 
@@ -127,7 +128,6 @@ impl Scenario {
         position: &ArrayIndex,
         dropped_soft_groups: usize,
     ) -> Vec<(ArrayIndex, u64)> {
-        let spatial_neighbors = self.dataset.get_3x3(position);
         let soft_barrier_cells: HashSet<_> = self
             .dataset
             .get_3x3_soft_barrier_cells(position, dropped_soft_groups)
@@ -138,56 +138,108 @@ impl Scenario {
             return Vec::new();
         }
 
-        if self.driver_multiplier(position).is_none() {
+        let option_neighborhoods = self.dataset.get_3x3_neighborhood_all_options(position);
+        let Some(current_option_neighborhood) = option_neighborhoods
+            .iter()
+            .find(|item| item.option == position.option)
+        else {
             return Vec::new();
-        }
+        };
+        let Some(source_primary_cost) = current_option_neighborhood.center_primary_cost else {
+            return Vec::new();
+        };
+        let Some(source_driver_multiplier) = self.driver_multiplier(position) else {
+            return Vec::new();
+        };
 
-        let mut neighbors = spatial_neighbors
-            .into_iter()
-            .filter(|(p, c)| c.is_finite() && *c > 0.0 && !soft_barrier_cells.contains(p))
-            .filter_map(|(p, c)| {
-                self.driver_multiplier(&p)
-                    .map(|multiplier| (p, cost_as_u64(c * multiplier)))
-            })
-            .collect::<Vec<_>>();
+        let mut neighbors = Vec::new();
 
-        let (_, _, noptions) = self.grid_shape();
-        for option in 0..noptions {
+        for option_neighborhood in &option_neighborhoods {
+            let option = option_neighborhood.option;
             if option == position.option {
-                continue;
+                neighbors.extend(self.same_option_successors(
+                    &option_neighborhood.points,
+                    source_primary_cost,
+                    &soft_barrier_cells,
+                ));
+            } else {
+                let destination_soft_barriers: HashSet<_> = self
+                    .dataset
+                    .get_3x3_soft_barrier_cells(
+                        &ArrayIndex {
+                            i: position.i,
+                            j: position.j,
+                            option,
+                        },
+                        dropped_soft_groups,
+                    )
+                    .into_iter()
+                    .collect();
+
+                neighbors.extend(self.switched_option_successors(
+                    position.option,
+                    &option_neighborhood.points,
+                    source_primary_cost,
+                    source_driver_multiplier,
+                    &destination_soft_barriers,
+                ));
             }
-
-            let destination = ArrayIndex {
-                i: position.i,
-                j: position.j,
-                option,
-            };
-            let destination_soft_barriers: HashSet<_> = self
-                .dataset
-                .get_3x3_soft_barrier_cells(&destination, dropped_soft_groups)
-                .into_iter()
-                .collect();
-            if destination_soft_barriers.contains(&destination) {
-                continue;
-            }
-
-            let Some(destination_center_cost) = self.dataset.get_cell_cost(&destination) else {
-                continue; // destination is hard barriered
-            };
-            let Some(driver_multiplier) = self.driver_multiplier(&destination) else {
-                continue; // destination is excluded by the driver
-            };
-
-            let transition_cost = self.transition_cost(position.option, option);
-            neighbors.push((
-                destination,
-                transition_cost
-                    .saturating_add(cost_as_u64(destination_center_cost * driver_multiplier)),
-            ));
         }
 
         trace!("Adjusting neighbors' types: {:?}", neighbors);
         neighbors
+    }
+
+    fn same_option_successors(
+        &self,
+        points: &[NeighborhoodPoint],
+        source_primary_cost: f32,
+        soft_barrier_cells: &HashSet<ArrayIndex>,
+    ) -> Vec<(ArrayIndex, u64)> {
+        points
+            .iter()
+            .filter(|point| !soft_barrier_cells.contains(&point.destination))
+            .filter_map(|point| {
+                let multiplier = self.driver_multiplier(&point.destination)?;
+                point
+                    .traversal_cost(source_primary_cost, multiplier, multiplier)
+                    .filter(|cost| cost.is_finite() && *cost > 0.0)
+                    .map(|cost| (point, cost))
+            })
+            .map(|(point, cost)| (point.destination.clone(), cost_as_u64(cost)))
+            .collect()
+    }
+
+    fn switched_option_successors(
+        &self,
+        from_option: u32,
+        points: &[NeighborhoodPoint],
+        source_primary_cost: f32,
+        source_driver_multiplier: f32,
+        soft_barrier_cells: &HashSet<ArrayIndex>,
+    ) -> Vec<(ArrayIndex, u64)> {
+        points
+            .iter()
+            .filter(|point| !soft_barrier_cells.contains(&point.destination))
+            .filter_map(|point| {
+                let destination_driver_multiplier = self.driver_multiplier(&point.destination)?;
+                point
+                    .traversal_cost(
+                        source_primary_cost,
+                        source_driver_multiplier,
+                        destination_driver_multiplier,
+                    )
+                    .filter(|cost| cost.is_finite() && *cost > 0.0)
+                    .map(|cost| (point, cost))
+            })
+            .map(|(point, traversal_cost)| {
+                (
+                    point.destination.clone(),
+                    self.transition_cost(from_option, point.destination.option)
+                        .saturating_add(cost_as_u64(traversal_cost)),
+                )
+            })
+            .collect()
     }
 
     /// Count the configured soft barrier groups.
@@ -259,7 +311,7 @@ impl Scenario {
             }
 
             self.dataset
-                .get_cell_cost(&candidate) // checks for hard barriers
+                .get_cell_cost_components(&candidate) // checks for hard barriers
                 .filter(|_| self.driver_multiplier(&candidate).is_some()) // drops `None` values from `get_cell_cost`
                 .map(|_| candidate) // drops `None` values from `driver_multiplier`
         })
@@ -311,8 +363,8 @@ mod tests {
         if band == 0 { 1.0 } else { 5.0 }
     }
 
-    fn second_option_center_barrier(band: u64, row: u64, col: u64) -> f32 {
-        if band == 1 && row == 1 && col == 1 {
+    fn second_option_right_barrier(band: u64, row: u64, col: u64) -> f32 {
+        if band == 1 && row == 1 && col == 2 {
             1.0
         } else {
             0.0
@@ -329,6 +381,14 @@ mod tests {
 
     fn underground_option_cost(band: u64, _row: u64, _col: u64) -> f32 {
         if band == 1 { 5.0 } else { 8.0 }
+    }
+
+    fn constant_positive_cost(_band: u64, _row: u64, _col: u64) -> f32 {
+        1.0
+    }
+
+    fn constant_zone(_band: u64, _row: u64, _col: u64) -> f32 {
+        1.0
     }
 
     #[test]
@@ -444,7 +504,7 @@ mod tests {
     }
 
     #[test]
-    fn successors_include_same_pixel_option_transitions() {
+    fn successors_include_directional_option_transitions() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
             .dimensions(2, 3, 3)
             .chunks(2, 3, 3)
@@ -483,15 +543,70 @@ mod tests {
             *index
                 == ArrayIndex {
                     i: 1,
-                    j: 1,
+                    j: 2,
                     option: 1,
                 }
-                && *cost == 50_000
+                && *cost == 30_000
+        }));
+        assert!(!successors.iter().any(|(index, _)| *index
+            == ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 1,
+            }));
+    }
+
+    #[test]
+    fn successors_use_corner_geometry_for_directional_option_transitions() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                option_cost,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let successors = scenario.successors_for_attempt(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            0,
+        );
+
+        let expected_cost = (((1.0 + 5.0) * f32::sqrt(2.0)) / 2.0 * 10_000.0) as u64;
+
+        assert!(successors.iter().any(|(index, cost)| {
+            *index
+                == ArrayIndex {
+                    i: 2,
+                    j: 2,
+                    option: 1,
+                }
+                && *cost == expected_cost
         }));
     }
 
     #[test]
-    fn successors_skip_same_pixel_transitions_into_blocked_options() {
+    fn successors_skip_directional_option_transitions_into_blocked_options() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
             .dimensions(2, 3, 3)
             .chunks(2, 3, 3)
@@ -501,7 +616,7 @@ mod tests {
             ))
             .layer(crate::dataset::samples::LayerConfig::custom(
                 "hard_barrier",
-                second_option_center_barrier,
+                second_option_right_barrier,
             ))
             .build()
             .unwrap();
@@ -547,7 +662,7 @@ mod tests {
         assert!(!successors.iter().any(|(index, _)| *index
             == ArrayIndex {
                 i: 1,
-                j: 1,
+                j: 2,
                 option: 1
             }));
     }
@@ -603,10 +718,10 @@ mod tests {
             *index
                 == ArrayIndex {
                     i: 1,
-                    j: 1,
+                    j: 2,
                     option: 1,
                 }
-                && *cost == 80_000
+                && *cost == 60_000
         }));
     }
 
@@ -664,10 +779,10 @@ mod tests {
             *index
                 == ArrayIndex {
                     i: 1,
-                    j: 1,
+                    j: 2,
                     option: 1,
                 }
-                && *cost == 80_000
+                && *cost == 60_000
         }));
     }
 
@@ -806,6 +921,130 @@ mod tests {
                 }
                 && *cost == 100_000
         }));
+    }
+
+    #[test]
+    fn successors_apply_driver_multipliers_to_switched_moves() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                option_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "zone",
+                |_band, row, col| option_zone(row, col),
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "drivers": {
+                    "default": {
+                        "overhead": 1,
+                        "underground": 1
+                    },
+                    "zones": [
+                        {
+                            "layer_name": "zone",
+                            "mask_operator": "eq",
+                            "mask_threshold": 1,
+                            "overhead": 10,
+                            "underground": 1
+                        }
+                    ]
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let successors = scenario.successors_for_attempt(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            0,
+        );
+
+        assert!(successors.iter().any(|(index, cost)| {
+            *index
+                == ArrayIndex {
+                    i: 1,
+                    j: 2,
+                    option: 1,
+                }
+                && *cost == 75_000
+        }));
+    }
+
+    #[test]
+    fn successors_skip_switched_moves_with_nonpositive_traversal_costs() {
+        let store = crate::dataset::samples::ZarrTestBuilder::new()
+            .dimensions(2, 3, 3)
+            .chunks(2, 3, 3)
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "cost",
+                constant_positive_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "zone",
+                constant_zone,
+            ))
+            .build()
+            .unwrap();
+        let cost_function = crate::cost::CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "cost"}]
+                    }
+                },
+                "drivers": {
+                    "default": {
+                        "overhead": 1,
+                        "underground": 1
+                    },
+                    "zones": [
+                        {
+                            "layer_name": "zone",
+                            "mask_operator": "eq",
+                            "mask_threshold": 1,
+                            "overhead": 0,
+                            "underground": 0
+                        }
+                    ]
+                },
+                "ignore_invalid_costs": false
+            }"#,
+        )
+        .unwrap();
+        let scenario = Scenario::new(store.path(), cost_function, 1_000).unwrap();
+
+        let successors = scenario.successors_for_attempt(
+            &ArrayIndex {
+                i: 1,
+                j: 1,
+                option: 0,
+            },
+            0,
+        );
+
+        assert!(successors.is_empty());
     }
 
     #[test]
