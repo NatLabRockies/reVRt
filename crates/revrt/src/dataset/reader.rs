@@ -959,8 +959,8 @@ mod tests {
         soft_retry_one_values: Vec<bool>,
     ) -> ReaderFixture {
         let source_tmp = ZarrTestBuilder::new()
-            .dimensions(grid_noptions, grid_nrows, grid_ncols)
-            .chunks(grid_noptions, grid_nrows, grid_ncols)
+            .dimensions(1, grid_nrows, grid_ncols)
+            .chunks(1, grid_nrows, grid_ncols)
             .layer(LayerConfig::ones("source"))
             .build()
             .expect("failed to create source test dataset");

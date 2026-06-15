@@ -584,20 +584,10 @@ mod test {
     #[test]
     fn routing_options_object_builds_ordered_names_and_band_specific_costs() {
         let tmp = samples::ZarrTestBuilder::new()
-            .dimensions(2, 2, 2)
-            .chunks(2, 2, 2)
-            .layer(samples::LayerConfig::custom(
-                "overhead_cost",
-                |band, _, _| {
-                    if band == 0 { 1.0 } else { 9.0 }
-                },
-            ))
-            .layer(samples::LayerConfig::custom(
-                "underground_cost",
-                |band, _, _| {
-                    if band == 1 { 2.0 } else { 8.0 }
-                },
-            ))
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("overhead_cost", 1.0))
+            .layer(samples::LayerConfig::constant("underground_cost", 2.0))
             .build()
             .expect("Failed to create routing option zarr");
         let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
@@ -633,11 +623,9 @@ mod test {
     #[test]
     fn routing_options_object_reuses_same_source_layer_across_options() {
         let tmp = samples::ZarrTestBuilder::new()
-            .dimensions(2, 2, 2)
-            .chunks(2, 2, 2)
-            .layer(samples::LayerConfig::custom("shared_cost", |band, _, _| {
-                if band == 0 { 3.0 } else { 4.0 }
-            }))
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("shared_cost", 3.0))
             .build()
             .expect("Failed to create shared routing option zarr");
         let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
@@ -666,7 +654,7 @@ mod test {
         );
         assert_eq!(
             result.index_axis(Axis(0), 1).to_owned(),
-            ArrayD::from_elem(IxDyn(&[2, 2]), 8.0)
+            ArrayD::from_elem(IxDyn(&[2, 2]), 6.0)
         );
     }
 

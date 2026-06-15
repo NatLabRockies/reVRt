@@ -762,24 +762,25 @@ mod tests {
     #[test]
     fn ensure_derived_data_for_subset_materializes_each_band_chunk_once() {
         let source_tmp = ZarrTestBuilder::new()
-            .dimensions(2, 2, 2)
+            .dimensions(1, 2, 2)
             .chunks(1, 2, 2)
-            .layer(LayerConfig::custom("A", |band, _, _| (band + 1) as f32))
+            .layer(LayerConfig::constant("overhead_cost", 1.0))
+            .layer(LayerConfig::constant("underground_cost", 2.0))
             .build()
-            .expect("failed to create multi-band source dataset");
+            .expect("failed to create single-band source dataset");
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(source_tmp.path()).expect("could not open test store"));
         let readable_source: Arc<dyn zarrs::storage::ReadableStorageTraits> = Arc::new(
             FilesystemStore::new(source_tmp.path()).expect("could not reopen readable test store"),
         );
         let cost_function = CostFunction::from_json(
-            r#"{"routing_options":{"overhead":{"cost_layers":[{"layer_name":"A"}]},"underground":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+            r#"{"routing_options":{"overhead":{"cost_layers":[{"layer_name":"overhead_cost"}]},"underground":{"cost_layers":[{"layer_name":"underground_cost"}]}}}"#,
         )
         .expect("failed to construct cost function");
         let layout = inspect_source_layout(&source, cost_function.routing_options.len() as u32)
             .expect("source layout inspection failed");
-        let array =
-            zarrs::array::Array::open(readable_source, "/A").expect("failed to open source array");
+        let array = zarrs::array::Array::open(readable_source, "/overhead_cost")
+            .expect("failed to open source array");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
         let swap = initialize_swap(swap_tmp.path(), &layout, 0)
             .expect("failed to initialize swap dataset");

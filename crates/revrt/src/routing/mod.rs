@@ -331,12 +331,16 @@ mod tests {
     use super::{Algorithm, AlgorithmType, Scenario, compute_route_attempt_result};
     use crate::ArrayIndex;
 
-    fn layered_switch_cost(band: u64, _row: u64, _col: u64) -> f32 {
-        if band == 0 { 1.0 } else { 4.0 }
+    fn overhead_switch_cost(_band: u64, _row: u64, _col: u64) -> f32 {
+        1.0
     }
 
-    fn first_option_destination_barrier(band: u64, row: u64, col: u64) -> f32 {
-        if band == 0 && row == 0 && col == 1 {
+    fn underground_switch_cost(_band: u64, _row: u64, _col: u64) -> f32 {
+        4.0
+    }
+
+    fn overhead_destination_barrier(_band: u64, row: u64, col: u64) -> f32 {
+        if row == 0 && col == 1 {
             1.0
         } else {
             0.0
@@ -420,15 +424,19 @@ mod tests {
     #[test]
     fn compute_route_attempt_result_can_switch_options_while_moving() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 1, 2)
-            .chunks(2, 1, 2)
+            .dimensions(1, 1, 2)
+            .chunks(1, 1, 2)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                layered_switch_cost,
+                "overhead_cost",
+                overhead_switch_cost,
             ))
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "hard_barrier",
-                first_option_destination_barrier,
+                "underground_cost",
+                underground_switch_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "overhead_hard_barrier",
+                overhead_destination_barrier,
             ))
             .build()
             .unwrap();
@@ -436,24 +444,17 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}],
+                        "cost_layers": [{"layer_name": "overhead_cost"}],
                         "barrier_layers": [
                             {
-                                "layer_name": "hard_barrier",
+                                "layer_name": "overhead_hard_barrier",
                                 "barrier_operator": "eq",
                                 "barrier_threshold": 1.0
                             }
                         ]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}],
-                        "barrier_layers": [
-                            {
-                                "layer_name": "hard_barrier",
-                                "barrier_operator": "eq",
-                                "barrier_threshold": 1.0
-                            }
-                        ]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
                 "ignore_invalid_costs": false
@@ -497,15 +498,19 @@ mod tests {
     #[test]
     fn compute_route_attempt_result_applies_transition_costs() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 1, 2)
-            .chunks(2, 1, 2)
+            .dimensions(1, 1, 2)
+            .chunks(1, 1, 2)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                layered_switch_cost,
+                "overhead_cost",
+                overhead_switch_cost,
             ))
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "hard_barrier",
-                first_option_destination_barrier,
+                "underground_cost",
+                underground_switch_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "overhead_hard_barrier",
+                overhead_destination_barrier,
             ))
             .build()
             .unwrap();
@@ -513,24 +518,17 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}],
+                        "cost_layers": [{"layer_name": "overhead_cost"}],
                         "barrier_layers": [
                             {
-                                "layer_name": "hard_barrier",
+                                "layer_name": "overhead_hard_barrier",
                                 "barrier_operator": "eq",
                                 "barrier_threshold": 1.0
                             }
                         ]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}],
-                        "barrier_layers": [
-                            {
-                                "layer_name": "hard_barrier",
-                                "barrier_operator": "eq",
-                                "barrier_threshold": 1.0
-                            }
-                        ]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
                 "transition_costs": {
@@ -568,15 +566,19 @@ mod tests {
     #[test]
     fn compute_route_attempt_result_requires_matching_end_option() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 1, 2)
-            .chunks(2, 1, 2)
+            .dimensions(1, 1, 2)
+            .chunks(1, 1, 2)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                layered_switch_cost,
+                "overhead_cost",
+                overhead_switch_cost,
             ))
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "hard_barrier",
-                first_option_destination_barrier,
+                "underground_cost",
+                underground_switch_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "overhead_hard_barrier",
+                overhead_destination_barrier,
             ))
             .build()
             .unwrap();
@@ -584,24 +586,17 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}],
+                        "cost_layers": [{"layer_name": "overhead_cost"}],
                         "barrier_layers": [
                             {
-                                "layer_name": "hard_barrier",
+                                "layer_name": "overhead_hard_barrier",
                                 "barrier_operator": "eq",
                                 "barrier_threshold": 1.0
                             }
                         ]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}],
-                        "barrier_layers": [
-                            {
-                                "layer_name": "hard_barrier",
-                                "barrier_operator": "eq",
-                                "barrier_threshold": 1.0
-                            }
-                        ]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
                 "ignore_invalid_costs": false
