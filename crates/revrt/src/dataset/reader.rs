@@ -144,12 +144,15 @@ impl DerivedDataReader {
         })
     }
 
-    /// Read the valid 3x3 neighborhood movement costs around an index.
+    /// Read the clipped 3x3 neighborhood data for every routing option.
     ///
-    /// The returned costs combine the directional cost surface, the
-    /// invariant movement penalty, diagonal scaling, and optional hard
-    /// barrier filtering. If the center cell is itself a hard barrier,
-    /// an empty vector is returned.
+    /// The returned neighborhoods include the directional cost surface,
+    /// invariant movement penalty, and optional hard barrier state for
+    /// each neighboring cell in the clipped 3x3 window. The result always
+    /// contains one `RoutingOptionNeighborhood` per routing option. If a
+    /// center cell is blocked or otherwise invalid for an option, that
+    /// option's neighborhood is still returned with `center_primary_cost`
+    /// set to `None`.
     ///
     /// # Arguments
     /// `index`: Grid index whose neighborhood should be read.
