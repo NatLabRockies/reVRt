@@ -96,6 +96,7 @@ class PointToFeatureMapper:
         self,
         points,
         feature_out_fp,
+        route_table_out_fp=None,
         radius=None,
         expand_radius=True,
         clip_points_to_regions=False,
@@ -112,6 +113,11 @@ class PointToFeatureMapper:
             be added automatically. This file will contain all features
             clipped to each point (with a feature ID column added to
             link back to the points).
+        route_table_out_fp : path-like, optional
+            Optional file path to incrementally persist mapped point
+            assignments. If the route table and feature outputs already
+            exist, the mapper resumes from the previously completed
+            points. By default, ``None``.
         radius : float or str, optional
             Radius (in CRS units) around each point to clip features to.
             If `str`, the column in `points` to use for radius values.
@@ -139,7 +145,7 @@ class PointToFeatureMapper:
             )
             raise revrtValueError(msg)
 
-        points = points.to_crs(self._crs)
+        points = points.to_crs(self._crs).copy(deep=True)
         points[self._conn_id_column] = np.nan
 
         if self._regions is not None:
@@ -147,23 +153,64 @@ class PointToFeatureMapper:
                 points, clip_points_to_regions
             )
 
+        points, next_conn_id = _resume_points(
+            points,
+            feature_out_fp,
+            route_table_out_fp,
+            self._conn_id_column,
+            self._rid_column,
+        )
+
         writer = _init_streaming_writer(feature_out_fp)
-        for point_batch in self._iter_point_batches(points):
-            self._run_batch(points, point_batch, writer, radius, expand_radius)
+        route_writer = None
+        if route_table_out_fp is not None:
+            route_writer = IncrementalWriter(route_table_out_fp)
 
-        return self._drop_unpaired_points(points)
+        pending_points = points[points[self._conn_id_column].isna()]
+        if pending_points.empty:
+            logger.info("All points already mapped; nothing to resume")
 
-    def _iter_point_batches(self, points):
+        for point_batch in self._iter_point_batches(
+            pending_points, start_conn_id=next_conn_id
+        ):
+            self._run_batch(
+                points,
+                point_batch,
+                writer,
+                radius,
+                expand_radius,
+                route_writer=route_writer,
+            )
+
+        route_table = self._drop_unpaired_points(points)
+        if route_table_out_fp is not None:
+            route_table.drop(columns="geometry").to_csv(
+                route_table_out_fp, index=False
+            )
+        return route_table
+
+    def _iter_point_batches(self, points, start_conn_id=0):
         """Generate batches of points for processing"""
         jobs = (
             (ind, row_ind, point)
-            for ind, (row_ind, point) in enumerate(points.iterrows())
+            for ind, (row_ind, point) in enumerate(
+                points.iterrows(), start=start_conn_id
+            )
         )
         yield from batched(jobs, self._batch_size)
 
-    def _run_batch(self, points, point_batch, writer, radius, expand_radius):
+    def _run_batch(
+        self,
+        points,
+        point_batch,
+        writer,
+        radius,
+        expand_radius,
+        route_writer=None,
+    ):
         """Process one point batch and flush complete feature chunks"""
         results = []
+        routed_point_indices = []
         for row_ind, conn_id, clipped_features in self._compute_point_batch(
             point_batch, radius, expand_radius
         ):
@@ -173,12 +220,21 @@ class PointToFeatureMapper:
             clipped_features[self._conn_id_column] = conn_id
             points.loc[row_ind, self._conn_id_column] = conn_id
             results.append(clipped_features)
+            routed_point_indices.append(row_ind)
 
-        if results:
-            logger.debug(
-                "Dumping batch of %d features to file...", len(results)
-            )
-            writer.save(pd.concat(results))
+        if not results:
+            return
+
+        logger.debug("Dumping batch of %d features to file...", len(results))
+        writer.save(pd.concat(results))
+
+        if route_writer is None:
+            return
+
+        route_table_batch = points.loc[routed_point_indices].drop(
+            columns="geometry"
+        )
+        route_writer.save(route_table_batch)
 
     def _compute_point_batch(self, point_batch, radius, expand_radius):
         """Compute clipped features for a batch of points"""
@@ -608,3 +664,94 @@ def _drop_empty_categories(features):
         features = features[~mask].reset_index(drop=True)
 
     return features
+
+
+def _resume_points(
+    points, feature_out_fp, route_table_out_fp, conn_id_column, rid_column
+):
+    """Recover previously completed mappings from prior outputs"""
+    if feature_out_fp is None or route_table_out_fp is None:
+        return points, 0
+
+    feature_out_fp = Path(feature_out_fp)
+    route_table_out_fp = Path(route_table_out_fp)
+    feature_output_missing = not feature_out_fp.exists()
+    route_table_missing = not route_table_out_fp.exists()
+
+    if feature_output_missing or route_table_missing:
+        feature_out_fp.unlink(missing_ok=True)
+        route_table_out_fp.unlink(missing_ok=True)
+        logger.info(
+            "Feature output missing: %r; route table missing: %r. "
+            "Restarting point mapping...",
+            feature_output_missing,
+            route_table_missing,
+        )
+        return points, 0
+
+    route_table = _read_route_table(route_table_out_fp)
+    if route_table.empty:
+        feature_out_fp.unlink(missing_ok=True)
+        route_table_out_fp.unlink(missing_ok=True)
+        logger.info("Existing route table is empty; restarting point mapping")
+        return points, 0
+
+    key_columns = _resume_key_columns(points, route_table, rid_column)
+    existing_route_table = route_table[[*key_columns, conn_id_column]]
+    existing_route_table = existing_route_table.drop_duplicates(
+        subset=key_columns, keep="last"
+    )
+    conn_ids = pd.to_numeric(
+        existing_route_table[conn_id_column], errors="coerce"
+    )
+    if conn_ids.isna().any():
+        msg = (
+            "Cannot resume point-to-feature mapping because the "
+            f"existing route table contains invalid "
+            f"'{conn_id_column}' values"
+        )
+        raise revrtValueError(msg)
+
+    existing_lookup = existing_route_table.set_index(key_columns)[
+        conn_id_column
+    ]
+    point_keys = pd.MultiIndex.from_frame(points[key_columns])
+    points[conn_id_column] = existing_lookup.reindex(point_keys).to_numpy()
+
+    completed = int(points[conn_id_column].notna().sum())
+    logger.info(
+        "Resuming point-to-feature mapping from %d completed point(s)",
+        completed,
+    )
+    next_conn_id = int(conn_ids.max()) + 1
+    return points, next_conn_id
+
+
+def _resume_key_columns(points, route_table, rid_column):
+    """Determine columns used to match existing route rows"""
+    key_columns = ["start_row", "start_col"]
+    missing_columns = [
+        col
+        for col in key_columns
+        if col not in points.columns or col not in route_table.columns
+    ]
+    if missing_columns:
+        msg = (
+            "Cannot resume point-to-feature mapping because the "
+            "existing route table is missing required columns: "
+            f"{missing_columns}"
+        )
+        raise revrtValueError(msg)
+
+    if rid_column in points.columns and rid_column in route_table.columns:
+        key_columns.append(rid_column)
+
+    return key_columns
+
+
+def _read_route_table(route_table_out_fp):
+    """Load a route table from disk, tolerating empty files"""
+    try:
+        return pd.read_csv(route_table_out_fp)
+    except pd.errors.EmptyDataError:
+        return pd.DataFrame()

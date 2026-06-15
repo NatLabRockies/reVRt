@@ -352,6 +352,106 @@ def test_point_to_feature_route_table_builds_outputs(
     assert any(".csv" in msg for msg in warning_messages)
 
 
+def test_point_to_feature_route_table_resumes_existing_outputs(
+    tmp_path, revx_transmission_layers
+):
+    """Existing outputs are reused so interrupted runs can resume"""
+
+    cost_fp = tmp_path / "resume_cost_surface.zarr"
+    with xr.open_dataset(
+        revx_transmission_layers, consolidated=False, engine="zarr"
+    ) as ds:
+        subset = ds.isel(y=slice(0, 8), x=slice(0, 8))
+        subset.to_zarr(cost_fp, mode="w", zarr_format=3, consolidated=False)
+        crs = subset.rio.crs
+        transform = subset.rio.transform()
+        shape = (subset.rio.height, subset.rio.width)
+
+    cell_size = max(abs(transform.a), abs(transform.e))
+    route_points = make_rev_sc_points(
+        shape[0], shape[1], crs, transform, resolution=4
+    ).head(2)
+    points_fp = tmp_path / "resume_points.csv"
+    route_points.drop(columns="geometry").to_csv(points_fp, index=False)
+
+    geometries = [
+        LineString(
+            [
+                (point.geometry.x - cell_size, point.geometry.y),
+                (point.geometry.x + cell_size, point.geometry.y),
+            ]
+        )
+        for point in route_points.itertuples()
+    ]
+
+    features = gpd.GeoDataFrame(
+        {"gid": [1, 2], "category": ["test", "test"]},
+        geometry=geometries,
+        crs=crs,
+    )
+    features_fp = tmp_path / "resume_features_source.gpkg"
+    features.to_file(features_fp, driver="GPKG")
+
+    min_x, min_y, max_x, max_y = features.total_bounds
+    padding = 4 * cell_size
+    region_geom = Polygon(
+        [
+            (min_x - padding, min_y - padding),
+            (min_x - padding, max_y + padding),
+            (max_x + padding, max_y + padding),
+            (max_x + padding, min_y - padding),
+        ]
+    )
+    regions = gpd.GeoDataFrame({"rid": [8]}, geometry=[region_geom], crs=crs)
+    regions_fp = tmp_path / "resume_regions.gpkg"
+    regions.to_file(regions_fp, driver="GPKG")
+
+    out_dir = tmp_path / "resume_outputs"
+    out_dir.mkdir()
+    feature_out_fp = out_dir / "mapped_features.gpkg"
+    route_table_out_fp = out_dir / "route_table.csv"
+
+    partial_mapper = PointToFeatureMapper(
+        crs,
+        features_fp,
+        regions,
+        region_identifier_column="rid",
+        batch_size=1,
+    )
+    partial_mapper.map_points(
+        route_points.iloc[[0]].copy(deep=True),
+        feature_out_fp,
+        route_table_out_fp=route_table_out_fp,
+        radius=3 * cell_size,
+        expand_radius=False,
+    )
+
+    outputs = point_to_feature_route_table(
+        cost_fpath=cost_fp,
+        features_fpath=features_fp,
+        out_dir=out_dir,
+        regions_fpath=regions_fp,
+        points_fpath=points_fp,
+        radius=3 * cell_size,
+        feature_out_fp=feature_out_fp.name,
+        route_table_out_fp=route_table_out_fp.name,
+        expand_radius=False,
+        batch_size=1,
+    )
+
+    assert set(outputs) == {str(route_table_out_fp), str(feature_out_fp)}
+
+    route_table = pd.read_csv(route_table_out_fp)
+    assert len(route_table) == 2
+    assert route_table["end_feat_id"].tolist() == [0, 1]
+    assert (
+        route_table[["start_row", "start_col"]].drop_duplicates().shape[0] == 2
+    )
+
+    mapped_features = gpd.read_file(feature_out_fp)
+    assert set(mapped_features["end_feat_id"].unique()) == {0, 1}
+
+
 def test_point_to_feature_route_table_radius_only(
     tmp_path, revx_transmission_layers
 ):

@@ -52,6 +52,13 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     to. The mapped features are also output as a separate file that
     contains the same feature IDs for linking to the route table.
 
+    This command can be re-started from a partially completed state by
+    providing the same output file paths. The command will check for
+    existing outputs and skip any points that have already been mapped
+    to features. If the output files are not provided or do not exist,
+    the command will start from the beginning and create new output
+    files.
+
     Parameters
     ----------
     cost_fpath : path-like
@@ -178,15 +185,13 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
             batch_size=batch_size,
             max_workers=max_workers,
         )
-        route_table = mapper.map_points(
+        mapper.map_points(
             points,
             feature_out_fp,
+            route_table_out_fp=route_table_out_fp,
             radius=radius,
             expand_radius=expand_radius,
             clip_points_to_regions=clip_points_to_regions,
-        )
-        route_table.drop(columns="geometry").to_csv(
-            route_table_out_fp, index=False
         )
 
     return [str(route_table_out_fp), str(feature_out_fp)]
