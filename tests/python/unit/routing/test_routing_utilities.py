@@ -4,10 +4,11 @@ import math
 from pathlib import Path
 import warnings
 
-import pytest
+import dask
+import geopandas as gpd
 import numpy as np
 import pandas as pd
-import geopandas as gpd
+import pytest
 from rasterio.transform import from_origin, xy
 from shapely.geometry import LineString, Point, Polygon
 
@@ -385,7 +386,9 @@ def test_point_to_feature_mapper_maps_points_and_writes_features(
     features_fp, _ = transmission_features
     regions_fp = tmp_path / "regions.gpkg"
     transmission_regions.to_file(regions_fp, driver="GPKG")
-    mapper = PointToFeatureMapper("EPSG:4326", features_fp, regions=regions_fp)
+    mapper = PointToFeatureMapper(
+        "EPSG:4326", features_fp, regions=regions_fp, batch_size=5
+    )
     feature_out = tmp_path / "clipped_features"
 
     with pytest.warns(
@@ -396,7 +399,6 @@ def test_point_to_feature_mapper_maps_points_and_writes_features(
             candidate_points.copy(deep=True),
             feature_out,
             radius="search_radius",
-            batch_size=5,
         )
 
     clipped_fp = feature_out.with_suffix(".gpkg")
@@ -428,7 +430,7 @@ def test_point_to_feature_mapper_radius_only(transmission_features, tmp_path):
     """Mapper clips by radius when no regions supplied"""
 
     features_fp, _ = transmission_features
-    mapper = PointToFeatureMapper("EPSG:4326", features_fp)
+    mapper = PointToFeatureMapper("EPSG:4326", features_fp, batch_size=1)
     points = gpd.GeoDataFrame(
         {"geometry": [Point(0.1, 0.1)]},
         crs="EPSG:4326",
@@ -438,11 +440,59 @@ def test_point_to_feature_mapper_radius_only(transmission_features, tmp_path):
         points.copy(deep=True),
         tmp_path / "radius_only.gpkg",
         radius=0.25,
-        batch_size=1,
         expand_radius=False,
     )
 
     assert mapped["end_feat_id"].tolist() == [0]
+
+
+def test_point_to_feature_mapper_parallel_batch(
+    transmission_features, tmp_path, monkeypatch
+):
+    """Mapper can compute point batches via Dask and preserve IDs"""
+
+    features_fp, _ = transmission_features
+    mapper = PointToFeatureMapper(
+        "EPSG:4326", features_fp, batch_size=2, max_workers=2
+    )
+    points = gpd.GeoDataFrame(
+        {"geometry": [Point(0.1, 0.1), Point(10.1, 10.1)]},
+        crs="EPSG:4326",
+    )
+    fake_features = gpd.GeoDataFrame(
+        {"trans_gid": [1]},
+        geometry=[LineString([(0.0, 0.0), (0.0, 0.5)])],
+        crs="EPSG:4326",
+    )
+
+    def _fake_clip_to_point(self, point, radius, expand_radius):
+        return fake_features.copy()
+
+    compute_calls = []
+    original_compute = dask.compute
+
+    def _tracking_compute(*args, **kwargs):
+        compute_calls.append(kwargs)
+        return original_compute(*args, **kwargs)
+
+    monkeypatch.setattr(
+        PointToFeatureMapper, "_clip_to_point", _fake_clip_to_point
+    )
+    monkeypatch.setattr(
+        "revrt.routing.utilities.dask.compute", _tracking_compute
+    )
+
+    mapped = mapper.map_points(
+        points.copy(deep=True),
+        tmp_path / "parallel_batch.gpkg",
+        radius=0.25,
+        expand_radius=False,
+    )
+
+    assert mapped["end_feat_id"].tolist() == [0, 1]
+    assert compute_calls
+    assert compute_calls[0]["scheduler"] == "threads"
+    assert compute_calls[0]["num_workers"] == 2
 
 
 def test_point_to_feature_mapper_drops_unpaired_points(
@@ -451,7 +501,7 @@ def test_point_to_feature_mapper_drops_unpaired_points(
     """Mapper drops points that never find nearby features"""
 
     features_fp, _ = transmission_features
-    mapper = PointToFeatureMapper("EPSG:4326", features_fp)
+    mapper = PointToFeatureMapper("EPSG:4326", features_fp, batch_size=1)
     distant = candidate_points.iloc[[1]].copy(deep=True)
     nearby = candidate_points.iloc[[0]].copy(deep=True)
     nearby.loc[:, "geometry"] = Point(0.0, 0.2)
@@ -461,15 +511,13 @@ def test_point_to_feature_mapper_drops_unpaired_points(
     )
 
     with pytest.warns(
-        revrtWarning,
-        match=r"No features found for 1 point\(s\)",
+        revrtWarning, match=r"No features found for 1 point\(s\)"
     ):
         mapped = mapper.map_points(
             points,
             tmp_path / "dropped_points.gpkg",
             radius=0.01,
             expand_radius=False,
-            batch_size=1,
         )
 
     assert len(mapped) == 1
@@ -485,13 +533,14 @@ def test_point_to_feature_mapper_preserves_existing_region_ids(
     features_fp, _ = transmission_features
     regions = transmission_regions.copy(deep=True)
     regions["rid"] = [5, 6]
-    mapper = PointToFeatureMapper("EPSG:4326", features_fp, regions=regions)
+    mapper = PointToFeatureMapper(
+        "EPSG:4326", features_fp, regions=regions, batch_size=5
+    )
 
     mapped = mapper.map_points(
         candidate_points.copy(deep=True),
         tmp_path / "existing_rid.gpkg",
         radius="search_radius",
-        batch_size=5,
     )
 
     assert mapped["rid"].tolist() == [5, 6]

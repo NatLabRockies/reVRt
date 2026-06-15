@@ -278,7 +278,10 @@ def test_point_to_feature_mapper_extension_warning_and_radius_column(
         return original(self, region, features)
 
     monkeypatch.setattr(
-        PointToFeatureMapper, "_clipped_features", _clipped_features_once
+        PointToFeatureMapper,
+        "_clipped_features",
+        _clipped_features_once,
+        batch_size=1,
     )
 
     with pytest.warns(revrtWarning) as warn_records:
@@ -287,7 +290,6 @@ def test_point_to_feature_mapper_extension_warning_and_radius_column(
             tmp_path / "features_no_extension",
             radius="radius_m",
             expand_radius=True,
-            batch_size=1,
         )
 
     warn_messages = [str(w.message) for w in warn_records]
@@ -325,6 +327,7 @@ def test_point_to_feature_mapper_accepts_region_path(
         cost_metadata["crs"],
         routing_test_inputs["features_fp"],
         regions=routing_test_inputs["regions_fp"],
+        batch_size=2,
     )
     points = make_rev_sc_points(
         cost_metadata["shape"][0],
@@ -335,11 +338,7 @@ def test_point_to_feature_mapper_accepts_region_path(
     ).head(2)
 
     mapped = mapper.map_points(
-        points,
-        tmp_path / "path_regions",
-        radius=100_000,
-        expand_radius=False,
-        batch_size=2,
+        points, tmp_path / "path_regions", radius=100_000, expand_radius=False
     )
 
     assert mapped["end_feat_id"].tolist() == list(range(len(mapped)))
@@ -427,15 +426,13 @@ def test_map_points_flushes_remaining_batch(
         return fake_features.copy()
 
     monkeypatch.setattr(
-        PointToFeatureMapper, "_clip_to_point", _fake_clip_to_point
-    )
-
-    mapped = mapper.map_points(
-        points,
-        tmp_path / "flush_batch",
-        radius=10_000,
+        PointToFeatureMapper,
+        "_clip_to_point",
+        _fake_clip_to_point,
         batch_size=5,
     )
+
+    mapped = mapper.map_points(points, tmp_path / "flush_batch", radius=10_000)
 
     assert len(dummy_writer.saved) == 1
     assert len(mapped) == len(points)

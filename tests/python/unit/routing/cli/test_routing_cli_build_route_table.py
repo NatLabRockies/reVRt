@@ -140,6 +140,7 @@ def test_point_to_feature_mapper_clips_features_to_region_boundary(tmp_path):
         features_fp,
         regions=regions_fp,
         region_identifier_column="rid",
+        batch_size=1,
     )
 
     points = gpd.GeoDataFrame(
@@ -149,13 +150,7 @@ def test_point_to_feature_mapper_clips_features_to_region_boundary(tmp_path):
     )
 
     out_fp = tmp_path / "clipped_outputs.gpkg"
-    mapper.map_points(
-        points,
-        out_fp,
-        radius=800,
-        expand_radius=False,
-        batch_size=1,
-    )
+    mapper.map_points(points, out_fp, radius=800, expand_radius=False)
 
     clipped = gpd.read_file(out_fp)
     assert len(clipped) == 1
@@ -182,19 +177,13 @@ def test_point_to_feature_mapper_clips_features_to_radius(tmp_path):
     features_fp = tmp_path / "radius_features.gpkg"
     features.to_file(features_fp, driver="GPKG")
 
-    mapper = PointToFeatureMapper(crs, features_fp)
+    mapper = PointToFeatureMapper(crs, features_fp, batch_size=1)
     points = gpd.GeoDataFrame(
         {"start_row": [0], "start_col": [0]}, geometry=[point_geom], crs=crs
     )
 
     out_fp = tmp_path / "radius_outputs.gpkg"
-    mapper.map_points(
-        points,
-        out_fp,
-        radius=radius,
-        expand_radius=False,
-        batch_size=1,
-    )
+    mapper.map_points(points, out_fp, radius=radius, expand_radius=False)
 
     clipped = gpd.read_file(out_fp)
     assert len(clipped) == 1
@@ -229,6 +218,7 @@ def test_point_to_feature_mapper_clips_features_to_region_and_radius(
         features_fp,
         regions=regions_fp,
         region_identifier_column="rid",
+        batch_size=1,
     )
 
     points = gpd.GeoDataFrame(
@@ -238,13 +228,7 @@ def test_point_to_feature_mapper_clips_features_to_region_and_radius(
     )
 
     out_fp = tmp_path / "region_and_radius_outputs.gpkg"
-    mapper.map_points(
-        points,
-        out_fp,
-        radius=radius,
-        expand_radius=False,
-        batch_size=1,
-    )
+    mapper.map_points(points, out_fp, radius=radius, expand_radius=False)
 
     clipped = gpd.read_file(out_fp)
     assert len(clipped) == 1
