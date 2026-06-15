@@ -124,12 +124,9 @@ impl LazySubset<f32> {
                         )))
                     })?;
 
-                let source_subset = self.source_subset_for_variable(&variable);
-
+                let source_subset = self.source_subset_for_variable(&variable, varname)?;
                 let values = self.load_as_f32(&variable, varname, &source_subset)?;
-
                 self.data.insert(varname.to_string(), values.clone());
-
                 values
             }
         };
@@ -156,17 +153,30 @@ impl LazySubset<f32> {
     fn source_subset_for_variable<TStorage: ?Sized + ReadableListableStorageTraits + 'static>(
         &self,
         variable: &Array<TStorage>,
-    ) -> ArraySubset {
+        varname: &str,
+    ) -> Result<ArraySubset> {
         let shape = variable.shape();
-        if shape.len() == 3 && shape[0] == 1 && self.subset.start()[0] != 0 {
-            return ArraySubset::new_with_ranges(&[
-                0..1,
-                self.subset.start()[1]..(self.subset.start()[1] + self.subset.shape()[1]),
-                self.subset.start()[2]..(self.subset.start()[2] + self.subset.shape()[2]),
-            ]);
+        if shape.len() < 3 {
+            return Err(Error::InvalidDatasetShape {
+                variable: varname.to_string(),
+                min_rank: 3,
+                shape: shape.to_vec(),
+            });
         }
 
-        self.subset.clone()
+        if shape[0] != 1 {
+            return Err(Error::InvalidSourceBandCount {
+                variable: varname.to_string(),
+                expected: 1,
+                found: shape[0],
+            });
+        }
+
+        Ok(ArraySubset::new_with_ranges(&[
+            0..1,
+            self.subset.start()[1]..(self.subset.start()[1] + self.subset.shape()[1]),
+            self.subset.start()[2]..(self.subset.start()[2] + self.subset.shape()[2]),
+        ]))
     }
 
     fn load_as_f32<TStorage: ?Sized + ReadableListableStorageTraits + 'static>(

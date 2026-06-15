@@ -285,19 +285,8 @@ impl Dataset {
                 index.j..(index.j + 1),
             ]),
             3 => {
-                let bands = shape[0];
-                let band = if bands == 1 {
-                    0
-                } else {
-                    let option = u64::from(index.option);
-                    if option >= bands {
-                        return None;
-                    }
-                    option
-                };
-
                 zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    band..(band + 1),
+                    0..1,
                     index.i..(index.i + 1),
                     index.j..(index.j + 1),
                 ])
@@ -486,11 +475,10 @@ mod tests {
     #[test]
     fn get_source_cell_value_reuses_single_band_3d_layers_for_all_options() {
         let tmp = samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
-            .layer(samples::LayerConfig::custom("cost", |band, _, _| {
-                if band == 0 { 1.0 } else { 2.0 }
-            }))
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("overhead_cost", 1.0))
+            .layer(samples::LayerConfig::constant("underground_cost", 2.0))
             .build()
             .unwrap();
         let store: ReadableWritableListableStorage =
@@ -519,10 +507,10 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
                 "drivers": {

@@ -38,8 +38,10 @@ pub(super) struct SourceLayout {
 
 /// Inspect the source dataset and recover the layout used for swap storage.
 ///
-/// A representative non-coordinate variable is selected from the source store
-/// and used to infer the full grid shape and chunk grid. Coordinate-like
+/// Every non-coordinate source layer is expected to be a 3D array with a
+/// single input band. Routing options are represented only in the derived
+/// swap dataset, not in the source inputs. A representative source layer is
+/// then used to infer the full grid shape and chunk grid. Coordinate-like
 /// arrays such as latitude, longitude, and spatial reference metadata are
 /// ignored during selection.
 ///
@@ -56,48 +58,17 @@ pub(super) fn inspect_source_layout(
     source: &ReadableListableStorage,
     routing_option_count: u32,
 ) -> Result<SourceLayout> {
-    let entries = source.list().map_err(|err| {
-        Error::IO(std::io::Error::other(format!(
-            "failed to list variables in source dataset: {err}"
-        )))
-    })?;
-    let first_entry_opt = entries
-        .into_iter()
-        .map(|entry| entry.to_string())
-        .find(|entry| {
-            let name = entry.split('/').next().unwrap_or("").to_ascii_lowercase();
-            // Skip coordinate axes when selecting a representative variable for cost storage.
-            const EXCLUDES: [&str; 6] = ["latitude", "longitude", "band", "x", "y", "spatial_ref"];
-            !name.ends_with(".json") && !EXCLUDES.iter().any(|needle| name == *needle)
-        });
-    let first_entry = match first_entry_opt {
-        Some(entry) => entry,
-        None => {
-            return Err(Error::IO(std::io::Error::other(format!(
-                "no non-coordinate variables found in source dataset: {:?}",
-                source.list().ok()
-            ))));
-        }
-    };
-
-    let varname = match first_entry.split('/').next() {
-        Some(name) => name,
-        None => {
-            return Err(Error::IO(std::io::Error::other(
-                "Could not determine any variable names from source dataset",
-            )));
-        }
-    };
+    let variable_names = source_variable_names(source)?;
+    let varname = &variable_names[0];
     debug!("Using '{}' to determine shape of cost data", varname);
 
     let representative = zarrs::array::Array::open(source.clone(), &format!("/{varname}"))?;
     let shape = representative.shape();
-    if shape.len() < 3 {
-        return Err(Error::InvalidDatasetShape {
-            variable: varname.to_string(),
-            min_rank: 3,
-            shape: shape.to_vec(),
-        });
+    validate_source_variable_shape(varname, shape)?;
+
+    for variable_name in variable_names.iter().skip(1) {
+        let variable = zarrs::array::Array::open(source.clone(), &format!("/{variable_name}"))?;
+        validate_source_variable_shape(variable_name, variable.shape())?;
     }
 
     let chunk_shape = representative
@@ -141,6 +112,60 @@ pub(super) fn inspect_source_layout(
     debug!("Chunk grid info: {:?}", &layout.chunk_grid);
 
     Ok(layout)
+}
+
+fn source_variable_names(source: &ReadableListableStorage) -> Result<Vec<String>> {
+    let entries = source.list().map_err(|err| {
+        Error::IO(std::io::Error::other(format!(
+            "failed to list variables in source dataset: {err}"
+        )))
+    })?;
+    let mut variable_names = Vec::new();
+
+    for entry in entries.into_iter().map(|entry| entry.to_string()) {
+        let Some(name) = entry.split('/').next() else {
+            continue;
+        };
+        let normalized = name.to_ascii_lowercase();
+        const EXCLUDES: [&str; 6] = ["latitude", "longitude", "band", "x", "y", "spatial_ref"];
+        if normalized.ends_with(".json")
+            || EXCLUDES.iter().any(|needle| normalized == *needle)
+            || variable_names.iter().any(|existing| existing == name)
+        {
+            continue;
+        }
+
+        variable_names.push(name.to_string());
+    }
+
+    if variable_names.is_empty() {
+        return Err(Error::IO(std::io::Error::other(format!(
+            "no non-coordinate variables found in source dataset: {:?}",
+            source.list().ok()
+        ))));
+    }
+
+    Ok(variable_names)
+}
+
+fn validate_source_variable_shape(variable: &str, shape: &[u64]) -> Result<()> {
+    if shape.len() < 3 {
+        return Err(Error::InvalidDatasetShape {
+            variable: variable.to_string(),
+            min_rank: 3,
+            shape: shape.to_vec(),
+        });
+    }
+
+    if shape[0] != 1 {
+        return Err(Error::InvalidSourceBandCount {
+            variable: variable.to_string(),
+            expected: 1,
+            found: shape[0],
+        });
+    }
+
+    Ok(())
 }
 
 /// Create and initialize the derived swap dataset.
@@ -312,7 +337,7 @@ mod tests {
 
     #[test]
     fn inspect_source_layout_returns_expected_grid_metadata() {
-        let tmp = samples::multi_variable_random(2, 8, 8, 1, 4, 4, &["A", "B", "cost"]);
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "B", "cost"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
 
@@ -324,6 +349,26 @@ mod tests {
         assert_eq!(layout.grid_ncols, 8);
         assert_eq!(layout.chunk_grid_rows, 2);
         assert_eq!(layout.chunk_grid_cols, 2);
+    }
+
+    #[test]
+    fn inspect_source_layout_rejects_multi_band_source_variables() {
+        let tmp = samples::multi_variable_random(2, 8, 8, 1, 4, 4, &["A"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+
+        let error = inspect_source_layout(&source, 2)
+            .err()
+            .expect("expected multi-band source dataset to be rejected");
+
+        assert!(matches!(
+            error,
+            Error::InvalidSourceBandCount {
+                variable,
+                expected: 1,
+                found: 2,
+            } if variable == "A"
+        ));
     }
 
     #[test]
