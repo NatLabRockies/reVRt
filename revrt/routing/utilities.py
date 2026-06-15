@@ -170,6 +170,17 @@ class PointToFeatureMapper:
         if pending_points.empty:
             logger.info("All points already mapped; nothing to resume")
 
+        total_pending_points = len(pending_points)
+        if total_pending_points:
+            logger.info(
+                "Mapping %d point(s) to nearby features in batches of %d "
+                "using %d workers",
+                total_pending_points,
+                self._batch_size,
+                self._max_workers,
+            )
+
+        processed_points = 0
         for point_batch in self._iter_point_batches(
             pending_points, start_conn_id=next_conn_id
         ):
@@ -180,6 +191,13 @@ class PointToFeatureMapper:
                 radius,
                 expand_radius,
                 route_writer=route_writer,
+            )
+            processed_points += len(point_batch)
+            logger.info(
+                "%d/%d (%.2f%%) points processed",
+                processed_points,
+                total_pending_points,
+                processed_points / total_pending_points * 100,
             )
 
         route_table = self._drop_unpaired_points(points)
