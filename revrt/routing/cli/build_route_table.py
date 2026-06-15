@@ -175,6 +175,8 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
             regions,
             region_identifier_column=region_identifier_column,
             connection_identifier_column=connection_identifier_column,
+            batch_size=batch_size,
+            max_workers=max_workers,
         )
         route_table = mapper.map_points(
             points,
@@ -182,8 +184,6 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
             radius=radius,
             expand_radius=expand_radius,
             clip_points_to_regions=clip_points_to_regions,
-            batch_size=batch_size,
-            max_workers=max_workers,
         )
         route_table.drop(columns="geometry").to_csv(
             route_table_out_fp, index=False
