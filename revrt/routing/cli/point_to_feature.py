@@ -188,11 +188,11 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
 
 def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     cost_fpath,
-    route_table_fpath,
-    features_fpath,
     cost_layers,
     out_dir,
     job_name,
+    route_table_fpath="PIPELINE",
+    features_fpath="PIPELINE",
     friction_layers=None,
     barrier_layers=None,
     tracked_layers=None,
@@ -221,26 +221,6 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     cost_fpath : path-like
         Path to layered Zarr file containing cost and other required
         routing layers.
-    route_table_fpath : path-like
-        Path to CSV file defining the start points and end features of
-        all routes. Must have the following columns:
-
-            - "start_lat": Stating point latitude (can alternatively use
-              "start_col" to define the start point column index in the
-              cost raster).
-            - "start_lon": Stating point longitude (can alternatively
-              use "start_row" to define the start point row index in the
-              cost raster).
-            - `connection_identifier_column`: ID of the feature that
-              should be mapped to. This ID should match at least one of
-              the feature IDs in the `features_fpath` input; otherwise,
-              no route will be computed for that point.
-
-    features_fpath : path-like
-        Path to vector file containing features to map points to. This
-        file must have a column matching the
-        `connection_identifier_column` parameter that maps each feature
-        back to the starting points defined in the `route_table`.
     cost_layers : list
         List of dictionaries defining the layers that are summed to
         determine total costs raster used for routing. Each layer is
@@ -313,6 +293,51 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         Directory where routing outputs should be written.
     job_name : str
         Label used to name the generated output file.
+    route_table_fpath : path-like, str, or list, default="PIPELINE"
+        Route-table input defining all route start points and end
+        features.
+
+        If set to ``"PIPELINE"``, then ``features_fpath`` must also
+        be ``"PIPELINE"`` and the route tables will be pulled from
+        the previous pipeline step. Pipeline inputs require previous
+        outputs containing matching CSV route tables and GPKG
+        feature files.
+
+        Otherwise, provide either a single CSV path or a list of
+        CSV paths. When a list is provided, ``features_fpath`` must
+        also be a list with the same length, and each route table
+        is paired with the feature file at the same list index.
+
+        Each route table must have the following columns:
+
+            - "start_lat": Stating point latitude (can alternatively use
+              "start_col" to define the start point column index in the
+              cost raster).
+            - "start_lon": Stating point longitude (can alternatively
+              use "start_row" to define the start point row index in the
+              cost raster).
+            - `connection_identifier_column`: ID of the feature that
+              should be mapped to. This ID should match at least one of
+              the feature IDs in the `features_fpath` input; otherwise,
+              no route will be computed for that point.
+
+    features_fpath : path-like, str, or list, default="PIPELINE"
+        Feature input containing the vector geometries to map points to.
+
+        If set to ``"PIPELINE"``, then ``route_table_fpath`` must
+        also be ``"PIPELINE"`` and the feature files will be pulled
+        from the previous pipeline step.
+
+        Otherwise, provide either a single vector path or a list of
+        vector paths. When a list is provided,
+        ``route_table_fpath`` must also be a list with the same
+        length, and each feature file is paired with the route table
+        at the same list index.
+
+        Each feature file must have a column matching the
+        `connection_identifier_column` parameter that maps each
+        feature back to the starting points defined in the
+        `route_table`.
     friction_layers : list, optional
         Layers to be multiplied onto the aggregated cost layer to
         influence routing but NOT be reported in final cost
