@@ -12,9 +12,12 @@ import geopandas as gpd
 from shapely.geometry import LineString
 from rasterio.transform import xy
 
+from revrt.exceptions import revrtConfigurationError
 from revrt.warn import revrtWarning
 from revrt.routing.cli.point_to_feature import (
     PointToFeatureRouteDefinitionConverter,
+    _handle_route_table_and_features_input,
+    _prep_config,
     compute_lcp_routes,
 )
 
@@ -319,6 +322,180 @@ def test_compute_lcp_routes_saves_routing_layer(point_feature_dataset):
         assert "cost" in ds
         assert "latitude" in ds.coords
         assert "longitude" in ds.coords
+
+
+def test_pipeline_inputs_are_split_and_aligned_by_shared_tag(monkeypatch):
+    """Pipeline inputs should align CSVs and GPKGs by shared tag"""
+
+    files = [
+        "/tmp/route_table_j0.csv",  # noqa
+        "/tmp/mapped_features_j0.gpkg",  # noqa
+        "/tmp/route_table_j10.csv",  # noqa
+        "/tmp/mapped_features_j10.gpkg",  # noqa
+    ]
+
+    monkeypatch.setattr(
+        "revrt.routing.cli.point_to_feature.parse_previous_status",
+        lambda *_args, **_kwargs: files,
+    )
+
+    config = {
+        "route_table_fpath": "PIPELINE",
+        "features_fpath": "PIPELINE",
+    }
+
+    result = _handle_route_table_and_features_input(
+        config,
+        "/tmp/project",  # noqa
+        "route-features",
+    )
+
+    assert result["route_table_fpath"] == [
+        "/tmp/route_table_j0.csv",  # noqa
+        "/tmp/route_table_j10.csv",  # noqa
+    ]
+    assert result["features_fpath"] == [
+        "/tmp/mapped_features_j0.gpkg",  # noqa
+        "/tmp/mapped_features_j10.gpkg",  # noqa
+    ]
+
+
+def test_prep_config_normalizes_non_pipeline_paths():
+    """Preprocessor should strip and wrap non-pipeline path inputs"""
+
+    config = {
+        "cost_fpath": "  /tmp/cost_layers.zarr  ",
+        "route_table_fpath": "  /tmp/routes.csv  ",
+        "features_fpath": "  /tmp/features.gpkg  ",
+        "out_dir": "  /tmp/output_dir  ",
+    }
+
+    result = _prep_config(config, "/tmp/project", "route-features")  # noqa
+
+    assert result["cost_fpath"] == "/tmp/cost_layers.zarr"  # noqa
+    assert result["route_table_fpath"] == ["/tmp/routes.csv"]  # noqa
+    assert result["features_fpath"] == ["/tmp/features.gpkg"]  # noqa
+    assert result["out_dir"] == "/tmp/output_dir"  # noqa
+    assert result["_split_params"] == [(0, 1)]
+
+
+def test_prep_config_normalizes_non_pipeline_sequences():
+    """Preprocessor should strip whitespace from sequence path inputs"""
+
+    config = {
+        "route_table_fpath": ["  /tmp/routes_a.csv  ", " /tmp/routes_b.csv"],
+        "features_fpath": [
+            "  /tmp/features_a.gpkg  ",
+            " /tmp/features_b.gpkg",
+        ],
+    }
+
+    result = _prep_config(config, "/tmp/project", "route-features")  # noqa
+
+    assert result["route_table_fpath"] == [
+        "/tmp/routes_a.csv",  # noqa
+        "/tmp/routes_b.csv",  # noqa
+    ]
+    assert result["features_fpath"] == [
+        "/tmp/features_a.gpkg",  # noqa
+        "/tmp/features_b.gpkg",  # noqa
+    ]
+
+
+@pytest.mark.parametrize(
+    ("config", "match"),
+    [
+        (
+            {
+                "route_table_fpath": ["/tmp/routes.csv"],  # noqa
+                "features_fpath": "/tmp/features.gpkg",  # noqa
+            },
+            "must both be sequences or both be strings",
+        ),
+        (
+            {
+                "route_table_fpath": [
+                    "/tmp/routes_a.csv",  # noqa
+                    "/tmp/routes_b.csv",  # noqa
+                ],
+                "features_fpath": ["/tmp/features_a.gpkg"],  # noqa
+            },
+            "must be the same length",
+        ),
+    ],
+)
+def test_non_pipeline_inputs_require_matching_shapes(config, match):
+    """Non-pipeline paths must have matching string/sequence shapes"""
+
+    with pytest.raises(revrtConfigurationError, match=match):
+        _handle_route_table_and_features_input(
+            config,
+            "/tmp/project",  # noqa
+            "route-features",
+        )
+
+
+def test_pipeline_inputs_require_both_pipeline_sentinels():
+    """Pipeline mode requires both route-table and feature sentinels"""
+
+    config = {
+        "route_table_fpath": "PIPELINE",
+        "features_fpath": "/tmp/features.gpkg",  # noqa
+    }
+
+    with pytest.raises(
+        revrtConfigurationError,
+        match="must be set to 'PIPELINE' for pipeline runs",
+    ):
+        _handle_route_table_and_features_input(
+            config,
+            "/tmp/project",  # noqa
+            "route-features",
+        )
+
+
+@pytest.mark.parametrize(
+    ("files", "match"),
+    [
+        (
+            [
+                "/tmp/route_table_j0.csv",  # noqa
+                "/tmp/route_table_j1.csv",  # noqa
+                "/tmp/mapped_features_j0.gpkg",  # noqa
+                "/tmp/mapped_features_j9.gpkg",  # noqa
+            ],
+            "Could not align pipeline route-table CSV outputs",
+        ),
+        (
+            [
+                "/tmp/route_table.csv",  # noqa
+                "/tmp/route_table_j1.csv",  # noqa
+                "/tmp/mapped_features_j0.gpkg",  # noqa
+                "/tmp/mapped_features_j1.gpkg",  # noqa
+            ],
+            "ambiguously tagged",
+        ),
+    ],
+)
+def test_pipeline_inputs_validate_previous_outputs(monkeypatch, files, match):
+    """Pipeline mode should reject ambiguous or misaligned outputs"""
+
+    monkeypatch.setattr(
+        "revrt.routing.cli.point_to_feature.parse_previous_status",
+        lambda *_args, **_kwargs: files,
+    )
+
+    config = {
+        "route_table_fpath": "PIPELINE",
+        "features_fpath": "PIPELINE",
+    }
+
+    with pytest.raises(revrtConfigurationError, match=match):
+        _handle_route_table_and_features_input(
+            config,
+            "/tmp/project",  # noqa
+            "route-features",
+        )
 
 
 @pytest.mark.skipif(
