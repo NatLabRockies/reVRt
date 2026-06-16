@@ -14,6 +14,7 @@ from shapely.geometry import LineString, Point, Polygon
 
 from revrt.routing.utilities import (
     PointToFeatureMapper,
+    _add_voltage_polarity,
     _filter_transmission_features,
     _init_streaming_writer,
     _transform_lat_lon_to_row_col,
@@ -661,6 +662,47 @@ def test_init_streaming_writer_appends_suffix(tmp_path):
         writer = _init_streaming_writer(raw_fp)
 
     assert writer.out_fp.suffix == ".gpkg"
+
+
+def test_add_voltage_polarity_expands_routes_by_combination():
+    """_add_voltage_polarity should duplicate routes per input combination"""
+
+    route_table = pd.DataFrame(
+        {
+            "route_id": ["route-a", "route-b"],
+            "start_row": [0, 1],
+            "start_col": [2, 3],
+        }
+    )
+
+    updated = _add_voltage_polarity(
+        route_table,
+        voltages=[138, 230],
+        polarities=["ac", "dc"],
+    )
+
+    assert len(updated) == len(route_table) * 4
+    assert updated["route_id"].value_counts().to_dict() == {
+        "route-a": 4,
+        "route-b": 4,
+    }
+
+    actual = {
+        (row.route_id, row.voltage, row.polarity, row.start_row, row.start_col)
+        for row in updated.itertuples(index=False)
+    }
+    expected = {
+        ("route-a", 138, "ac", 0, 2),
+        ("route-a", 138, "dc", 0, 2),
+        ("route-a", 230, "ac", 0, 2),
+        ("route-a", 230, "dc", 0, 2),
+        ("route-b", 138, "ac", 1, 3),
+        ("route-b", 138, "dc", 1, 3),
+        ("route-b", 230, "ac", 1, 3),
+        ("route-b", 230, "dc", 1, 3),
+    }
+
+    assert actual == expected
 
 
 def test_filter_points_outside_cost_domain_only_start_indices(cost_grid):

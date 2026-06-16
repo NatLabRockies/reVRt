@@ -775,3 +775,23 @@ def _read_route_table(route_table_out_fp):
         return pd.read_csv(route_table_out_fp)
     except pd.errors.EmptyDataError:
         return pd.DataFrame()
+
+
+def _add_voltage_polarity(route_table, voltages, polarities):
+    """Add voltage and polarity columns to route table"""
+    if voltages:
+        out = []
+        for voltage in voltages:
+            new_data = route_table.copy(deep=True)
+            new_data["voltage"] = voltage
+            out.append(new_data)
+        route_table = pd.concat(out, ignore_index=True)
+
+    if polarities:
+        out = []
+        for polarity in polarities:
+            new_data = route_table.copy(deep=True)
+            new_data["polarity"] = polarity
+            out.append(new_data)
+        route_table = pd.concat(out, ignore_index=True)
+    return route_table
