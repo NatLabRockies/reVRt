@@ -243,6 +243,28 @@ def _check_output_filepaths(out_dir, feature_out_fp, route_table_out_fp):
     return feature_out_fp, route_table_out_fp
 
 
+def _tag_output_filepaths(
+    feature_out_fp, route_table_out_fp, tag=None, split_params=None
+):
+    """Tag node outputs so split runs do not clobber each other"""
+    if not tag:
+        return feature_out_fp, route_table_out_fp
+
+    __, num_chunks = split_params or (0, 1)
+    if num_chunks <= 1:
+        return feature_out_fp, route_table_out_fp
+
+    return (
+        _tag_filepath(feature_out_fp, tag),
+        _tag_filepath(route_table_out_fp, tag),
+    )
+
+
+def _tag_filepath(fp, tag):
+    """Insert node tag before file suffix"""
+    return fp.with_name(f"{fp.stem}{tag}{fp.suffix}")
+
+
 def _preprocess_point_to_feature_route_table(config):
     """Preprocess config for point_to_feature_route_table command"""
     config = split_routes(config)
