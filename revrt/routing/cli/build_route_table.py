@@ -117,12 +117,12 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
         Option to expand the `radius` value for each point until at
         least one feature is found to connect to. This input has no
         effect if `radius` is ``None``. By default, ``True``.
-    voltages : iterable of str or int, optional
+    voltages : list of str or int, optional
         Voltage values to assign to the output route table. If
         provided, each mapped point-to-feature connection is duplicated
         once per voltage value and a ``voltage`` column is added. By
         default, ``None``.
-    polarities : iterable of str, optional
+    polarities : list of str, optional
         Polarity values to assign to the output route table. If
         provided, each mapped point-to-feature connection is duplicated
         once per polarity value and a ``polarity`` column is added. By
