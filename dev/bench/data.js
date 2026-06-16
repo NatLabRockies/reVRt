@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781487734042,
+  "lastUpdate": 1781651136933,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -11255,6 +11255,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 485693602,
             "range": "± 6710653",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "351efc0c972e9238d11af71b3c6843900a4f3b44",
+          "message": "Better build table (#293)\n\n* Fix message\n\n* Accept `max_workers`\n\n* Parallelize route table building\n\n* Update\n\n* Fix tests\n\n* Allow build command to re-start from partial state\n\n* Add logging\n\n* Use process\n\n* route table can now be split into pieces\n\n* Add helper function\n\n* Add logic for split\n\n* Default to max workers\n\n* Fix logs\n\n* Split out function\n\n* Add tests\n\n* Allow route and feature fpaths to be defined by pipeline\n\n* Add function\n\n* Add tests\n\n* Add option to specify voltage/polarity\n\n* Update docstring\n\n* Update docstring\n\n* Fix minor bug\n\n* Fix tests\n\n* Update function",
+          "timestamp": "2026-06-16T16:51:15-06:00",
+          "tree_id": "f37dacbd2a2b9fdf4e188bbcbc1cf3ce48108751",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/351efc0c972e9238d11af71b3c6843900a4f3b44"
+        },
+        "date": 1781651134556,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 106561084,
+            "range": "± 1411337",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 86508360,
+            "range": "± 1152309",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 144704805,
+            "range": "± 3398088",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 217858300,
+            "range": "± 3996686",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 876487614,
+            "range": "± 10443788",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 151556773,
+            "range": "± 2318495",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 151899620,
+            "range": "± 1043071",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 172649476,
+            "range": "± 1586641",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 241136540,
+            "range": "± 31088833",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 488395250,
+            "range": "± 5686721",
             "unit": "ns/iter"
           }
         ]
