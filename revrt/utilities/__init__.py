@@ -12,6 +12,7 @@ from .base import (
     save_data_using_custom_props,
     save_data_array_to_geotiff,
     strip_path_keys,
+    strip_path,
     region_mapper,
     transform_xy,
 )
