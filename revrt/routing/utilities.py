@@ -100,6 +100,8 @@ class PointToFeatureMapper:
         radius=None,
         expand_radius=True,
         clip_points_to_regions=False,
+        voltages=None,
+        polarities=None,
     ):
         """Map points to features within the point region
 
@@ -132,6 +134,16 @@ class PointToFeatureMapper:
             this parameter has no effect. If ``False``, all points are
             used as-is, which means points outside of the regions domain
             are mapped to the closest region. By default, ``False``.
+        voltages : iterable of str or int, optional
+            Voltage values to assign to the output route table. If
+            provided, each mapped point-to-feature connection is
+            duplicated once per voltage value and a ``voltage`` column
+            is added. By default, ``None``.
+        polarities : iterable of str, optional
+            Polarity values to assign to the output route table. If
+            provided, each mapped point-to-feature connection is
+            duplicated once per polarity value and a ``polarity``
+            column is added. By default, ``None``.
 
         Returns
         -------
@@ -203,6 +215,7 @@ class PointToFeatureMapper:
             )
 
         route_table = self._drop_unpaired_points(points)
+        route_table = _add_voltage_polarity(route_table, voltages, polarities)
         if route_table_out_fp is not None:
             route_table.drop(columns="geometry").to_csv(
                 route_table_out_fp, index=False

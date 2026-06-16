@@ -33,6 +33,8 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     radius=None,
     points_fpath=None,
     expand_radius=True,
+    voltages=None,
+    polarities=None,
     feature_out_fp="mapped_features.gpkg",
     route_table_out_fp="route_table.csv",
     region_identifier_column="rid",
@@ -115,6 +117,16 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
         Option to expand the `radius` value for each point until at
         least one feature is found to connect to. This input has no
         effect if `radius` is ``None``. By default, ``True``.
+    voltages : iterable of str or int, optional
+        Voltage values to assign to the output route table. If
+        provided, each mapped point-to-feature connection is duplicated
+        once per voltage value and a ``voltage`` column is added. By
+        default, ``None``.
+    polarities : iterable of str, optional
+        Polarity values to assign to the output route table. If
+        provided, each mapped point-to-feature connection is duplicated
+        once per polarity value and a ``polarity`` column is added. By
+        default, ``None``.
     feature_out_fp : str, default="mapped_features.gpkg"
         Name of output file for mapped (and potentially clipped)
         features. This output file will contain an identifier column
@@ -202,6 +214,8 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
             radius=radius,
             expand_radius=expand_radius,
             clip_points_to_regions=clip_points_to_regions,
+            voltages=voltages,
+            polarities=polarities,
         )
 
     return [str(route_table_out_fp), str(feature_out_fp)]
