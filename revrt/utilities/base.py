@@ -683,14 +683,19 @@ def strip_path_keys(config, keys_to_fix):
     for key in keys_to_fix:
         value = config.get(key)
         if isinstance(value, str):
-            value = value.strip()
-            for token in (r"\n", r"\r", r"\t"):
-                while value.startswith(token):
-                    value = value[len(token) :].lstrip()
-                while value.endswith(token):
-                    value = value[: -len(token)].rstrip()
-            config[key] = value
+            config[key] = strip_path(value)
     return config
+
+
+def strip_path(value):
+    """[NOT PUBLIC API] Strip whitespace from path-like value"""
+    value = value.strip()
+    for token in (r"\n", r"\r", r"\t"):
+        while value.startswith(token):
+            value = value[len(token) :].lstrip()
+        while value.endswith(token):
+            value = value[: -len(token)].rstrip()
+    return value
 
 
 def _crs_match(first_crs, second_crs):
