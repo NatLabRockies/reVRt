@@ -491,7 +491,7 @@ def test_point_to_feature_mapper_parallel_batch(
 
     assert mapped["end_feat_id"].tolist() == [0, 1]
     assert compute_calls
-    assert compute_calls[0]["scheduler"] == "threads"
+    assert compute_calls[0]["scheduler"] == "processes"
     assert compute_calls[0]["num_workers"] == 2
 
 

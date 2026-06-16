@@ -67,7 +67,7 @@ class PointToFeatureMapper:
         max_workers : int, optional
             Number of parallel workers to use for point-to-feature
             clipping. If ``None`` or >1, clipping is performed in
-            parallel using Dask's threaded scheduler. By default,
+            parallel using Dask's process scheduler. By default,
             ``1``.
         """
         self._crs = crs
@@ -277,7 +277,7 @@ class PointToFeatureMapper:
         return list(
             dask.compute(
                 *tasks,
-                scheduler="threads",
+                scheduler="processes",
                 num_workers=num_workers,
             )
         )
