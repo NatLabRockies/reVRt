@@ -705,6 +705,53 @@ def test_add_voltage_polarity_expands_routes_by_combination():
     assert actual == expected
 
 
+@pytest.mark.parametrize(
+    ("voltages", "polarities"),
+    [
+        (None, None),
+        ([], []),
+        (None, []),
+        ([], None),
+        ([138], None),
+        ([138], []),
+        (None, ["ac"]),
+        ([], ["ac"]),
+    ],
+)
+def test_add_voltage_polarity_handles_none_and_empty_inputs(
+    voltages, polarities
+):
+    """_add_voltage_polarity should return a routing table for empty inputs"""
+
+    route_table = pd.DataFrame(
+        {
+            "route_id": ["route-a", "route-b"],
+            "start_row": [0, 1],
+            "start_col": [2, 3],
+        }
+    )
+
+    updated = _add_voltage_polarity(route_table, voltages, polarities)
+
+    assert isinstance(updated, pd.DataFrame)
+    if voltages:
+        assert updated["voltage"].tolist() == [138, 138]
+    else:
+        assert "voltage" not in updated.columns
+
+    if polarities:
+        assert updated["polarity"].tolist() == ["ac", "ac"]
+    else:
+        assert "polarity" not in updated.columns
+
+    expected = route_table.copy(deep=True)
+    if voltages:
+        expected["voltage"] = 138
+    if polarities:
+        expected["polarity"] = "ac"
+    pd.testing.assert_frame_equal(updated.reset_index(drop=True), expected)
+
+
 def test_filter_points_outside_cost_domain_only_start_indices(cost_grid):
     """Bounds filtering works when end indices are absent"""
 
