@@ -38,7 +38,7 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     region_identifier_column="rid",
     connection_identifier_column="end_feat_id",
     batch_size=500,
-    max_workers=1,
+    max_workers=None,
     tag=None,
     _split_params=None,
 ):
@@ -141,7 +141,7 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     max_workers : int, optional
         Number of parallel workers to use for point-to-feature clipping.
         If ``None`` or >1, clipping is performed in parallel using Dask.
-        By default, ``1``.
+        By default, ``None``, which uses all CPU cores.
 
     Returns
     -------

@@ -34,7 +34,7 @@ class PointToFeatureMapper:
         region_identifier_column="rid",
         connection_identifier_column="end_feat_id",
         batch_size=500,
-        max_workers=1,
+        max_workers=None,
     ):
         """
 
@@ -67,8 +67,8 @@ class PointToFeatureMapper:
         max_workers : int, optional
             Number of parallel workers to use for point-to-feature
             clipping. If ``None`` or >1, clipping is performed in
-            parallel using Dask's process scheduler. By default,
-            ``1``.
+            parallel using Dask's process scheduler.
+            By default, ``None``, which uses all CPU cores.
         """
         self._crs = crs
         self._features_fp = features_fp
@@ -174,10 +174,12 @@ class PointToFeatureMapper:
         if total_pending_points:
             logger.info(
                 "Mapping %d point(s) to nearby features in batches of %d "
-                "using %d workers",
+                "using %s workers",
                 total_pending_points,
                 self._batch_size,
-                self._max_workers,
+                f"{self._max_workers:,d}"
+                if self._max_workers in {None, 0}
+                else "all",
             )
 
         processed_points = 0
@@ -262,18 +264,18 @@ class PointToFeatureMapper:
                 for job in point_batch
             ]
 
+        num_workers = (
+            None if self._max_workers in {None, 0} else self._max_workers
+        )
         logger.debug(
-            "Processing %d point(s) with Dask max_workers=%r",
+            "Processing %d point(s) in parallel with Dask num_workers=%r",
             len(point_batch),
-            self._max_workers,
+            num_workers,
         )
         tasks = [
             dask.delayed(self._clip_point_job)(job, radius, expand_radius)
             for job in point_batch
         ]
-        num_workers = (
-            None if self._max_workers in {None, 0} else self._max_workers
-        )
         return list(
             dask.compute(
                 *tasks,
