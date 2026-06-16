@@ -189,9 +189,9 @@ class PointToFeatureMapper:
                 "using %s workers",
                 total_pending_points,
                 self._batch_size,
-                f"{self._max_workers:,d}"
+                "all"
                 if self._max_workers in {None, 0}
-                else "all",
+                else f"{self._max_workers:,d}",
             )
 
         processed_points = 0
