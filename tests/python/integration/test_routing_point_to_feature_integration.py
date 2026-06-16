@@ -258,7 +258,9 @@ def test_point_to_feature_mapper_extension_warning_and_radius_column(
     """Radius column inputs trigger streaming writer extension warnings"""
 
     mapper = PointToFeatureMapper(
-        cost_metadata["crs"], routing_test_inputs["features_fp"]
+        cost_metadata["crs"],
+        routing_test_inputs["features_fp"],
+        batch_size=1,
     )
     points = make_rev_sc_points(
         cost_metadata["shape"][0],
@@ -281,7 +283,6 @@ def test_point_to_feature_mapper_extension_warning_and_radius_column(
         PointToFeatureMapper,
         "_clipped_features",
         _clipped_features_once,
-        batch_size=1,
     )
 
     with pytest.warns(revrtWarning) as warn_records:
@@ -395,7 +396,7 @@ def test_map_points_flushes_remaining_batch(
     """map_points writes any trailing batch after iteration completes"""
 
     mapper = PointToFeatureMapper(
-        cost_metadata["crs"], routing_test_inputs["features_fp"]
+        cost_metadata["crs"], routing_test_inputs["features_fp"], batch_size=5
     )
     points = make_rev_sc_points(
         cost_metadata["shape"][0],
@@ -429,7 +430,6 @@ def test_map_points_flushes_remaining_batch(
         PointToFeatureMapper,
         "_clip_to_point",
         _fake_clip_to_point,
-        batch_size=5,
     )
 
     mapped = mapper.map_points(points, tmp_path / "flush_batch", radius=10_000)
