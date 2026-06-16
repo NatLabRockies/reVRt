@@ -368,7 +368,7 @@ def _get_row_multiplier(transmission_config, voltage):
         row_multiplier = row_widths[voltage]
     except KeyError as e:
         msg = (
-            "`apply_row_mult` was set to `True`, but voltage ' "
+            "`apply_row_mult` was set to `True`, but voltage '"
             f"{voltage}' not found in transmission config "
             "'row_width' settings. Available voltages: "
             f"{list(row_widths)}"
@@ -393,7 +393,7 @@ def _get_polarity_multiplier(transmission_config, voltage, polarity):
         polarity_voltages = polarity_config[voltage]
     except KeyError as e:
         msg = (
-            "`apply_polarity_mult` was set to `True`, but voltage ' "
+            "`apply_polarity_mult` was set to `True`, but voltage '"
             f"{voltage}' not found in polarity config. Available voltages: "
             f"{list(polarity_config)}"
         )
