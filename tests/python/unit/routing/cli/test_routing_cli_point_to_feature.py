@@ -10,7 +10,7 @@ import rioxarray  # noqa: F401
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
-from gaps.cli.config import TAG
+from gaps.utilities import TAG
 from shapely.geometry import LineString
 from rasterio.transform import xy
 

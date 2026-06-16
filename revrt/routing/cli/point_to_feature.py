@@ -10,7 +10,7 @@ import rasterio
 import numpy as np
 import geopandas as gpd
 from gaps.cli import CLICommandFromFunction
-from gaps.cli.config import TAG
+from gaps.utilities import TAG
 from gaps.pipeline import parse_previous_status
 
 from revrt.routing.cli.base import (
