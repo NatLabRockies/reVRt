@@ -1,6 +1,8 @@
 """reVRt point-to-feature routing CLI command"""
 
 import logging
+import re
+from collections import abc
 from pathlib import Path
 from warnings import warn
 
@@ -8,6 +10,8 @@ import rasterio
 import numpy as np
 import geopandas as gpd
 from gaps.cli import CLICommandFromFunction
+from gaps.cli.config import TAG
+from gaps.pipeline import parse_previous_status
 
 from revrt.routing.cli.base import (
     run_lcp,
@@ -15,10 +19,11 @@ from revrt.routing.cli.base import (
     split_routes,
     RouteToDefinitionConverter,
 )
-from revrt.utilities import strip_path_keys, log_runtime
+from revrt.utilities import strip_path_keys, strip_path, log_runtime
 from revrt.routing.utilities import map_to_costs
 from revrt.costs.config import parse_config
 from revrt.utilities.raster import integer_dimension_window
+from revrt.exceptions import revrtConfigurationError
 from revrt.warn import revrtWarning
 
 
@@ -560,25 +565,147 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     return str(out_fp)
 
 
-def _prep_config(config):
+def _prep_config(config, project_dir, command_name):
     """Pre-process config inputs for point-to-feature routing"""
     config = split_routes(config)
-    return strip_path_keys(
-        config,
-        keys_to_fix={
-            "cost_fpath",
-            "route_table_fpath",
-            "features_fpath",
-            "out_dir",
-        },
+    config = _handle_route_table_and_features_input(
+        config, project_dir, command_name
     )
+    return strip_path_keys(config, keys_to_fix={"cost_fpath", "out_dir"})
+
+
+def _handle_route_table_and_features_input(config, project_dir, command_name):
+    """Handle route table and features input from user"""
+
+    rt_is_pipeline = config["route_table_fpath"] == "PIPELINE"
+    f_is_pipeline = config["features_fpath"] == "PIPELINE"
+
+    if rt_is_pipeline != f_is_pipeline:
+        msg = (
+            "Both `route_table_fpath` and `features_fpath` must be set "
+            "to 'PIPELINE' for pipeline runs."
+        )
+        raise revrtConfigurationError(msg)
+
+    if not rt_is_pipeline:
+        return _handle_non_pipeline_input(config)
+
+    files = [
+        strip_path(fp)
+        for fp in parse_previous_status(project_dir, command_name)
+    ]
+    route_tables, feature_files = _split_pipeline_route_inputs(files)
+    config["route_table_fpath"] = route_tables
+    config["features_fpath"] = feature_files
+    return config
+
+
+def _split_pipeline_route_inputs(files):
+    """Split and align pipeline route-table and feature outputs"""
+    route_tables = [fp for fp in files if Path(fp).suffix.lower() == ".csv"]
+    feature_files = [fp for fp in files if Path(fp).suffix.lower() == ".gpkg"]
+
+    if not route_tables or not feature_files:
+        msg = (
+            "Pipeline route-features input requires previous outputs with "
+            "both CSV route tables and GPKG feature files."
+        )
+        raise revrtConfigurationError(msg)
+
+    if len(route_tables) != len(feature_files):
+        msg = (
+            "Pipeline route-features input requires the same number of "
+            "CSV route tables and GPKG feature files."
+        )
+        raise revrtConfigurationError(msg)
+
+    if len(route_tables) == 1:
+        return route_tables, feature_files
+
+    feature_map = _match_pipeline_feature_files(route_tables, feature_files)
+    return route_tables, [feature_map[fp] for fp in route_tables]
+
+
+def _match_pipeline_feature_files(route_tables, feature_files):
+    """Match route tables to feature files using the GAPs split tag"""
+    route_tags = {_pipeline_file_tag(fp): fp for fp in route_tables}
+    feature_tags = {_pipeline_file_tag(fp): fp for fp in feature_files}
+
+    if None in route_tags or None in feature_tags:
+        msg = "Pipeline route-features inputs are ambiguously tagged."
+        raise revrtConfigurationError(msg)
+
+    if len(route_tags) != len(route_tables) or len(feature_tags) != len(
+        feature_files
+    ):
+        msg = "Pipeline route-features inputs are ambiguously tagged."
+        raise revrtConfigurationError(msg)
+
+    if set(route_tags) != set(feature_tags):
+        msg = (
+            "Could not align pipeline route-table CSV outputs with "
+            "mapped-feature GPKG outputs using the GAPs split tag."
+        )
+        raise revrtConfigurationError(msg)
+
+    return {route_tags[tag]: feature_tags[tag] for tag in sorted(route_tags)}
+
+
+def _pipeline_file_tag(fp):
+    """Extract the GAPs split tag from a pipeline output filepath"""
+    match = re.search(rf"({re.escape(TAG)}\d+)$", Path(fp).stem)
+    if match is None:
+        return None
+    return match.group(1)
+
+
+def _handle_non_pipeline_input(config):
+    """Handle non-pipeline input from user"""
+    rt_fp = config["route_table_fpath"]
+    f_fp = config["features_fpath"]
+    rt_is_sequence = isinstance(rt_fp, abc.Sequence) and not isinstance(
+        rt_fp, str
+    )
+    f_is_sequence = isinstance(f_fp, abc.Sequence) and not isinstance(
+        f_fp, str
+    )
+
+    if rt_is_sequence or f_is_sequence:
+        if not (rt_is_sequence and f_is_sequence):
+            msg = (
+                "`route_table_fpath` and `features_fpath` must both "
+                "be sequences or both be strings."
+            )
+            raise revrtConfigurationError(msg)
+
+        if len(rt_fp) != len(f_fp):
+            msg = (
+                "`route_table_fpath` and `features_fpath` sequences "
+                "must be the same length."
+            )
+            raise revrtConfigurationError(msg)
+
+        config["route_table_fpath"] = [strip_path(p) for p in rt_fp]
+        config["features_fpath"] = [strip_path(p) for p in f_fp]
+        return config
+
+    if not isinstance(rt_fp, str) or not isinstance(f_fp, str):
+        msg = (
+            "`route_table_fpath` and `features_fpath` must both be "
+            "sequences or both be strings."
+        )
+        raise revrtConfigurationError(msg)
+
+    config["route_table_fpath"] = [strip_path(rt_fp)]
+    config["features_fpath"] = [strip_path(f_fp)]
+    return config
 
 
 route_features_command = CLICommandFromFunction(
     compute_lcp_routes,
     name="route-features",
     add_collect=False,
-    split_keys={"_split_params"},
+    split_keys=[("route_table_fpath", "features_fpath"), "_split_params"],
     config_preprocessor=_prep_config,
     skip_doc_params=["system_mem_limit_gb"],
 )
