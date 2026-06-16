@@ -245,8 +245,16 @@ def _check_output_filepaths(out_dir, feature_out_fp, route_table_out_fp):
 
 def _preprocess_point_to_feature_route_table(config):
     """Preprocess config for point_to_feature_route_table command"""
+    config = split_routes(config)
     return strip_path_keys(
-        config, keys_to_fix={"cost_fpath", "features_fpath", "out_dir"}
+        config,
+        keys_to_fix={
+            "cost_fpath",
+            "features_fpath",
+            "out_dir",
+            "points_fpath",
+            "regions_fpath",
+        },
     )
 
 
@@ -254,5 +262,6 @@ build_point_to_feature_route_table_command = CLICommandFromFunction(
     point_to_feature_route_table,
     name="build-feature-route-table",
     add_collect=False,
+    split_keys={"_split_params"},
     config_preprocessor=_preprocess_point_to_feature_route_table,
 )
