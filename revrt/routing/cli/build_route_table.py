@@ -8,6 +8,7 @@ import geopandas as gpd
 import xarray as xr
 from gaps.cli import CLICommandFromFunction
 
+from revrt.routing.cli.base import route_points_subset, split_routes
 from revrt.routing.utilities import (
     PointToFeatureMapper,
     filter_points_outside_cost_domain,
@@ -38,6 +39,8 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     connection_identifier_column="end_feat_id",
     batch_size=500,
     max_workers=1,
+    tag=None,
+    _split_params=None,
 ):
     """Create a route table mapping points to nearest features
 
@@ -152,6 +155,12 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
         feature_out_fp, route_table_out_fp = _check_output_filepaths(
             out_dir, feature_out_fp, route_table_out_fp
         )
+        feature_out_fp, route_table_out_fp = _tag_output_filepaths(
+            feature_out_fp,
+            route_table_out_fp,
+            tag=tag,
+            split_params=_split_params,
+        )
 
         logger.debug("Cost input: %r", cost_fpath)
         logger.debug("Features input: %r", features_fpath)
@@ -175,6 +184,7 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
             points_fpath=points_fpath,
             resolution=resolution,
         )
+        points = route_points_subset(points, split_params=_split_params)
 
         mapper = PointToFeatureMapper(
             crs,
