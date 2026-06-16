@@ -437,9 +437,9 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     return str(out_fp)
 
 
-def _prep_config(config):
+def _prep_config(config, nodes):
     """Pre-process config inputs for point-to-point routing"""
-    config = split_routes(config)
+    config = split_routes(config, nodes)
     return strip_path_keys(
         config, keys_to_fix={"cost_fpath", "route_table_fpath", "out_dir"}
     )
