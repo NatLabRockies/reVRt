@@ -792,19 +792,22 @@ def _read_route_table(route_table_out_fp):
 
 def _add_voltage_polarity(route_table, voltages, polarities):
     """Add voltage and polarity columns to route table"""
+    if voltages is not None:
+        voltages = list(voltages)
+
     if voltages:
-        out = []
-        for voltage in voltages:
-            new_data = route_table.copy(deep=True)
-            new_data["voltage"] = voltage
-            out.append(new_data)
-        route_table = pd.concat(out, ignore_index=True)
+        route_table = pd.concat(
+            [route_table.assign(voltage=voltage) for voltage in voltages],
+            ignore_index=True,
+        )
+
+    if polarities is not None:
+        polarities = list(polarities)
 
     if polarities:
-        out = []
-        for polarity in polarities:
-            new_data = route_table.copy(deep=True)
-            new_data["polarity"] = polarity
-            out.append(new_data)
-        route_table = pd.concat(out, ignore_index=True)
+        route_table = pd.concat(
+            [route_table.assign(polarity=polarity) for polarity in polarities],
+            ignore_index=True,
+        )
+
     return route_table
