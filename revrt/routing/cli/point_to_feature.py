@@ -10,7 +10,7 @@ import rasterio
 import numpy as np
 import geopandas as gpd
 from gaps.cli import CLICommandFromFunction
-from gaps.cli.config import TAG
+from gaps.utilities import TAG
 from gaps.pipeline import parse_previous_status
 
 from revrt.routing.cli.base import (
@@ -590,9 +590,9 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     return str(out_fp)
 
 
-def _prep_config(config, project_dir, command_name):
+def _prep_config(config, nodes, project_dir, command_name):
     """Pre-process config inputs for point-to-feature routing"""
-    config = split_routes(config)
+    config = split_routes(config, nodes)
     config = _handle_route_table_and_features_input(
         config, project_dir, command_name
     )

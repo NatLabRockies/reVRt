@@ -10,7 +10,7 @@ import rioxarray  # noqa: F401
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
-from gaps.cli.config import TAG
+from gaps.utilities import TAG
 from shapely.geometry import LineString
 from rasterio.transform import xy
 
@@ -428,7 +428,7 @@ def test_prep_config_normalizes_non_pipeline_paths():
         "out_dir": "  /tmp/output_dir  ",
     }
 
-    result = _prep_config(config, "/tmp/project", "route-features")  # noqa
+    result = _prep_config(config, 1, "/tmp/project", "route-features")  # noqa
 
     assert result["cost_fpath"] == "/tmp/cost_layers.zarr"  # noqa
     assert result["route_table_fpath"] == ["/tmp/routes.csv"]  # noqa
@@ -448,7 +448,7 @@ def test_prep_config_normalizes_non_pipeline_sequences():
         ],
     }
 
-    result = _prep_config(config, "/tmp/project", "route-features")  # noqa
+    result = _prep_config(config, 1, "/tmp/project", "route-features")  # noqa
 
     assert result["route_table_fpath"] == [
         "/tmp/routes_a.csv",  # noqa

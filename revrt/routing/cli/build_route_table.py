@@ -289,9 +289,9 @@ def _tag_filepath(fp, tag):
     return fp.with_name(f"{fp.stem}{tag}{fp.suffix}")
 
 
-def _preprocess_point_to_feature_route_table(config):
+def _preprocess_point_to_feature_route_table(config, nodes):
     """Preprocess config for point_to_feature_route_table command"""
-    config = split_routes(config)
+    config = split_routes(config, nodes)
     return strip_path_keys(
         config,
         keys_to_fix={

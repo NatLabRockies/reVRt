@@ -300,15 +300,11 @@ def test_paths_to_compute_inserts_missing_columns(tmp_path):
 def test_split_routes_handles_local_and_cluster():
     """split_routes should configure chunking for local and cluster modes"""
 
-    local_config = {"execution_control": {"option": "local", "nodes": 4}}
-    result_local = split_routes(local_config)
+    result_local = split_routes({}, 1)
     assert result_local["_split_params"] == [(0, 1)]
-    assert result_local["execution_control"]["nodes"] == 4
 
-    cluster_config = {"execution_control": {"nodes": 3}}
-    result_cluster = split_routes(cluster_config)
+    result_cluster = split_routes({}, 3)
     assert result_cluster["_split_params"] == [(0, 3), (1, 3), (2, 3)]
-    assert "nodes" not in result_cluster["execution_control"]
 
 
 def test_update_multipliers_applies_row_and_polarity():
