@@ -312,18 +312,13 @@ def route_points_subset(route_points, split_params):
     ]
 
 
-def split_routes(config):
+def split_routes(config, nodes):
     """[NOT PUBLIC API] Compute route split params inside of config"""
     exec_control = config.get("execution_control", {})
-    if exec_control.get("option") == "local":
-        num_nodes = 1
-    else:
-        num_nodes = exec_control.pop("nodes", 1)
-
     if mem_limit_gb := exec_control.get("memory"):
         config["system_mem_limit_gb"] = float(mem_limit_gb)
 
-    config["_split_params"] = [(i, num_nodes) for i in range(num_nodes)]
+    config["_split_params"] = [(i, nodes) for i in range(nodes)]
     return config
 
 
@@ -368,7 +363,7 @@ def _get_row_multiplier(transmission_config, voltage):
         row_multiplier = row_widths[voltage]
     except KeyError as e:
         msg = (
-            "`apply_row_mult` was set to `True`, but voltage ' "
+            "`apply_row_mult` was set to `True`, but voltage '"
             f"{voltage}' not found in transmission config "
             "'row_width' settings. Available voltages: "
             f"{list(row_widths)}"
@@ -393,7 +388,7 @@ def _get_polarity_multiplier(transmission_config, voltage, polarity):
         polarity_voltages = polarity_config[voltage]
     except KeyError as e:
         msg = (
-            "`apply_polarity_mult` was set to `True`, but voltage ' "
+            "`apply_polarity_mult` was set to `True`, but voltage '"
             f"{voltage}' not found in polarity config. Available voltages: "
             f"{list(polarity_config)}"
         )

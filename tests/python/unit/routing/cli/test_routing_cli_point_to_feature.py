@@ -1,5 +1,6 @@
 """Unit tests for point-to-feature routing CLI module"""
 
+import json
 import os
 import platform
 from pathlib import Path
@@ -9,12 +10,17 @@ import rioxarray  # noqa: F401
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
+from gaps.utilities import TAG
 from shapely.geometry import LineString
 from rasterio.transform import xy
 
+from revrt._cli import main
+from revrt.exceptions import revrtConfigurationError
 from revrt.warn import revrtWarning
 from revrt.routing.cli.point_to_feature import (
     PointToFeatureRouteDefinitionConverter,
+    _handle_route_table_and_features_input,
+    _prep_config,
     compute_lcp_routes,
 )
 
@@ -42,6 +48,61 @@ def _build_route_table(metadata, rows_cols, feature_ids):
             }
         )
     return pd.DataFrame.from_records(records)
+
+
+def _run_route_features_cli(
+    cli_runner, cli_error_message, config, tmp_path, config_name
+):
+    """Write config to disk and invoke the route-features CLI"""
+    config_fp = tmp_path / config_name
+    config_fp.write_text(json.dumps(config))
+
+    result = cli_runner.invoke(main, ["route-features", "-c", str(config_fp)])
+    msg = cli_error_message(result) or result.output
+    assert result.exit_code == 0, msg
+    return result
+
+
+def _read_route_feature_outputs(run_dir):
+    """Read route-features CSV outputs written by the CLI run"""
+    output_files = sorted(Path(run_dir).glob("*_route_features*.csv"))
+    assert output_files
+
+    outputs = []
+    for output_fp in output_files:
+        df = pd.read_csv(output_fp)
+        df = df[df["route_id"] != "route_id"].reset_index(drop=True)
+        outputs.append(df)
+
+    return outputs
+
+
+def _write_route_feature_input_pairs(tmp_path, point_feature_dataset, tagged):
+    """Create aligned route-table and feature file pairs for CLI tests"""
+    feature_source = gpd.read_file(point_feature_dataset["features_fp"])
+    pairs = [((1, 1), 1), ((2, 2), 2)]
+
+    route_tables = []
+    feature_files = []
+    for idx, (row_col, feat_id) in enumerate(pairs):
+        suffix = f"_{TAG}{idx}" if tagged else f"_{idx}"
+        route_table_fp = tmp_path / f"route_table{suffix}.csv"
+        feature_fp = tmp_path / f"mapped_features{suffix}.gpkg"
+
+        route_table = _build_route_table(
+            point_feature_dataset["metadata"], [row_col], [feat_id]
+        )
+        route_table.to_csv(route_table_fp, index=False)
+
+        features = feature_source.loc[
+            feature_source["end_feat_id"] == feat_id
+        ].copy()
+        features.to_file(feature_fp, driver="GPKG")
+
+        route_tables.append(route_table_fp)
+        feature_files.append(feature_fp)
+
+    return route_tables, feature_files
 
 
 @pytest.fixture(scope="module")
@@ -321,6 +382,180 @@ def test_compute_lcp_routes_saves_routing_layer(point_feature_dataset):
         assert "longitude" in ds.coords
 
 
+def test_pipeline_inputs_are_split_and_aligned_by_shared_tag(monkeypatch):
+    """Pipeline inputs should align CSVs and GPKGs by shared tag"""
+
+    files = [
+        "/tmp/route_table_j0.csv",  # noqa
+        "/tmp/mapped_features_j0.gpkg",  # noqa
+        "/tmp/route_table_j10.csv",  # noqa
+        "/tmp/mapped_features_j10.gpkg",  # noqa
+    ]
+
+    monkeypatch.setattr(
+        "revrt.routing.cli.point_to_feature.parse_previous_status",
+        lambda *_args, **_kwargs: files,
+    )
+
+    config = {
+        "route_table_fpath": "PIPELINE",
+        "features_fpath": "PIPELINE",
+    }
+
+    result = _handle_route_table_and_features_input(
+        config,
+        "/tmp/project",  # noqa
+        "route-features",
+    )
+
+    assert result["route_table_fpath"] == [
+        "/tmp/route_table_j0.csv",  # noqa
+        "/tmp/route_table_j10.csv",  # noqa
+    ]
+    assert result["features_fpath"] == [
+        "/tmp/mapped_features_j0.gpkg",  # noqa
+        "/tmp/mapped_features_j10.gpkg",  # noqa
+    ]
+
+
+def test_prep_config_normalizes_non_pipeline_paths():
+    """Preprocessor should strip and wrap non-pipeline path inputs"""
+
+    config = {
+        "cost_fpath": "  /tmp/cost_layers.zarr  ",
+        "route_table_fpath": "  /tmp/routes.csv  ",
+        "features_fpath": "  /tmp/features.gpkg  ",
+        "out_dir": "  /tmp/output_dir  ",
+    }
+
+    result = _prep_config(config, 1, "/tmp/project", "route-features")  # noqa
+
+    assert result["cost_fpath"] == "/tmp/cost_layers.zarr"  # noqa
+    assert result["route_table_fpath"] == ["/tmp/routes.csv"]  # noqa
+    assert result["features_fpath"] == ["/tmp/features.gpkg"]  # noqa
+    assert result["out_dir"] == "/tmp/output_dir"  # noqa
+    assert result["_split_params"] == [(0, 1)]
+
+
+def test_prep_config_normalizes_non_pipeline_sequences():
+    """Preprocessor should strip whitespace from sequence path inputs"""
+
+    config = {
+        "route_table_fpath": ["  /tmp/routes_a.csv  ", " /tmp/routes_b.csv"],
+        "features_fpath": [
+            "  /tmp/features_a.gpkg  ",
+            " /tmp/features_b.gpkg",
+        ],
+    }
+
+    result = _prep_config(config, 1, "/tmp/project", "route-features")  # noqa
+
+    assert result["route_table_fpath"] == [
+        "/tmp/routes_a.csv",  # noqa
+        "/tmp/routes_b.csv",  # noqa
+    ]
+    assert result["features_fpath"] == [
+        "/tmp/features_a.gpkg",  # noqa
+        "/tmp/features_b.gpkg",  # noqa
+    ]
+
+
+@pytest.mark.parametrize(
+    ("config", "match"),
+    [
+        (
+            {
+                "route_table_fpath": ["/tmp/routes.csv"],  # noqa
+                "features_fpath": "/tmp/features.gpkg",  # noqa
+            },
+            "must both be sequences or both be strings",
+        ),
+        (
+            {
+                "route_table_fpath": [
+                    "/tmp/routes_a.csv",  # noqa
+                    "/tmp/routes_b.csv",  # noqa
+                ],
+                "features_fpath": ["/tmp/features_a.gpkg"],  # noqa
+            },
+            "must be the same length",
+        ),
+    ],
+)
+def test_non_pipeline_inputs_require_matching_shapes(config, match):
+    """Non-pipeline paths must have matching string/sequence shapes"""
+
+    with pytest.raises(revrtConfigurationError, match=match):
+        _handle_route_table_and_features_input(
+            config,
+            "/tmp/project",  # noqa
+            "route-features",
+        )
+
+
+def test_pipeline_inputs_require_both_pipeline_sentinels():
+    """Pipeline mode requires both route-table and feature sentinels"""
+
+    config = {
+        "route_table_fpath": "PIPELINE",
+        "features_fpath": "/tmp/features.gpkg",  # noqa
+    }
+
+    with pytest.raises(
+        revrtConfigurationError,
+        match="must be set to 'PIPELINE' for pipeline runs",
+    ):
+        _handle_route_table_and_features_input(
+            config,
+            "/tmp/project",  # noqa
+            "route-features",
+        )
+
+
+@pytest.mark.parametrize(
+    ("files", "match"),
+    [
+        (
+            [
+                "/tmp/route_table_j0.csv",  # noqa
+                "/tmp/route_table_j1.csv",  # noqa
+                "/tmp/mapped_features_j0.gpkg",  # noqa
+                "/tmp/mapped_features_j9.gpkg",  # noqa
+            ],
+            "Could not align pipeline route-table CSV outputs",
+        ),
+        (
+            [
+                "/tmp/route_table.csv",  # noqa
+                "/tmp/route_table_j1.csv",  # noqa
+                "/tmp/mapped_features_j0.gpkg",  # noqa
+                "/tmp/mapped_features_j1.gpkg",  # noqa
+            ],
+            "ambiguously tagged",
+        ),
+    ],
+)
+def test_pipeline_inputs_validate_previous_outputs(monkeypatch, files, match):
+    """Pipeline mode should reject ambiguous or misaligned outputs"""
+
+    monkeypatch.setattr(
+        "revrt.routing.cli.point_to_feature.parse_previous_status",
+        lambda *_args, **_kwargs: files,
+    )
+
+    config = {
+        "route_table_fpath": "PIPELINE",
+        "features_fpath": "PIPELINE",
+    }
+
+    with pytest.raises(revrtConfigurationError, match=match):
+        _handle_route_table_and_features_input(
+            config,
+            "/tmp/project",  # noqa
+            "route-features",
+        )
+
+
 @pytest.mark.skipif(
     (os.environ.get("TOX_RUNNING") == "True")
     and (platform.system() == "Windows"),
@@ -384,6 +619,147 @@ def test_route_features_cli_strips_required_path_whitespace(
     )
 
     assert Path(out_fp).exists()
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_route_features_cli_accepts_string_input_paths(
+    cli_runner, cli_error_message, point_feature_dataset, tmp_path
+):
+    """route-features CLI should accept direct string path inputs"""
+
+    route_table = _build_route_table(
+        point_feature_dataset["metadata"], [(1, 1)], [1]
+    )
+    route_table_fp = tmp_path / "string_route_table.csv"
+    route_table.to_csv(route_table_fp, index=False)
+
+    out_dir = tmp_path / "string_outputs"
+    config = {
+        "cost_fpath": str(point_feature_dataset["cost_fp"]),
+        "route_table_fpath": str(route_table_fp),
+        "features_fpath": str(point_feature_dataset["features_fp"]),
+        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "out_dir": str(out_dir),
+        "job_name": "string_cli_run",
+        "save_paths": False,
+    }
+
+    _run_route_features_cli(
+        cli_runner,
+        cli_error_message,
+        config,
+        tmp_path,
+        "route_features_string_config.json",
+    )
+
+    outputs = _read_route_feature_outputs(tmp_path)
+    assert len(outputs) == 1
+    assert len(outputs[0]) == 1
+    assert outputs[0]["end_feat_id"].tolist() == [1]
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_route_features_cli_accepts_list_input_paths(
+    cli_runner, cli_error_message, point_feature_dataset, tmp_path
+):
+    """route-features CLI should accept aligned list path inputs"""
+
+    route_tables, feature_files = _write_route_feature_input_pairs(
+        tmp_path, point_feature_dataset, tagged=False
+    )
+
+    out_dir = tmp_path / "list_outputs"
+    config = {
+        "cost_fpath": str(point_feature_dataset["cost_fp"]),
+        "route_table_fpath": [str(fp) for fp in route_tables],
+        "features_fpath": [str(fp) for fp in feature_files],
+        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "out_dir": str(out_dir),
+        "job_name": "list_cli_run",
+        "save_paths": False,
+    }
+
+    _run_route_features_cli(
+        cli_runner,
+        cli_error_message,
+        config,
+        tmp_path,
+        "route_features_list_config.json",
+    )
+
+    outputs = _read_route_feature_outputs(tmp_path)
+    assert len(outputs) == 2
+    assert sorted(len(df) for df in outputs) == [1, 1]
+
+    end_feat_ids = sorted(
+        feat_id for df in outputs for feat_id in df["end_feat_id"].tolist()
+    )
+    assert end_feat_ids == [1, 2]
+
+
+@pytest.mark.skipif(
+    (os.environ.get("TOX_RUNNING") == "True")
+    and (platform.system() == "Windows"),
+    reason="CLI does not work under tox env on windows",
+)
+def test_route_features_cli_accepts_pipeline_inputs(
+    cli_runner,
+    cli_error_message,
+    monkeypatch,
+    point_feature_dataset,
+    tmp_path,
+):
+    """route-features CLI should resolve pipeline route-table inputs"""
+
+    route_tables, feature_files = _write_route_feature_input_pairs(
+        tmp_path, point_feature_dataset, tagged=True
+    )
+    previous_outputs = [
+        str(fp)
+        for pair in zip(route_tables, feature_files, strict=True)
+        for fp in pair
+    ]
+
+    monkeypatch.setattr(
+        "revrt.routing.cli.point_to_feature.parse_previous_status",
+        lambda *_args, **_kwargs: previous_outputs,
+    )
+
+    out_dir = tmp_path / "pipeline_outputs"
+    config = {
+        "cost_fpath": str(point_feature_dataset["cost_fp"]),
+        "route_table_fpath": "PIPELINE",
+        "features_fpath": "PIPELINE",
+        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "out_dir": str(out_dir),
+        "job_name": "pipeline_cli_run",
+        "save_paths": False,
+    }
+
+    _run_route_features_cli(
+        cli_runner,
+        cli_error_message,
+        config,
+        tmp_path,
+        "route_features_pipeline_config.json",
+    )
+
+    outputs = _read_route_feature_outputs(tmp_path)
+    assert len(outputs) == 2
+    assert sorted(len(df) for df in outputs) == [1, 1]
+
+    end_feat_ids = sorted(
+        feat_id for df in outputs for feat_id in df["end_feat_id"].tolist()
+    )
+    assert end_feat_ids == [1, 2]
 
 
 if __name__ == "__main__":
