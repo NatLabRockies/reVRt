@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781651136933,
+  "lastUpdate": 1781656534700,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -11339,6 +11339,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 488395250,
             "range": "± 5686721",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ee0d85ffb3f144d7ab45e5753eac9c8a3345676",
+          "message": "Dep updates (#294)\n\n* Update deps\n\n* Fix import\n\n* Nodes option now explicit\n\n* Update python version for free threaded wheels",
+          "timestamp": "2026-06-16T18:22:03-06:00",
+          "tree_id": "83ae55c8b6abb79e6a823ef04a7880db78722b43",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/8ee0d85ffb3f144d7ab45e5753eac9c8a3345676"
+        },
+        "date": 1781656533592,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 102360537,
+            "range": "± 1637656",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 108620095,
+            "range": "± 703496",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 141319687,
+            "range": "± 2821659",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 211366586,
+            "range": "± 2566628",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 838024238,
+            "range": "± 12819714",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 149543131,
+            "range": "± 1296417",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 149693749,
+            "range": "± 480813",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 169096124,
+            "range": "± 1101562",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 233647002,
+            "range": "± 1512502",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 472164279,
+            "range": "± 3647770",
             "unit": "ns/iter"
           }
         ]
