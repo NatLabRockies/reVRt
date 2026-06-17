@@ -898,7 +898,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">with</span> <span class="n">tfc</span> <span class="k">as</span> <span class="n">temp_zarr_file_str</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Setting swap file location to </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">temp_zarr_file_str</span><span class="p">)</span>
         <span class="n">temp_zarr_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temp_zarr_file_str</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="n">temp_zarr_file</span>
+        <span class="k">yield</span> <span class="n">temp_zarr_file</span>  <span class="c1"># noqa</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">save</span><span class="p">:</span>
             <span class="k">return</span>
@@ -983,9 +983,13 @@ window.runMermaid = runMermaid;</script>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute short hash for layer definitions&quot;&quot;&quot;</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
         <span class="p">{</span>
-            <span class="s2">&quot;cost_layers&quot;</span><span class="p">:</span> <span class="n">cost_layers</span><span class="p">,</span>
-            <span class="s2">&quot;friction_layers&quot;</span><span class="p">:</span> <span class="n">friction_layers</span><span class="p">,</span>
-            <span class="s2">&quot;barrier_layers&quot;</span><span class="p">:</span> <span class="n">barrier_layers</span><span class="p">,</span>
+            <span class="s2">&quot;routing_options&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;cost_layers&quot;</span><span class="p">:</span> <span class="n">cost_layers</span><span class="p">,</span>
+                    <span class="s2">&quot;friction_layers&quot;</span><span class="p">:</span> <span class="n">friction_layers</span><span class="p">,</span>
+                    <span class="s2">&quot;barrier_layers&quot;</span><span class="p">:</span> <span class="n">barrier_layers</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
         <span class="p">},</span>
         <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">),</span>

@@ -905,6 +905,12 @@ mapped to. The output route table contains the row and column index
 of the point (in the cost raster) and the ID of the feature it maps
 to. The mapped features are also output as a separate file that
 contains the same feature IDs for linking to the route table.</p>
+<p>This command can be re-started from a partially completed state by
+providing the same output file paths. The command will check for
+existing outputs and skip any points that have already been mapped
+to features. If the output files are not provided or do not exist,
+the command will start from the beginning and create new output
+files.</p>
 <p>The general structure for calling this CLI command is given below
 (add <code class="docutils literal notranslate"><span class="pre">--help</span></code> to print help info to the terminal).</p>
 <p class="rubric">Usage</p>
@@ -924,13 +930,15 @@ contains the same feature IDs for linking to the route table.</p>
         <span class="s2">&quot;walltime&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span><span class="p">,</span>
         <span class="s2">&quot;qos&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
         <span class="s2">&quot;memory&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+        <span class="s2">&quot;nodes&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
         <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;feature&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;conda_env&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;module&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;sh_script&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;keep_sh&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-        <span class="s2">&quot;num_test_nodes&quot;</span><span class="p">:</span> <span class="n">null</span>
+        <span class="s2">&quot;num_test_nodes&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+        <span class="s2">&quot;max_workers&quot;</span><span class="p">:</span> <span class="n">null</span>
     <span class="p">},</span>
     <span class="s2">&quot;log_directory&quot;</span><span class="p">:</span> <span class="s2">&quot;./logs&quot;</span><span class="p">,</span>
     <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
@@ -942,6 +950,8 @@ contains the same feature IDs for linking to the route table.</p>
     <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;points_fpath&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;expand_radius&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">&quot;voltages&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+    <span class="s2">&quot;polarities&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;feature_out_fp&quot;</span><span class="p">:</span> <span class="s2">&quot;mapped_features.gpkg&quot;</span><span class="p">,</span>
     <span class="s2">&quot;route_table_out_fp&quot;</span><span class="p">:</span> <span class="s2">&quot;route_table.csv&quot;</span><span class="p">,</span>
     <span class="s2">&quot;region_identifier_column&quot;</span><span class="p">:</span> <span class="s2">&quot;rid&quot;</span><span class="p">,</span>
@@ -956,6 +966,7 @@ contains the same feature IDs for linking to the route table.</p>
   <span class="n">walltime</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED IF ON HPC]&#39;</span>
   <span class="n">qos</span><span class="p">:</span> <span class="n">normal</span>
   <span class="n">memory</span><span class="p">:</span> <span class="n">null</span>
+  <span class="n">nodes</span><span class="p">:</span> <span class="mi">1</span>
   <span class="n">queue</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">feature</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">conda_env</span><span class="p">:</span> <span class="n">null</span>
@@ -963,6 +974,7 @@ contains the same feature IDs for linking to the route table.</p>
   <span class="n">sh_script</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">keep_sh</span><span class="p">:</span> <span class="n">false</span>
   <span class="n">num_test_nodes</span><span class="p">:</span> <span class="n">null</span>
+  <span class="n">max_workers</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">log_directory</span><span class="p">:</span> <span class="o">./</span><span class="n">logs</span>
 <span class="n">log_level</span><span class="p">:</span> <span class="n">INFO</span>
 <span class="n">cost_fpath</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
@@ -973,6 +985,8 @@ contains the same feature IDs for linking to the route table.</p>
 <span class="n">radius</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">points_fpath</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">expand_radius</span><span class="p">:</span> <span class="n">true</span>
+<span class="n">voltages</span><span class="p">:</span> <span class="n">null</span>
+<span class="n">polarities</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">feature_out_fp</span><span class="p">:</span> <span class="n">mapped_features</span><span class="o">.</span><span class="n">gpkg</span>
 <span class="n">route_table_out_fp</span><span class="p">:</span> <span class="n">route_table</span><span class="o">.</span><span class="n">csv</span>
 <span class="n">region_identifier_column</span><span class="p">:</span> <span class="n">rid</span>
@@ -997,6 +1011,7 @@ contains the same feature IDs for linking to the route table.</p>
 <span class="n">allocation</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span>
 <span class="n">walltime</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span>
 <span class="n">qos</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">keep_sh</span> <span class="o">=</span> <span class="n">false</span>
 </pre></div>
 </div>
@@ -1044,6 +1059,17 @@ nodes, you must specify the full upper limit of
 memory you would like for your job, otherwise you
 will be limited to the standard node memory size
 (250GB).</p>
+</dd>
+<dt class="field-even">nodes<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int, optional)
+Number of nodes to split the project points across.
+Note that the total number of requested nodes for
+a job may be larger than this value if the command
+splits across other inputs. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</dd>
+<dt class="field-odd">max_workers<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int, optional)
+Number of parallel workers to use for point-to-feature clipping. If <code class="docutils literal notranslate"><span class="pre">None</span></code> or &gt;1, clipping is performed in parallel using Dask. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which uses all CPU cores.</p>
 </dd>
 <dt class="field-even">queue<span class="colon">:</span></dt>
 <dd class="field-even"><p>(str, optional; PBS ONLY)
@@ -1113,6 +1139,10 @@ which submits all node jobs.</p>
 </dd>
 <dt>expand_radius<span class="classifier">bool, default=True</span></dt><dd><p>Option to expand the <cite>radius</cite> value for each point until at least one feature is found to connect to. This input has no effect if <cite>radius</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>. By default, <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </dd>
+<dt>voltages<span class="classifier">list of str or int, optional</span></dt><dd><p>Voltage values to assign to the output route table. If provided, each mapped point-to-feature connection is duplicated once per voltage value and a <code class="docutils literal notranslate"><span class="pre">voltage</span></code> column is added. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt>polarities<span class="classifier">list of str, optional</span></dt><dd><p>Polarity values to assign to the output route table. If provided, each mapped point-to-feature connection is duplicated once per polarity value and a <code class="docutils literal notranslate"><span class="pre">polarity</span></code> column is added. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
 <dt>feature_out_fp<span class="classifier">str, default=”mapped_features.gpkg”</span></dt><dd><p>Name of output file for mapped (and potentially clipped) features. This output file will contain an identifier column that can be linked back to the output route table. By default, <code class="docutils literal notranslate"><span class="pre">&quot;mapped_features.gpkg&quot;</span></code>.</p>
 </dd>
 <dt>route_table_out_fp<span class="classifier">str, default=”route_table.csv”</span></dt><dd><p>Name of route table output file. This file will contain a start row and column index (into the cost raster) as well as a feature ID that maps into the <cite>feature_out_fp</cite> to route to. By default, <code class="docutils literal notranslate"><span class="pre">&quot;route_table.csv&quot;</span></code>.</p>
@@ -1171,6 +1201,7 @@ on each type of action.</p>
     <span class="s2">&quot;log_directory&quot;</span><span class="p">:</span> <span class="s2">&quot;./logs&quot;</span><span class="p">,</span>
     <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
     <span class="s2">&quot;lcp_config_fp&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;routing_option&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED]&quot;</span><span class="p">,</span>
     <span class="s2">&quot;polarity&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;voltage&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;output_directory&quot;</span><span class="p">:</span> <span class="n">null</span>
@@ -1193,6 +1224,7 @@ on each type of action.</p>
 <span class="n">log_directory</span><span class="p">:</span> <span class="o">./</span><span class="n">logs</span>
 <span class="n">log_level</span><span class="p">:</span> <span class="n">INFO</span>
 <span class="n">lcp_config_fp</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
+<span class="n">routing_option</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
 <span class="n">polarity</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">voltage</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">output_directory</span><span class="p">:</span> <span class="n">null</span>
@@ -1201,6 +1233,7 @@ on each type of action.</p>
 </div><div aria-labelledby="tab-5-VE9NTA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-5-VE9NTA==" name="VE9NTA==" role="tabpanel" tabindex="0"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">log_directory</span> <span class="o">=</span> <span class="s2">&quot;./logs&quot;</span>
 <span class="n">log_level</span> <span class="o">=</span> <span class="s2">&quot;INFO&quot;</span>
 <span class="n">lcp_config_fp</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED]&quot;</span>
+<span class="n">routing_option</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED]&quot;</span>
 
 <span class="p">[</span><span class="n">execution_control</span><span class="p">]</span>
 <span class="n">option</span> <span class="o">=</span> <span class="s2">&quot;local&quot;</span>
@@ -1308,6 +1341,8 @@ which submits all node jobs.</p>
 <dt>log_level<span class="classifier">{“DEBUG”, “INFO”, “WARNING”, “ERROR”}</span></dt><dd><p>String representation of desired logger verbosity. Suitable options are <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> (most verbose), <code class="docutils literal notranslate"><span class="pre">INFO</span></code> (moderately verbose), <code class="docutils literal notranslate"><span class="pre">WARNING</span></code> (only log warnings and errors), and <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> (only log errors). By default, <code class="docutils literal notranslate"><span class="pre">&quot;INFO&quot;</span></code>.</p>
 </dd>
 <dt>lcp_config_fp<span class="classifier">path-like</span></dt><dd><p>Path to LCP config file for which the routing layer should be created.</p>
+</dd>
+<dt>routing_option<span class="classifier">str</span></dt><dd><p>Routing option to use when building the routing layer. This input is used to determine which cost and friction layers to use when building the routing layer. The routing option must be one of the options specified in the config file.</p>
 </dd>
 <dt>polarity<span class="classifier">str, optional</span></dt><dd><p>Polarity to use when building the routing layer. This input is required if any cost or friction layers that have <cite>apply_polarity_mult</cite> set to <cite>True</cite> - they will have the appropriate multiplier applied based on this polarity. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
@@ -3334,6 +3369,7 @@ in the <cite>cost_layers</cite> parameter.</p>
         <span class="s2">&quot;walltime&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span><span class="p">,</span>
         <span class="s2">&quot;qos&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
         <span class="s2">&quot;memory&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+        <span class="s2">&quot;nodes&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
         <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;feature&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;conda_env&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
@@ -3346,9 +3382,9 @@ in the <cite>cost_layers</cite> parameter.</p>
     <span class="s2">&quot;log_directory&quot;</span><span class="p">:</span> <span class="s2">&quot;./logs&quot;</span><span class="p">,</span>
     <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
     <span class="s2">&quot;cost_fpath&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED]&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;route_table_fpath&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED]&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;features_fpath&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED]&quot;</span><span class="p">,</span>
     <span class="s2">&quot;cost_layers&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;route_table_fpath&quot;</span><span class="p">:</span> <span class="s2">&quot;PIPELINE&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;features_fpath&quot;</span><span class="p">:</span> <span class="s2">&quot;PIPELINE&quot;</span><span class="p">,</span>
     <span class="s2">&quot;friction_layers&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;barrier_layers&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
     <span class="s2">&quot;tracked_layers&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
@@ -3369,6 +3405,7 @@ in the <cite>cost_layers</cite> parameter.</p>
   <span class="n">walltime</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED IF ON HPC]&#39;</span>
   <span class="n">qos</span><span class="p">:</span> <span class="n">normal</span>
   <span class="n">memory</span><span class="p">:</span> <span class="n">null</span>
+  <span class="n">nodes</span><span class="p">:</span> <span class="mi">1</span>
   <span class="n">queue</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">feature</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">conda_env</span><span class="p">:</span> <span class="n">null</span>
@@ -3380,9 +3417,9 @@ in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">log_directory</span><span class="p">:</span> <span class="o">./</span><span class="n">logs</span>
 <span class="n">log_level</span><span class="p">:</span> <span class="n">INFO</span>
 <span class="n">cost_fpath</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
-<span class="n">route_table_fpath</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
-<span class="n">features_fpath</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
 <span class="n">cost_layers</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED]&#39;</span>
+<span class="n">route_table_fpath</span><span class="p">:</span> <span class="n">PIPELINE</span>
+<span class="n">features_fpath</span><span class="p">:</span> <span class="n">PIPELINE</span>
 <span class="n">friction_layers</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">barrier_layers</span><span class="p">:</span> <span class="n">null</span>
 <span class="n">tracked_layers</span><span class="p">:</span> <span class="n">null</span>
@@ -3399,9 +3436,9 @@ in the <cite>cost_layers</cite> parameter.</p>
 </div><div aria-labelledby="tab-15-VE9NTA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-15-VE9NTA==" name="VE9NTA==" role="tabpanel" tabindex="0"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">log_directory</span> <span class="o">=</span> <span class="s2">&quot;./logs&quot;</span>
 <span class="n">log_level</span> <span class="o">=</span> <span class="s2">&quot;INFO&quot;</span>
 <span class="n">cost_fpath</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED]&quot;</span>
-<span class="n">route_table_fpath</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED]&quot;</span>
-<span class="n">features_fpath</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED]&quot;</span>
 <span class="n">cost_layers</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED]&quot;</span>
+<span class="n">route_table_fpath</span> <span class="o">=</span> <span class="s2">&quot;PIPELINE&quot;</span>
+<span class="n">features_fpath</span> <span class="o">=</span> <span class="s2">&quot;PIPELINE&quot;</span>
 <span class="n">cost_multiplier_scalar</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">save_paths</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">save_routing_layer</span> <span class="o">=</span> <span class="n">false</span>
@@ -3414,6 +3451,7 @@ in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">allocation</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span>
 <span class="n">walltime</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span>
 <span class="n">qos</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">keep_sh</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">memory_utilization_limit</span> <span class="o">=</span> <span class="mf">0.9</span>
 </pre></div>
@@ -3463,47 +3501,54 @@ memory you would like for your job, otherwise you
 will be limited to the standard node memory size
 (250GB).</p>
 </dd>
-<dt class="field-even">memory_utilization_limit<span class="colon">:</span></dt>
-<dd class="field-even"><p>(float, default=0.9)
+<dt class="field-even">nodes<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int, optional)
+Number of nodes to split the project points across.
+Note that the total number of requested nodes for
+a job may be larger than this value if the command
+splits across other inputs. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</dd>
+<dt class="field-odd">memory_utilization_limit<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(float, default=0.9)
 Fraction of <cite>system_mem_limit_gb</cite> to utilize for routing. Should be a value between 0 and 1. By default, <code class="docutils literal notranslate"><span class="pre">0.9</span></code>.</p>
 </dd>
-<dt class="field-odd">queue<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional; PBS ONLY)
+<dt class="field-even">queue<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional; PBS ONLY)
 HPC queue to submit job to. Examples include: ‘debug’,
 ‘short’, ‘batch’, ‘batch-h’, ‘long’, etc.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which uses “test_queue”.</p>
 </dd>
-<dt class="field-even">feature<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">feature<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Additional flags for SLURM job (e.g. “-p debug”).
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not specify any
 additional flags.</p>
 </dd>
-<dt class="field-odd">conda_env<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">conda_env<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Name of conda environment to activate. By default,
 <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not load any environments.</p>
 </dd>
-<dt class="field-even">module<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">module<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Module to load. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not
 load any modules.</p>
 </dd>
-<dt class="field-odd">sh_script<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">sh_script<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Extra shell script to run before command call.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not run any
 scripts.</p>
 </dd>
-<dt class="field-even">keep_sh<span class="colon">:</span></dt>
-<dd class="field-even"><p>(bool, optional)
+<dt class="field-odd">keep_sh<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(bool, optional)
 Option to keep the HPC submission script on disk.
 Only has effect if executing on HPC. By default,
 <code class="docutils literal notranslate"><span class="pre">False</span></code>, which purges the submission scripts
 after each job is submitted.</p>
 </dd>
-<dt class="field-odd">num_test_nodes<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">num_test_nodes<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Number of nodes to submit before terminating the
 submission process. This can be used to test a
 new submission configuration without submitting
@@ -3520,24 +3565,6 @@ which submits all node jobs.</p>
 <dt>log_level<span class="classifier">{“DEBUG”, “INFO”, “WARNING”, “ERROR”}</span></dt><dd><p>String representation of desired logger verbosity. Suitable options are <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> (most verbose), <code class="docutils literal notranslate"><span class="pre">INFO</span></code> (moderately verbose), <code class="docutils literal notranslate"><span class="pre">WARNING</span></code> (only log warnings and errors), and <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> (only log errors). By default, <code class="docutils literal notranslate"><span class="pre">&quot;INFO&quot;</span></code>.</p>
 </dd>
 <dt>cost_fpath<span class="classifier">path-like</span></dt><dd><p>Path to layered Zarr file containing cost and other required routing layers.</p>
-</dd>
-<dt>route_table_fpath<span class="classifier">path-like</span></dt><dd><p>Path to CSV file defining the start points and end features of all routes. Must have the following columns:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>“start_lat”: Stating point latitude (can alternatively use
-“start_col” to define the start point column index in the
-cost raster).</p></li>
-<li><p>“start_lon”: Stating point longitude (can alternatively
-use “start_row” to define the start point row index in the
-cost raster).</p></li>
-<li><p><cite>connection_identifier_column</cite>: ID of the feature that
-should be mapped to. This ID should match at least one of
-the feature IDs in the <cite>features_fpath</cite> input; otherwise,
-no route will be computed for that point.</p></li>
-</ul>
-</div></blockquote>
-</dd>
-<dt>features_fpath<span class="classifier">path-like</span></dt><dd><p>Path to vector file containing features to map points to. This file must have a column matching the <cite>connection_identifier_column</cite> parameter that maps each feature back to the starting points defined in the <cite>route_table</cite>.</p>
 </dd>
 <dt>cost_layers<span class="classifier">list</span></dt><dd><p>List of dictionaries defining the layers that are summed to determine total costs raster used for routing. Each layer is pre-processed before summation according to the user input. Each dict in the list should have the following keys:</p>
 <blockquote>
@@ -3602,6 +3629,30 @@ of “million $ per mile” and will be converted to
 <p>If a pixel has a final cost of <span class="math notranslate nohighlight">\(\leq 0\)</span>, it is treated
 as a barrier (i.e. no paths can ever cross this pixel).</p>
 </div>
+</dd>
+<dt>route_table_fpath<span class="classifier">path-like, str, or list, default=”PIPELINE”</span></dt><dd><p>Route-table input defining all route start points and end features.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code>, then <code class="docutils literal notranslate"><span class="pre">features_fpath</span></code> must also be <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code> and the route tables will be pulled from the previous pipeline step. Pipeline inputs require previous outputs containing matching CSV route tables and GPKG feature files.</p>
+<p>Otherwise, provide either a single CSV path or a list of CSV paths. When a list is provided, <code class="docutils literal notranslate"><span class="pre">features_fpath</span></code> must also be a list with the same length, and each route table is paired with the feature file at the same list index.</p>
+<p>Each route table must have the following columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“start_lat”: Stating point latitude (can alternatively use
+“start_col” to define the start point column index in the
+cost raster).</p></li>
+<li><p>“start_lon”: Stating point longitude (can alternatively
+use “start_row” to define the start point row index in the
+cost raster).</p></li>
+<li><p><cite>connection_identifier_column</cite>: ID of the feature that
+should be mapped to. This ID should match at least one of
+the feature IDs in the <cite>features_fpath</cite> input; otherwise,
+no route will be computed for that point.</p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>features_fpath<span class="classifier">path-like, str, or list, default=”PIPELINE”</span></dt><dd><p>Feature input containing the vector geometries to map points to.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code>, then <code class="docutils literal notranslate"><span class="pre">route_table_fpath</span></code> must also be <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code> and the feature files will be pulled from the previous pipeline step.</p>
+<p>Otherwise, provide either a single vector path or a list of vector paths. When a list is provided, <code class="docutils literal notranslate"><span class="pre">route_table_fpath</span></code> must also be a list with the same length, and each feature file is paired with the route table at the same list index.</p>
+<p>Each feature file must have a column matching the <cite>connection_identifier_column</cite> parameter that maps each feature back to the starting points defined in the <cite>route_table</cite>.</p>
 </dd>
 <dt>friction_layers<span class="classifier">list, optional</span></dt><dd><p>Layers to be multiplied onto the aggregated cost layer to influence routing but NOT be reported in final cost (i.e. friction, barriers, etc.). These layers are first aggregated, and then the aggregated friction layer is applied to the aggregated cost. The cost at each pixel is therefore computed as:</p>
 <div class="math notranslate nohighlight">
@@ -3783,6 +3834,7 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
         <span class="s2">&quot;walltime&quot;</span><span class="p">:</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span><span class="p">,</span>
         <span class="s2">&quot;qos&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
         <span class="s2">&quot;memory&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+        <span class="s2">&quot;nodes&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
         <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;feature&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
         <span class="s2">&quot;conda_env&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
@@ -3816,6 +3868,7 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
   <span class="n">walltime</span><span class="p">:</span> <span class="s1">&#39;[REQUIRED IF ON HPC]&#39;</span>
   <span class="n">qos</span><span class="p">:</span> <span class="n">normal</span>
   <span class="n">memory</span><span class="p">:</span> <span class="n">null</span>
+  <span class="n">nodes</span><span class="p">:</span> <span class="mi">1</span>
   <span class="n">queue</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">feature</span><span class="p">:</span> <span class="n">null</span>
   <span class="n">conda_env</span><span class="p">:</span> <span class="n">null</span>
@@ -3857,6 +3910,7 @@ layers defined in the <cite>cost_layers</cite> parameter.</p>
 <span class="n">allocation</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span>
 <span class="n">walltime</span> <span class="o">=</span> <span class="s2">&quot;[REQUIRED IF ON HPC]&quot;</span>
 <span class="n">qos</span> <span class="o">=</span> <span class="s2">&quot;normal&quot;</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">keep_sh</span> <span class="o">=</span> <span class="n">false</span>
 <span class="n">memory_utilization_limit</span> <span class="o">=</span> <span class="mf">0.9</span>
 </pre></div>
@@ -3906,47 +3960,54 @@ memory you would like for your job, otherwise you
 will be limited to the standard node memory size
 (250GB).</p>
 </dd>
-<dt class="field-even">memory_utilization_limit<span class="colon">:</span></dt>
-<dd class="field-even"><p>(float, default=0.9)
+<dt class="field-even">nodes<span class="colon">:</span></dt>
+<dd class="field-even"><p>(int, optional)
+Number of nodes to split the project points across.
+Note that the total number of requested nodes for
+a job may be larger than this value if the command
+splits across other inputs. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+</dd>
+<dt class="field-odd">memory_utilization_limit<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(float, default=0.9)
 Fraction of <cite>system_mem_limit_gb</cite> to utilize for routing. Should be a value between 0 and 1. By default, <code class="docutils literal notranslate"><span class="pre">0.9</span></code>.</p>
 </dd>
-<dt class="field-odd">queue<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional; PBS ONLY)
+<dt class="field-even">queue<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional; PBS ONLY)
 HPC queue to submit job to. Examples include: ‘debug’,
 ‘short’, ‘batch’, ‘batch-h’, ‘long’, etc.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which uses “test_queue”.</p>
 </dd>
-<dt class="field-even">feature<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">feature<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Additional flags for SLURM job (e.g. “-p debug”).
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not specify any
 additional flags.</p>
 </dd>
-<dt class="field-odd">conda_env<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">conda_env<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Name of conda environment to activate. By default,
 <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not load any environments.</p>
 </dd>
-<dt class="field-even">module<span class="colon">:</span></dt>
-<dd class="field-even"><p>(str, optional)
+<dt class="field-odd">module<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(str, optional)
 Module to load. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not
 load any modules.</p>
 </dd>
-<dt class="field-odd">sh_script<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">sh_script<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Extra shell script to run before command call.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not run any
 scripts.</p>
 </dd>
-<dt class="field-even">keep_sh<span class="colon">:</span></dt>
-<dd class="field-even"><p>(bool, optional)
+<dt class="field-odd">keep_sh<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(bool, optional)
 Option to keep the HPC submission script on disk.
 Only has effect if executing on HPC. By default,
 <code class="docutils literal notranslate"><span class="pre">False</span></code>, which purges the submission scripts
 after each job is submitted.</p>
 </dd>
-<dt class="field-odd">num_test_nodes<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(str, optional)
+<dt class="field-even">num_test_nodes<span class="colon">:</span></dt>
+<dd class="field-even"><p>(str, optional)
 Number of nodes to submit before terminating the
 submission process. This can be used to test a
 new submission configuration without submitting

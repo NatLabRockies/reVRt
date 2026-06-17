@@ -825,6 +825,8 @@ window.runMermaid = runMermaid;</script>
 <span></span><span class="sd">&quot;&quot;&quot;reVRt point-to-feature routing CLI command&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">abc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
@@ -832,6 +834,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gaps.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLICommandFromFunction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gaps.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">TAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gaps.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_previous_status</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.cli.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">run_lcp</span><span class="p">,</span>
@@ -839,10 +843,11 @@ window.runMermaid = runMermaid;</script>
     <span class="n">split_routes</span><span class="p">,</span>
     <span class="n">RouteToDefinitionConverter</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">strip_path_keys</span><span class="p">,</span> <span class="n">log_runtime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">strip_path_keys</span><span class="p">,</span> <span class="n">strip_path</span><span class="p">,</span> <span class="n">log_runtime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">map_to_costs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.costs.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_config</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.raster</span><span class="w"> </span><span class="kn">import</span> <span class="n">integer_dimension_window</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtConfigurationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span>
 
 
@@ -1012,11 +1017,11 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.point_to_feature.compute_lcp_routes.html#revrt.routing.cli.point_to_feature.compute_lcp_routes">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_lcp_routes</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913, PLR0917</span>
     <span class="n">cost_fpath</span><span class="p">,</span>
-    <span class="n">route_table_fpath</span><span class="p">,</span>
-    <span class="n">features_fpath</span><span class="p">,</span>
     <span class="n">cost_layers</span><span class="p">,</span>
     <span class="n">out_dir</span><span class="p">,</span>
     <span class="n">job_name</span><span class="p">,</span>
+    <span class="n">route_table_fpath</span><span class="o">=</span><span class="s2">&quot;PIPELINE&quot;</span><span class="p">,</span>
+    <span class="n">features_fpath</span><span class="o">=</span><span class="s2">&quot;PIPELINE&quot;</span><span class="p">,</span>
     <span class="n">friction_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">barrier_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">tracked_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1045,26 +1050,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    cost_fpath : path-like</span>
 <span class="sd">        Path to layered Zarr file containing cost and other required</span>
 <span class="sd">        routing layers.</span>
-<span class="sd">    route_table_fpath : path-like</span>
-<span class="sd">        Path to CSV file defining the start points and end features of</span>
-<span class="sd">        all routes. Must have the following columns:</span>
-
-<span class="sd">            - &quot;start_lat&quot;: Stating point latitude (can alternatively use</span>
-<span class="sd">              &quot;start_col&quot; to define the start point column index in the</span>
-<span class="sd">              cost raster).</span>
-<span class="sd">            - &quot;start_lon&quot;: Stating point longitude (can alternatively</span>
-<span class="sd">              use &quot;start_row&quot; to define the start point row index in the</span>
-<span class="sd">              cost raster).</span>
-<span class="sd">            - `connection_identifier_column`: ID of the feature that</span>
-<span class="sd">              should be mapped to. This ID should match at least one of</span>
-<span class="sd">              the feature IDs in the `features_fpath` input; otherwise,</span>
-<span class="sd">              no route will be computed for that point.</span>
-
-<span class="sd">    features_fpath : path-like</span>
-<span class="sd">        Path to vector file containing features to map points to. This</span>
-<span class="sd">        file must have a column matching the</span>
-<span class="sd">        `connection_identifier_column` parameter that maps each feature</span>
-<span class="sd">        back to the starting points defined in the `route_table`.</span>
 <span class="sd">    cost_layers : list</span>
 <span class="sd">        List of dictionaries defining the layers that are summed to</span>
 <span class="sd">        determine total costs raster used for routing. Each layer is</span>
@@ -1137,6 +1122,51 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Directory where routing outputs should be written.</span>
 <span class="sd">    job_name : str</span>
 <span class="sd">        Label used to name the generated output file.</span>
+<span class="sd">    route_table_fpath : path-like, str, or list, default=&quot;PIPELINE&quot;</span>
+<span class="sd">        Route-table input defining all route start points and end</span>
+<span class="sd">        features.</span>
+
+<span class="sd">        If set to ``&quot;PIPELINE&quot;``, then ``features_fpath`` must also</span>
+<span class="sd">        be ``&quot;PIPELINE&quot;`` and the route tables will be pulled from</span>
+<span class="sd">        the previous pipeline step. Pipeline inputs require previous</span>
+<span class="sd">        outputs containing matching CSV route tables and GPKG</span>
+<span class="sd">        feature files.</span>
+
+<span class="sd">        Otherwise, provide either a single CSV path or a list of</span>
+<span class="sd">        CSV paths. When a list is provided, ``features_fpath`` must</span>
+<span class="sd">        also be a list with the same length, and each route table</span>
+<span class="sd">        is paired with the feature file at the same list index.</span>
+
+<span class="sd">        Each route table must have the following columns:</span>
+
+<span class="sd">            - &quot;start_lat&quot;: Stating point latitude (can alternatively use</span>
+<span class="sd">              &quot;start_col&quot; to define the start point column index in the</span>
+<span class="sd">              cost raster).</span>
+<span class="sd">            - &quot;start_lon&quot;: Stating point longitude (can alternatively</span>
+<span class="sd">              use &quot;start_row&quot; to define the start point row index in the</span>
+<span class="sd">              cost raster).</span>
+<span class="sd">            - `connection_identifier_column`: ID of the feature that</span>
+<span class="sd">              should be mapped to. This ID should match at least one of</span>
+<span class="sd">              the feature IDs in the `features_fpath` input; otherwise,</span>
+<span class="sd">              no route will be computed for that point.</span>
+
+<span class="sd">    features_fpath : path-like, str, or list, default=&quot;PIPELINE&quot;</span>
+<span class="sd">        Feature input containing the vector geometries to map points to.</span>
+
+<span class="sd">        If set to ``&quot;PIPELINE&quot;``, then ``route_table_fpath`` must</span>
+<span class="sd">        also be ``&quot;PIPELINE&quot;`` and the feature files will be pulled</span>
+<span class="sd">        from the previous pipeline step.</span>
+
+<span class="sd">        Otherwise, provide either a single vector path or a list of</span>
+<span class="sd">        vector paths. When a list is provided,</span>
+<span class="sd">        ``route_table_fpath`` must also be a list with the same</span>
+<span class="sd">        length, and each feature file is paired with the route table</span>
+<span class="sd">        at the same list index.</span>
+
+<span class="sd">        Each feature file must have a column matching the</span>
+<span class="sd">        `connection_identifier_column` parameter that maps each</span>
+<span class="sd">        feature back to the starting points defined in the</span>
+<span class="sd">        `route_table`.</span>
 <span class="sd">    friction_layers : list, optional</span>
 <span class="sd">        Layers to be multiplied onto the aggregated cost layer to</span>
 <span class="sd">        influence routing but NOT be reported in final cost</span>
@@ -1390,25 +1420,147 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_prep_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_prep_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">,</span> <span class="n">command_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pre-process config inputs for point-to-feature routing&quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
-        <span class="n">config</span><span class="p">,</span>
-        <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;route_table_fpath&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;features_fpath&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;out_dir&quot;</span><span class="p">,</span>
-        <span class="p">},</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">_handle_route_table_and_features_input</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">,</span> <span class="n">command_name</span>
     <span class="p">)</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_handle_route_table_and_features_input</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">,</span> <span class="n">command_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle route table and features input from user&quot;&quot;&quot;</span>
+
+    <span class="n">rt_is_pipeline</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;PIPELINE&quot;</span>
+    <span class="n">f_is_pipeline</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;PIPELINE&quot;</span>
+
+    <span class="k">if</span> <span class="n">rt_is_pipeline</span> <span class="o">!=</span> <span class="n">f_is_pipeline</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Both `route_table_fpath` and `features_fpath` must be set &quot;</span>
+            <span class="s2">&quot;to &#39;PIPELINE&#39; for pipeline runs.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rt_is_pipeline</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_handle_non_pipeline_input</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">strip_path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">parse_previous_status</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">command_name</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">route_tables</span><span class="p">,</span> <span class="n">feature_files</span> <span class="o">=</span> <span class="n">_split_pipeline_route_inputs</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">route_tables</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_files</span>
+    <span class="k">return</span> <span class="n">config</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_pipeline_route_inputs</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split and align pipeline route-table and feature outputs&quot;&quot;&quot;</span>
+    <span class="n">route_tables</span> <span class="o">=</span> <span class="p">[</span><span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">]</span>
+    <span class="n">feature_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.gpkg&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">route_tables</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">feature_files</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Pipeline route-features input requires previous outputs with &quot;</span>
+            <span class="s2">&quot;both CSV route tables and GPKG feature files.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_tables</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_files</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Pipeline route-features input requires the same number of &quot;</span>
+            <span class="s2">&quot;CSV route tables and GPKG feature files.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_tables</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">route_tables</span><span class="p">,</span> <span class="n">feature_files</span>
+
+    <span class="n">feature_map</span> <span class="o">=</span> <span class="n">_match_pipeline_feature_files</span><span class="p">(</span><span class="n">route_tables</span><span class="p">,</span> <span class="n">feature_files</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">route_tables</span><span class="p">,</span> <span class="p">[</span><span class="n">feature_map</span><span class="p">[</span><span class="n">fp</span><span class="p">]</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">route_tables</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_match_pipeline_feature_files</span><span class="p">(</span><span class="n">route_tables</span><span class="p">,</span> <span class="n">feature_files</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Match route tables to feature files using the GAPs split tag&quot;&quot;&quot;</span>
+    <span class="n">route_tags</span> <span class="o">=</span> <span class="p">{</span><span class="n">_pipeline_file_tag</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span> <span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">route_tables</span><span class="p">}</span>
+    <span class="n">feature_tags</span> <span class="o">=</span> <span class="p">{</span><span class="n">_pipeline_file_tag</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span> <span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">feature_files</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">route_tags</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">feature_tags</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Pipeline route-features inputs are ambiguously tagged.&quot;</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_tags</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_tables</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_tags</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span>
+        <span class="n">feature_files</span>
+    <span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Pipeline route-features inputs are ambiguously tagged.&quot;</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">route_tags</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feature_tags</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Could not align pipeline route-table CSV outputs with &quot;</span>
+            <span class="s2">&quot;mapped-feature GPKG outputs using the GAPs split tag.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="n">route_tags</span><span class="p">[</span><span class="n">tag</span><span class="p">]:</span> <span class="n">feature_tags</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">route_tags</span><span class="p">)}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pipeline_file_tag</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract the GAPs split tag from a pipeline output filepath&quot;&quot;&quot;</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">rf</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">TAG</span><span class="p">)</span><span class="si">}</span><span class="s2">\d+)$&quot;</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_handle_non_pipeline_input</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle non-pipeline input from user&quot;&quot;&quot;</span>
+    <span class="n">rt_fp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span>
+    <span class="n">f_fp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span>
+    <span class="n">rt_is_sequence</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">rt_fp</span><span class="p">,</span> <span class="nb">str</span>
+    <span class="p">)</span>
+    <span class="n">f_is_sequence</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_fp</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">f_fp</span><span class="p">,</span> <span class="nb">str</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rt_is_sequence</span> <span class="ow">or</span> <span class="n">f_is_sequence</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rt_is_sequence</span> <span class="ow">and</span> <span class="n">f_is_sequence</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;`route_table_fpath` and `features_fpath` must both &quot;</span>
+                <span class="s2">&quot;be sequences or both be strings.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f_fp</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;`route_table_fpath` and `features_fpath` sequences &quot;</span>
+                <span class="s2">&quot;must be the same length.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">rt_fp</span><span class="p">]</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">f_fp</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;`route_table_fpath` and `features_fpath` must both be &quot;</span>
+            <span class="s2">&quot;sequences or both be strings.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">)]</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">f_fp</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">config</span>
 
 
 <span class="n">route_features_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
     <span class="n">compute_lcp_routes</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;route-features&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">split_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;_split_params&quot;</span><span class="p">},</span>
+    <span class="n">split_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;features_fpath&quot;</span><span class="p">),</span> <span class="s2">&quot;_split_params&quot;</span><span class="p">],</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_prep_config</span><span class="p">,</span>
     <span class="n">skip_doc_params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;system_mem_limit_gb&quot;</span><span class="p">],</span>
 <span class="p">)</span>

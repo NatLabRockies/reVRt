@@ -824,21 +824,23 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for revrt.routing.utilities</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;reVRt routing module utilities&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">batched</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">rasterio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dask</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">rasterio</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Point</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtValueError</span><span class="p">,</span> <span class="n">revrtRuntimeError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">region_mapper</span><span class="p">,</span> <span class="n">transform_xy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">IncrementalWriter</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtValueError</span><span class="p">,</span> <span class="n">revrtRuntimeError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -857,6 +859,8 @@ window.runMermaid = runMermaid;</script>
         <span class="n">regions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">region_identifier_column</span><span class="o">=</span><span class="s2">&quot;rid&quot;</span><span class="p">,</span>
         <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+        <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
@@ -883,6 +887,14 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Column in output data (both features and points) that will</span>
 <span class="sd">            be used to link the points to the features that should be</span>
 <span class="sd">            routed to. By default, ``&quot;end_feat_id&quot;``.</span>
+<span class="sd">        batch_size : int, default=500</span>
+<span class="sd">            Number of points to process in each batch when writing</span>
+<span class="sd">            clipped features to file. By default, ``500``.</span>
+<span class="sd">        max_workers : int, optional</span>
+<span class="sd">            Number of parallel workers to use for point-to-feature</span>
+<span class="sd">            clipping. If ``None`` or &gt;1, clipping is performed in</span>
+<span class="sd">            parallel using Dask&#39;s process scheduler.</span>
+<span class="sd">            By default, ``None``, which uses all CPU cores.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_crs</span> <span class="o">=</span> <span class="n">crs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_features_fp</span> <span class="o">=</span> <span class="n">features_fp</span>
@@ -890,6 +902,8 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rid_column</span> <span class="o">=</span> <span class="n">region_identifier_column</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn_id_column</span> <span class="o">=</span> <span class="n">connection_identifier_column</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_regions</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span> <span class="o">=</span> <span class="n">max_workers</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_regions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">regions</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the regions GeoDataFrame&quot;&quot;&quot;</span>
@@ -910,10 +924,12 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">points</span><span class="p">,</span>
         <span class="n">feature_out_fp</span><span class="p">,</span>
+        <span class="n">route_table_out_fp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">expand_radius</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">clip_points_to_regions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+        <span class="n">voltages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">polarities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Map points to features within the point region</span>
 
@@ -927,6 +943,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            be added automatically. This file will contain all features</span>
 <span class="sd">            clipped to each point (with a feature ID column added to</span>
 <span class="sd">            link back to the points).</span>
+<span class="sd">        route_table_out_fp : path-like, optional</span>
+<span class="sd">            Optional file path to incrementally persist mapped point</span>
+<span class="sd">            assignments. If the route table and feature outputs already</span>
+<span class="sd">            exist, the mapper resumes from the previously completed</span>
+<span class="sd">            points. By default, ``None``.</span>
 <span class="sd">        radius : float or str, optional</span>
 <span class="sd">            Radius (in CRS units) around each point to clip features to.</span>
 <span class="sd">            If `str`, the column in `points` to use for radius values.</span>
@@ -941,9 +962,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            this parameter has no effect. If ``False``, all points are</span>
 <span class="sd">            used as-is, which means points outside of the regions domain</span>
 <span class="sd">            are mapped to the closest region. By default, ``False``.</span>
-<span class="sd">        batch_size : int, default=500</span>
-<span class="sd">            Number of points to process in each batch when writing</span>
-<span class="sd">            clipped features to file. By default, ``500``.</span>
+<span class="sd">        voltages : iterable of str or int, optional</span>
+<span class="sd">            Voltage values to assign to the output route table. If</span>
+<span class="sd">            provided, each mapped point-to-feature connection is</span>
+<span class="sd">            duplicated once per voltage value and a ``voltage`` column</span>
+<span class="sd">            is added. By default, ``None``.</span>
+<span class="sd">        polarities : iterable of str, optional</span>
+<span class="sd">            Polarity values to assign to the output route table. If</span>
+<span class="sd">            provided, each mapped point-to-feature connection is</span>
+<span class="sd">            duplicated once per polarity value and a ``polarity``</span>
+<span class="sd">            column is added. By default, ``None``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -957,7 +985,7 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_crs</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_crs</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn_id_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_regions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -965,30 +993,144 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">points</span><span class="p">,</span> <span class="n">clip_points_to_regions</span>
             <span class="p">)</span>
 
+        <span class="n">points</span><span class="p">,</span> <span class="n">next_conn_id</span> <span class="o">=</span> <span class="n">_resume_points</span><span class="p">(</span>
+            <span class="n">points</span><span class="p">,</span>
+            <span class="n">feature_out_fp</span><span class="p">,</span>
+            <span class="n">route_table_out_fp</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn_id_column</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rid_column</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="n">writer</span> <span class="o">=</span> <span class="n">_init_streaming_writer</span><span class="p">(</span><span class="n">feature_out_fp</span><span class="p">)</span>
-        <span class="n">batches</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="p">(</span><span class="n">row_ind</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()):</span>
-            <span class="n">clipped_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clip_to_point</span><span class="p">(</span>
-                <span class="n">point</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">expand_radius</span>
+        <span class="n">route_writer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">route_table_out_fp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">route_writer</span> <span class="o">=</span> <span class="n">IncrementalWriter</span><span class="p">(</span><span class="n">route_table_out_fp</span><span class="p">)</span>
+
+        <span class="n">pending_points</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn_id_column</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">pending_points</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;All points already mapped; nothing to resume&quot;</span><span class="p">)</span>
+
+        <span class="n">total_pending_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending_points</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">total_pending_points</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Mapping </span><span class="si">%d</span><span class="s2"> point(s) to nearby features in batches of </span><span class="si">%d</span><span class="s2"> &quot;</span>
+                <span class="s2">&quot;using </span><span class="si">%s</span><span class="s2"> workers&quot;</span><span class="p">,</span>
+                <span class="n">total_pending_points</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span><span class="p">,</span>
+                <span class="s2">&quot;all&quot;</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">}</span>
+                <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">)</span>
+
+        <span class="n">processed_points</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">point_batch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_point_batches</span><span class="p">(</span>
+            <span class="n">pending_points</span><span class="p">,</span> <span class="n">start_conn_id</span><span class="o">=</span><span class="n">next_conn_id</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_batch</span><span class="p">(</span>
+                <span class="n">points</span><span class="p">,</span>
+                <span class="n">point_batch</span><span class="p">,</span>
+                <span class="n">writer</span><span class="p">,</span>
+                <span class="n">radius</span><span class="p">,</span>
+                <span class="n">expand_radius</span><span class="p">,</span>
+                <span class="n">route_writer</span><span class="o">=</span><span class="n">route_writer</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">processed_points</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">point_batch</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> (</span><span class="si">%.2f%%</span><span class="s2">) points processed&quot;</span><span class="p">,</span>
+                <span class="n">processed_points</span><span class="p">,</span>
+                <span class="n">total_pending_points</span><span class="p">,</span>
+                <span class="n">processed_points</span> <span class="o">/</span> <span class="n">total_pending_points</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">route_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drop_unpaired_points</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">route_table</span> <span class="o">=</span> <span class="n">_add_voltage_polarity</span><span class="p">(</span><span class="n">route_table</span><span class="p">,</span> <span class="n">voltages</span><span class="p">,</span> <span class="n">polarities</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">route_table_out_fp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">route_table</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+                <span class="n">route_table_out_fp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">route_table</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_iter_point_batches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">start_conn_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate batches of points for processing&quot;&quot;&quot;</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="p">(</span><span class="n">row_ind</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="n">points</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="n">start</span><span class="o">=</span><span class="n">start_conn_id</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">batched</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_batch</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">points</span><span class="p">,</span>
+        <span class="n">point_batch</span><span class="p">,</span>
+        <span class="n">writer</span><span class="p">,</span>
+        <span class="n">radius</span><span class="p">,</span>
+        <span class="n">expand_radius</span><span class="p">,</span>
+        <span class="n">route_writer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process one point batch and flush complete feature chunks&quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">routed_point_indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">,</span> <span class="n">clipped_features</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_point_batch</span><span class="p">(</span>
+            <span class="n">point_batch</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">expand_radius</span>
+        <span class="p">):</span>
             <span class="k">if</span> <span class="n">clipped_features</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
                 <span class="k">continue</span>
 
-            <span class="n">clipped_features</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn_id_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind</span>
-            <span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">row_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn_id_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind</span>
-            <span class="n">batches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clipped_features</span><span class="p">)</span>
+            <span class="n">clipped_features</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn_id_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">conn_id</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">row_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn_id_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">conn_id</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clipped_features</span><span class="p">)</span>
+            <span class="n">routed_point_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_ind</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">batches</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">batch_size</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dumping batch of features to file...&quot;</span><span class="p">)</span>
-                <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">batches</span><span class="p">))</span>
-                <span class="n">batches</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">:</span>
+            <span class="k">return</span>
 
-        <span class="k">if</span> <span class="n">batches</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dumping batch of features to file...&quot;</span><span class="p">)</span>
-            <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">batches</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dumping batch of </span><span class="si">%d</span><span class="s2"> features to file...&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">))</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">results</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drop_unpaired_points</span><span class="p">(</span><span class="n">points</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">route_writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
 
+        <span class="n">route_table_batch</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">routed_point_indices</span><span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span>
+        <span class="p">)</span>
+        <span class="n">route_writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">route_table_batch</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_point_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_batch</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">expand_radius</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute clipped features for a batch of points&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_clip_point_job</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">expand_radius</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">point_batch</span>
+            <span class="p">]</span>
+
+        <span class="n">num_workers</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">}</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_workers</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> point(s) in parallel with Dask num_workers=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">point_batch</span><span class="p">),</span>
+            <span class="n">num_workers</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">dask</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_clip_point_job</span><span class="p">)(</span><span class="n">job</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">expand_radius</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">point_batch</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">dask</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span>
+                <span class="o">*</span><span class="n">tasks</span><span class="p">,</span>
+                <span class="n">scheduler</span><span class="o">=</span><span class="s2">&quot;processes&quot;</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clip_point_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">expand_radius</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clip features for one point and return point metadata&quot;&quot;&quot;</span>
+        <span class="n">conn_id</span><span class="p">,</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">point</span> <span class="o">=</span> <span class="n">job</span>
+        <span class="n">clipped_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clip_to_point</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">expand_radius</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">,</span> <span class="n">clipped_features</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_map_points_to_nearest_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">clip_points_to_regions</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Map points to nearest region; optionally clip to regions&quot;&quot;&quot;</span>
@@ -1033,7 +1175,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">features</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_rid_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">rid</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> transmission features found in region with id </span><span class="si">%s</span><span class="s2"> &quot;</span><span class="p">,</span>
+            <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> transmission feature(s) found in region with id </span><span class="si">%s</span><span class="s2"> &quot;</span><span class="p">,</span>
             <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">),</span>
             <span class="n">rid</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1400,6 +1542,120 @@ window.runMermaid = runMermaid;</script>
         <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">features</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resume_points</span><span class="p">(</span>
+    <span class="n">points</span><span class="p">,</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span><span class="p">,</span> <span class="n">conn_id_column</span><span class="p">,</span> <span class="n">rid_column</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recover previously completed mappings from prior outputs&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">feature_out_fp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">route_table_out_fp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">points</span><span class="p">,</span> <span class="mi">0</span>
+
+    <span class="n">feature_out_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">feature_out_fp</span><span class="p">)</span>
+    <span class="n">route_table_out_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">route_table_out_fp</span><span class="p">)</span>
+    <span class="n">feature_output_missing</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">feature_out_fp</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="n">route_table_missing</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">route_table_out_fp</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">feature_output_missing</span> <span class="ow">or</span> <span class="n">route_table_missing</span><span class="p">:</span>
+        <span class="n">feature_out_fp</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">route_table_out_fp</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Feature output missing: </span><span class="si">%r</span><span class="s2">; route table missing: </span><span class="si">%r</span><span class="s2">. &quot;</span>
+            <span class="s2">&quot;Restarting point mapping...&quot;</span><span class="p">,</span>
+            <span class="n">feature_output_missing</span><span class="p">,</span>
+            <span class="n">route_table_missing</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">points</span><span class="p">,</span> <span class="mi">0</span>
+
+    <span class="n">route_table</span> <span class="o">=</span> <span class="n">_read_route_table</span><span class="p">(</span><span class="n">route_table_out_fp</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">route_table</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="n">feature_out_fp</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">route_table_out_fp</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Existing route table is empty; restarting point mapping&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">points</span><span class="p">,</span> <span class="mi">0</span>
+
+    <span class="n">key_columns</span> <span class="o">=</span> <span class="n">_resume_key_columns</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">route_table</span><span class="p">,</span> <span class="n">rid_column</span><span class="p">)</span>
+    <span class="n">existing_route_table</span> <span class="o">=</span> <span class="n">route_table</span><span class="p">[[</span><span class="o">*</span><span class="n">key_columns</span><span class="p">,</span> <span class="n">conn_id_column</span><span class="p">]]</span>
+    <span class="n">existing_route_table</span> <span class="o">=</span> <span class="n">existing_route_table</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span>
+        <span class="n">subset</span><span class="o">=</span><span class="n">key_columns</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="s2">&quot;last&quot;</span>
+    <span class="p">)</span>
+    <span class="n">conn_ids</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span>
+        <span class="n">existing_route_table</span><span class="p">[</span><span class="n">conn_id_column</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;coerce&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">conn_ids</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Cannot resume point-to-feature mapping because the &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;existing route table contains invalid &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">conn_id_column</span><span class="si">}</span><span class="s2">&#39; values&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">existing_lookup</span> <span class="o">=</span> <span class="n">existing_route_table</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">key_columns</span><span class="p">)[</span>
+        <span class="n">conn_id_column</span>
+    <span class="p">]</span>
+    <span class="n">point_keys</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_frame</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">key_columns</span><span class="p">])</span>
+    <span class="n">points</span><span class="p">[</span><span class="n">conn_id_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">existing_lookup</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">point_keys</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+    <span class="n">completed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">conn_id_column</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Resuming point-to-feature mapping from </span><span class="si">%d</span><span class="s2"> completed point(s)&quot;</span><span class="p">,</span>
+        <span class="n">completed</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">next_conn_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">conn_ids</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">points</span><span class="p">,</span> <span class="n">next_conn_id</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resume_key_columns</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">route_table</span><span class="p">,</span> <span class="n">rid_column</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine columns used to match existing route rows&quot;&quot;&quot;</span>
+    <span class="n">key_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">,</span> <span class="s2">&quot;start_col&quot;</span><span class="p">]</span>
+    <span class="n">missing_columns</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">col</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">key_columns</span>
+        <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">route_table</span><span class="o">.</span><span class="n">columns</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing_columns</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Cannot resume point-to-feature mapping because the &quot;</span>
+            <span class="s2">&quot;existing route table is missing required columns: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">missing_columns</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rid_column</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">rid_column</span> <span class="ow">in</span> <span class="n">route_table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">key_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rid_column</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">key_columns</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_route_table</span><span class="p">(</span><span class="n">route_table_out_fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a route table from disk, tolerating empty files&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">route_table_out_fp</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">EmptyDataError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_voltage_polarity</span><span class="p">(</span><span class="n">route_table</span><span class="p">,</span> <span class="n">voltages</span><span class="p">,</span> <span class="n">polarities</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add voltage and polarity columns to route table&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">voltages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">voltages</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">voltages</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">voltages</span><span class="p">:</span>
+        <span class="n">route_table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">route_table</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">voltage</span><span class="o">=</span><span class="n">voltage</span><span class="p">)</span> <span class="k">for</span> <span class="n">voltage</span> <span class="ow">in</span> <span class="n">voltages</span><span class="p">],</span>
+            <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">polarities</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">polarities</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">polarities</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">polarities</span><span class="p">:</span>
+        <span class="n">route_table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">route_table</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">polarity</span><span class="o">=</span><span class="n">polarity</span><span class="p">)</span> <span class="k">for</span> <span class="n">polarity</span> <span class="ow">in</span> <span class="n">polarities</span><span class="p">],</span>
+            <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">route_table</span>
 </pre></div>
 
                 </article>

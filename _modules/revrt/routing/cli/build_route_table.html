@@ -832,6 +832,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gaps.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLICommandFromFunction</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.cli.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">route_points_subset</span><span class="p">,</span> <span class="n">split_routes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">PointToFeatureMapper</span><span class="p">,</span>
     <span class="n">filter_points_outside_cost_domain</span><span class="p">,</span>
@@ -858,11 +859,16 @@ window.runMermaid = runMermaid;</script>
     <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">points_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">expand_radius</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">voltages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">polarities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">feature_out_fp</span><span class="o">=</span><span class="s2">&quot;mapped_features.gpkg&quot;</span><span class="p">,</span>
     <span class="n">route_table_out_fp</span><span class="o">=</span><span class="s2">&quot;route_table.csv&quot;</span><span class="p">,</span>
     <span class="n">region_identifier_column</span><span class="o">=</span><span class="s2">&quot;rid&quot;</span><span class="p">,</span>
     <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">tag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">_split_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a route table mapping points to nearest features</span>
 
@@ -876,6 +882,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    of the point (in the cost raster) and the ID of the feature it maps</span>
 <span class="sd">    to. The mapped features are also output as a separate file that</span>
 <span class="sd">    contains the same feature IDs for linking to the route table.</span>
+
+<span class="sd">    This command can be re-started from a partially completed state by</span>
+<span class="sd">    providing the same output file paths. The command will check for</span>
+<span class="sd">    existing outputs and skip any points that have already been mapped</span>
+<span class="sd">    to features. If the output files are not provided or do not exist,</span>
+<span class="sd">    the command will start from the beginning and create new output</span>
+<span class="sd">    files.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -930,6 +943,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Option to expand the `radius` value for each point until at</span>
 <span class="sd">        least one feature is found to connect to. This input has no</span>
 <span class="sd">        effect if `radius` is ``None``. By default, ``True``.</span>
+<span class="sd">    voltages : list of str or int, optional</span>
+<span class="sd">        Voltage values to assign to the output route table. If</span>
+<span class="sd">        provided, each mapped point-to-feature connection is duplicated</span>
+<span class="sd">        once per voltage value and a ``voltage`` column is added. By</span>
+<span class="sd">        default, ``None``.</span>
+<span class="sd">    polarities : list of str, optional</span>
+<span class="sd">        Polarity values to assign to the output route table. If</span>
+<span class="sd">        provided, each mapped point-to-feature connection is duplicated</span>
+<span class="sd">        once per polarity value and a ``polarity`` column is added. By</span>
+<span class="sd">        default, ``None``.</span>
 <span class="sd">    feature_out_fp : str, default=&quot;mapped_features.gpkg&quot;</span>
 <span class="sd">        Name of output file for mapped (and potentially clipped)</span>
 <span class="sd">        features. This output file will contain an identifier column</span>
@@ -953,6 +976,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Number of features to process before writing to output feature</span>
 <span class="sd">        file. This can be used to tune the tradeoff between performance</span>
 <span class="sd">        and memory requirements. By default, ``500``.</span>
+<span class="sd">    max_workers : int, optional</span>
+<span class="sd">        Number of parallel workers to use for point-to-feature clipping.</span>
+<span class="sd">        If ``None`` or &gt;1, clipping is performed in parallel using Dask.</span>
+<span class="sd">        By default, ``None``, which uses all CPU cores.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -965,6 +992,12 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span> <span class="o">=</span> <span class="n">_check_output_filepaths</span><span class="p">(</span>
             <span class="n">out_dir</span><span class="p">,</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
+        <span class="p">)</span>
+        <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span> <span class="o">=</span> <span class="n">_tag_output_filepaths</span><span class="p">(</span>
+            <span class="n">feature_out_fp</span><span class="p">,</span>
+            <span class="n">route_table_out_fp</span><span class="p">,</span>
+            <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">,</span>
+            <span class="n">split_params</span><span class="o">=</span><span class="n">_split_params</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cost input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">cost_fpath</span><span class="p">)</span>
@@ -989,6 +1022,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">points_fpath</span><span class="o">=</span><span class="n">points_fpath</span><span class="p">,</span>
             <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">route_points_subset</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">split_params</span><span class="o">=</span><span class="n">_split_params</span><span class="p">)</span>
 
         <span class="n">mapper</span> <span class="o">=</span> <span class="n">PointToFeatureMapper</span><span class="p">(</span>
             <span class="n">crs</span><span class="p">,</span>
@@ -996,17 +1030,18 @@ window.runMermaid = runMermaid;</script>
             <span class="n">regions</span><span class="p">,</span>
             <span class="n">region_identifier_column</span><span class="o">=</span><span class="n">region_identifier_column</span><span class="p">,</span>
             <span class="n">connection_identifier_column</span><span class="o">=</span><span class="n">connection_identifier_column</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_workers</span><span class="o">=</span><span class="n">max_workers</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">route_table</span> <span class="o">=</span> <span class="n">mapper</span><span class="o">.</span><span class="n">map_points</span><span class="p">(</span>
+        <span class="n">mapper</span><span class="o">.</span><span class="n">map_points</span><span class="p">(</span>
             <span class="n">points</span><span class="p">,</span>
             <span class="n">feature_out_fp</span><span class="p">,</span>
+            <span class="n">route_table_out_fp</span><span class="o">=</span><span class="n">route_table_out_fp</span><span class="p">,</span>
             <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
             <span class="n">expand_radius</span><span class="o">=</span><span class="n">expand_radius</span><span class="p">,</span>
             <span class="n">clip_points_to_regions</span><span class="o">=</span><span class="n">clip_points_to_regions</span><span class="p">,</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">route_table</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">route_table_out_fp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span>
+            <span class="n">voltages</span><span class="o">=</span><span class="n">voltages</span><span class="p">,</span>
+            <span class="n">polarities</span><span class="o">=</span><span class="n">polarities</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">route_table_out_fp</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">feature_out_fp</span><span class="p">)]</span></div>
@@ -1059,10 +1094,40 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_point_to_feature_route_table</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_tag_output_filepaths</span><span class="p">(</span>
+    <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_params</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tag node outputs so split runs do not clobber each other&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tag</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
+
+    <span class="n">__</span><span class="p">,</span> <span class="n">num_chunks</span> <span class="o">=</span> <span class="n">split_params</span> <span class="ow">or</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_chunks</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">_tag_filepath</span><span class="p">(</span><span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">tag</span><span class="p">),</span>
+        <span class="n">_tag_filepath</span><span class="p">(</span><span class="n">route_table_out_fp</span><span class="p">,</span> <span class="n">tag</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tag_filepath</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Insert node tag before file suffix&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">fp</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fp</span><span class="o">.</span><span class="n">stem</span><span class="si">}{</span><span class="n">tag</span><span class="si">}{</span><span class="n">fp</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_point_to_feature_route_table</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for point_to_feature_route_table command&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
-        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;features_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">}</span>
+        <span class="n">config</span><span class="p">,</span>
+        <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;features_fpath&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;out_dir&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;points_fpath&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;regions_fpath&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
     <span class="p">)</span>
 
 
@@ -1070,6 +1135,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">point_to_feature_route_table</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;build-feature-route-table&quot;</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">split_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;_split_params&quot;</span><span class="p">},</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_point_to_feature_route_table</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>

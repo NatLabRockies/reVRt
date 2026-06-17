@@ -841,7 +841,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="build_final_routing_layers">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.build_costs.build_final_routing_layers.html#revrt.routing.cli.build_costs.build_final_routing_layers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_final_routing_layers</span><span class="p">(</span>
-    <span class="n">lcp_config_fp</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">polarity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voltage</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">lcp_config_fp</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">,</span> <span class="n">polarity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voltage</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build out the final routing layers based on an LCP config file</span>
 
@@ -862,6 +862,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        created.</span>
 <span class="sd">    output_dir : path-like</span>
 <span class="sd">        Path to directory where to store the outputs.</span>
+<span class="sd">    routing_option : str</span>
+<span class="sd">        Routing option to use when building the routing layer. This</span>
+<span class="sd">        input is used to determine which cost and friction layers to use</span>
+<span class="sd">        when building the routing layer. The routing option must be one</span>
+<span class="sd">        of the options specified in the config file.</span>
 <span class="sd">    polarity : str, optional</span>
 <span class="sd">        Polarity to use when building the routing layer. This input is</span>
 <span class="sd">        required if any cost or friction layers that have</span>
@@ -889,14 +894,15 @@ window.runMermaid = runMermaid;</script>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;transmission_config&quot;</span><span class="p">)</span>
     <span class="p">)</span>
 
+    <span class="n">route_layer_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;routing_options&quot;</span><span class="p">][</span><span class="n">routing_option</span><span class="p">]</span>
     <span class="n">route_cl</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">],</span>
+        <span class="n">route_layer_config</span><span class="p">[</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">],</span>
         <span class="n">polarity</span><span class="p">,</span>
         <span class="n">voltage</span><span class="p">,</span>
         <span class="n">transmission_config</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">route_fl</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="n">route_layer_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span>
         <span class="n">polarity</span><span class="p">,</span>
         <span class="n">voltage</span><span class="p">,</span>
         <span class="n">transmission_config</span><span class="p">,</span>
@@ -906,7 +912,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">cost_fpath</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;cost_fpath&quot;</span><span class="p">],</span>
         <span class="n">cost_layers</span><span class="o">=</span><span class="n">route_cl</span><span class="p">,</span>
         <span class="n">friction_layers</span><span class="o">=</span><span class="n">route_fl</span><span class="p">,</span>
-        <span class="n">barrier_layers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">),</span>
+        <span class="n">barrier_layers</span><span class="o">=</span><span class="n">route_layer_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">),</span>
         <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">),</span>
         <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
         <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ignore_invalid_costs&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>

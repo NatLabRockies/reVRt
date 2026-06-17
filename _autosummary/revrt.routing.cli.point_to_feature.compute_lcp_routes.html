@@ -649,7 +649,7 @@
 <h1>revrt.routing.cli.point_to_feature.compute_lcp_routes<a class="headerlink" href="#revrt-routing-cli-point-to-feature-compute-lcp-routes" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="revrt.routing.cli.point_to_feature.compute_lcp_routes">
-<span class="sig-name descname"><span class="pre">compute_lcp_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_table_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">friction_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barrier_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_scalar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmission_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_routing_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_invalid_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connection_identifier_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'end_feat_id'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bidirectional_long_range_dijkstra'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_utilization_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_mem_limit_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_split_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/point_to_feature.html#compute_lcp_routes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.point_to_feature.compute_lcp_routes" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">compute_lcp_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_table_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PIPELINE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PIPELINE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">friction_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barrier_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_scalar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmission_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_routing_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_invalid_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connection_identifier_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'end_feat_id'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bidirectional_long_range_dijkstra'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_utilization_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_mem_limit_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_split_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/point_to_feature.html#compute_lcp_routes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.point_to_feature.compute_lcp_routes" title="Link to this definition">#</a></dt>
 <dd><p>Run least-cost path routing for points mapped to features</p>
 <p>Given a table that defines each route as a start point (via latitude
 and longitude input or preferably a row/column index into the data)
@@ -661,27 +661,6 @@ in the <cite>cost_layers</cite> parameter.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cost_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to layered Zarr file containing cost and other required
 routing layers.</p></li>
-<li><p><strong>route_table_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – <p>Path to CSV file defining the start points and end features of
-all routes. Must have the following columns:</p>
-<blockquote>
-<div><ul>
-<li><p>”start_lat”: Stating point latitude (can alternatively use
-“start_col” to define the start point column index in the
-cost raster).</p></li>
-<li><p>”start_lon”: Stating point longitude (can alternatively
-use “start_row” to define the start point row index in the
-cost raster).</p></li>
-<li><p><cite>connection_identifier_column</cite>: ID of the feature that
-should be mapped to. This ID should match at least one of
-the feature IDs in the <cite>features_fpath</cite> input; otherwise,
-no route will be computed for that point.</p></li>
-</ul>
-</div></blockquote>
-</p></li>
-<li><p><strong>features_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to vector file containing features to map points to. This
-file must have a column matching the
-<cite>connection_identifier_column</cite> parameter that maps each feature
-back to the starting points defined in the <cite>route_table</cite>.</p></li>
 <li><p><strong>cost_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>) – <p>List of dictionaries defining the layers that are summed to
 determine total costs raster used for routing. Each layer is
 pre-processed before summation according to the user input.
@@ -755,6 +734,47 @@ as a barrier (i.e. no paths can ever cross this pixel).</p>
 </p></li>
 <li><p><strong>out_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Directory where routing outputs should be written.</p></li>
 <li><p><strong>job_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Label used to name the generated output file.</p></li>
+<li><p><strong>route_table_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code>) – <p>Route-table input defining all route start points and end
+features.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code>, then <code class="docutils literal notranslate"><span class="pre">features_fpath</span></code> must also
+be <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code> and the route tables will be pulled from
+the previous pipeline step. Pipeline inputs require previous
+outputs containing matching CSV route tables and GPKG
+feature files.</p>
+<p>Otherwise, provide either a single CSV path or a list of
+CSV paths. When a list is provided, <code class="docutils literal notranslate"><span class="pre">features_fpath</span></code> must
+also be a list with the same length, and each route table
+is paired with the feature file at the same list index.</p>
+<p>Each route table must have the following columns:</p>
+<blockquote>
+<div><ul>
+<li><p>”start_lat”: Stating point latitude (can alternatively use
+“start_col” to define the start point column index in the
+cost raster).</p></li>
+<li><p>”start_lon”: Stating point longitude (can alternatively
+use “start_row” to define the start point row index in the
+cost raster).</p></li>
+<li><p><cite>connection_identifier_column</cite>: ID of the feature that
+should be mapped to. This ID should match at least one of
+the feature IDs in the <cite>features_fpath</cite> input; otherwise,
+no route will be computed for that point.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>features_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code>) – <p>Feature input containing the vector geometries to map points to.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code>, then <code class="docutils literal notranslate"><span class="pre">route_table_fpath</span></code> must
+also be <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code> and the feature files will be pulled
+from the previous pipeline step.</p>
+<p>Otherwise, provide either a single vector path or a list of
+vector paths. When a list is provided,
+<code class="docutils literal notranslate"><span class="pre">route_table_fpath</span></code> must also be a list with the same
+length, and each feature file is paired with the route table
+at the same list index.</p>
+<p>Each feature file must have a column matching the
+<cite>connection_identifier_column</cite> parameter that maps each
+feature back to the starting points defined in the
+<cite>route_table</cite>.</p>
+</p></li>
 <li><p><strong>friction_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – <p>Layers to be multiplied onto the aggregated cost layer to
 influence routing but NOT be reported in final cost
 (i.e. friction, barriers, etc.). These layers are first

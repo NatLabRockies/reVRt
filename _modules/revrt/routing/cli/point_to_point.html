@@ -1267,9 +1267,9 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_prep_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_prep_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pre-process config inputs for point-to-point routing&quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
         <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;route_table_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">}</span>
     <span class="p">)</span>

@@ -940,10 +940,18 @@ window.runMermaid = runMermaid;</script>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;str: JSON string describing configured cost layers&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
             <span class="p">{</span>
-                <span class="s2">&quot;cost_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_layers_for_rust</span><span class="p">()),</span>
-                <span class="s2">&quot;friction_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_friction_layers_for_rust</span><span class="p">()),</span>
-                <span class="s2">&quot;barrier_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_barrier_layers_for_rust</span><span class="p">()),</span>
                 <span class="s2">&quot;ignore_invalid_costs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
+                <span class="s2">&quot;routing_options&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;cost_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_layers_for_rust</span><span class="p">()),</span>
+                        <span class="s2">&quot;friction_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_friction_layers_for_rust</span><span class="p">()</span>
+                        <span class="p">),</span>
+                        <span class="s2">&quot;barrier_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_barrier_layers_for_rust</span><span class="p">()</span>
+                        <span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">},</span>
             <span class="p">}</span>
         <span class="p">)</span></div>
 
@@ -1733,32 +1741,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">num_complete</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">route_id</span><span class="p">,</span> <span class="n">solutions</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">results_iter</span><span class="p">)</span>
-                <span class="n">start_points</span><span class="p">,</span> <span class="n">end_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">[</span><span class="n">route_id</span><span class="p">]</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">solutions</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Unable to find route from </span><span class="si">{</span><span class="n">start_points</span><span class="si">}</span><span class="s2"> to any of &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">end_points</span><span class="si">}</span><span class="s2"> (route ID: </span><span class="si">{</span><span class="n">route_id</span><span class="si">}</span><span class="s2">). Please verify &quot;</span>
-                        <span class="s2">&quot;that the start and end points are not separated by &quot;</span>
-                        <span class="s2">&quot;hard barriers or invalid cost cells.&quot;</span>
-                    <span class="p">)</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                    <span class="k">continue</span>
-
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="s2">&quot;Got result from Rust for route_id </span><span class="si">%d</span><span class="s2">. Processing...&quot;</span>
-                    <span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- Start points: </span><span class="si">%r</span><span class="se">\n\t</span><span class="s2">- End points: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="n">route_id</span><span class="p">,</span>
-                    <span class="n">start_points</span><span class="p">,</span>
-                    <span class="n">end_points</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">for</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">dbl</span> <span class="ow">in</span> <span class="n">solutions</span><span class="p">:</span>
-                    <span class="n">attrs_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">route_id</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                    <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">route_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attrs_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_attrs</span><span class="p">),</span>
-                        <span class="s2">&quot;dropped_barrier_layers&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dbl</span><span class="p">),</span>
-                    <span class="p">}</span>
-                    <span class="k">yield</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">attrs</span>
-
+                <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_formatted_solutions</span><span class="p">(</span><span class="n">solutions</span><span class="p">,</span> <span class="n">route_id</span><span class="p">)</span>
                 <span class="n">time_elapsed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> minute(s)&quot;</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> (</span><span class="si">%.2f%%</span><span class="s2">) route definitions processed in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -1773,6 +1756,34 @@ window.runMermaid = runMermaid;</script>
             <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Routing complete&quot;</span><span class="p">)</span>
                 <span class="k">break</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_formatted_solutions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solutions</span><span class="p">,</span> <span class="n">route_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format reVRt output solutions and log any failures&quot;&quot;&quot;</span>
+        <span class="n">start_points</span><span class="p">,</span> <span class="n">end_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">[</span><span class="n">route_id</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">solutions</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unable to find route from </span><span class="si">{</span><span class="n">start_points</span><span class="si">}</span><span class="s2"> to any of &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">end_points</span><span class="si">}</span><span class="s2"> (route ID: </span><span class="si">{</span><span class="n">route_id</span><span class="si">}</span><span class="s2">). Please verify &quot;</span>
+                <span class="s2">&quot;that the start and end points are not separated by &quot;</span>
+                <span class="s2">&quot;hard barriers or invalid cost cells.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Got result from Rust for route_id </span><span class="si">%d</span><span class="s2">. Processing...&quot;</span>
+            <span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- Start points: </span><span class="si">%r</span><span class="se">\n\t</span><span class="s2">- End points: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">route_id</span><span class="p">,</span>
+            <span class="n">start_points</span><span class="p">,</span>
+            <span class="n">end_points</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">dbl</span> <span class="ow">in</span> <span class="n">solutions</span><span class="p">:</span>
+            <span class="n">attrs_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">route_id</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">route_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attrs_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_attrs</span><span class="p">),</span>
+                <span class="s2">&quot;dropped_barrier_layers&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dbl</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="k">yield</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">attrs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_start_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate start points by removing cells invalid cost&quot;&quot;&quot;</span>
