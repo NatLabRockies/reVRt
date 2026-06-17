@@ -8,6 +8,7 @@ import geopandas as gpd
 import xarray as xr
 from gaps.cli import CLICommandFromFunction
 
+from revrt.routing.cli.base import route_points_subset, split_routes
 from revrt.routing.utilities import (
     PointToFeatureMapper,
     filter_points_outside_cost_domain,
@@ -32,11 +33,16 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     radius=None,
     points_fpath=None,
     expand_radius=True,
+    voltages=None,
+    polarities=None,
     feature_out_fp="mapped_features.gpkg",
     route_table_out_fp="route_table.csv",
     region_identifier_column="rid",
     connection_identifier_column="end_feat_id",
     batch_size=500,
+    max_workers=None,
+    tag=None,
+    _split_params=None,
 ):
     """Create a route table mapping points to nearest features
 
@@ -50,6 +56,13 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
     of the point (in the cost raster) and the ID of the feature it maps
     to. The mapped features are also output as a separate file that
     contains the same feature IDs for linking to the route table.
+
+    This command can be re-started from a partially completed state by
+    providing the same output file paths. The command will check for
+    existing outputs and skip any points that have already been mapped
+    to features. If the output files are not provided or do not exist,
+    the command will start from the beginning and create new output
+    files.
 
     Parameters
     ----------
@@ -104,6 +117,16 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
         Option to expand the `radius` value for each point until at
         least one feature is found to connect to. This input has no
         effect if `radius` is ``None``. By default, ``True``.
+    voltages : list of str or int, optional
+        Voltage values to assign to the output route table. If
+        provided, each mapped point-to-feature connection is duplicated
+        once per voltage value and a ``voltage`` column is added. By
+        default, ``None``.
+    polarities : list of str, optional
+        Polarity values to assign to the output route table. If
+        provided, each mapped point-to-feature connection is duplicated
+        once per polarity value and a ``polarity`` column is added. By
+        default, ``None``.
     feature_out_fp : str, default="mapped_features.gpkg"
         Name of output file for mapped (and potentially clipped)
         features. This output file will contain an identifier column
@@ -127,6 +150,10 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
         Number of features to process before writing to output feature
         file. This can be used to tune the tradeoff between performance
         and memory requirements. By default, ``500``.
+    max_workers : int, optional
+        Number of parallel workers to use for point-to-feature clipping.
+        If ``None`` or >1, clipping is performed in parallel using Dask.
+        By default, ``None``, which uses all CPU cores.
 
     Returns
     -------
@@ -139,6 +166,12 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
 
         feature_out_fp, route_table_out_fp = _check_output_filepaths(
             out_dir, feature_out_fp, route_table_out_fp
+        )
+        feature_out_fp, route_table_out_fp = _tag_output_filepaths(
+            feature_out_fp,
+            route_table_out_fp,
+            tag=tag,
+            split_params=_split_params,
         )
 
         logger.debug("Cost input: %r", cost_fpath)
@@ -163,6 +196,7 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
             points_fpath=points_fpath,
             resolution=resolution,
         )
+        points = route_points_subset(points, split_params=_split_params)
 
         mapper = PointToFeatureMapper(
             crs,
@@ -170,17 +204,18 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
             regions,
             region_identifier_column=region_identifier_column,
             connection_identifier_column=connection_identifier_column,
+            batch_size=batch_size,
+            max_workers=max_workers,
         )
-        route_table = mapper.map_points(
+        mapper.map_points(
             points,
             feature_out_fp,
+            route_table_out_fp=route_table_out_fp,
             radius=radius,
             expand_radius=expand_radius,
             clip_points_to_regions=clip_points_to_regions,
-            batch_size=batch_size,
-        )
-        route_table.drop(columns="geometry").to_csv(
-            route_table_out_fp, index=False
+            voltages=voltages,
+            polarities=polarities,
         )
 
     return [str(route_table_out_fp), str(feature_out_fp)]
@@ -232,10 +267,40 @@ def _check_output_filepaths(out_dir, feature_out_fp, route_table_out_fp):
     return feature_out_fp, route_table_out_fp
 
 
-def _preprocess_point_to_feature_route_table(config):
+def _tag_output_filepaths(
+    feature_out_fp, route_table_out_fp, tag=None, split_params=None
+):
+    """Tag node outputs so split runs do not clobber each other"""
+    if not tag:
+        return feature_out_fp, route_table_out_fp
+
+    __, num_chunks = split_params or (0, 1)
+    if num_chunks <= 1:
+        return feature_out_fp, route_table_out_fp
+
+    return (
+        _tag_filepath(feature_out_fp, tag),
+        _tag_filepath(route_table_out_fp, tag),
+    )
+
+
+def _tag_filepath(fp, tag):
+    """Insert node tag before file suffix"""
+    return fp.with_name(f"{fp.stem}{tag}{fp.suffix}")
+
+
+def _preprocess_point_to_feature_route_table(config, nodes):
     """Preprocess config for point_to_feature_route_table command"""
+    config = split_routes(config, nodes)
     return strip_path_keys(
-        config, keys_to_fix={"cost_fpath", "features_fpath", "out_dir"}
+        config,
+        keys_to_fix={
+            "cost_fpath",
+            "features_fpath",
+            "out_dir",
+            "points_fpath",
+            "regions_fpath",
+        },
     )
 
 
@@ -243,5 +308,6 @@ build_point_to_feature_route_table_command = CLICommandFromFunction(
     point_to_feature_route_table,
     name="build-feature-route-table",
     add_collect=False,
+    split_keys={"_split_params"},
     config_preprocessor=_preprocess_point_to_feature_route_table,
 )

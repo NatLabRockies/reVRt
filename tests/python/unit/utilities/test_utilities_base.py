@@ -18,6 +18,8 @@ from revrt.utilities import (
     features_to_route_table,
     LayeredFile,
     log_array_backend,
+    strip_path,
+    strip_path_keys,
 )
 from revrt.utilities.base import _crs_match
 from revrt.exceptions import revrtProfileCheckError, revrtValueError
@@ -401,6 +403,45 @@ def test_features_to_route_table_generates_pairs():
         assert row.start_lon == pytest.approx(start_lon)
         assert row.end_lat == pytest.approx(end_lat)
         assert row.end_lon == pytest.approx(end_lon)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("  /tmp/example.tif  ", "/tmp/example.tif"),  # noqa
+        (r"\n  /tmp/example.tif\t  ", "/tmp/example.tif"),  # noqa
+        (r"\r  /tmp/example.tif\r", "/tmp/example.tif"),  # noqa
+        (
+            r"  /tmp/with\ninterior/value.tif  ",
+            r"/tmp/with\ninterior/value.tif",  # noqa
+        ),
+    ],
+)
+def test_strip_path_trims_surrounding_whitespace_and_escape_tokens(
+    value, expected
+):
+    """strip_path trims only outer whitespace and escape tokens"""
+
+    assert strip_path(value) == expected
+
+
+def test_strip_path_keys_updates_only_requested_string_entries():
+    """strip_path_keys strips listed string values in place"""
+
+    config = {
+        "fp": r"\n  /tmp/output.zarr\t  ",
+        "layers": ["keep", "as-is"],
+        "description": "  leave alone  ",
+        "count": 2,
+    }
+
+    out = strip_path_keys(config, ["fp", "layers", "missing"])
+
+    assert out is config
+    assert config["fp"] == "/tmp/output.zarr"  # noqa
+    assert config["layers"] == ["keep", "as-is"]
+    assert config["description"] == "  leave alone  "
+    assert config["count"] == 2
 
 
 @pytest.mark.parametrize(
