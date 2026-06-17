@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781660541546,
+  "lastUpdate": 1781718398021,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -11591,6 +11591,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 459691153,
             "range": "± 6158639",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5751b738e828ea386b5cd517f3ccdea26abc4f55",
+          "message": "Build(deps): Bump pyo3 from 0.28.2 to 0.29.0 (#291)\n\nBumps [pyo3](https://github.com/pyo3/pyo3) from 0.28.2 to 0.29.0.\n- [Release notes](https://github.com/pyo3/pyo3/releases)\n- [Changelog](https://github.com/PyO3/pyo3/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/pyo3/pyo3/compare/v0.28.2...v0.29.0)\n\n---\nupdated-dependencies:\n- dependency-name: pyo3\n  dependency-version: 0.29.0\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Paul Pinchuk <ppinchuk@nrel.gov>",
+          "timestamp": "2026-06-17T11:33:57-06:00",
+          "tree_id": "1dc19a3e932e50e5f749dca3d28fb7b037596bd6",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/5751b738e828ea386b5cd517f3ccdea26abc4f55"
+        },
+        "date": 1781718396441,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 77754319,
+            "range": "± 1062589",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 124112019,
+            "range": "± 1645990",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 127420546,
+            "range": "± 3706080",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 186469642,
+            "range": "± 3160302",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 583178014,
+            "range": "± 8634044",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 88752235,
+            "range": "± 1563707",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 89255823,
+            "range": "± 795252",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 102939345,
+            "range": "± 904956",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 148162468,
+            "range": "± 1516598",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 319808827,
+            "range": "± 4437823",
             "unit": "ns/iter"
           }
         ]
