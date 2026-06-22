@@ -14,56 +14,13 @@ use crate::{
     resolve_with_routing_options,
 };
 
-type PyRouteNode = (u64, u64);
+type PyInputRouteNode = (u64, u64, String);
 type PyRoutePoint = (u64, u64, String);
-type PyPossibleRouteNodes = Vec<PyRouteNode>;
+type PyPossibleRouteNodes = Vec<PyInputRouteNode>;
 type PyRouteResult = (Vec<PyRoutePoint>, f32, Vec<String>);
 type PyRoutingSolutions = Vec<PyRouteResult>;
 type PyRouteYield = PyResult<Option<(u32, PyRoutingSolutions)>>;
 type PyRouteDefinition = (u32, PyPossibleRouteNodes, PyPossibleRouteNodes);
-
-impl From<&PyRouteDefinition> for RouteDefinition {
-    fn from(route: &PyRouteDefinition) -> RouteDefinition {
-        let (id, start_points, end_points) = route;
-        RouteDefinition {
-            route_id: *id,
-            start_inds: start_points
-                .iter()
-                .map(|(i, j)| ArrayIndex::new_ij(*i, *j))
-                .collect(),
-            end_inds: end_points
-                .iter()
-                .map(|(i, j)| ArrayIndex::new_ij(*i, *j))
-                .collect(),
-        }
-    }
-}
-
-fn py_route_result_from_solution(
-    solution: Solution<ArrayIndex, f32>,
-    routing_option_names: &[String],
-) -> PyResult<PyRouteResult> {
-    let Solution {
-        route,
-        total_cost,
-        dropped_barrier_layers,
-    } = solution;
-    let mut path = Vec::with_capacity(route.len());
-    for index in route {
-        let (i, j, option): (u64, u64, u32) = index.into();
-        let option_name = routing_option_names
-            .get(option as usize)
-            .cloned()
-            .ok_or_else(|| {
-                PyValueError::new_err(format!(
-                    "routing option index {option} is out of bounds for {} routing options",
-                    routing_option_names.len()
-                ))
-            })?;
-        path.push((i, j, option_name));
-    }
-    Ok((path, total_cost, dropped_barrier_layers))
-}
 
 pyo3::create_exception!(_rust, revrtRustError, PyException);
 
@@ -155,14 +112,17 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     "ignore_invalid_costs". See the documentation of the cost
 ///     function for details on each of these inputs.
 /// start : list of tuple
-///     List of two-tuples containing non-negative integers representing
-///     the indices in the array for the pixel from which routing should
-///     begin. A unique path will be returned for each of the starting
-///     points.
+///     List of three-tuples ``(i, j, option_name)`` containing
+///     non-negative integers representing the array indices and a
+///     routing-option name matching one of the configured
+///     ``routing_options``. A unique path will be returned for each of
+///     the starting points.
 /// end : list of tuple
-///     List of two-tuples containing non-negative integers representing
-///     the indices in the array for the any allowed final pixel.
-///     When the algorithm reaches any of these points, the routing
+///     List of three-tuples ``(i, j, option_name)`` containing
+///     non-negative integers representing the array indices and a
+///     routing-option name matching one of the configured
+///     ``routing_options`` for any allowed final pixel. When the
+///     algorithm reaches any of these exact routing states, the routing
 ///     is terminated and the final path + cost is returned.
 /// routing_layer_out_fp : path-like, optional
 ///    Optional path to a cost zarr file that will be used to store the routing
@@ -204,22 +164,23 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 fn find_paths(
     zarr_fp: PathBuf,
     cost_function: String,
-    start: Vec<(u64, u64)>,
-    end: Vec<(u64, u64)>,
+    start: Vec<PyInputRouteNode>,
+    end: Vec<PyInputRouteNode>,
     algorithm: &str,
     routing_layer_out_fp: Option<PathBuf>,
     mem_limit_bytes: u64,
     log_level: Option<u8>,
 ) -> PyResult<PyRoutingSolutions> {
     py_tracing::configure(log_level).map_err(PyErr::from)?;
+    let input_routing_option_names = routing_option_names_from_cost_function_json(&cost_function)?;
     let start: Vec<ArrayIndex> = start
-        .into_iter()
-        .map(|(i, j)| ArrayIndex::new_ij(i, j))
-        .collect();
+        .iter()
+        .map(|point| array_index_from_py_route_node(point, &input_routing_option_names))
+        .collect::<PyResult<_>>()?;
     let end: Vec<ArrayIndex> = end
-        .into_iter()
-        .map(|(i, j)| ArrayIndex::new_ij(i, j))
-        .collect();
+        .iter()
+        .map(|point| array_index_from_py_route_node(point, &input_routing_option_names))
+        .collect::<PyResult<_>>()?;
     let (paths, routing_option_names) = resolve_with_routing_options(
         zarr_fp,
         &cost_function,
@@ -230,8 +191,6 @@ fn find_paths(
         mem_limit_bytes,
     )
     .map_err(PyErr::from)?;
-    // TODO: have cost function return the layer mapping so that
-    // python can perform conversion on it's end
     paths
         .into_iter()
         .map(|solution| py_route_result_from_solution(solution, &routing_option_names))
@@ -256,11 +215,11 @@ fn find_paths(
 ///     a route ID (non-negative) that you can use to link results to
 ///     input route definitions. The first list contains the starting
 ///     points and the second list contains the ending points. Each point
-///     is represented as a two-tuple of non-negative integers representing
-///     the indices in the array for the pixel indicating where routing should
-///     begin/end. A unique path will be returned for each of the starting
-///     points in each of the path definition tuples (assuming a valid path
-///     exists).
+///     is represented as a three-tuple ``(i, j, option_name)`` of
+///     non-negative array indices and a routing-option name matching one
+///     of the configured ``routing_options``. A unique path will be
+///     returned for each of the starting points in each of the path
+///     definition tuples (assuming a valid path exists).
 /// routing_layer_out_fp : path-like, optional
 ///    Optional path to a cost zarr file that will be used to store the routing
 ///    cost layers. If not given, the routing layers will be kept in a temporary
@@ -370,14 +329,20 @@ struct RouteOutputIter {
 impl RouteOutputIter {
     fn new(user_input: &RouteFinder) -> Result<Self> {
         let (tx, rx) = mpsc::channel();
+        let input_routing_option_names =
+            crate::cost::CostFunction::from_json(&user_input.cost_function)?.routing_options;
+        let route_definitions = user_input
+            .route_definitions
+            .iter()
+            .map(|route| {
+                route_definition_from_py(route, &input_routing_option_names)
+                    .map_err(|err| Error::Undefined(err.to_string()))
+            })
+            .collect::<Result<Vec<_>>>()?;
         let routing_option_names = resolve_generator_with_routing_options(
             &user_input.zarr_fp,
             &user_input.cost_function,
-            user_input
-                .route_definitions
-                .iter()
-                .map(Into::into)
-                .collect::<Vec<_>>(),
+            route_definitions,
             tx,
             user_input.routing_layer_out_fp.clone(),
             user_input.mem_limit_bytes,
@@ -434,4 +399,75 @@ impl RouteOutputIter {
             }
         }
     }
+}
+
+fn routing_option_names_from_cost_function_json(cost_function: &str) -> PyResult<Vec<String>> {
+    Ok(crate::cost::CostFunction::from_json(cost_function)
+        .map_err(PyErr::from)?
+        .routing_options)
+}
+
+fn array_index_from_py_route_node(
+    point: &PyInputRouteNode,
+    routing_option_names: &[String],
+) -> PyResult<ArrayIndex> {
+    let &(i, j, ref option_name) = point;
+    let option = routing_option_names
+        .iter()
+        .position(|candidate| candidate == option_name)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown routing option {option_name:?}; expected one of {:?}",
+                routing_option_names
+            ))
+        })
+        .and_then(|option| {
+            u32::try_from(option)
+                .map_err(|_| PyValueError::new_err("routing option index exceeds u32"))
+        })?;
+    Ok(ArrayIndex { i, j, option })
+}
+
+fn route_definition_from_py(
+    route: &PyRouteDefinition,
+    routing_option_names: &[String],
+) -> PyResult<RouteDefinition> {
+    let (id, start_points, end_points) = route;
+    Ok(RouteDefinition {
+        route_id: *id,
+        start_inds: start_points
+            .iter()
+            .map(|point| array_index_from_py_route_node(point, routing_option_names))
+            .collect::<PyResult<_>>()?,
+        end_inds: end_points
+            .iter()
+            .map(|point| array_index_from_py_route_node(point, routing_option_names))
+            .collect::<PyResult<_>>()?,
+    })
+}
+
+fn py_route_result_from_solution(
+    solution: Solution<ArrayIndex, f32>,
+    routing_option_names: &[String],
+) -> PyResult<PyRouteResult> {
+    let Solution {
+        route,
+        total_cost,
+        dropped_barrier_layers,
+    } = solution;
+    let mut path = Vec::with_capacity(route.len());
+    for index in route {
+        let (i, j, option): (u64, u64, u32) = index.into();
+        let option_name = routing_option_names
+            .get(option as usize)
+            .cloned()
+            .ok_or_else(|| {
+                PyValueError::new_err(format!(
+                    "routing option index {option} is out of bounds for {} routing options",
+                    routing_option_names.len()
+                ))
+            })?;
+        path.push((i, j, option_name));
+    }
+    Ok((path, total_cost, dropped_barrier_layers))
 }
