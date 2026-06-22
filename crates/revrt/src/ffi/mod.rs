@@ -9,11 +9,15 @@ use pyo3::prelude::*;
 
 use crate::error::{Error, Result};
 use crate::routing::RouteDefinition;
-use crate::{ArrayIndex, RevrtRoutingSolutions, Solution, resolve, resolve_generator};
+use crate::{
+    ArrayIndex, RevrtRoutingSolutions, Solution, resolve_generator_with_routing_options,
+    resolve_with_routing_options,
+};
 
-type PyRoutePoint = (u64, u64);
-type PyPossibleRouteNodes = Vec<PyRoutePoint>;
-type PyRouteResult = (Vec<PyRoutePoint>, f32, Vec<String>, Vec<u32>);
+type PyRouteNode = (u64, u64);
+type PyRoutePoint = (u64, u64, String);
+type PyPossibleRouteNodes = Vec<PyRouteNode>;
+type PyRouteResult = (Vec<PyRoutePoint>, f32, Vec<String>);
 type PyRoutingSolutions = Vec<PyRouteResult>;
 type PyRouteYield = PyResult<Option<(u32, PyRoutingSolutions)>>;
 type PyRouteDefinition = (u32, PyPossibleRouteNodes, PyPossibleRouteNodes);
@@ -35,26 +39,30 @@ impl From<&PyRouteDefinition> for RouteDefinition {
     }
 }
 
-impl From<Solution<ArrayIndex, f32>> for PyRouteResult {
-    fn from(solution: Solution<ArrayIndex, f32>) -> Self {
-        let Solution {
-            route,
-            total_cost,
-            dropped_barrier_layers,
-        } = solution;
-        let mut path = Vec::with_capacity(route.len());
-        let mut option_ids = Vec::with_capacity(route.len());
-        for index in route {
-            let point: (u64, u64) = index.clone().into();
-            let (_, _, option): (u64, u64, u32) = index.into();
-            path.push(point);
-            option_ids.push(option);
-        }
-        if option_ids.iter().all(|option| *option == 0) {
-            option_ids.clear();
-        }
-        (path, total_cost, dropped_barrier_layers, option_ids)
+fn py_route_result_from_solution(
+    solution: Solution<ArrayIndex, f32>,
+    routing_option_names: &[String],
+) -> PyResult<PyRouteResult> {
+    let Solution {
+        route,
+        total_cost,
+        dropped_barrier_layers,
+    } = solution;
+    let mut path = Vec::with_capacity(route.len());
+    for index in route {
+        let (i, j, option): (u64, u64, u32) = index.into();
+        let option_name = routing_option_names
+            .get(option as usize)
+            .cloned()
+            .ok_or_else(|| {
+                PyValueError::new_err(format!(
+                    "routing option index {option} is out of bounds for {} routing options",
+                    routing_option_names.len()
+                ))
+            })?;
+        path.push((i, j, option_name));
     }
+    Ok((path, total_cost, dropped_barrier_layers))
 }
 
 pyo3::create_exception!(_rust, revrtRustError, PyException);
@@ -182,12 +190,10 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// -------
 /// list of tuple
 ///     List of path routing results. Each result is a tuple where the first
-///     element is a list of 2D grid points that the route goes through,
-///     the second element is the final route cost, the third element is
-///     a list containing the names of any soft barriers dropped to obtain
-///     that specific path, and the optional fourth element is a list of
-///     routing-option IDs aligned with the returned path. The option list
-///     is empty when the route never leaves the default routing option.
+///     element is a list of 3-tuples ``(i, j, option_name)`` describing
+///     the route points and their routing option names, the second element
+///     is the final route cost, and the third element is a list containing
+///     the names of any soft barriers dropped to obtain that specific path.
 ///     The result list will contain multiple tuples if the path definition
 ///     had multiple starting points. An empty list will be returned if no
 ///     paths were found from any of the starting points to any of the
@@ -214,7 +220,7 @@ fn find_paths(
         .into_iter()
         .map(|(i, j)| ArrayIndex::new_ij(i, j))
         .collect();
-    let paths = resolve(
+    let (paths, routing_option_names) = resolve_with_routing_options(
         zarr_fp,
         &cost_function,
         algorithm,
@@ -226,7 +232,10 @@ fn find_paths(
     .map_err(PyErr::from)?;
     // TODO: have cost function return the layer mapping so that
     // python can perform conversion on it's end
-    Ok(paths.into_iter().map(Into::into).collect())
+    paths
+        .into_iter()
+        .map(|solution| py_route_result_from_solution(solution, &routing_option_names))
+        .collect()
 }
 
 /// Find least-cost paths for one or more starting points in parallel.
@@ -281,12 +290,10 @@ fn find_paths(
 ///     path definition. The first element is the route definition ID
 ///     (as given in the input) and the second element is a list of path
 ///     routing results. Each routing result is a tuple where the first
-///     element is a list of 2D grid points that the route goes through,
-///     the second element is the final route cost, the third element is a
-///     list containing the names of any soft barriers dropped to obtain
-///     that specific path, and the optional fourth element is a list of
-///     routing-option IDs aligned with the returned path. The option list
-///     is empty when the route never leaves the default routing option.
+///     element is a list of 3-tuples ``(i, j, option_name)`` describing
+///     the route points and their routing option names, the second element
+///     is the final route cost, and the third element is a list containing
+///     the names of any soft barriers dropped to obtain that specific path.
 ///     The result list will contain multiple tuples if the path definition
 ///     had multiple starting points. An empty list will be returned if no
 ///     paths were found from any of the starting points to any of the
@@ -356,13 +363,14 @@ impl RouteFinder {
 #[pyclass(unsendable)]
 struct RouteOutputIter {
     receiver: Option<mpsc::Receiver<(u32, RevrtRoutingSolutions)>>,
+    routing_option_names: Vec<String>,
     finished: bool,
 }
 
 impl RouteOutputIter {
     fn new(user_input: &RouteFinder) -> Result<Self> {
         let (tx, rx) = mpsc::channel();
-        resolve_generator(
+        let routing_option_names = resolve_generator_with_routing_options(
             &user_input.zarr_fp,
             &user_input.cost_function,
             user_input
@@ -377,6 +385,7 @@ impl RouteOutputIter {
         )?;
         Ok(Self {
             receiver: Some(rx),
+            routing_option_names,
             finished: false,
         })
     }
@@ -409,7 +418,15 @@ impl RouteOutputIter {
         slf.receiver = Some(receiver);
 
         match recv_result {
-            Ok((id, solutions)) => Ok(Some((id, solutions.into_iter().map(Into::into).collect()))),
+            Ok((id, solutions)) => Ok(Some((
+                id,
+                solutions
+                    .into_iter()
+                    .map(|solution| {
+                        py_route_result_from_solution(solution, &slf.routing_option_names)
+                    })
+                    .collect::<PyResult<_>>()?,
+            ))),
             // Ok(Err(err)) => Err(err.into()),
             Err(_) => {
                 slf.finished = true;
