@@ -15,6 +15,7 @@ from revrt.routing.base import RoutingScenario
 from revrt.routing.batch_route_processor import (
     BatchRouteProcessor,
     _RouteDefinitionFormatter,
+    _RouteResultWriter,
     _validate_out_fp,
 )
 from revrt.exceptions import revrtKeyError
@@ -369,7 +370,7 @@ def test_multi_option_routes_write_companion_gpkg(
 
 
 def test_routing_option_results_split_transition_segment_midpoint(
-    sample_layered_data,
+    sample_layered_data, tmp_path
 ):
     """Route option outputs split option changes at the segment midpoint"""
 
@@ -384,9 +385,15 @@ def test_routing_option_results_split_transition_segment_midpoint(
         routing_scenario=scenario,
         route_definitions=[],
     )
+    result_writer = _RouteResultWriter(
+        tmp_path / "test_routes.gpkg",
+        True,
+        route_computer.routing_layers.cost_crs,
+        route_computer.routing_layers.transform,
+    )
 
     try:
-        results = route_computer._routing_option_results(
+        results = result_writer._routing_option_results(
             [
                 (1, 1, "overhead"),
                 (1, 2, "underground"),

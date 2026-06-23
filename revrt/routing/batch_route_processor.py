@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from warnings import warn
 from functools import cached_property
+from contextlib import suppress
 from itertools import pairwise
 
 import rasterio
@@ -233,8 +234,12 @@ class BatchRouteProcessor:
     def _reset_routing_layers(self):
         """Close handler and remove built routing layers from memory"""
         self.routing_layers.close()
-        del self.routing_layers
-        del self.route_definitions
+
+        with suppress(AttributeError):
+            del self.routing_layers
+
+        with suppress(AttributeError):
+            del self.route_definitions
 
 
 class _RouteDefinitionFormatter:
@@ -418,80 +423,35 @@ class _RouteResultWriter:
     def _routing_option_results(self, indices, route_result):
         """Yield aggregated geometries for each routing option used"""
 
-        segments_by_option = {}
-        current_option = None
-        current_segment = []
-        for start_p, end_p in pairwise(indices):
-            if start_p == end_p:
-                continue
+        segments_by_option = _ResultsByOption(indices).collect()
+        return self._build_option_results(segments_by_option, route_result)
 
-            start = tuple(start_p[:2])
-            end = tuple(end_p[:2])
-            start_point_option = start_p[-1]
-            end_point_option = end_p[-1]
-
-            if current_option != start_point_option:
-                if len(current_segment) > 1:
-                    segments_by_option.setdefault(current_option, []).append(
-                        current_segment
-                    )
-                current_option = start_point_option
-                current_segment = [start]
-
-            if current_segment[-1] != start:
-                current_segment.append(start)
-
-            if start_point_option == end_point_option:
-                if current_segment[-1] != end:
-                    current_segment.append(end)
-                continue
-
-            midpoint = _midpoint(start, end)
-            if current_segment[-1] != midpoint:
-                current_segment.append(midpoint)
-
-            if len(current_segment) > 1:
-                segments_by_option.setdefault(current_option, []).append(
-                    current_segment
-                )
-            current_option = end_point_option
-            current_segment = [midpoint]
-            if current_segment[-1] != end:
-                current_segment.append(end)
-
-        if len(current_segment) > 1:
-            segments_by_option.setdefault(current_option, []).append(
-                current_segment
-            )
-
+    def _build_option_results(self, segments_by_option, route_result):
+        """list: Output records for each routing option traversed"""
         cell_size = abs(self._transform.a)
+        base_result = {
+            key: value
+            for key, value in route_result.items()
+            if key
+            not in {
+                "geometry",
+                "cost",
+                "optimized_objective",
+                "length_km",
+            }
+        }
         results = []
         for option, segments in segments_by_option.items():
-            geoms = [self._component_geometry(segment) for segment in segments]
-            if not geoms:
+            geometry = self._option_geometry(segments)
+            if geometry is None:
                 continue
 
-            geometry = (
-                geoms[0]
-                if len(geoms) == 1
-                else MultiLineString([list(geom.coords) for geom in geoms])
-            )
             length_km = sum(
                 compute_lens(segment, cell_size)[1] for segment in segments
             )
             results.append(
                 {
-                    **{
-                        key: value
-                        for key, value in route_result.items()
-                        if key
-                        not in {
-                            "geometry",
-                            "cost",
-                            "optimized_objective",
-                            "length_km",
-                        }
-                    },
+                    **base_result,
                     "routing_option": option,
                     "length_km": length_km,
                     "geometry": geometry,
@@ -499,6 +459,17 @@ class _RouteResultWriter:
             )
 
         return results
+
+    def _option_geometry(self, segments):
+        """shapely geometry or None: Combined geometry for one option"""
+        geoms = [self._component_geometry(segment) for segment in segments]
+        if not geoms:
+            return None
+
+        if len(geoms) == 1:
+            return geoms[0]
+
+        return MultiLineString([list(geom.coords) for geom in geoms])
 
     def _component_geometry(self, route):
         """Build geometry for one contiguous routing-option segment"""
@@ -549,6 +520,75 @@ class _IncrementalRouteWriter(IncrementalWriter):
                 [result], geometry="geometry", crs=self.crs
             )
         return pd.DataFrame([result])
+
+
+class _ResultsByOption:
+    """Break route indices into contiguous segments by routing option"""
+
+    def __init__(self, indices):
+        self.indices = indices
+        self.__current_option = None
+        self.__current_segment = []
+        self.__segments_by_option = {}
+
+    def collect(self):
+        """Contiguous route segments grouped by routing option
+
+        Returns
+        -------
+        dict
+            Mapping of routing option to list of contiguous route
+            segments.
+        """
+
+        for start_p, end_p in pairwise(self.indices):
+            if start_p == end_p:
+                continue
+
+            self._update_option_segment(start_p, end_p)
+
+        self._append_segment()
+        return self.__segments_by_option
+
+    def _update_option_segment(self, start_p, end_p):
+        """tuple: Updated routing-option segment state for one step"""
+
+        start = tuple(start_p[:2])
+        end = tuple(end_p[:2])
+        start_point_option = start_p[-1]
+        end_point_option = end_p[-1]
+
+        if self.__current_option != start_point_option:
+            self._append_segment()
+            self.__current_option = start_point_option
+            self.__current_segment = [start]
+
+        if self.__current_segment[-1] != start:
+            self.__current_segment.append(start)
+
+        if start_point_option == end_point_option:
+            if self.__current_segment[-1] != end:
+                self.__current_segment.append(end)
+            return
+
+        midpoint = _midpoint(start, end)
+        if self.__current_segment[-1] != midpoint:
+            self.__current_segment.append(midpoint)
+
+        self._append_segment()
+        self.__current_option = end_point_option
+        self.__current_segment = [midpoint]
+        if self.__current_segment[-1] != end:
+            self.__current_segment.append(end)
+
+    def _append_segment(self):
+        """Append a completed routing-option segment when long enough"""
+        if len(self.__current_segment) <= 1:
+            return
+
+        self.__segments_by_option.setdefault(self.__current_option, []).append(
+            self.__current_segment
+        )
 
 
 def _validate_out_fp(out_fp, save_paths):
