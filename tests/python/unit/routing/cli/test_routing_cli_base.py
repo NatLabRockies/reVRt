@@ -14,6 +14,7 @@ from revrt.routing.utilities import map_to_costs
 from revrt.exceptions import revrtKeyError
 from revrt.routing.cli.base import (
     update_multipliers,
+    update_route_options,
     run_lcp,
     route_points_subset,
     split_routes,
@@ -357,6 +358,67 @@ def test_update_multipliers_applies_row_and_polarity():
         [{"layer_name": "layer_3"}], "dc", "unknown", transmission_config
     )
     assert unchanged[0]["layer_name"] == "layer_3"
+
+
+def test_update_route_options_updates_nested_layers_without_mutation():
+    """update_route_options should transform nested layer configs safely"""
+
+    routing_options = {
+        "overhead": {
+            "cost_layers": [
+                {
+                    "layer_name": "layer_1",
+                    "multiplier_scalar": 2,
+                    "apply_row_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "layer_name": "layer_2",
+                    "apply_polarity_mult": True,
+                }
+            ],
+            "barrier_layers": [
+                {
+                    "layer_name": "layer_3",
+                    "barrier_values": "==1",
+                }
+            ],
+        }
+    }
+    transmission_config = {
+        "row_width": {"138": 1.5},
+        "voltage_polarity_mult": {"138": {"ac": 0.5}},
+    }
+
+    updated = update_route_options(
+        routing_options,
+        polarity="ac",
+        voltage=138,
+        transmission_config=transmission_config,
+    )
+
+    assert updated["overhead"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(3)
+    assert updated["overhead"]["friction_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+    assert updated["overhead"]["barrier_layers"] == [
+        {"layer_name": "layer_3", "barrier_values": "==1"}
+    ]
+    assert (
+        updated["overhead"]["barrier_layers"]
+        is not routing_options["overhead"]["barrier_layers"]
+    )
+
+    assert routing_options["overhead"]["cost_layers"][0]["apply_row_mult"]
+    assert routing_options["overhead"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == 2
+    assert routing_options["overhead"]["friction_layers"][0][
+        "apply_polarity_mult"
+    ]
 
 
 def test_route_converter_updates_multi_option_layers(tmp_path):
