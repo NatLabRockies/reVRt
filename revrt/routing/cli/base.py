@@ -395,6 +395,31 @@ def update_multipliers(layers, polarity, voltage, transmission_config):
     return output_layers
 
 
+def update_route_options(
+    routing_options, polarity, voltage, transmission_config
+):
+    """[NOT PUBLIC API] Update multipliers for multi-option routing"""
+    updated_options = deepcopy(routing_options)
+    for option_config in updated_options.values():
+        option_config["cost_layers"] = update_multipliers(
+            option_config.get("cost_layers", []),
+            polarity,
+            voltage,
+            transmission_config,
+        )
+        option_config["friction_layers"] = update_multipliers(
+            option_config.get("friction_layers", []),
+            polarity,
+            voltage,
+            transmission_config,
+        )
+        option_config["barrier_layers"] = deepcopy(
+            option_config.get("barrier_layers", [])
+        )
+
+    return updated_options
+
+
 def _get_row_multiplier(transmission_config, voltage):
     """Get right-of-way width multiplier for a given voltage"""
     try:
