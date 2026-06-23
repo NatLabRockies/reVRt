@@ -775,5 +775,30 @@ def test_filter_points_outside_cost_domain_only_start_indices(cost_grid):
     assert filtered.index.tolist() == [0]
 
 
+def test_compute_lens_splits_segment_lengths_across_route_cells():
+    """Per-cell and total route lengths are computed consistently"""
+
+    route = np.array([[0, 0], [0, 1], [1, 2]], dtype=float)
+
+    lens, total_path_length = compute_lens(route, cell_size=2000)
+
+    expected_lens = np.array(
+        [0.5, (1 + math.sqrt(2)) / 2, math.sqrt(2) / 2]
+    )
+    np.testing.assert_allclose(lens, expected_lens)
+    assert math.isclose(total_path_length, 2 * (1 + math.sqrt(2)))
+
+
+def test_compute_lens_returns_zero_lengths_for_single_cell_route():
+    """A route with one cell has zero per-cell and total length"""
+
+    route = np.array([[3, 4]])
+
+    lens, total_path_length = compute_lens(route, cell_size=90)
+
+    np.testing.assert_array_equal(lens, np.array([0.0]))
+    assert total_path_length == 0
+
+
 if __name__ == "__main__":
     pytest.main(["-q", "--show-capture=all", Path(__file__), "-rapP"])

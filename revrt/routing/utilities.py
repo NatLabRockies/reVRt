@@ -652,6 +652,29 @@ def filter_points_outside_cost_domain(route_table, shape):
     return route_table
 
 
+def compute_lens(route, cell_size):
+    """[NOT PUBLIC API] Compute lengths of LCP"""
+    # Use Pythagorean theorem to calculate length between cells (km)
+    # Use c**2 = a**2 + b**2 to determine length of individual paths
+    lens = np.sqrt(np.sum(np.diff(route, axis=0) ** 2, axis=1))
+    total_path_length = np.sum(lens) * cell_size / 1000
+
+    # Need to determine distance coming into and out of any cell.
+    # Assume paths start and end at the center of a cell. Therefore,
+    # distance traveled in the cell is half the distance entering it
+    # and half the distance exiting it. Duplicate all lengths,
+    # pad 0s on ends for start  and end cells, and divide all
+    # distance by half.
+    lens = np.repeat(lens, 2)
+    lens = np.insert(np.append(lens, 0), 0, 0)
+    lens /= 2
+
+    # Group entrance and exits distance together, and add them
+    lens = lens.reshape((int(lens.shape[0] / 2), 2))
+    lens = np.sum(lens, axis=1)
+    return lens, total_path_length
+
+
 def _transform_lat_lon_to_row_col(transform, cost_crs, lat, lon):
     """Convert WGS84 coordinates to cost grid row and column arrays"""
     x, y = transform_xy("EPSG:4326", cost_crs, lon, lat)
