@@ -107,9 +107,9 @@ class BatchRouteProcessor:
             By default, ``4``.
         """
         self.routing_scenario = routing_scenario
-        self._route_definitions = route_definitions
         self._route_attrs = route_attrs or {}
         self.mem_limit_gb = mem_limit_gb
+        self.__rd = route_definitions
 
     @cached_property
     def default_attrs(self):
@@ -126,14 +126,16 @@ class BatchRouteProcessor:
         }
 
     @cached_property
-    def route_definitions(self):
-        """list: Validated route definitions for computation"""
-        return self._compile_valid_route_definitions()
-
-    @cached_property
     def routing_layers(self):
         """RoutingLayerManager: Built routing layers for the scenario"""
         return RoutingLayerManager(self.routing_scenario).build()
+
+    @cached_property
+    def route_definitions(self):
+        """list: Validated route definitions for computation"""
+        return _RouteDefinitionFormatter(
+            self.__rd, self.routing_layers, self.routing_scenario
+        ).route_definitions
 
     def process(self, out_fp, save_paths=False, routing_layer_out_fp=None):
         """Compute all routes and save to disk
@@ -168,16 +170,12 @@ class BatchRouteProcessor:
     def _compute_routes(self, out_fp, save_paths, rl=None):
         """Evaluate route definitions and build result records"""
 
-        out_fp = _validate_out_fp(out_fp, save_paths)
-        writer = _IncrementalRouteWriter(
-            out_fp, crs=self.routing_layers.cost_crs
+        result_writer = _RouteResultWriter(
+            out_fp,
+            save_paths,
+            self.routing_layers.cost_crs,
+            self.routing_layers.transform,
         )
-        option_writer = None
-        if save_paths and self.routing_scenario.routing_options is not None:
-            option_writer = _IncrementalRouteWriter(
-                _routing_options_output_fp(out_fp),
-                crs=self.routing_layers.cost_crs,
-            )
 
         for indices, optimized_objective, attrs in self._route_results(rl):
             metrics = RouteMetrics(
@@ -188,106 +186,7 @@ class BatchRouteProcessor:
                 attrs=attrs,
             )
             route_result = metrics.compute()
-            writer.save(route_result)
-            if option_writer is not None:
-                for option_result in self._routing_option_results(
-                    indices, route_result
-                ):
-                    option_writer.save(option_result)
-
-    def _routing_option_results(self, indices, route_result):
-        """Yield aggregated geometries for each routing option used"""
-
-        segments_by_option = {}
-        current_option = None
-        current_segment = []
-        for start_p, end_p in pairwise(indices):
-            if start_p == end_p:
-                continue
-
-            start = tuple(start_p[:2])
-            end = tuple(end_p[:2])
-            start_point_option = start_p[-1]
-            end_point_option = end_p[-1]
-
-            if current_option != start_point_option:
-                if len(current_segment) > 1:
-                    segments_by_option.setdefault(current_option, []).append(
-                        current_segment
-                    )
-                current_option = start_point_option
-                current_segment = [start]
-
-            if current_segment[-1] != start:
-                current_segment.append(start)
-
-            if start_point_option == end_point_option:
-                if current_segment[-1] != end:
-                    current_segment.append(end)
-                continue
-
-            midpoint = _midpoint(start, end)
-            if current_segment[-1] != midpoint:
-                current_segment.append(midpoint)
-
-            if len(current_segment) > 1:
-                segments_by_option.setdefault(current_option, []).append(
-                    current_segment
-                )
-            current_option = end_point_option
-            current_segment = [midpoint]
-            if current_segment[-1] != end:
-                current_segment.append(end)
-
-        if len(current_segment) > 1:
-            segments_by_option.setdefault(current_option, []).append(
-                current_segment
-            )
-
-        cell_size = abs(self.routing_layers.transform.a)
-        results = []
-        for option, segments in segments_by_option.items():
-            geoms = [self._component_geometry(segment) for segment in segments]
-            if not geoms:
-                continue
-
-            geometry = (
-                geoms[0]
-                if len(geoms) == 1
-                else MultiLineString([list(geom.coords) for geom in geoms])
-            )
-            length_km = sum(
-                compute_lens(segment, cell_size)[1] for segment in segments
-            )
-            results.append(
-                {
-                    **{
-                        key: value
-                        for key, value in route_result.items()
-                        if key
-                        not in {
-                            "geometry",
-                            "cost",
-                            "optimized_objective",
-                            "length_km",
-                        }
-                    },
-                    "routing_option": option,
-                    "length_km": length_km,
-                    "geometry": geometry,
-                }
-            )
-
-        return results
-
-    def _component_geometry(self, route):
-        """Build geometry for one contiguous routing-option segment"""
-        rows, cols = np.array(route).T
-        x, y = rasterio.transform.xy(self.routing_layers.transform, rows, cols)
-        if len(route) == 1:
-            return Point(x, y)
-
-        return LineString(simplify_using_slopes(list(zip(x, y, strict=True))))
+            result_writer.persist(route_result, indices)
 
     def _route_results(self, routing_layer_out_fp=None):
         """Generator yielding route results from Rust computations"""
@@ -311,46 +210,6 @@ class BatchRouteProcessor:
             routing_layer_out_fp=routing_layer_out_fp,
         )
         yield from self._skip_failed_routes(route_results)
-
-    def _compile_valid_route_definitions(self):
-        """Filter route definitions to those with valid route nodes"""
-        if not self._route_definitions:
-            return {}
-
-        sample_definition = self._route_definitions[0]
-        if len(sample_definition) == 2:  # noqa: PLR2004
-            self._route_definitions = _add_route_ids(self._route_definitions)
-
-        routes_to_compute = {}
-        for route_id, start_points, end_points in self._route_definitions:
-            filtered_start_points = self._validate_start_points(start_points)
-            if not filtered_start_points:
-                msg = (
-                    f"All start points are invalid for route with ID "
-                    f"{route_id}: {start_points}\nSkipping..."
-                )
-                warn(msg, revrtWarning)
-                continue
-
-            try:
-                filtered_end_points = self._validate_end_points(end_points)
-            except revrtLeastCostPathNotFoundError:
-                continue
-
-            if not filtered_end_points:
-                msg = (
-                    f"All end points are invalid for route with ID "
-                    f"{route_id}: {end_points}\nSkipping..."
-                )
-                warn(msg, revrtWarning)
-                continue
-
-            routes_to_compute[route_id] = (
-                filtered_start_points,
-                filtered_end_points,
-            )
-
-        return routes_to_compute
 
     def _skip_failed_routes(self, routing_results):
         """Yield only successfully computed routes from Rust results"""
@@ -411,6 +270,66 @@ class BatchRouteProcessor:
                 "dropped_barrier_layers": json.dumps(dbl),
             }
             yield indices, optimized_objective, attrs
+
+    def _reset_routing_layers(self):
+        """Close handler and remove built routing layers from memory"""
+        self.routing_layers.close()
+        del self.routing_layers
+        del self.route_definitions
+
+
+class _RouteDefinitionFormatter:
+    """Validate route definitions against routing layers"""
+
+    def __init__(self, route_definitions, routing_layers, routing_scenario):
+        self._route_definitions = route_definitions
+        self.routing_layers = routing_layers
+        self.routing_scenario = routing_scenario
+
+    @cached_property
+    def route_definitions(self):
+        """list: Validated route definitions for computation"""
+        return self._compile_valid_route_definitions()
+
+    def _compile_valid_route_definitions(self):
+        """Filter route definitions to those with valid route nodes"""
+        if not self._route_definitions:
+            return {}
+
+        sample_definition = self._route_definitions[0]
+        if len(sample_definition) == 2:  # noqa: PLR2004
+            self._route_definitions = _add_route_ids(self._route_definitions)
+
+        routes_to_compute = {}
+        for route_id, start_points, end_points in self._route_definitions:
+            filtered_start_points = self._validate_start_points(start_points)
+            if not filtered_start_points:
+                msg = (
+                    f"All start points are invalid for route with ID "
+                    f"{route_id}: {start_points}\nSkipping..."
+                )
+                warn(msg, revrtWarning)
+                continue
+
+            try:
+                filtered_end_points = self._validate_end_points(end_points)
+            except revrtLeastCostPathNotFoundError:
+                continue
+
+            if not filtered_end_points:
+                msg = (
+                    f"All end points are invalid for route with ID "
+                    f"{route_id}: {end_points}\nSkipping..."
+                )
+                warn(msg, revrtWarning)
+                continue
+
+            routes_to_compute[route_id] = (
+                filtered_start_points,
+                filtered_end_points,
+            )
+
+        return routes_to_compute
 
     def _validate_start_points(self, points):
         """Validate start points by removing cells invalid cost"""
@@ -500,10 +419,136 @@ class BatchRouteProcessor:
 
         return points
 
-    def _reset_routing_layers(self):
-        """Close handler and remove built routing layers from memory"""
-        self.routing_layers.close()
-        del self.routing_layers
+
+class _RouteResultWriter:
+    """Class to manage output of route results"""
+
+    def __init__(self, out_fp, save_paths, cost_crs, transform):
+        out_fp = _validate_out_fp(out_fp, save_paths)
+        self._writer = _IncrementalRouteWriter(out_fp, crs=cost_crs)
+        self._transform = transform
+        self._option_writer = (
+            None
+            if not save_paths
+            else _IncrementalRouteWriter(
+                _routing_options_output_fp(out_fp), crs=cost_crs
+            )
+        )
+
+    def persist(self, route_result, indices):
+        """Persist route result and any routing-option pieces to disk
+
+        Parameters
+        ----------
+        route_result : dict
+            Route result dictionary as built by
+            ``RouteMetrics.compute()``.
+        indices : list
+            List of route indices as returned by the Rust routing
+            engine.
+        """
+        self._writer.save(route_result)
+        if self._option_writer is None:
+            return
+
+        for option_result in self._routing_option_results(
+            indices, route_result
+        ):
+            self._option_writer.save(option_result)
+
+    def _routing_option_results(self, indices, route_result):
+        """Yield aggregated geometries for each routing option used"""
+
+        segments_by_option = {}
+        current_option = None
+        current_segment = []
+        for start_p, end_p in pairwise(indices):
+            if start_p == end_p:
+                continue
+
+            start = tuple(start_p[:2])
+            end = tuple(end_p[:2])
+            start_point_option = start_p[-1]
+            end_point_option = end_p[-1]
+
+            if current_option != start_point_option:
+                if len(current_segment) > 1:
+                    segments_by_option.setdefault(current_option, []).append(
+                        current_segment
+                    )
+                current_option = start_point_option
+                current_segment = [start]
+
+            if current_segment[-1] != start:
+                current_segment.append(start)
+
+            if start_point_option == end_point_option:
+                if current_segment[-1] != end:
+                    current_segment.append(end)
+                continue
+
+            midpoint = _midpoint(start, end)
+            if current_segment[-1] != midpoint:
+                current_segment.append(midpoint)
+
+            if len(current_segment) > 1:
+                segments_by_option.setdefault(current_option, []).append(
+                    current_segment
+                )
+            current_option = end_point_option
+            current_segment = [midpoint]
+            if current_segment[-1] != end:
+                current_segment.append(end)
+
+        if len(current_segment) > 1:
+            segments_by_option.setdefault(current_option, []).append(
+                current_segment
+            )
+
+        cell_size = abs(self._transform.a)
+        results = []
+        for option, segments in segments_by_option.items():
+            geoms = [self._component_geometry(segment) for segment in segments]
+            if not geoms:
+                continue
+
+            geometry = (
+                geoms[0]
+                if len(geoms) == 1
+                else MultiLineString([list(geom.coords) for geom in geoms])
+            )
+            length_km = sum(
+                compute_lens(segment, cell_size)[1] for segment in segments
+            )
+            results.append(
+                {
+                    **{
+                        key: value
+                        for key, value in route_result.items()
+                        if key
+                        not in {
+                            "geometry",
+                            "cost",
+                            "optimized_objective",
+                            "length_km",
+                        }
+                    },
+                    "routing_option": option,
+                    "length_km": length_km,
+                    "geometry": geometry,
+                }
+            )
+
+        return results
+
+    def _component_geometry(self, route):
+        """Build geometry for one contiguous routing-option segment"""
+        rows, cols = np.array(route).T
+        x, y = rasterio.transform.xy(self._transform, rows, cols)
+        if len(route) == 1:
+            return Point(x, y)
+
+        return LineString(simplify_using_slopes(list(zip(x, y, strict=True))))
 
 
 def _validate_out_fp(out_fp, save_paths):

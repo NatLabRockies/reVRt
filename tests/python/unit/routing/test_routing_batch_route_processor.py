@@ -14,6 +14,7 @@ from revrt.utilities import LayeredFile
 from revrt.routing.base import RoutingScenario
 from revrt.routing.batch_route_processor import (
     BatchRouteProcessor,
+    _RouteDefinitionFormatter,
     _validate_out_fp,
 )
 from revrt.exceptions import revrtKeyError
@@ -331,7 +332,9 @@ def test_multi_option_routes_write_companion_gpkg(
                 ]
             )
 
-    monkeypatch.setattr("revrt.routing.base.RouteFinder", FakeRouteFinder)
+    monkeypatch.setattr(
+        "revrt.routing.batch_route_processor.RouteFinder", FakeRouteFinder
+    )
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
@@ -1951,11 +1954,16 @@ def test_soft_barrier_points_remain_valid_for_retry(sample_layered_data):
             ([(1, 1, "default")], [(1, 5, "default")]),
         ],
     )
+    route_formatter = _RouteDefinitionFormatter(
+        route_computer.route_definitions,
+        route_computer.routing_layers,
+        route_computer.routing_scenario,
+    )
     try:
-        assert route_computer._validate_start_points([(0, 3, "default")]) == [
+        assert route_formatter._validate_start_points([(0, 3, "default")]) == [
             (0, 3, "default")
         ]
-        assert route_computer._validate_end_points([(0, 3, "default")]) == [
+        assert route_formatter._validate_end_points([(0, 3, "default")]) == [
             (0, 3, "default")
         ]
     finally:
