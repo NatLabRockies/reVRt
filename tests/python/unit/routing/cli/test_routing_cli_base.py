@@ -141,98 +141,109 @@ def _build_route_table(layered_fp, rows_cols):
     return pd.DataFrame.from_records(records)
 
 
-# def test_run_lcp_with_save_paths_filters_existing_routes(
-#     sample_layered_data, tmp_path, monkeypatch
-# ):
-#     """run_lcp should skip already processed routes and append geometries"""
+def test_run_lcp_with_save_paths_filters_existing_routes(
+    sample_layered_data, tmp_path, monkeypatch
+):
+    """run_lcp should skip already processed routes and append geometries"""
 
-#     routes = _build_route_table(
-#         sample_layered_data,
-#         rows_cols=[((1, 1), (2, 2)), ((2, 2), (4, 4))],
-#     )
+    routes = _build_route_table(
+        sample_layered_data,
+        rows_cols=[((1, 1), (2, 2)), ((2, 2), (4, 4))],
+    )
 
-#     with xr.open_dataset(
-#         sample_layered_data, consolidated=False, engine="zarr"
-#     ) as ds:
-#         mapped_routes = map_to_costs(
-#             routes.copy(), ds.rio.crs, ds.rio.transform(), ds.rio.shape
-#         )
+    with xr.open_dataset(
+        sample_layered_data, consolidated=False, engine="zarr"
+    ) as ds:
+        mapped_routes = map_to_costs(
+            routes.copy(), ds.rio.crs, ds.rio.transform(), ds.rio.shape
+        )
 
-#     existing_tuple = (
-#         int(mapped_routes.iloc[0]["start_row"]),
-#         int(mapped_routes.iloc[0]["start_col"]),
-#         int(mapped_routes.iloc[0]["end_row"]),
-#         int(mapped_routes.iloc[0]["end_col"]),
-#         routes.iloc[0]["polarity"],
-#         str(routes.iloc[0]["voltage"]),
-#     )
+    existing_tuple = (
+        int(mapped_routes.iloc[0]["start_row"]),
+        int(mapped_routes.iloc[0]["start_col"]),
+        "default",
+        int(mapped_routes.iloc[0]["end_row"]),
+        int(mapped_routes.iloc[0]["end_col"]),
+        "default",
+        routes.iloc[0]["polarity"],
+        str(routes.iloc[0]["voltage"]),
+    )
 
-#     monkeypatch.setattr(
-#         "revrt.routing.cli.point_to_point."
-#         "PointToPointRouteDefinitionConverter.existing_routes",
-#         {existing_tuple},
-#     )
+    monkeypatch.setattr(
+        "revrt.routing.cli.point_to_point."
+        "PointToPointRouteDefinitionConverter.existing_routes",
+        {existing_tuple},
+    )
 
-#     saved_calls = []
+    saved_calls = []
 
-#     def fake_to_file(self, path, driver=None, mode=None, **_kwargs):
-#         saved_calls.append((path, driver, mode, self.copy(deep=True)))
+    def fake_to_file(self, path, driver=None, mode=None, **_kwargs):
+        saved_calls.append((path, driver, mode, self.copy(deep=True)))
 
-#     monkeypatch.setattr("geopandas.GeoDataFrame.to_file", fake_to_file)
+    monkeypatch.setattr("geopandas.GeoDataFrame.to_file", fake_to_file)
 
-#     out_fp = tmp_path / "routes.gpkg"
+    out_fp = tmp_path / "routes.gpkg"
 
-#     routes_to_compute = PointToPointRouteDefinitionConverter(
-#         cost_fpath=sample_layered_data,
-#         route_points=routes,
-#         out_fp=out_fp,
-#         routing_options={
-#             "default": {
-#                 "cost_layers": [{"layer_name": "layer_1"}],
-#                 "friction_layers": [
-#                     {"mask": "layer_2", "apply_row_mult": True}
-#                 ],
-#             }
-#         },
-#         transmission_config={
-#             "row_width": {"138": 1.0},
-#             "voltage_polarity_mult": {"138": {"ac": 1.0}},
-#         },
-#     )
+    routes_to_compute = PointToPointRouteDefinitionConverter(
+        cost_fpath=sample_layered_data,
+        route_points=routes,
+        out_fp=out_fp,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [
+                    {"mask": "layer_2", "apply_row_mult": True}
+                ],
+            }
+        },
+        transmission_config={
+            "row_width": {"138": 1.0},
+            "voltage_polarity_mult": {"138": {"ac": 1.0}},
+        },
+    )
 
-#     run_lcp(
-#         cost_fpath=sample_layered_data,
-#         out_fp=out_fp,
-#         routes_to_compute=routes_to_compute,
-#         tracked_layers=[{"layer_name": "layer_3", "agg_method": "max"}],
-#         ignore_invalid_costs=True,
-#     )
+    run_lcp(
+        cost_fpath=sample_layered_data,
+        out_fp=out_fp,
+        routes_to_compute=routes_to_compute,
+        tracked_layers=[{"layer_name": "layer_3", "agg_method": "max"}],
+        ignore_invalid_costs=True,
+    )
 
-#     assert len(saved_calls) == 1
-#     saved_path, driver, mode, saved_gdf = saved_calls[0]
-#     assert saved_path == out_fp
-#     assert driver == "GPKG"
-#     assert mode == "a"
-#     assert len(saved_gdf) == 1
-#     assert saved_gdf["route_id"].iloc[0] == routes.iloc[1]["route_id"]
+    primary_calls = [call for call in saved_calls if call[0] == out_fp]
+    option_calls = [
+        call
+        for call in saved_calls
+        if call[0] == tmp_path / "routes_routing_options.gpkg"
+    ]
 
-#     expected = mapped_routes.iloc[1]
-#     assert int(saved_gdf["start_row"].iloc[0]) == int(expected["start_row"])
-#     assert int(saved_gdf["start_col"].iloc[0]) == int(expected["start_col"])
-#     assert int(saved_gdf["end_row"].iloc[0]) == int(expected["end_row"])
-#     assert int(saved_gdf["end_col"].iloc[0]) == int(expected["end_col"])
+    assert len(primary_calls) == 1
+    assert len(option_calls) == 1
 
-#     cost_val = float(saved_gdf["cost"].iloc[0])
-#     objective_val = float(saved_gdf["optimized_objective"].iloc[0])
-#     length_val = float(saved_gdf["length_km"].iloc[0])
+    saved_path, driver, mode, saved_gdf = primary_calls[0]
+    assert saved_path == out_fp
+    assert driver == "GPKG"
+    assert mode == "a"
+    assert len(saved_gdf) == 1
+    assert saved_gdf["route_id"].iloc[0] == routes.iloc[1]["route_id"]
 
-#     assert cost_val > 0
-#     assert length_val > 0
-#     assert objective_val > cost_val
+    expected = mapped_routes.iloc[1]
+    assert int(saved_gdf["start_row"].iloc[0]) == int(expected["start_row"])
+    assert int(saved_gdf["start_col"].iloc[0]) == int(expected["start_col"])
+    assert int(saved_gdf["end_row"].iloc[0]) == int(expected["end_row"])
+    assert int(saved_gdf["end_col"].iloc[0]) == int(expected["end_col"])
 
-#     geom = saved_gdf.geometry.iloc[0]
-#     assert isinstance(geom, LineString)
-#     assert len(geom.coords) >= 2
+    cost_val = float(saved_gdf["cost"].iloc[0])
+    objective_val = float(saved_gdf["optimized_objective"].iloc[0])
+    length_val = float(saved_gdf["length_km"].iloc[0])
+
+    assert cost_val > 0
+    assert length_val > 0
+    assert objective_val > cost_val
+
+    geom = saved_gdf.geometry.iloc[0]
+    assert isinstance(geom, LineString)
+    assert len(geom.coords) >= 2
 
 
 def test_run_lcp_returns_immediately_when_no_routes(tmp_path):
