@@ -107,8 +107,6 @@ pub(super) struct TransitionCostRule {
     pub(super) from: TransitionOptionRef,
     pub(super) to: TransitionOptionRef,
     pub(super) cost: f32,
-    #[serde(default)]
-    pub(super) applies_bidirectionally: bool,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -259,9 +257,7 @@ impl TransitionCostsConfig {
             let from = resolve_transition_option(&rule.from, routing_options)?;
             let to = resolve_transition_option(&rule.to, routing_options)?;
             pairwise.insert((from, to), rule.cost);
-            if rule.applies_bidirectionally {
-                pairwise.insert((to, from), rule.cost);
-            }
+            pairwise.insert((to, from), rule.cost);
         }
 
         trace!(

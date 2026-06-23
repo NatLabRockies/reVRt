@@ -703,8 +703,7 @@ mod tests {
                         {
                             "from": "overhead",
                             "to": "underground",
-                            "cost": 3.0,
-                            "applies_bidirectionally": true
+                            "cost": 3.0
                         }
                     ]
                 },
@@ -764,8 +763,7 @@ mod tests {
                         {
                             "from": "overhead",
                             "to": "underground",
-                            "cost": 3.0,
-                            "applies_bidirectionally": true
+                            "cost": 3.0
                         }
                     ]
                 },
