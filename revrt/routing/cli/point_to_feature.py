@@ -33,17 +33,14 @@ logger = logging.getLogger(__name__)
 class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
     """Convert route points DataFrame to route definition for Rust"""
 
-    def __init__(  # noqa: PLR0913, PLR0917
+    def __init__(
         self,
         cost_fpath,
         route_points,
         features_fpath,
         out_fp,
-        cost_layers,
-        friction_layers=None,
-        barrier_layers=None,
+        routing_options,
         transmission_config=None,
-        routing_options=None,
         drivers=None,
         transition_costs=None,
         connection_identifier_column="end_feat_id",
@@ -87,11 +84,8 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
             cost_fpath=cost_fpath,
             route_points=route_points,
             out_fp=out_fp,
-            cost_layers=cost_layers,
-            friction_layers=friction_layers,
-            barrier_layers=barrier_layers,
-            transmission_config=transmission_config,
             routing_options=routing_options,
+            transmission_config=transmission_config,
             drivers=drivers,
             transition_costs=transition_costs,
         )
@@ -120,6 +114,7 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
         return (
             int(row["start_row"]),
             int(row["start_col"]),
+            str(row.get("start_option", self._default_routing_option)),
             str(row[self.connection_identifier_column]),
             str(row.get("polarity", "unknown")),
             str(row.get("voltage", "unknown")),
@@ -128,12 +123,13 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
     def _convert_to_route_definitions(self, routes):
         """Convert route DataFrame to route definitions format"""
         start_point_cols = ["start_row", "start_col"]
+        start_option = "start_option"
 
         route_definitions = []
         route_attrs = {}
         cost_height, cost_width = self.cost_metadata["shape"]
-        for route_id, (feat_id, sub_routes) in enumerate(
-            routes.groupby(self.connection_identifier_column)
+        for route_id, ((feat_id, eo), sub_routes) in enumerate(
+            routes.groupby([self.connection_identifier_column, "end_option"])
         ):
             end_feats = gpd.read_file(
                 self.features_fpath,
@@ -151,7 +147,10 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
 
             start_points = []
             for __, info in sub_routes.iterrows():
-                start_idx = tuple(info[start_point_cols].astype("int32"))
+                start_idx = (
+                    *info[start_point_cols].astype("int32"),
+                    info[start_option],
+                )
                 route_attrs[(route_id, start_idx)] = info.to_dict()
                 start_points.append(start_idx)
 
@@ -160,7 +159,7 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
                     route_id,
                     start_points,
                     [
-                        (int(r), int(c))
+                        (int(r), int(c), str(eo))
                         for r, c in zip(rows, cols, strict=True)
                         if 0 <= r < cost_height and 0 <= c < cost_width
                     ],
@@ -196,17 +195,13 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     cost_fpath,
     out_dir,
     job_name,
-    cost_layers=None,
+    routing_options,
     route_table_fpath="PIPELINE",
     features_fpath="PIPELINE",
-    friction_layers=None,
-    barrier_layers=None,
-    routing_options=None,
     drivers=None,
     transition_costs=None,
     tracked_layers=None,
-    cost_multiplier_layer=None,
-    cost_multiplier_scalar=1,
+    # cost_multiplier_layer=None,
     transmission_config=None,
     save_paths=False,
     save_routing_layer=False,
@@ -470,12 +465,6 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         but tracked layers do not contribute to routing costs. They are
         only summarized for output characterization.
         By default, ``None``.
-    cost_multiplier_layer : str, optional
-        Name of the spatial multiplier layer applied to final costs.
-        By default, ``None``.
-    cost_multiplier_scalar : int, default=1
-        Scalar multiplier applied to the final cost surface.
-        By default, ``1``.
     transmission_config : path-like or dict, optional
         Dictionary of transmission cost configuration values, or
         path to JSON/JSON5 file containing this dictionary. The
@@ -575,11 +564,8 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             route_points=route_points,
             features_fpath=features_fpath,
             out_fp=out_fp,
-            cost_layers=cost_layers,
-            friction_layers=friction_layers,
-            barrier_layers=barrier_layers,
-            transmission_config=transmission_config,
             routing_options=routing_options,
+            transmission_config=transmission_config,
             drivers=drivers,
             transition_costs=transition_costs,
             connection_identifier_column=connection_identifier_column,
@@ -590,8 +576,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             out_fp=out_fp,
             routes_to_compute=routes_to_compute,
             job_name=job_name,
-            cost_multiplier_layer=cost_multiplier_layer,
-            cost_multiplier_scalar=cost_multiplier_scalar,
+            # cost_multiplier_layer=cost_multiplier_layer,
             tracked_layers=tracked_layers,
             ignore_invalid_costs=ignore_invalid_costs,
             user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,

@@ -39,13 +39,15 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
 
         super()._validate_route_points()
 
-    def _route_as_tuple(self, row):  # noqa:PLR6301
+    def _route_as_tuple(self, row):
         """Convert route row to a tuple for existing route checking"""
         return (
             int(row["start_row"]),
             int(row["start_col"]),
+            str(row.get("start_option", self._default_routing_option)),
             int(row["end_row"]),
             int(row["end_col"]),
+            str(row.get("end_option", self._default_routing_option)),
             str(row.get("polarity", "unknown")),
             str(row.get("voltage", "unknown")),
         )
@@ -54,6 +56,7 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
         """Convert route DataFrame to route definitions format"""
         start_point_cols = ["start_row", "start_col"]
         end_point_cols = ["end_row", "end_col"]
+        start_option, end_option = "start_option", "end_option"
         num_unique_start_points = len(routes.groupby(start_point_cols))
         num_unique_end_points = len(routes.groupby(end_point_cols))
         if num_unique_end_points > num_unique_start_points:
@@ -61,22 +64,30 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
                 "Less unique starting points detected! Swapping start and "
                 "end point set for optimal routing performance"
             )
-            start_point_cols = ["end_row", "end_col"]
-            end_point_cols = ["start_row", "start_col"]
+            start_point_cols, end_point_cols = end_point_cols, start_point_cols
+            start_option, end_option = end_option, start_option
 
         route_definitions = []
         route_attrs = {}
         for route_id, (end_idx, sub_routes) in enumerate(
-            routes.groupby(end_point_cols)
+            routes.groupby([*end_point_cols, end_option])
         ):
             start_points = []
             for __, info in sub_routes.iterrows():
-                start_idx = tuple(info[start_point_cols].astype("int32"))
+                start_idx = (
+                    *info[start_point_cols].astype("int32"),
+                    info[start_option],
+                )
                 route_attrs[(route_id, start_idx)] = info.to_dict()
                 start_points.append(start_idx)
 
+            er, ec, eo = end_idx
             route_definitions.append(
-                (route_id, start_points, [tuple(map(int, end_idx))])
+                (
+                    route_id,
+                    start_points,
+                    [(int(er), int(ec), str(eo))],
+                )
             )
 
         return route_definitions, route_attrs
@@ -87,15 +98,11 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     route_table_fpath,
     out_dir,
     job_name,
-    cost_layers=None,
-    friction_layers=None,
-    barrier_layers=None,
-    routing_options=None,
+    routing_options,
     drivers=None,
     transition_costs=None,
     tracked_layers=None,
-    cost_multiplier_layer=None,
-    cost_multiplier_scalar=1,
+    # cost_multiplier_layer=None,
     transmission_config=None,
     save_paths=False,
     save_routing_layer=False,
@@ -321,12 +328,6 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         but tracked layers do not contribute to routing costs. They are
         only summarized for output characterization.
         By default, ``None``.
-    cost_multiplier_layer : str, optional
-        Name of the spatial multiplier layer applied to final costs.
-        By default, ``None``.
-    cost_multiplier_scalar : int, default=1
-        Scalar multiplier applied to the final cost surface.
-        By default, ``1``.
     transmission_config : path-like or dict, optional
         Dictionary of transmission cost configuration values, or
         path to JSON/JSON5 file containing this dictionary. The
@@ -417,11 +418,8 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             cost_fpath=cost_fpath,
             route_points=route_points,
             out_fp=out_fp,
-            cost_layers=cost_layers,
-            friction_layers=friction_layers,
-            barrier_layers=barrier_layers,
-            transmission_config=transmission_config,
             routing_options=routing_options,
+            transmission_config=transmission_config,
             drivers=drivers,
             transition_costs=transition_costs,
         )
@@ -431,8 +429,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             out_fp=out_fp,
             routes_to_compute=routes_to_compute,
             job_name=job_name,
-            cost_multiplier_layer=cost_multiplier_layer,
-            cost_multiplier_scalar=cost_multiplier_scalar,
+            # cost_multiplier_layer=cost_multiplier_layer,
             tracked_layers=tracked_layers,
             ignore_invalid_costs=ignore_invalid_costs,
             user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
