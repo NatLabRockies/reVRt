@@ -48,6 +48,8 @@ pub(super) struct RoutingOptionDefinition {
     #[serde(default)]
     cost_layers: Vec<CostLayer>,
     #[serde(default)]
+    cost_multiplier_layer: Option<String>,
+    #[serde(default)]
     friction_layers: Vec<FrictionLayerInput>,
     #[serde(default)]
     barrier_layers: Vec<BarrierLayer>,
@@ -56,6 +58,7 @@ pub(super) struct RoutingOptionDefinition {
 #[derive(Clone, Debug, Default)]
 pub(super) struct RoutingOptionLayerSet {
     pub(super) cost_layers: Vec<CostLayer>,
+    pub(super) cost_multiplier_layer: Option<String>,
     pub(super) friction_layers: Vec<FrictionLayer>,
     pub(super) barrier_layers: Vec<BarrierLayer>,
 }
@@ -160,6 +163,7 @@ impl TryFrom<CostFunctionInput> for CostFunction {
             invalid_costs_block_routing,
         } = input;
         let mut cost_layers = Vec::new();
+        let mut cost_multiplier_layers = Vec::new();
         let mut friction_layers = Vec::new();
         let mut barrier_layers = Vec::new();
         let mut routing_option_names = Vec::new();
@@ -172,11 +176,13 @@ impl TryFrom<CostFunctionInput> for CostFunction {
         {
             let RoutingOptionLayerSet {
                 cost_layers: option_cost_layers,
+                cost_multiplier_layer: option_cost_multiplier_layer,
                 friction_layers: option_friction_layers,
                 barrier_layers: option_barrier_layers,
             } = definition.into_layers(index)?;
             routing_option_names.push(name);
             cost_layers.extend(option_cost_layers);
+            cost_multiplier_layers.push(option_cost_multiplier_layer);
             friction_layers.extend(option_friction_layers);
             barrier_layers.extend(option_barrier_layers);
         }
@@ -186,6 +192,7 @@ impl TryFrom<CostFunctionInput> for CostFunction {
 
         Ok(CostFunction::from_input_parts(
             cost_layers,
+            cost_multiplier_layers,
             friction_layers,
             barrier_layers,
             routing_option_names,
@@ -204,6 +211,7 @@ impl RoutingOptionDefinition {
                 .into_iter()
                 .map(|layer| layer.with_option(option))
                 .collect(),
+            cost_multiplier_layer: self.cost_multiplier_layer,
             friction_layers: self
                 .friction_layers
                 .into_iter()
