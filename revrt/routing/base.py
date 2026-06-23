@@ -140,6 +140,9 @@ class RoutingScenario:
                         option_config.get("barrier_layers", [])
                     )
                 ),
+                "cost_multiplier_layer": option_config.get(
+                    "cost_multiplier_layer"
+                ),
             }
             for option_name, option_config in self.routing_options.items()
         }
