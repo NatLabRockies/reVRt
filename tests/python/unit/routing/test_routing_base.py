@@ -17,6 +17,7 @@ from revrt.routing.base import (
     RouteMetrics,
     RoutingLayerManager,
     RoutingScenario,
+    _friction_layers_for_rust,
     _validate_out_fp,
 )
 from revrt.exceptions import revrtKeyError
@@ -230,7 +231,6 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
                     "from": "overhead",
                     "to": "underground",
                     "cost": 3,
-                    "applies_bidirectionally": True,
                 }
             ],
         },
@@ -261,34 +261,72 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
     ]
 
 
-def test_multi_option_route_metrics_use_optimized_objective(
+def test_multi_option_route_metrics_use_option_layers(
     sample_layered_data,
 ):
-    """Multi-option routes should trust the Rust objective for cost"""
+    """Multi-option routes report per-option and transition costs"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         routing_options={
             "overhead": {
-                "cost_layers": [{"layer_name": "layer_1"}],
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {"layer_name": "layer_3", "is_invariant": True},
+                ],
             },
             "underground": {
-                "cost_layers": [{"layer_name": "layer_2"}],
+                "cost_layers": [
+                    {"layer_name": "layer_2"},
+                    {"layer_name": "layer_3", "is_invariant": True},
+                ],
             },
         },
         drivers={"default": {"overhead": 1, "underground": 10}},
-        transition_costs={"default": 0},
+        transition_costs={
+            "default": 0,
+            "pairwise": [
+                {
+                    "from": "overhead",
+                    "to": "underground",
+                    "cost": 3.5,
+                }
+            ],
+        },
         ignore_invalid_costs=True,
     )
     routing_layers = RoutingLayerManager(scenario).build()
     try:
         metrics = RouteMetrics(
             routing_layers,
-            route=[(1, 1), (1, 2), (1, 3)],
+            route=[
+                (1, 1, "overhead"),
+                (1, 2, "overhead"),
+                (1, 2, "underground"),
+                (1, 3, "underground"),
+            ],
             optimized_objective=42.5,
         )
+        result = metrics.compute()
 
-        assert metrics.cost == pytest.approx(42.5)
+        # expected_cost = 3.0 + 9.0 + 3.5
+        expected_cost = (
+            # layer 1 costs
+            1.5
+            # layer 1 inv costs
+            + 2
+            + 2
+            # transition costs
+            + 3.5
+            # layer 2 costs
+            + 1.5
+            # layer 2 inv costs
+            + 2
+            + 3
+        )
+        assert metrics.cost == pytest.approx(expected_cost)
+        assert result["cost"] == pytest.approx(expected_cost)
+        assert result["optimized_objective"] == pytest.approx(42.5)
     finally:
         routing_layers.close()
 
@@ -309,7 +347,9 @@ def test_basic_single_route_layered_file_short_path(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -317,7 +357,7 @@ def test_basic_single_route_layered_file_short_path(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(1, 2)]),
+            ([(1, 1, "default")], [(1, 2, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -346,14 +386,16 @@ def test_route_results_passes_routing_layer_out_fp(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm="long-range-dijkstra",
     )
 
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
 
@@ -384,10 +426,14 @@ def test_multi_option_routes_write_companion_gpkg(
                         7,
                         [
                             (
-                                [(1, 1), (1, 2), (1, 2), (1, 3)],
+                                [
+                                    (1, 1, "overhead"),
+                                    (1, 2, "overhead"),
+                                    (1, 2, "underground"),
+                                    (1, 3, "underground"),
+                                ],
                                 12.0,
                                 [],
-                                [0, 0, 1, 1],
                             )
                         ],
                     )
@@ -408,8 +454,8 @@ def test_multi_option_routes_write_companion_gpkg(
     )
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
-        route_definitions=[(7, [(1, 1)], [(1, 3)])],
-        route_attrs={(7, (1, 1)): {"route_id": "route_7"}},
+        route_definitions=[(7, [(1, 1, "overhead")], [(1, 3, "underground")])],
+        route_attrs={(7, (1, 1, "overhead")): {"route_id": "route_7"}},
     )
 
     out_fp = tmp_path / "routes.gpkg"
@@ -419,7 +465,6 @@ def test_multi_option_routes_write_companion_gpkg(
     option_routes = gpd.read_file(tmp_path / "routes_routing_options.gpkg")
 
     assert len(full_routes) == 1
-    assert full_routes.iloc[0]["route_option_ids"] == "[0, 0, 1, 1]"
     assert len(option_routes) == 2
     assert set(option_routes["routing_option"]) == {
         "overhead",
@@ -434,7 +479,9 @@ def test_routing_scenario_normalizes_algorithm(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm="long-range-dijkstra",
     )
 
@@ -447,7 +494,9 @@ def test_routing_scenario_forwards_a_star_alias(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm="a-star",
     )
 
@@ -459,13 +508,15 @@ def test_routing_scenario_rejects_invalid_algorithm(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm="bellman_ford",
     )
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
     with pytest.raises(ValueError, match="Unsupported routing algorithm"):
@@ -490,13 +541,15 @@ def test_batch_route_processor_forwards_algorithm(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm="dijkstra",
     )
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
 
@@ -520,7 +573,9 @@ def test_basic_single_route_layered_file(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -528,8 +583,8 @@ def test_basic_single_route_layered_file(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
-            ([(1, 2)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
+            ([(1, 2, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -565,10 +620,14 @@ def test_multi_layer_route_layered_file(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1"},
-            {"layer_name": "layer_2"},
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {"layer_name": "layer_2"},
+                ]
+            }
+        },
         algorithm=algorithm,
     )
 
@@ -577,21 +636,25 @@ def test_multi_layer_route_layered_file(
         route_computer = BatchRouteProcessor(
             routing_scenario=scenario,
             route_definitions=[
-                (1, [(1, 1), (1, 2)], [(2, 6)]),
+                (
+                    1,
+                    [(1, 1, "default"), (1, 2, "default")],
+                    [(2, 6, "default")],
+                ),
             ],
             route_attrs={
-                (1, (1, 2)): {"route_type": "A"},
+                (1, (1, 2, "default")): {"route_type": "A"},
             },
         )
     else:
         route_computer = BatchRouteProcessor(
             routing_scenario=scenario,
             route_definitions=[
-                (1, [(1, 1)], [(2, 6)]),
-                (2, [(1, 2)], [(2, 6)]),
+                (1, [(1, 1, "default")], [(2, 6, "default")]),
+                (2, [(1, 2, "default")], [(2, 6, "default")]),
             ],
             route_attrs={
-                (2, (1, 2)): {"route_type": "A"},
+                (2, (1, 2, "default")): {"route_type": "A"},
             },
         )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -610,11 +673,11 @@ def test_multi_layer_route_layered_file(
         0.005414,
         rel=1e-4,
     )
-    assert first_route["layer_1_cost"] == pytest.approx(
+    assert first_route["layer_1_default_cost"] == pytest.approx(
         17.571068,
         rel=1e-4,
     )
-    assert first_route["layer_2_cost"] == pytest.approx(
+    assert first_route["layer_2_default_cost"] == pytest.approx(
         10.035534,
         rel=1e-4,
     )
@@ -634,11 +697,11 @@ def test_multi_layer_route_layered_file(
         0.004414,
         rel=1e-4,
     )
-    assert second_route["layer_1_cost"] == pytest.approx(
+    assert second_route["layer_1_default_cost"] == pytest.approx(
         16.071068,
         rel=1e-4,
     )
-    assert second_route["layer_2_cost"] == pytest.approx(
+    assert second_route["layer_2_default_cost"] == pytest.approx(
         9.035534,
         rel=1e-4,
     )
@@ -659,7 +722,9 @@ def test_save_paths_returns_expected_geometry(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -667,8 +732,8 @@ def test_save_paths_returns_expected_geometry(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
-            ([(1, 2)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
+            ([(1, 2, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=out_gpkg, save_paths=True)
@@ -723,7 +788,9 @@ def test_empty_route_definitions_returns_empty_dataframe(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -747,7 +814,9 @@ def test_empty_route_definitions_returns_empty_geo_dataframe(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -771,13 +840,17 @@ def test_multi_layer_route_with_multiplier(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1"},
-            {
-                "layer_name": "layer_2",
-                "multiplier_scalar": 0.5,
-            },
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {
+                        "layer_name": "layer_2",
+                        "multiplier_scalar": 0.5,
+                    },
+                ]
+            }
+        },
         algorithm=algorithm,
     )
 
@@ -785,8 +858,8 @@ def test_multi_layer_route_with_multiplier(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
-            ([(1, 2)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
+            ([(1, 2, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -805,11 +878,11 @@ def test_multi_layer_route_with_multiplier(
         0.005414,
         rel=1e-4,
     )
-    assert first_route["layer_1_cost"] == pytest.approx(
+    assert first_route["layer_1_default_cost"] == pytest.approx(
         17.571068,
         rel=1e-4,
     )
-    assert first_route["layer_2_cost"] == pytest.approx(
+    assert first_route["layer_2_default_cost"] == pytest.approx(
         5.017767,
         rel=1e-4,
     )
@@ -830,11 +903,11 @@ def test_multi_layer_route_with_multiplier(
         0.004414,
         rel=1e-4,
     )
-    assert second_route["layer_1_cost"] == pytest.approx(
+    assert second_route["layer_1_default_cost"] == pytest.approx(
         16.071068,
         rel=1e-4,
     )
-    assert second_route["layer_2_cost"] == pytest.approx(
+    assert second_route["layer_2_default_cost"] == pytest.approx(
         4.517767,
         rel=1e-4,
     )
@@ -856,19 +929,23 @@ def test_multi_layer_route_with_scalar_and_layer_multipliers(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1"},
-            {"layer_name": "layer_2", "multiplier_scalar": 0.5},
-            {
-                "layer_name": "layer_3",
-                "multiplier_layer": "layer_4",
-            },
-            {
-                "layer_name": "layer_5",
-                "multiplier_scalar": 2,
-                "multiplier_layer": "layer_4",
-            },
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {"layer_name": "layer_2", "multiplier_scalar": 0.5},
+                    {
+                        "layer_name": "layer_3",
+                        "multiplier_layer": "layer_4",
+                    },
+                    {
+                        "layer_name": "layer_5",
+                        "multiplier_scalar": 2,
+                        "multiplier_layer": "layer_4",
+                    },
+                ]
+            }
+        },
         algorithm=algorithm,
     )
 
@@ -876,7 +953,7 @@ def test_multi_layer_route_with_scalar_and_layer_multipliers(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(1, 2)]),
+            ([(1, 1, "default")], [(1, 2, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -887,14 +964,14 @@ def test_multi_layer_route_with_scalar_and_layer_multipliers(
     route = output.iloc[0]
     assert route["cost"] == pytest.approx(2.0, rel=1e-4)
     assert route["length_km"] == pytest.approx(0.001, rel=1e-4)
-    assert route["layer_1_cost"] == pytest.approx(1.5, rel=1e-4)
-    assert route["layer_2_cost"] == pytest.approx(0.5, rel=1e-4)
-    assert route["layer_3_cost"] == pytest.approx(0.0, abs=1e-8)
-    assert route["layer_5_cost"] == pytest.approx(0.0, abs=1e-8)
-    assert route["layer_1_length_km"] == pytest.approx(0.001, rel=1e-4)
-    assert route["layer_2_length_km"] == pytest.approx(0.001, rel=1e-4)
-    assert route["layer_3_length_km"] == pytest.approx(0.0, abs=1e-8)
-    assert route["layer_5_length_km"] == pytest.approx(0.0, abs=1e-8)
+    assert route["layer_1_default_cost"] == pytest.approx(1.5, rel=1e-4)
+    assert route["layer_2_default_cost"] == pytest.approx(0.5, rel=1e-4)
+    assert route["layer_3_default_cost"] == pytest.approx(0.0, abs=1e-8)
+    assert route["layer_5_default_cost"] == pytest.approx(0.0, abs=1e-8)
+    assert route["layer_1_default_length_km"] == pytest.approx(0.001, rel=1e-4)
+    assert route["layer_2_default_length_km"] == pytest.approx(0.001, rel=1e-4)
+    assert route["layer_3_default_length_km"] == pytest.approx(0.0, abs=1e-8)
+    assert route["layer_5_default_length_km"] == pytest.approx(0.0, abs=1e-8)
     assert np.isclose(route["cost"], route["optimized_objective"], rtol=1e-6)
 
 
@@ -907,7 +984,9 @@ def test_routing_with_tracked_layers(sample_layered_data, tmp_path, algorithm):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         tracked_layers=[
             {"layer_name": "layer_1", "agg_method": "mean"},
             {"layer_name": "layer_2", "agg_method": "max"},
@@ -920,7 +999,7 @@ def test_routing_with_tracked_layers(sample_layered_data, tmp_path, algorithm):
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(1, 2)]),
+            ([(1, 1, "default")], [(1, 2, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -947,7 +1026,9 @@ def test_tracked_layers_apply_multiplier_scalar_and_layer(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         tracked_layers=[
             {
                 "layer_name": "layer_1",
@@ -966,7 +1047,7 @@ def test_tracked_layers_apply_multiplier_scalar_and_layer(
     try:
         result = RouteMetrics(
             routing_layers,
-            route=[(1, 1), (2, 1)],
+            route=[(1, 1, "default"), (2, 1, "default")],
             optimized_objective=0.0,
         ).compute()
 
@@ -992,11 +1073,13 @@ def test_start_point_on_barrier_returns_no_route(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_6"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_6"}]}
+        },
         algorithm=algorithm,
     )
     if use_friction:
-        scenario.friction_layers = [
+        scenario.routing_options["default"]["friction_layers"] = [
             {"mask": "layer_5", "multiplier_scalar": -10}
         ]
 
@@ -1006,7 +1089,7 @@ def test_start_point_on_barrier_returns_no_route(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(3, 1)], [(2, 6)]),
+            ([(3, 1, "default")], [(2, 6, "default")]),
         ],
     )
     with pytest.warns(revrtWarning, match="invalid"):
@@ -1014,11 +1097,12 @@ def test_start_point_on_barrier_returns_no_route(
 
     assert_message_was_logged(
         "One or more of the start points have an invalid cost (must be > 0): "
-        "{(3, 1)}",
+        "{(3, 1, 'default')}",
         "WARNING",
     )
     assert_message_was_logged(
-        "All start points are invalid for route with ID 0: [(3, 1)]",
+        "All start points are invalid for route with ID 0: "
+        "[(3, 1, 'default')]",
         "WARNING",
     )
     assert not out_csv.exists()
@@ -1035,7 +1119,9 @@ def test_invalid_start_point_logged(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -1045,7 +1131,10 @@ def test_invalid_start_point_logged(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1), (0, 3)], [(2, 6)]),
+            (
+                [(1, 1, "default"), (0, 3, "default")],
+                [(2, 6, "default")],
+            ),
         ],
     )
     with pytest.warns(revrtWarning, match="invalid cost"):
@@ -1053,7 +1142,7 @@ def test_invalid_start_point_logged(
 
     assert_message_was_logged(
         "One or more of the start points have an invalid cost (must be > 0): "
-        "{(0, 3)}",
+        "{(0, 3, 'default')}",
         "WARNING",
     )
 
@@ -1080,7 +1169,9 @@ def test_invalid_start_point_explicitly_allowed(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         ignore_invalid_costs=False,
         algorithm=algorithm,
     )
@@ -1091,7 +1182,14 @@ def test_invalid_start_point_explicitly_allowed(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1), (0, 3), (10000, 10000)], [(2, 6), (20000, 20000)]),
+            (
+                [
+                    (1, 1, "default"),
+                    (0, 3, "default"),
+                    (10000, 10000, "default"),
+                ],
+                [(2, 6, "default"), (20000, 20000, "default")],
+            ),
         ],
     )
     with pytest.warns(revrtWarning, match="out of bounds"):
@@ -1099,12 +1197,12 @@ def test_invalid_start_point_explicitly_allowed(
 
     assert_message_was_logged(
         "One or more of the start points are out of bounds for an array of "
-        "shape (7, 8): [(10000, 10000)]",
+        "shape (7, 8): [(10000, 10000, 'default')]",
         "WARNING",
     )
     assert_message_was_logged(
         "One or more of the end points are out of bounds for an array of "
-        "shape (7, 8): [(20000, 20000)]",
+        "shape (7, 8): [(20000, 20000, 'default')]",
         "WARNING",
     )
 
@@ -1141,7 +1239,9 @@ def test_some_endpoints_include_barriers_but_one_valid(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -1151,7 +1251,7 @@ def test_some_endpoints_include_barriers_but_one_valid(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(0, 3), (2, 6)]),
+            ([(1, 1, "default")], [(0, 3, "default"), (2, 6, "default")]),
         ],
     )
     with pytest.warns(revrtWarning, match="invalid cost"):
@@ -1179,7 +1279,9 @@ def test_all_endpoints_are_barriers_returns_no_route(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -1187,7 +1289,7 @@ def test_all_endpoints_are_barriers_returns_no_route(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(0, 3), (0, 7)]),
+            ([(1, 1, "default")], [(0, 3, "default"), (0, 7, "default")]),
         ],
     )
     with pytest.warns(revrtWarning, match="valid cost"):
@@ -1195,7 +1297,7 @@ def test_all_endpoints_are_barriers_returns_no_route(
 
     assert_message_was_logged(
         "None of the end points have a valid cost (must be > 0): "
-        "[(0, 3), (0, 7)]",
+        "[(0, 3, 'default'), (0, 7, 'default')]",
         "ERROR",
     )
     assert not out_csv.exists()
@@ -1212,7 +1314,9 @@ def test_bad_start_index_returns_no_route(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -1220,7 +1324,10 @@ def test_bad_start_index_returns_no_route(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(10000, 10000)], [(0, 3), (0, 7)]),
+            (
+                [(10000, 10000, "default")],
+                [(0, 3, "default"), (0, 7, "default")],
+            ),
         ],
     )
     with pytest.warns(revrtWarning, match=r"[(10000, 10000)]"):
@@ -1228,7 +1335,7 @@ def test_bad_start_index_returns_no_route(
 
     assert_message_was_logged(
         "One or more of the start points are out of bounds for an array of "
-        "shape (7, 8): [(10000, 10000)]",
+        "shape (7, 8): [(10000, 10000, 'default')]",
         "WARNING",
     )
     assert not out_csv.exists()
@@ -1245,7 +1352,9 @@ def test_bad_end_index_returns_no_route(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -1253,7 +1362,7 @@ def test_bad_end_index_returns_no_route(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(10000, 10000)]),
+            ([(1, 1, "default")], [(10000, 10000, "default")]),
         ],
     )
     with pytest.warns(revrtWarning, match="end points"):
@@ -1261,11 +1370,12 @@ def test_bad_end_index_returns_no_route(
 
     assert_message_was_logged(
         "One or more of the end points are out of bounds for an array of "
-        "shape (7, 8): [(10000, 10000)]",
+        "shape (7, 8): [(10000, 10000, 'default')]",
         "WARNING",
     )
     assert_message_was_logged(
-        "All end points are invalid for route with ID 0: [(10000, 10000)]",
+        "All end points are invalid for route with ID 0: "
+        "[(10000, 10000, 'default')]",
         "WARNING",
     )
     assert not out_csv.exists()
@@ -1282,7 +1392,9 @@ def test_bad_index_skipped(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -1290,7 +1402,14 @@ def test_bad_index_skipped(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(10000, 10000), (1, 1)], [(0, 3), (2, 6), (20000, 20000)]),
+            (
+                [(10000, 10000, "default"), (1, 1, "default")],
+                [
+                    (0, 3, "default"),
+                    (2, 6, "default"),
+                    (20000, 20000, "default"),
+                ],
+            ),
         ],
     )
     with pytest.warns(revrtWarning, match="Dropping these"):
@@ -1298,12 +1417,12 @@ def test_bad_index_skipped(
 
     assert_message_was_logged(
         "One or more of the start points are out of bounds for an array of "
-        "shape (7, 8): [(10000, 10000)]",
+        "shape (7, 8): [(10000, 10000, 'default')]",
         "WARNING",
     )
     assert_message_was_logged(
         "One or more of the end points are out of bounds for an array of "
-        "shape (7, 8): [(20000, 20000)]",
+        "shape (7, 8): [(20000, 20000, 'default')]",
         "WARNING",
     )
     output = pd.read_csv(out_csv)
@@ -1323,17 +1442,25 @@ def test_routing_scenario_repr_contains_fields(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[{"mask": "layer_2"}],
-        cost_multiplier_layer="layer_3",
-        cost_multiplier_scalar=1.5,
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_layer": "layer_3",
+                        "multiplier_scalar": 1.5,
+                    }
+                ],
+                "friction_layers": [{"mask": "layer_2"}],
+            }
+        },
     )
 
     representation = repr(scenario)
 
     assert "layer_1" in representation
     assert "layer_2" in representation
-    assert "cost_multiplier_scalar: 1.5" in representation
+    assert "'multiplier_scalar': 1.5" in representation
 
 
 def test_missing_cost_layer_raises_key_error(sample_layered_data, tmp_path):
@@ -1341,7 +1468,9 @@ def test_missing_cost_layer_raises_key_error(sample_layered_data, tmp_path):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "not_there"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "not_there"}]}
+        },
     )
 
     out_csv = tmp_path / "routes.csv"
@@ -1351,7 +1480,7 @@ def test_missing_cost_layer_raises_key_error(sample_layered_data, tmp_path):
         route_computer = BatchRouteProcessor(
             routing_scenario=scenario,
             route_definitions=[
-                ([(1, 1)], [(1, 2)]),
+                ([(1, 1, "default")], [(1, 2, "default")]),
             ],
         )
         route_computer.process(out_fp=out_csv, save_paths=False)
@@ -1362,14 +1491,24 @@ def test_cost_multiplier_layer_and_scalar_applied(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        cost_multiplier_layer="layer_3",
-        cost_multiplier_scalar=2.0,
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_layer": "layer_3",
+                        "multiplier_scalar": 2.0,
+                    }
+                ]
+            }
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
-        cost_val = routing_layers.cost.isel(y=1, x=1).compute().item()
+        cost_val = (
+            routing_layers.costs["default"].isel(y=1, x=1).compute().item()
+        )
         layer_one = (
             routing_layers._layer_fh["layer_1"]
             .isel(band=0, y=1, x=1)
@@ -1382,7 +1521,13 @@ def test_cost_multiplier_layer_and_scalar_applied(sample_layered_data):
             .compute()
             .item()
         )
-        expected = layer_one * layer_three * scenario.cost_multiplier_scalar
+        expected = (
+            layer_one
+            * layer_three
+            * scenario.routing_options["default"]["cost_layers"][0][
+                "multiplier_scalar"
+            ]
+        )
 
         assert cost_val == pytest.approx(expected)
     finally:
@@ -1394,10 +1539,14 @@ def test_length_invariant_layer_costs_ignore_path_length(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1"},
-            {"layer_name": "layer_2", "is_invariant": True},
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {"layer_name": "layer_2", "is_invariant": True},
+                ]
+            }
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
@@ -1405,7 +1554,7 @@ def test_length_invariant_layer_costs_ignore_path_length(sample_layered_data):
         route = [(1, 1), (1, 2)]
         result = RouteMetrics(
             routing_layers,
-            route,
+            [(1, 1, "default"), (1, 2, "default")],
             optimized_objective=0.0,
         ).compute()
 
@@ -1417,7 +1566,7 @@ def test_length_invariant_layer_costs_ignore_path_length(sample_layered_data):
         )
         expected = sum(layer_two[row, col] for row, col in route)
 
-        assert result["layer_2_cost"] == pytest.approx(expected)
+        assert result["layer_2_default_cost"] == pytest.approx(expected)
     finally:
         routing_layers.close()
 
@@ -1433,10 +1582,14 @@ def test_length_invariant_layers_sum_raw_values(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1"},
-            {"layer_name": "layer_2", "is_invariant": True},
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {"layer_name": "layer_2", "is_invariant": True},
+                ]
+            }
+        },
         algorithm=algorithm,
     )
 
@@ -1444,7 +1597,7 @@ def test_length_invariant_layers_sum_raw_values(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=out_gpkg, save_paths=True)
@@ -1471,15 +1624,15 @@ def test_length_invariant_layers_sum_raw_values(
             for row, col in zip(rows, cols, strict=True)
         )
 
-    assert route["layer_2_cost"] == pytest.approx(
+    assert route["layer_2_default_cost"] == pytest.approx(
         expected_invariant_cost,
         rel=1e-6,
     )
     assert route["cost"] == pytest.approx(
-        route["layer_1_cost"] + expected_invariant_cost,
+        route["layer_1_default_cost"] + expected_invariant_cost,
         rel=1e-6,
     )
-    assert route["layer_2_length_km"] == pytest.approx(
+    assert route["layer_2_default_length_km"] == pytest.approx(
         route["length_km"],
         rel=1e-6,
     )
@@ -1496,22 +1649,26 @@ def test_length_invariant_hidden_and_friction_layers(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1"},
-            {"layer_name": "layer_2", "is_invariant": True},
-            {
-                "layer_name": "layer_5",
-                "multiplier_scalar": 100,
-                "include_in_final_cost": False,
-                "include_in_report": True,
-            },
-        ],
-        friction_layers=[
-            {
-                "mask": "layer_4",
-                "multiplier_scalar": 0.5,
-            },
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {"layer_name": "layer_2", "is_invariant": True},
+                    {
+                        "layer_name": "layer_5",
+                        "multiplier_scalar": 100,
+                        "include_in_final_cost": False,
+                        "include_in_report": True,
+                    },
+                ],
+                "friction_layers": [
+                    {
+                        "mask": "layer_4",
+                        "multiplier_scalar": 0.5,
+                    },
+                ],
+            }
+        },
         algorithm=algorithm,
     )
 
@@ -1519,7 +1676,7 @@ def test_length_invariant_hidden_and_friction_layers(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=out_gpkg, save_paths=True)
@@ -1532,14 +1689,14 @@ def test_length_invariant_hidden_and_friction_layers(
         0.00682842712474619,
         rel=1e-6,
     )
-    assert route["layer_2_length_km"] == pytest.approx(
+    assert route["layer_2_default_length_km"] == pytest.approx(
         route["length_km"],
         rel=1e-6,
     )
-    assert route["layer_1_cost"] == pytest.approx(26.156855, rel=1e-6)
-    assert route["layer_2_cost"] == pytest.approx(19.0)
+    assert route["layer_1_default_cost"] == pytest.approx(26.156855, rel=1e-6)
+    assert route["layer_2_default_cost"] == pytest.approx(19.0)
     assert route["cost"] == pytest.approx(
-        route["layer_1_cost"] + route["layer_2_cost"],
+        route["layer_1_default_cost"] + route["layer_2_default_cost"],
         rel=1e-6,
     )
     assert route["cost"] == pytest.approx(
@@ -1548,11 +1705,11 @@ def test_length_invariant_hidden_and_friction_layers(
     )
     assert route["optimized_objective"] > route["cost"]
 
-    assert route["layer_5_cost"] == pytest.approx(
+    assert route["layer_5_default_cost"] == pytest.approx(
         170.71068,
         rel=1e-6,
     )
-    assert route["layer_5_length_km"] == pytest.approx(
+    assert route["layer_5_default_length_km"] == pytest.approx(
         0.0017071,
         rel=1e-4,
     )
@@ -1571,7 +1728,9 @@ def test_tracked_layers_invalid_configs_warn(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         tracked_layers=[
             {"layer_name": "layer_1", "agg_method": "does_not_exist"},
             {"layer_name": "missing_layer", "agg_method": "mean"},
@@ -1599,7 +1758,9 @@ def test_tracked_layer_missing_multiplier_layer_raises_key_error(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         tracked_layers=[
             {
                 "layer_name": "layer_1",
@@ -1621,32 +1782,44 @@ def test_friction_layers_and_lcp_agg_costs(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1", "include_in_report": False},
-            {
-                "layer_name": "layer_2",
-                "multiplier_scalar": 0.5,
-                "include_in_report": True,
-                "include_in_final_cost": False,
-            },
-        ],
-        friction_layers=[
-            {
-                "mask": "layer_3",
-                "multiplier_scalar": 0.1,
-            },
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "include_in_report": False,
+                    },
+                    {
+                        "layer_name": "layer_2",
+                        "multiplier_scalar": 0.5,
+                        "include_in_report": True,
+                        "include_in_final_cost": False,
+                    },
+                ],
+                "friction_layers": [
+                    {
+                        "mask": "layer_3",
+                        "multiplier_scalar": 0.1,
+                    },
+                ],
+            }
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
         tracked_names = {layer.name for layer in routing_layers.tracked_layers}
-        assert "layer_1" not in tracked_names
-        assert "layer_2" in tracked_names
+        assert "layer_1_default" not in tracked_names
+        assert "layer_2_default" in tracked_names
 
-        base_value = routing_layers.cost.isel(y=1, x=1).compute().item()
+        base_value = (
+            routing_layers.costs["default"].isel(y=1, x=1).compute().item()
+        )
         final_value = (
-            routing_layers.final_routing_layer.isel(y=1, x=1).compute().item()
+            routing_layers.final_routing_layers["default"]
+            .isel(y=1, x=1)
+            .compute()
+            .item()
         )
 
         assert final_value > base_value
@@ -1659,20 +1832,24 @@ def test_friction_layer_include_in_report_adds_tracker(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[
-            {
-                "mask": "layer_4",
-                "multiplier_scalar": 0.5,
-                "include_in_report": True,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [
+                    {
+                        "mask": "layer_4",
+                        "multiplier_scalar": 0.5,
+                        "include_in_report": True,
+                    }
+                ],
             }
-        ],
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
         tracked_names = {layer.name for layer in routing_layers.tracked_layers}
-        assert "layer_4" in tracked_names
+        assert "layer_4_default" in tracked_names
     finally:
         routing_layers.close()
 
@@ -1688,19 +1865,25 @@ def test_friction_layer_influences_objective_without_reporting(
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
     friction_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[
-            {
-                "mask": "layer_4",
-                "multiplier_scalar": 0.5,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [
+                    {
+                        "mask": "layer_4",
+                        "multiplier_scalar": 0.5,
+                    }
+                ],
             }
-        ],
+        },
         algorithm=algorithm,
     )
 
@@ -1708,7 +1891,7 @@ def test_friction_layer_influences_objective_without_reporting(
     route_computer = BatchRouteProcessor(
         routing_scenario=base_scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=base_csv, save_paths=False)
@@ -1722,7 +1905,7 @@ def test_friction_layer_influences_objective_without_reporting(
     route_computer = BatchRouteProcessor(
         routing_scenario=friction_scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=friction_csv, save_paths=False)
@@ -1737,8 +1920,8 @@ def test_friction_layer_influences_objective_without_reporting(
         friction_route["optimized_objective"]
         > base_route["optimized_objective"]
     )
-    assert "layer_2_cost" not in friction_route
-    assert "layer_2_length_km" not in friction_route
+    assert "layer_2_default_cost" not in friction_route
+    assert "layer_2_default_length_km" not in friction_route
 
 
 @pytest.mark.parametrize(
@@ -1752,19 +1935,25 @@ def test_friction_layer_influences_objective(
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
     friction_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[
-            {
-                "mask": "layer_5",
-                "multiplier_scalar": 1000,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [
+                    {
+                        "mask": "layer_5",
+                        "multiplier_scalar": 1000,
+                    }
+                ],
             }
-        ],
+        },
         algorithm=algorithm,
     )
 
@@ -1772,7 +1961,7 @@ def test_friction_layer_influences_objective(
     route_computer = BatchRouteProcessor(
         routing_scenario=base_scenario,
         route_definitions=[
-            ([(1, 1)], [(3, 5)]),
+            ([(1, 1, "default")], [(3, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=base_csv, save_paths=False)
@@ -1785,7 +1974,7 @@ def test_friction_layer_influences_objective(
     route_computer = BatchRouteProcessor(
         routing_scenario=friction_scenario,
         route_definitions=[
-            ([(1, 1)], [(3, 5)]),
+            ([(1, 1, "default")], [(3, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=friction_csv, save_paths=False)
@@ -1804,8 +1993,8 @@ def test_friction_layer_influences_objective(
         > base_route["optimized_objective"]
     )
 
-    assert "layer_5_cost" not in friction_route
-    assert "layer_5_length_km" not in friction_route
+    assert "layer_5_default_cost" not in friction_route
+    assert "layer_5_default_length_km" not in friction_route
 
 
 @pytest.mark.parametrize(
@@ -1819,19 +2008,25 @@ def test_negative_friction_layer_influences_objective(
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
     friction_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[
-            {
-                "mask": "layer_5",
-                "multiplier_scalar": -10,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [
+                    {
+                        "mask": "layer_5",
+                        "multiplier_scalar": -10,
+                    }
+                ],
             }
-        ],
+        },
         algorithm=algorithm,
     )
 
@@ -1839,7 +2034,7 @@ def test_negative_friction_layer_influences_objective(
     route_computer = BatchRouteProcessor(
         routing_scenario=base_scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=base_gpkg, save_paths=True)
@@ -1852,7 +2047,7 @@ def test_negative_friction_layer_influences_objective(
     route_computer = BatchRouteProcessor(
         routing_scenario=friction_scenario,
         route_definitions=[
-            ([(1, 1)], [(2, 6)]),
+            ([(1, 1, "default")], [(2, 6, "default")]),
         ],
     )
     route_computer.process(out_fp=friction_gpkg, save_paths=True)
@@ -1871,8 +2066,8 @@ def test_negative_friction_layer_influences_objective(
         < base_route["optimized_objective"]
     )
 
-    assert "layer_5_cost" not in friction_route
-    assert "layer_5_length_km" not in friction_route
+    assert "layer_5_default_cost" not in friction_route
+    assert "layer_5_default_length_km" not in friction_route
 
 
 @pytest.mark.parametrize(
@@ -1886,19 +2081,25 @@ def test_negative_friction_layer_does_not_go_thru_barrier(
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_6"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_6"}]}
+        },
         algorithm=algorithm,
     )
 
     friction_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_6"}],
-        friction_layers=[
-            {
-                "mask": "layer_5",
-                "multiplier_scalar": -10,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_6"}],
+                "friction_layers": [
+                    {
+                        "mask": "layer_5",
+                        "multiplier_scalar": -10,
+                    }
+                ],
             }
-        ],
+        },
         algorithm=algorithm,
     )
 
@@ -1906,7 +2107,7 @@ def test_negative_friction_layer_does_not_go_thru_barrier(
     route_computer = BatchRouteProcessor(
         routing_scenario=base_scenario,
         route_definitions=[
-            ([(4, 0)], [(2, 7)]),
+            ([(4, 0, "default")], [(2, 7, "default")]),
         ],
     )
     route_computer.process(out_fp=base_gpkg, save_paths=True)
@@ -1919,7 +2120,7 @@ def test_negative_friction_layer_does_not_go_thru_barrier(
     route_computer = BatchRouteProcessor(
         routing_scenario=friction_scenario,
         route_definitions=[
-            ([(4, 0)], [(2, 7)]),
+            ([(4, 0, "default")], [(2, 7, "default")]),
         ],
     )
     route_computer.process(out_fp=friction_gpkg, save_paths=True)
@@ -1940,8 +2141,8 @@ def test_negative_friction_layer_does_not_go_thru_barrier(
         < base_route["optimized_objective"]
     )
 
-    assert "layer_5_cost" not in friction_route
-    assert "layer_5_length_km" not in friction_route
+    assert "layer_5_default_cost" not in friction_route
+    assert "layer_5_default_length_km" not in friction_route
 
 
 @pytest.mark.parametrize(
@@ -1955,7 +2156,9 @@ def test_include_in_final_cost_false_behaves_like_friction(
 
     base_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm=algorithm,
     )
 
@@ -1963,7 +2166,7 @@ def test_include_in_final_cost_false_behaves_like_friction(
     route_computer = BatchRouteProcessor(
         routing_scenario=base_scenario,
         route_definitions=[
-            ([(1, 1)], [(3, 5)]),
+            ([(1, 1, "default")], [(3, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=out_gpkg, save_paths=True)
@@ -1974,22 +2177,26 @@ def test_include_in_final_cost_false_behaves_like_friction(
 
     penalized_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1"},
-            {
-                "layer_name": "layer_5",
-                "multiplier_scalar": 1000,
-                "include_in_final_cost": False,
-                "include_in_report": False,
-            },
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {
+                        "layer_name": "layer_5",
+                        "multiplier_scalar": 1000,
+                        "include_in_final_cost": False,
+                        "include_in_report": False,
+                    },
+                ]
+            }
+        },
     )
 
     penalized_gpkg = tmp_path / "penalized.gpkg"
     route_computer = BatchRouteProcessor(
         routing_scenario=penalized_scenario,
         route_definitions=[
-            ([(1, 1)], [(3, 5)]),
+            ([(1, 1, "default")], [(3, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=penalized_gpkg, save_paths=True)
@@ -2006,10 +2213,10 @@ def test_include_in_final_cost_false_behaves_like_friction(
     assert penalized_route["optimized_objective"] > penalized_route["cost"]
     assert penalized_route["cost"] < 1000
     assert penalized_route["cost"] == pytest.approx(
-        penalized_route["layer_1_cost"],
+        penalized_route["layer_1_default_cost"],
         rel=1e-6,
     )
-    assert "layer_5_cost" not in penalized_route
+    assert "layer_5_default_cost" not in penalized_route
 
 
 def test_route_result_geom_returns_point_for_single_cell(sample_layered_data):
@@ -2017,12 +2224,14 @@ def test_route_result_geom_returns_point_for_single_cell(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
-        route = [(1, 1)]
+        route = [(1, 1, "default")]
         result = RouteMetrics(
             routing_layers,
             route,
@@ -2041,7 +2250,9 @@ def test_characterized_layer_length_metric_uses_positive_mask(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
@@ -2049,12 +2260,12 @@ def test_characterized_layer_length_metric_uses_positive_mask(
         layer = next(
             tracked
             for tracked in routing_layers.tracked_layers
-            if tracked.name == "layer_1"
+            if tracked.name == "layer_1_default"
         )
         route = [(1, 1), (1, 2), (2, 3)]
         metrics = layer.compute(route, abs(routing_layers.transform.a))
 
-        assert metrics["layer_1_length_km"] >= 0
+        assert metrics["layer_1_default_length_km"] >= 0
     finally:
         routing_layers.close()
 
@@ -2066,12 +2277,14 @@ def test_route_result_cached_properties_reuse_computed_values(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
-        route = [(1, 1), (1, 2), (2, 3)]
+        route = [(1, 1, "default"), (1, 2, "default"), (2, 3, "default")]
         result = RouteMetrics(
             routing_layers,
             route,
@@ -2094,12 +2307,14 @@ def test_route_result_cost_property_returns_value(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
-        route = [(1, 1), (1, 2), (2, 3)]
+        route = [(1, 1, "default"), (1, 2, "default"), (2, 3, "default")]
         result = RouteMetrics(
             routing_layers,
             route,
@@ -2116,7 +2331,9 @@ def test_characterized_layer_total_length_computation(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario, chunks=None).build()
@@ -2124,13 +2341,13 @@ def test_characterized_layer_total_length_computation(sample_layered_data):
         layer = next(
             tracked
             for tracked in routing_layers.tracked_layers
-            if tracked.name == "layer_1"
+            if tracked.name == "layer_1_default"
         )
         route = [(1, 1), (1, 2), (2, 3)]
         metrics = layer.compute(route, abs(routing_layers.transform.a))
 
-        assert metrics["layer_1_cost"] > 0
-        assert metrics["layer_1_length_km"] >= 0
+        assert metrics["layer_1_default_cost"] > 0
+        assert metrics["layer_1_default_length_km"] >= 0
     finally:
         routing_layers.close()
 
@@ -2146,11 +2363,17 @@ def test_negative_cost_path_returns_no_route(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_6"},
-            {"layer_name": "layer_4", "multiplier_scalar": -3},
-        ],
-        friction_layers=[{"mask": "layer_5", "multiplier_scalar": -10}],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_6"},
+                    {"layer_name": "layer_4", "multiplier_scalar": -3},
+                ],
+                "friction_layers": [
+                    {"mask": "layer_5", "multiplier_scalar": -10}
+                ],
+            }
+        },
         algorithm=algorithm,
     )
 
@@ -2158,7 +2381,7 @@ def test_negative_cost_path_returns_no_route(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(4, 0)], [(2, 7)]),
+            ([(4, 0, "default")], [(2, 7, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -2170,17 +2393,25 @@ def test_friction_layer_with_layer_name_warns(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[
-            {
-                "layer_name": "legacy_friction",
-                "mask": "layer_4",
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [
+                    {
+                        "layer_name": "legacy_friction",
+                        "mask": "layer_4",
+                    }
+                ],
             }
-        ],
+        },
     )
 
     with pytest.warns(revrtDeprecationWarning) as warning_record:
-        layers_for_rust = list(scenario._friction_layers_for_rust())
+        layers_for_rust = list(
+            _friction_layers_for_rust(
+                scenario.routing_options["default"]["friction_layers"]
+            )
+        )
 
     assert len(warning_record) == 1
     friction_payload = layers_for_rust[-1]
@@ -2193,16 +2424,24 @@ def test_friction_layer_with_multiplier_layer_only(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[
-            {
-                "multiplier_layer": "layer_4",
-                "multiplier_scalar": 0.25,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [
+                    {
+                        "multiplier_layer": "layer_4",
+                        "multiplier_scalar": 0.25,
+                    }
+                ],
             }
-        ],
+        },
     )
 
-    layers_for_rust = list(scenario._friction_layers_for_rust())
+    layers_for_rust = list(
+        _friction_layers_for_rust(
+            scenario.routing_options["default"]["friction_layers"]
+        )
+    )
     friction_payload = layers_for_rust[-1]
     assert friction_payload["multiplier_layer"] == "layer_4"
     assert "mask" not in friction_payload
@@ -2213,8 +2452,12 @@ def test_friction_layer_requires_mask(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[{"multiplier_scalar": 5}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [{"multiplier_scalar": 5}],
+            }
+        },
     )
 
     routing_layers = RoutingLayerManager(scenario)
@@ -2236,15 +2479,19 @@ def test_barrier_layers_are_normalized_for_rust(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        barrier_layers=[
-            {
-                "layer_name": "layer_4",
-                "barrier_values": "==1",
-                "barrier_importance": 2,
-            },
-            {"layer_name": "layer_6", "barrier_values": "<0"},
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_4",
+                        "barrier_values": "==1",
+                        "barrier_importance": 2,
+                    },
+                    {"layer_name": "layer_6", "barrier_values": "<0"},
+                ],
+            }
+        },
     )
 
     cost_function = json.loads(scenario.cost_function_json)
@@ -2258,8 +2505,9 @@ def test_barrier_layers_are_normalized_for_rust(sample_layered_data):
         {
             "layer_name": "layer_6",
             "barrier_operator": "lt",
-            "barrier_threshold": 0,
-            "barrier_importance": None,
+            # "barrier_threshold": 0,
+            # "barrier_importance": None,
+            "barrier_threshold": 0.0,
         },
     ]
 
@@ -2269,14 +2517,18 @@ def test_barrier_layers_normalize_not_equal_for_rust(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
-        barrier_layers=[
-            {
-                "layer_name": "layer_4",
-                "barrier_values": "!=0",
-                "barrier_importance": 1,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_4",
+                        "barrier_values": "!=0",
+                        "barrier_importance": 1,
+                    }
+                ],
             }
-        ],
+        },
     )
 
     cost_function = json.loads(scenario.cost_function_json)
@@ -2296,8 +2548,14 @@ def test_invalid_barrier_values_raise(sample_layered_data):
     with pytest.raises(ValueError, match="Barrier values must use"):
         __ = RoutingScenario(
             cost_fpath=sample_layered_data,
-            cost_layers=[{"layer_name": "layer_1"}],
-            barrier_layers=[{"layer_name": "layer_4", "barrier_values": "~1"}],
+            routing_options={
+                "default": {
+                    "cost_layers": [{"layer_name": "layer_1"}],
+                    "barrier_layers": [
+                        {"layer_name": "layer_4", "barrier_values": "~1"}
+                    ],
+                }
+            },
         ).cost_function_json
 
 
@@ -2307,14 +2565,18 @@ def test_barrier_importance_must_be_positive(sample_layered_data):
     with pytest.raises(ValueError, match="positive integer"):
         __ = RoutingScenario(
             cost_fpath=sample_layered_data,
-            cost_layers=[{"layer_name": "layer_1"}],
-            barrier_layers=[
-                {
-                    "layer_name": "layer_4",
-                    "barrier_values": "==1",
-                    "barrier_importance": 0,
+            routing_options={
+                "default": {
+                    "cost_layers": [{"layer_name": "layer_1"}],
+                    "barrier_layers": [
+                        {
+                            "layer_name": "layer_4",
+                            "barrier_values": "==1",
+                            "barrier_importance": 0,
+                        }
+                    ],
                 }
-            ],
+            },
         ).cost_function_json
 
 
@@ -2323,18 +2585,30 @@ def test_explicit_barriers_remain_hard(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_2"}],
-        barrier_layers=[{"layer_name": "layer_4", "barrier_values": "==1"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_2"}],
+                "barrier_layers": [
+                    {"layer_name": "layer_4", "barrier_values": "==1"}
+                ],
+            }
+        },
         ignore_invalid_costs=False,
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
         barrier_value = (
-            routing_layers.final_routing_layer.isel(y=0, x=3).compute().item()
+            routing_layers.final_routing_layers["default"]
+            .isel(y=0, x=3)
+            .compute()
+            .item()
         )
         free_value = (
-            routing_layers.final_routing_layer.isel(y=0, x=2).compute().item()
+            routing_layers.final_routing_layers["default"]
+            .isel(y=0, x=2)
+            .compute()
+            .item()
         )
     finally:
         routing_layers.close()
@@ -2348,18 +2622,30 @@ def test_not_equal_barriers_remain_hard(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_2"}],
-        barrier_layers=[{"layer_name": "layer_4", "barrier_values": "!=0"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_2"}],
+                "barrier_layers": [
+                    {"layer_name": "layer_4", "barrier_values": "!=0"}
+                ],
+            }
+        },
         ignore_invalid_costs=False,
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
         barrier_value = (
-            routing_layers.final_routing_layer.isel(y=0, x=3).compute().item()
+            routing_layers.final_routing_layers["default"]
+            .isel(y=0, x=3)
+            .compute()
+            .item()
         )
         free_value = (
-            routing_layers.final_routing_layer.isel(y=0, x=2).compute().item()
+            routing_layers.final_routing_layers["default"]
+            .isel(y=0, x=2)
+            .compute()
+            .item()
         )
     finally:
         routing_layers.close()
@@ -2373,26 +2659,36 @@ def test_soft_barrier_setting_controls_barrier_value(sample_layered_data):
 
     hard_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         ignore_invalid_costs=True,
     )
     hard_layers = RoutingLayerManager(hard_scenario).build()
     try:
         hard_value = (
-            hard_layers.final_routing_layer.isel(y=0, x=3).compute().item()
+            hard_layers.final_routing_layers["default"]
+            .isel(y=0, x=3)
+            .compute()
+            .item()
         )
     finally:
         hard_layers.close()
 
     soft_scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         ignore_invalid_costs=False,
     )
     soft_layers = RoutingLayerManager(soft_scenario).build()
     try:
         soft_value = (
-            soft_layers.final_routing_layer.isel(y=0, x=3).compute().item()
+            soft_layers.final_routing_layers["default"]
+            .isel(y=0, x=3)
+            .compute()
+            .item()
         )
         assert hard_value == -1
         assert soft_value > 0
@@ -2408,8 +2704,14 @@ def test_explicit_barrier_blocks_route_even_with_soft_invalid_costs(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_2"}],
-        barrier_layers=[{"layer_name": "layer_4", "barrier_values": "==1"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_2"}],
+                "barrier_layers": [
+                    {"layer_name": "layer_4", "barrier_values": "==1"}
+                ],
+            }
+        },
         ignore_invalid_costs=False,
         algorithm="dijkstra",
     )
@@ -2418,7 +2720,7 @@ def test_explicit_barrier_blocks_route_even_with_soft_invalid_costs(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(1, 5)]),
+            ([(1, 1, "default")], [(1, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -2431,31 +2733,39 @@ def test_soft_barrier_points_remain_valid_for_retry(sample_layered_data):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_2"}],
-        barrier_layers=[
-            {
-                "layer_name": "layer_4",
-                "barrier_values": "==1",
-                "barrier_importance": 1,
-            },
-            {
-                "layer_name": "layer_5",
-                "barrier_values": "==1",
-                "barrier_importance": 1,
-            },
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_2"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_4",
+                        "barrier_values": "==1",
+                        "barrier_importance": 1,
+                    },
+                    {
+                        "layer_name": "layer_5",
+                        "barrier_values": "==1",
+                        "barrier_importance": 1,
+                    },
+                ],
+            }
+        },
         ignore_invalid_costs=False,
     )
 
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(1, 5)]),
+            ([(1, 1, "default")], [(1, 5, "default")]),
         ],
     )
     try:
-        assert route_computer._validate_start_points([(0, 3)]) == [(0, 3)]
-        assert route_computer._validate_end_points([(0, 3)]) == [(0, 3)]
+        assert route_computer._validate_start_points([(0, 3, "default")]) == [
+            (0, 3, "default")
+        ]
+        assert route_computer._validate_end_points([(0, 3, "default")]) == [
+            (0, 3, "default")
+        ]
     finally:
         route_computer._reset_routing_layers()
 
@@ -2467,14 +2777,18 @@ def test_soft_barrier_retry_returns_route_with_metadata(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_2"}],
-        barrier_layers=[
-            {
-                "layer_name": "layer_4",
-                "barrier_values": "==1",
-                "barrier_importance": 1,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_2"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_4",
+                        "barrier_values": "==1",
+                        "barrier_importance": 1,
+                    }
+                ],
             }
-        ],
+        },
         ignore_invalid_costs=False,
         algorithm="dijkstra",
     )
@@ -2483,7 +2797,7 @@ def test_soft_barrier_retry_returns_route_with_metadata(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 1)], [(1, 5)]),
+            ([(1, 1, "default")], [(1, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -2501,14 +2815,18 @@ def test_soft_barrier_start_point_retries_and_records_metadata(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_2"}],
-        barrier_layers=[
-            {
-                "layer_name": "layer_4",
-                "barrier_values": "==1",
-                "barrier_importance": 1,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_2"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_4",
+                        "barrier_values": "==1",
+                        "barrier_importance": 1,
+                    }
+                ],
             }
-        ],
+        },
         ignore_invalid_costs=False,
         algorithm="dijkstra",
     )
@@ -2517,7 +2835,7 @@ def test_soft_barrier_start_point_retries_and_records_metadata(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(1, 3)], [(1, 5)]),
+            ([(1, 3, "default")], [(1, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
@@ -2539,14 +2857,18 @@ def test_soft_barrier_retry_exhaustion_returns_no_route(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_7"}],
-        barrier_layers=[
-            {
-                "layer_name": "layer_4",
-                "barrier_values": "==1",
-                "barrier_importance": 1,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_7"}],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_4",
+                        "barrier_values": "==1",
+                        "barrier_importance": 1,
+                    }
+                ],
             }
-        ],
+        },
         ignore_invalid_costs=True,
         algorithm="dijkstra",
     )
@@ -2555,13 +2877,14 @@ def test_soft_barrier_retry_exhaustion_returns_no_route(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(4, 0)], [(4, 5)]),
+            ([(4, 0, "default")], [(4, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)
 
     assert_message_was_logged(
-        "Unable to find route from [(4, 0)] to any of [(4, 5)]",
+        "Unable to find route from [(4, 0, 'default')] to any of "
+        "[(4, 5, 'default')]",
         "ERROR",
     )
     assert not out_csv.exists()
@@ -2574,16 +2897,22 @@ def test_skip_failed_routes_preserves_per_solution_retry_metadata(
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         algorithm="dijkstra",
     )
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            (13, [(1, 1), (1, 2)], [(2, 6)]),
+            (
+                13,
+                [(1, 1, "default"), (1, 2, "default")],
+                [(2, 6, "default")],
+            ),
         ],
         route_attrs={
-            (13, (1, 2)): {"route_type": "secondary"},
+            (13, (1, 2, "default")): {"route_type": "secondary"},
         },
     )
 
@@ -2594,12 +2923,20 @@ def test_skip_failed_routes_preserves_per_solution_retry_metadata(
                     13,
                     [
                         (
-                            [(1, 1), (2, 2), (2, 6)],
+                            [
+                                (1, 1, "default"),
+                                (2, 2, "default"),
+                                (2, 6, "default"),
+                            ],
                             10.0,
                             [],
                         ),
                         (
-                            [(1, 2), (2, 3), (2, 6)],
+                            [
+                                (1, 2, "default"),
+                                (2, 3, "default"),
+                                (2, 6, "default"),
+                            ],
                             12.0,
                             ["layer_4"],
                         ),
@@ -2612,12 +2949,12 @@ def test_skip_failed_routes_preserves_per_solution_retry_metadata(
     assert len(routed) == 2
 
     first_indices, first_objective, first_attrs = routed[0]
-    assert first_indices[0] == (1, 1)
+    assert first_indices[0] == (1, 1, "default")
     assert first_objective == pytest.approx(10.0)
     assert first_attrs["dropped_barrier_layers"] == "[]"
 
     second_indices, second_objective, second_attrs = routed[1]
-    assert second_indices[0] == (1, 2)
+    assert second_indices[0] == (1, 2, "default")
     assert second_objective == pytest.approx(12.0)
     assert second_attrs["route_type"] == "secondary"
     assert second_attrs["dropped_barrier_layers"] == '["layer_4"]'
@@ -2634,7 +2971,9 @@ def test_soft_barrier(
     """Test that soft barriers work as expected in point-to-many routing"""
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[{"layer_name": "layer_7"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_7"}]}
+        },
         ignore_invalid_costs=ignore_invalid_costs,
         algorithm=algorithm,
     )
@@ -2643,7 +2982,7 @@ def test_soft_barrier(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(4, 0)], [(4, 5)]),
+            ([(4, 0, "default")], [(4, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=out_gpkg, save_paths=True)
@@ -2671,9 +3010,13 @@ def test_route_many_attrs(sample_layered_data, tmp_path, single_rd, algorithm):
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
-        cost_layers=[
-            {"layer_name": "layer_1"},
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                ]
+            }
+        },
         algorithm=algorithm,
     )
 
@@ -2682,12 +3025,21 @@ def test_route_many_attrs(sample_layered_data, tmp_path, single_rd, algorithm):
         route_computer = BatchRouteProcessor(
             routing_scenario=scenario,
             route_definitions=[
-                (1, [(1, 1), (1, 2), (1, 3), (1, 4)], [(2, 6)]),
+                (
+                    1,
+                    [
+                        (1, 1, "default"),
+                        (1, 2, "default"),
+                        (1, 3, "default"),
+                        (1, 4, "default"),
+                    ],
+                    [(2, 6, "default")],
+                ),
             ],
             route_attrs={
-                (1, (1, 2)): {"route_type": "A"},
-                (1, (1, 4)): {"my_attr": "B"},
-                (1, (1, 3)): {
+                (1, (1, 2, "default")): {"route_type": "A"},
+                (1, (1, 4, "default")): {"my_attr": "B"},
+                (1, (1, 3, "default")): {
                     "route_type": "C",
                     "my_attr": "D",
                     "final": True,
@@ -2698,15 +3050,15 @@ def test_route_many_attrs(sample_layered_data, tmp_path, single_rd, algorithm):
         route_computer = BatchRouteProcessor(
             routing_scenario=scenario,
             route_definitions=[
-                (6, [(1, 1)], [(2, 6)]),
-                (7, [(1, 2)], [(2, 6)]),
-                (8, [(1, 3)], [(2, 6)]),
-                (9, [(1, 4)], [(2, 6)]),
+                (6, [(1, 1, "default")], [(2, 6, "default")]),
+                (7, [(1, 2, "default")], [(2, 6, "default")]),
+                (8, [(1, 3, "default")], [(2, 6, "default")]),
+                (9, [(1, 4, "default")], [(2, 6, "default")]),
             ],
             route_attrs={
-                (7, (1, 2)): {"route_type": "A"},
-                (9, (1, 4)): {"my_attr": "B"},
-                (8, (1, 3)): {
+                (7, (1, 2, "default")): {"route_type": "A"},
+                (9, (1, 4, "default")): {"my_attr": "B"},
+                (8, (1, 3, "default")): {
                     "route_type": "C",
                     "my_attr": "D",
                     "final": True,

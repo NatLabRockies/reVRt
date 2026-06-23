@@ -175,7 +175,9 @@ def test_compute_lcp_routes_generates_csv(sample_layered_data, tmp_path):
     result_fp = compute_lcp_routes(
         cost_fpath=sample_layered_data,
         route_table_fpath=route_table_fp,
-        cost_layers=cost_layers,
+        routing_options={
+            "default": {"cost_layers": cost_layers},
+        },
         out_dir=out_dir,
         job_name="run",
         transmission_config=transmission_config,
@@ -194,10 +196,10 @@ def test_compute_lcp_routes_generates_csv(sample_layered_data, tmp_path):
         "cost",
         "length_km",
         "optimized_objective",
-        "layer_1_cost",
-        "layer_1_length_km",
-        "layer_2_cost",
-        "layer_2_length_km",
+        "layer_1_default_cost",
+        "layer_1_default_length_km",
+        "layer_2_default_cost",
+        "layer_2_default_length_km",
     ]
     for col in numeric_cols:
         if col in df.columns:
@@ -234,7 +236,8 @@ def test_compute_lcp_routes_generates_csv(sample_layered_data, tmp_path):
         ).all()
 
     assert np.allclose(
-        merged["cost"], merged["layer_1_cost"] + merged["layer_2_cost"]
+        merged["cost"],
+        merged["layer_1_default_cost"] + merged["layer_2_default_cost"],
     )
     assert np.all(merged["length_km"] > 0)
     assert np.allclose(
@@ -256,7 +259,9 @@ def test_compute_lcp_routes_saves_routing_layer(sample_layered_data, tmp_path):
     result_fp = compute_lcp_routes(
         cost_fpath=sample_layered_data,
         route_table_fpath=route_table_fp,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         out_dir=out_dir,
         job_name="save_layer",
         save_routing_layer=True,
@@ -334,7 +339,9 @@ def test_compute_lcp_routes_returns_none_on_empty_indices(
     result = compute_lcp_routes(
         cost_fpath=sample_layered_data,
         route_table_fpath=route_table_fp,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         out_dir=tmp_path,
         job_name="no_routes",
         _split_params=(1000, 1),
@@ -363,10 +370,10 @@ def test_route_generator_existing_routes_csv(tmp_path):
     data.to_csv(csv_fp, index=False)
 
     route_generator = PointToPointRouteDefinitionConverter(
-        None, None, csv_fp, None, None, None
+        None, None, csv_fp, {"default": []}, None, None
     )
     result = route_generator.existing_routes
-    assert result == {(0, 1, 2, 3, "ac", "230")}
+    assert result == {(0, 1, "default", 2, 3, "default", "ac", "230")}
 
 
 def test_route_generator_existing_routes_gpkg(tmp_path):
@@ -388,21 +395,21 @@ def test_route_generator_existing_routes_gpkg(tmp_path):
     gdf.to_file(gpkg_fp, driver="GPKG")
 
     route_generator = PointToPointRouteDefinitionConverter(
-        None, None, gpkg_fp, None, None, None
+        None, None, gpkg_fp, {"default": []}, None, None
     )
     result = route_generator.existing_routes
-    assert result == {(1, 2, 3, 4, "unknown", "unknown")}
+    assert result == {(1, 2, "default", 3, 4, "default", "unknown", "unknown")}
 
 
 def test_route_generator_existing_routes_when_missing(tmp_path):
     """Missing outputs should result in an empty existing route set"""
 
     route_generator = PointToPointRouteDefinitionConverter(
-        None, None, tmp_path / "missing.csv", None, None, None
+        None, None, tmp_path / "missing.csv", {"default": []}, None, None
     )
     assert route_generator.existing_routes == set()
     route_generator = PointToPointRouteDefinitionConverter(
-        None, None, tmp_path / "missing.csv", None, None, None
+        None, None, tmp_path / "missing.csv", {"default": []}, None, None
     )
     assert route_generator.existing_routes == set()
 
@@ -428,7 +435,11 @@ def test_cli_route_points_skips_precomputed_routes(
     config = {
         "cost_fpath": str(sample_layered_data),
         "route_table_fpath": str(route_table_fp),
-        "cost_layers": [{"layer_name": "layer_1"}],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+            }
+        },
     }
     config_fp = tmp_path / "route_points_config.json"
     config_fp.write_text(json.dumps(config))
@@ -532,7 +543,9 @@ def test_cli_route_points_strips_required_path_whitespace(
     config = {
         "cost_fpath": f"  {sample_layered_data}  ",
         "route_table_fpath": f"  {route_table_fp}  ",
-        "cost_layers": [{"layer_name": "layer_1"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
     }
     out_fp = run_gaps_cli_with_expected_file(
         "route-points", config, tmp_path, glob_pattern="*test*.csv"
@@ -562,7 +575,9 @@ def test_cli_route_points_skips_precomputed_routes_gpkg(
     config = {
         "cost_fpath": str(sample_layered_data),
         "route_table_fpath": str(route_table_fp),
-        "cost_layers": [{"layer_name": "layer_1"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
         "save_paths": True,
     }
     config_fp = tmp_path / "route_points_config.json"
@@ -573,7 +588,7 @@ def test_cli_route_points_skips_precomputed_routes_gpkg(
     )
     assert first_result.exit_code == 0, first_result.output
 
-    out_fp = list(tmp_path.glob("*test*.gpkg"))
+    out_fp = list(tmp_path.glob("*test*_route_points.gpkg"))
     assert len(out_fp) == 1
     out_fp = out_fp[0]
     assert out_fp.exists()
@@ -602,7 +617,7 @@ def test_cli_route_points_skips_precomputed_routes_gpkg(
     )
     assert second_result.exit_code == 0, second_result.output
 
-    assert len(list(tmp_path.glob("*test*.gpkg"))) == 1
+    assert len(list(tmp_path.glob("*test*_route_points.gpkg"))) == 1
     all_routes = gpd.read_file(out_fp)
     assert len(all_routes) == 2
 
@@ -678,7 +693,9 @@ def test_cli_route_points_flip_start_end(
     config = {
         "cost_fpath": str(sample_layered_data),
         "route_table_fpath": str(route_table_fp),
-        "cost_layers": [{"layer_name": "layer_1"}],
+        "routing_options": {
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
     }
     out_fp = run_gaps_cli_with_expected_file(
         "route-points", config, tmp_path, glob_pattern="*test*.csv"
