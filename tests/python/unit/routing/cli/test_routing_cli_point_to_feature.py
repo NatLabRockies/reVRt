@@ -210,9 +210,10 @@ def test_converter_maps_lat_lon_and_iterates(point_feature_dataset):
     assert route_attrs[first_key]["end_feat_id"] == 1
 
     tuple_repr = converter._route_as_tuple(converter.route_points.iloc[0])
-    assert tuple_repr[2] == "1"
-    assert tuple_repr[3] == "ac"
-    assert tuple_repr[4] == "138"
+    assert tuple_repr[2] == "default"
+    assert tuple_repr[3] == "1"
+    assert tuple_repr[4] == "ac"
+    assert tuple_repr[5] == "138"
 
 
 def test_converter_warns_when_feature_missing(point_feature_dataset):
@@ -242,6 +243,8 @@ def test_converter_warns_when_feature_missing(point_feature_dataset):
             "end_feat_id": [9],
             "polarity": ["dc"],
             "voltage": [230],
+            "start_option": ["default"],
+            "end_option": ["default"],
         }
     )
 
