@@ -34,47 +34,6 @@ logger = logging.getLogger(__name__)
 _ROUTE_SOLUTION_LEN = 3
 
 
-class _IncrementalRouteWriter(IncrementalWriter):
-    """Stream results to disk by appending each new result to a file
-
-    A new file is created if one does not exist.
-    """
-
-    def __init__(self, out_fp, crs=None):
-        """
-
-        Parameters
-        ----------
-        out_fp : path-like
-            Path to output file.
-        crs : rasterio.crs.CRS or dict, optional
-            Coordinate reference system for geometries when saving to
-            GeoPackage. By default, ``None``.
-        """
-        super().__init__(out_fp)
-        self.crs = crs
-
-    def preprocess_chunk(self, result):
-        """Turn result into a dataframe chunk
-
-        Parameters
-        ----------
-        result : dict
-            Route result dictionary as built by
-            ``RouteMetrics.compute()``.
-
-        Returns
-        -------
-        pandas.DataFrame or geopandas.GeoDataFrame
-            A dataframe holding the route result.
-        """
-        if "geometry" in result:
-            return gpd.GeoDataFrame(
-                [result], geometry="geometry", crs=self.crs
-            )
-        return pd.DataFrame([result])
-
-
 class BatchRouteProcessor:
     """Class to manage batches of route computations"""
 
@@ -549,6 +508,47 @@ class _RouteResultWriter:
             return Point(x, y)
 
         return LineString(simplify_using_slopes(list(zip(x, y, strict=True))))
+
+
+class _IncrementalRouteWriter(IncrementalWriter):
+    """Stream results to disk by appending each new result to a file
+
+    A new file is created if one does not exist.
+    """
+
+    def __init__(self, out_fp, crs=None):
+        """
+
+        Parameters
+        ----------
+        out_fp : path-like
+            Path to output file.
+        crs : rasterio.crs.CRS or dict, optional
+            Coordinate reference system for geometries when saving to
+            GeoPackage. By default, ``None``.
+        """
+        super().__init__(out_fp)
+        self.crs = crs
+
+    def preprocess_chunk(self, result):
+        """Turn result into a dataframe chunk
+
+        Parameters
+        ----------
+        result : dict
+            Route result dictionary as built by
+            ``RouteMetrics.compute()``.
+
+        Returns
+        -------
+        pandas.DataFrame or geopandas.GeoDataFrame
+            A dataframe holding the route result.
+        """
+        if "geometry" in result:
+            return gpd.GeoDataFrame(
+                [result], geometry="geometry", crs=self.crs
+            )
+        return pd.DataFrame([result])
 
 
 def _validate_out_fp(out_fp, save_paths):
