@@ -121,7 +121,7 @@ def test_build_final_routing_layers_command_writes_expected_layers(
                 "cost_multiplier_scalar": 2.0,
             }
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     config_fp = tmp_path / "lcp_config.json"
@@ -178,7 +178,7 @@ def test_build_final_routing_layers_command_applies_explicit_barriers(
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
 
     config_fp = tmp_path / "barrier_lcp_config.json"
@@ -233,7 +233,7 @@ def test_build_final_routing_layers_parses_transmission_config_path(
             }
         },
         "transmission_config": str(transmission_config_fp),
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     config_fp = tmp_path / "lcp_config_with_transmission.json"
@@ -279,7 +279,7 @@ def test_build_final_routing_layers_writes_to_supplied_output_directory(
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     config_fp = tmp_path / "custom_output_lcp_config.json"
@@ -332,7 +332,7 @@ def test_cli_build_final_routing_layers_command(
                 "cost_multiplier_scalar": 2.0,
             }
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     lcp_config_fp = tmp_path / "cli_lcp_config.json"
@@ -389,7 +389,7 @@ def test_cli_build_route_costs_strips_required_path_whitespace(
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     lcp_config_fp = tmp_path / "cli_trimmed_lcp_config.json"
@@ -428,7 +428,7 @@ def test_cli_build_final_routing_layers_honors_output_directory(
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     lcp_config_fp = tmp_path / "cli_custom_output_lcp_config.json"

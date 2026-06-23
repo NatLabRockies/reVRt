@@ -103,7 +103,7 @@ def test_find_paths_basic_single_route_layered_file(tmp_path):
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "test_costs"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
     results = find_paths(
         zarr_fp=layered_fp,
@@ -156,7 +156,7 @@ def test_find_paths_respects_hard_barrier_layered_file(tmp_path):
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = find_paths(
         zarr_fp=layered_fp,
@@ -201,7 +201,7 @@ def test_find_paths_respects_not_equal_barrier_layered_file(tmp_path):
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = find_paths(
         zarr_fp=layered_fp,
@@ -363,7 +363,7 @@ def test_route_finder_retries_soft_barriers_layered_file(tmp_path, algorithm):
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = list(
         RouteFinder(
@@ -458,7 +458,7 @@ def test_route_finder_drops_multiple_soft_barrier_groups_layered_file(
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = list(
         RouteFinder(
@@ -542,7 +542,7 @@ def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "test_costs"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
     routing_layer_out_fp = tmp_path / "routing_layer.zarr"
 
@@ -569,7 +569,7 @@ def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
     scenario = RoutingScenario(
         cost_fpath=layered_fp,
         cost_layers=[{"layer_name": "test_costs"}],
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
     )
     routing_layers = RoutingLayerManager(scenario).build()
     try:

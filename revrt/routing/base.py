@@ -47,7 +47,7 @@ class RoutingScenario:
         tracked_layers=None,
         drivers=None,
         transition_costs=None,
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
         algorithm="bidirectional_long_range_dijkstra",
     ):
         """
@@ -74,7 +74,7 @@ class RoutingScenario:
         transition_costs : dict, optional
             Optional transition-cost configuration between routing
             options.
-        ignore_invalid_costs : bool, optional
+        invalid_costs_block_routing : bool, optional
             Flag indicating whether non-positive costs block traversal.
         algorithm : str, default="bidirectional_long_range_dijkstra"
             Routing algorithm implementation to use. Supported values
@@ -93,7 +93,7 @@ class RoutingScenario:
         self.drivers = drivers
         self.transition_costs = transition_costs
         self.tracked_layers = tracked_layers or []
-        self.ignore_invalid_costs = ignore_invalid_costs
+        self.invalid_costs_block_routing = invalid_costs_block_routing
         self.algorithm = algorithm
 
     def __repr__(self):
@@ -114,7 +114,7 @@ class RoutingScenario:
     def cost_function_json(self):
         """str: JSON string describing configured cost layers"""
         payload = {
-            "ignore_invalid_costs": self.ignore_invalid_costs,
+            "invalid_costs_block_routing": self.invalid_costs_block_routing,
             "routing_options": self._routing_options_for_rust(),
         }
         if self.drivers is not None:
@@ -294,7 +294,7 @@ class RoutingLayerManager:
 
         option_layer.values = da.where(
             option_layer <= 0,
-            -1 if self.routing_scenario.ignore_invalid_costs else 1e10,
+            -1 if self.routing_scenario.invalid_costs_block_routing else 1e10,
             option_layer,
         )
         option_layer.values = da.where(
@@ -1047,7 +1047,7 @@ class BatchRouteProcessor:
         points = _get_valid_points(
             points, self.routing_layers.full_shape, point_type="start"
         )
-        if not points or not self.routing_scenario.ignore_invalid_costs:
+        if not points or not self.routing_scenario.invalid_costs_block_routing:
             return points
 
         routing_options = {point[-1] for point in points}
@@ -1091,7 +1091,7 @@ class BatchRouteProcessor:
         points = _get_valid_points(
             points, self.routing_layers.full_shape, point_type="end"
         )
-        if not points or not self.routing_scenario.ignore_invalid_costs:
+        if not points or not self.routing_scenario.invalid_costs_block_routing:
             return points
 
         routing_options = {point[-1] for point in points}

@@ -292,7 +292,7 @@ mod tests {
                         }]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();

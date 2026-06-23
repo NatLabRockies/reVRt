@@ -234,12 +234,12 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
                 }
             ],
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
     )
 
     payload = json.loads(scenario.cost_function_json)
 
-    assert payload["ignore_invalid_costs"] is False
+    assert payload["invalid_costs_block_routing"] is False
     assert payload["drivers"] == scenario.drivers
     assert payload["transition_costs"] == scenario.transition_costs
     assert set(payload["routing_options"]) == {"overhead", "underground"}
@@ -293,7 +293,7 @@ def test_multi_option_route_metrics_use_option_layers(
                 }
             ],
         },
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
     )
     routing_layers = RoutingLayerManager(scenario).build()
     try:
@@ -450,7 +450,7 @@ def test_multi_option_routes_write_companion_gpkg(
         },
         drivers={"default": {"overhead": 1, "underground": 10}},
         transition_costs={"default": 0},
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
     )
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
@@ -1165,14 +1165,14 @@ def test_invalid_start_point_logged(
 def test_invalid_start_point_explicitly_allowed(
     sample_layered_data, assert_message_was_logged, tmp_path, algorithm
 ):
-    """Test out-of-bounds points logging when ignore_invalid_costs is False"""
+    """Test out-of-bounds points logging"""
 
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         routing_options={
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
         algorithm=algorithm,
     )
 
@@ -2593,7 +2593,7 @@ def test_explicit_barriers_remain_hard(sample_layered_data):
                 ],
             }
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
@@ -2630,7 +2630,7 @@ def test_not_equal_barriers_remain_hard(sample_layered_data):
                 ],
             }
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
     )
 
     routing_layers = RoutingLayerManager(scenario).build()
@@ -2662,7 +2662,7 @@ def test_soft_barrier_setting_controls_barrier_value(sample_layered_data):
         routing_options={
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
     )
     hard_layers = RoutingLayerManager(hard_scenario).build()
     try:
@@ -2680,7 +2680,7 @@ def test_soft_barrier_setting_controls_barrier_value(sample_layered_data):
         routing_options={
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
     )
     soft_layers = RoutingLayerManager(soft_scenario).build()
     try:
@@ -2712,7 +2712,7 @@ def test_explicit_barrier_blocks_route_even_with_soft_invalid_costs(
                 ],
             }
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
         algorithm="dijkstra",
     )
 
@@ -2750,7 +2750,7 @@ def test_soft_barrier_points_remain_valid_for_retry(sample_layered_data):
                 ],
             }
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
     )
 
     route_computer = BatchRouteProcessor(
@@ -2789,7 +2789,7 @@ def test_soft_barrier_retry_returns_route_with_metadata(
                 ],
             }
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
         algorithm="dijkstra",
     )
 
@@ -2827,7 +2827,7 @@ def test_soft_barrier_start_point_retries_and_records_metadata(
                 ],
             }
         },
-        ignore_invalid_costs=False,
+        invalid_costs_block_routing=False,
         algorithm="dijkstra",
     )
 
@@ -2869,7 +2869,7 @@ def test_soft_barrier_retry_exhaustion_returns_no_route(
                 ],
             }
         },
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
         algorithm="dijkstra",
     )
 
@@ -2960,13 +2960,13 @@ def test_skip_failed_routes_preserves_per_solution_retry_metadata(
     assert second_attrs["dropped_barrier_layers"] == '["layer_4"]'
 
 
-@pytest.mark.parametrize("ignore_invalid_costs", [True, False])
+@pytest.mark.parametrize("invalid_costs_block_routing", [True, False])
 @pytest.mark.parametrize(
     "algorithm",
     ["dijkstra", "long-range-dijkstra", "bidirectional-long-range-dijkstra"],
 )
 def test_soft_barrier(
-    sample_layered_data, ignore_invalid_costs, tmp_path, algorithm
+    sample_layered_data, invalid_costs_block_routing, tmp_path, algorithm
 ):
     """Test that soft barriers work as expected in point-to-many routing"""
     scenario = RoutingScenario(
@@ -2974,7 +2974,7 @@ def test_soft_barrier(
         routing_options={
             "default": {"cost_layers": [{"layer_name": "layer_7"}]}
         },
-        ignore_invalid_costs=ignore_invalid_costs,
+        invalid_costs_block_routing=invalid_costs_block_routing,
         algorithm=algorithm,
     )
 
@@ -2987,7 +2987,7 @@ def test_soft_barrier(
     )
     route_computer.process(out_fp=out_gpkg, save_paths=True)
 
-    if ignore_invalid_costs:
+    if invalid_costs_block_routing:
         assert not out_gpkg.exists()
     else:
         output = gpd.read_file(out_gpkg)

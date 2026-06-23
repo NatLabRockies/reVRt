@@ -106,7 +106,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     transmission_config=None,
     save_paths=False,
     save_routing_layer=False,
-    ignore_invalid_costs=False,
+    invalid_costs_block_routing=False,
     memory_utilization_limit=0.9,
     system_mem_limit_gb=5,
     _split_params=None,
@@ -357,11 +357,11 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     save_routing_layer : bool, default=False
         Save Rust routing layer outputs to ``out_dir/extra_outputs``
         when ``True``. Defaults to ``False``.
-    ignore_invalid_costs : bool, optional
-        Optional flag to treat any cost values <= 0 as impassable
-        (i.e. no paths can ever cross this). If ``False``, cost values
-        of <= 0 are set to a large value to simulate a strong but
-        permeable "quasi-barrier". By default, ``False``.
+    invalid_costs_block_routing : bool, optional
+        Optional flag to treat any invalid cost values (<= 0) as
+        impassable (i.e. no paths can ever cross this). If ``False``,
+        invalid cost values (<= 0) are set to a large value to simulate
+        a strong but permeable "quasi-barrier". By default, ``False``.
     algorithm : str, default="bidirectional_long_range_dijkstra"
         Routing algorithm implementation to use. Supported values
         are ``"astar"``, ``"long_range_astar"``,
@@ -431,7 +431,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             job_name=job_name,
             # cost_multiplier_layer=cost_multiplier_layer,
             tracked_layers=tracked_layers,
-            ignore_invalid_costs=ignore_invalid_costs,
+            invalid_costs_block_routing=invalid_costs_block_routing,
             user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
             save_routing_layer=save_routing_layer,
             algorithm=algorithm,

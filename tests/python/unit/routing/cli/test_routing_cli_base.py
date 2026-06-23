@@ -207,7 +207,7 @@ def test_run_lcp_with_save_paths_filters_existing_routes(
         out_fp=out_fp,
         routes_to_compute=routes_to_compute,
         tracked_layers=[{"layer_name": "layer_3", "agg_method": "max"}],
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
     )
 
     primary_calls = [call for call in saved_calls if call[0] == out_fp]

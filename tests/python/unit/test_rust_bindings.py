@@ -44,7 +44,7 @@ def test_find_paths_basic_single_route(tmp_path):
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "test_costs"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
     results = find_paths(
         zarr_fp=test_cost_fp,
@@ -111,7 +111,7 @@ def test_find_paths_respects_explicit_barrier_layers(tmp_path):
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = find_paths(
         zarr_fp=test_cost_fp,
@@ -169,7 +169,7 @@ def test_find_paths_respects_not_equal_barrier_layers(tmp_path):
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = find_paths(
         zarr_fp=test_cost_fp,
@@ -298,7 +298,7 @@ def test_route_finder_writes_routing_layer_to_expected_path(
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "test_costs"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
     routing_results = RouteFinder(
         zarr_fp=test_cost_fp,
@@ -325,7 +325,7 @@ def test_route_finder_writes_routing_layer_to_expected_path(
         routing_options={
             "default": {"cost_layers": [{"layer_name": "test_costs"}]}
         },
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
         algorithm=algorithm,
     )
     routing_layers = RoutingLayerManager(scenario).build()
@@ -392,7 +392,7 @@ def test_find_paths_supports_explicit_algorithm(tmp_path, algorithm):
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "test_costs"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
     results = find_paths(
         zarr_fp=test_cost_fp,
@@ -546,7 +546,7 @@ def test_route_finder_tracks_dropped_barriers_per_start_point(tmp_path):
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = list(
         RouteFinder(
@@ -638,7 +638,7 @@ def test_route_finder_retries_not_equal_soft_barriers(tmp_path):
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = list(
         RouteFinder(
@@ -743,7 +743,7 @@ def test_route_finder_drops_soft_barriers_by_importance(tmp_path, algorithm):
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
     results = list(
         RouteFinder(
@@ -829,7 +829,7 @@ def test_find_paths_returns_option_ids_for_multi_option_routes(tmp_path):
                 }
             ],
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     results = find_paths(

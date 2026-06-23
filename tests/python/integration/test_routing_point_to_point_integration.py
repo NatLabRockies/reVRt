@@ -58,15 +58,15 @@ def sample_large_layered_data(tmp_path_factory):
     return layered_fp
 
 
-@pytest.mark.parametrize("ignore_invalid_costs", [True, False])
+@pytest.mark.parametrize("invalid_costs_block_routing", [True, False])
 def test_soft_barrier_with_large_dataset(
-    sample_large_layered_data, ignore_invalid_costs, tmp_path
+    sample_large_layered_data, invalid_costs_block_routing, tmp_path
 ):
     """Test that soft barriers work as expected in point-to-many routing"""
     scenario = RoutingScenario(
         cost_fpath=sample_large_layered_data,
         cost_layers=[{"layer_name": "layer_1"}],
-        ignore_invalid_costs=ignore_invalid_costs,
+        invalid_costs_block_routing=invalid_costs_block_routing,
     )
 
     out_gpkg = tmp_path / "routes.gpkg"
@@ -76,7 +76,7 @@ def test_soft_barrier_with_large_dataset(
     )
     route_computer.process(out_fp=out_gpkg, save_paths=True)
 
-    if ignore_invalid_costs:
+    if invalid_costs_block_routing:
         assert not out_gpkg.exists()
     else:
         output = gpd.read_file(out_gpkg)

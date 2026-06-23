@@ -109,7 +109,7 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 ///     JSON string representation of the cost function. The following
 ///     keys are allowed in the cost function: "cost_layers",
 ///     "friction_layers", "barrier_layers", and
-///     "ignore_invalid_costs". See the documentation of the cost
+///     "invalid_costs_block_routing". See the documentation of the cost
 ///     function for details on each of these inputs.
 /// start : list of tuple
 ///     List of three-tuples ``(i, j, option_name)`` containing
@@ -207,7 +207,7 @@ fn find_paths(
 ///     JSON string representation of the cost function. The following
 ///     keys are allowed in the cost function: "cost_layers",
 ///     "friction_layers", "barrier_layers", and
-///     "ignore_invalid_costs". See the documentation of the cost
+///     "invalid_costs_block_routing". See the documentation of the cost
 ///     function for details on each of these inputs.
 /// route_definitions : list of tuple
 ///     List of tuples containing path definitions. Each path definition

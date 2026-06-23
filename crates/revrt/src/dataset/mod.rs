@@ -284,13 +284,11 @@ impl Dataset {
                 index.i..(index.i + 1),
                 index.j..(index.j + 1),
             ]),
-            3 => {
-                zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    index.i..(index.i + 1),
-                    index.j..(index.j + 1),
-                ])
-            }
+            3 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                0..1,
+                index.i..(index.i + 1),
+                index.j..(index.j + 1),
+            ]),
             _ => return None,
         };
         read_source_cell_as_f32(&array, &subset)
@@ -528,7 +526,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -939,8 +937,8 @@ mod tests {
         }
     }
 
-    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"ignore_invalid_costs":true}"# ; "zero layer")]
-    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"ignore_invalid_costs":true}"# ; "negative layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"invalid_costs_block_routing":true}"# ; "zero layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"invalid_costs_block_routing":true}"# ; "negative layer")]
     fn test_get_3x3_with_hard_barriered_layers(json: &str) {
         let tmp = samples::ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
@@ -959,12 +957,12 @@ mod tests {
         let results = same_option_neighbors(&neighborhoods, index.option, None);
         assert!(
             results.is_empty(),
-            "Found data with `ignore_invalid_costs=true`"
+            "Found data with `invalid_costs_block_routing=true`"
         );
     }
 
-    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"ignore_invalid_costs":false}"# ; "zero layer")]
-    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"ignore_invalid_costs":false}"# ; "negative layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"invalid_costs_block_routing":false}"# ; "zero layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"invalid_costs_block_routing":false}"# ; "negative layer")]
     fn test_get_3x3_with_soft_barrier_layers(json: &str) {
         let tmp = samples::ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
@@ -1084,7 +1082,7 @@ mod tests {
                     ]
                 }
             },
-            "ignore_invalid_costs": false
+            "invalid_costs_block_routing": false
         }
         "#;
 

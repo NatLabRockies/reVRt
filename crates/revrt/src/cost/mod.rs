@@ -26,7 +26,7 @@ const HIGH_FRICTION_INVALID_COST: f32 = 1e10;
 /// `cost_layers`: A collection of cost layers with equal weight.
 /// `friction_layers`: A collection of friction layers that scale the cost layer.
 /// `barrier_layers`: A collection of layers that create impassable cells.
-/// `ignore_invalid_costs`: If true, cells with <=0 or NaN costs are skipped completely.
+/// `invalid_costs_block_routing`: If true, cells with <=0 or NaN costs are skipped completely.
 ///
 /// This was based on the original transmission router and is composed of
 /// layers that are summed together (per grid point) to give the total cost.
@@ -38,7 +38,7 @@ pub(crate) struct CostFunction {
     pub(crate) drivers: DriverRuleSet,
     pub(crate) transition_costs: TransitionCostTable,
     /// Option to completely ignore <=0 cost cells
-    pub(crate) ignore_invalid_costs: bool,
+    pub(crate) invalid_costs_block_routing: bool,
 }
 
 impl CostFunction {
@@ -49,7 +49,7 @@ impl CostFunction {
         routing_options: Vec<String>,
         drivers: DriverRuleSet,
         transition_costs: TransitionCostTable,
-        ignore_invalid_costs: bool,
+        invalid_costs_block_routing: bool,
     ) -> Self {
         Self {
             cost_layers,
@@ -58,7 +58,7 @@ impl CostFunction {
             routing_options,
             drivers,
             transition_costs,
-            ignore_invalid_costs,
+            invalid_costs_block_routing,
         }
     }
 
@@ -177,7 +177,7 @@ impl CostFunction {
         let mut final_cost_layer = reduce_layers(cost_data);
         final_cost_layer.mapv_inplace(|v| {
             if v <= 0_f32 {
-                if self.ignore_invalid_costs {
+                if self.invalid_costs_block_routing {
                     f32::NAN
                 } else {
                     HIGH_FRICTION_INVALID_COST

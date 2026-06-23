@@ -327,7 +327,7 @@ def test_compute_lcp_routes_creates_csv_output(point_feature_dataset):
         job_name="csv_run",
         transmission_config=transmission_config,
         tracked_layers=tracked_layers,
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
     )
 
     output_fp = Path(csv_path)

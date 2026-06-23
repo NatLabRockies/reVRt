@@ -25,7 +25,7 @@ pub(super) struct CostFunctionInput {
     #[serde(default)]
     transition_costs: TransitionCostsConfig,
     #[serde(default = "true_option")]
-    ignore_invalid_costs: bool,
+    invalid_costs_block_routing: bool,
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
@@ -160,7 +160,7 @@ impl TryFrom<CostFunctionInput> for CostFunction {
             routing_options,
             drivers,
             transition_costs,
-            ignore_invalid_costs,
+            invalid_costs_block_routing,
         } = input;
         let mut cost_layers = Vec::new();
         let mut friction_layers = Vec::new();
@@ -194,7 +194,7 @@ impl TryFrom<CostFunctionInput> for CostFunction {
             routing_option_names,
             drivers,
             transition_costs,
-            ignore_invalid_costs,
+            invalid_costs_block_routing,
         ))
     }
 }

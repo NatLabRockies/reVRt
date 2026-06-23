@@ -85,7 +85,7 @@ Sometimes, however, the presence of invalid costs can prevent a route from being
 completed (imagine a start point completely surrounded by invalid costs, either
 locally or further into the domain). In these rare cases, it might be useful to
 allow routes to be formed over the invalid costs in order to get any result back.
-In this cases, users may specify ``ignore_invalid_costs: false`` in their
+In this cases, users may specify ``invalid_costs_block_routing: false`` in their
 configuration, and ``reVRt`` will allow routes to pass over these invalid cost
 pixels, minimizing the route's exposure to them.
 

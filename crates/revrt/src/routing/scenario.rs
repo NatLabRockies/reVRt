@@ -431,7 +431,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -492,7 +492,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -528,7 +528,7 @@ mod tests {
                         "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -585,7 +585,7 @@ mod tests {
                         "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -649,7 +649,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -708,7 +708,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -769,7 +769,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -839,7 +839,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -914,7 +914,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -984,7 +984,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -1050,7 +1050,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -1109,7 +1109,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -1182,7 +1182,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -1247,7 +1247,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();

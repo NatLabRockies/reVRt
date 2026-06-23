@@ -43,7 +43,7 @@ def validate_find_paths_single_var(data, start, end, tmp_path, algorithm):
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "test_costs"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
     results = find_paths(
         zarr_fp=test_cost_fp,
