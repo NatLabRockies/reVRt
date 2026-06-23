@@ -534,8 +534,7 @@ mod tests {
                 "transition_costs": {
                     "pairwise": [
                         {
-                            "from": "overhead",
-                            "to": "underground",
+                            "between": ["overhead", "underground"],
                             "cost": 3.0
                         }
                     ]

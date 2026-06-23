@@ -104,8 +104,7 @@ pub(super) enum DriverRuleValue {
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub(super) struct TransitionCostRule {
-    pub(super) from: TransitionOptionRef,
-    pub(super) to: TransitionOptionRef,
+    pub(super) between: [TransitionOptionRef; 2],
     pub(super) cost: f32,
 }
 
@@ -254,8 +253,9 @@ impl TransitionCostsConfig {
         let mut pairwise = HashMap::new();
 
         for rule in self.pairwise {
-            let from = resolve_transition_option(&rule.from, routing_options)?;
-            let to = resolve_transition_option(&rule.to, routing_options)?;
+            let [from, to] = rule.between;
+            let from = resolve_transition_option(&from, routing_options)?;
+            let to = resolve_transition_option(&to, routing_options)?;
             pairwise.insert((from, to), rule.cost);
             pairwise.insert((to, from), rule.cost);
         }

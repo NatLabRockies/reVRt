@@ -1231,9 +1231,11 @@ def _transition_cost_lookup(transition_costs):
     default_cost = transition_costs.get("default", 0) or 0
     pairwise_costs = {}
     for rule in transition_costs.get("pairwise", []):
-        pairwise_costs[(rule["from"], rule["from"])] = 0
-        pairwise_costs[(rule["to"], rule["to"])] = 0
-        pairwise_costs[(rule["from"], rule["to"])] = rule["cost"]
+        src, dst = rule["between"]
+        pairwise_costs[(src, src)] = 0
+        pairwise_costs[(dst, dst)] = 0
+        pairwise_costs[(src, dst)] = rule["cost"]
+        pairwise_costs[(dst, src)] = rule["cost"]
 
     return default_cost, pairwise_costs
 

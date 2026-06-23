@@ -18,6 +18,7 @@ from revrt.routing.base import (
     RoutingLayerManager,
     RoutingScenario,
     _friction_layers_for_rust,
+    _transition_cost_lookup,
     _validate_out_fp,
 )
 from revrt.exceptions import revrtKeyError
@@ -228,8 +229,7 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
             "default": 0,
             "pairwise": [
                 {
-                    "from": "overhead",
-                    "to": "underground",
+                    "between": ["overhead", "underground"],
                     "cost": 3,
                 }
             ],
@@ -287,8 +287,7 @@ def test_multi_option_route_metrics_use_option_layers(
             "default": 0,
             "pairwise": [
                 {
-                    "from": "overhead",
-                    "to": "underground",
+                    "between": ["overhead", "underground"],
                     "cost": 3.5,
                 }
             ],
@@ -329,6 +328,28 @@ def test_multi_option_route_metrics_use_option_layers(
         assert result["optimized_objective"] == pytest.approx(42.5)
     finally:
         routing_layers.close()
+
+
+def test_transition_cost_lookup_uses_between_rules_bidirectionally():
+    """Pairwise transition rules apply in both directions"""
+
+    default_cost, pairwise_costs = _transition_cost_lookup(
+        {
+            "default": 1,
+            "pairwise": [
+                {
+                    "between": ["overhead", "underground"],
+                    "cost": 3.5,
+                }
+            ],
+        }
+    )
+
+    assert default_cost == 1
+    assert pairwise_costs[("overhead", "overhead")] == 0
+    assert pairwise_costs[("underground", "underground")] == 0
+    assert pairwise_costs[("overhead", "underground")] == pytest.approx(3.5)
+    assert pairwise_costs[("underground", "overhead")] == pytest.approx(3.5)
 
 
 @pytest.mark.parametrize(

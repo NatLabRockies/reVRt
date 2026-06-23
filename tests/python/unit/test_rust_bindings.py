@@ -823,8 +823,7 @@ def test_find_paths_returns_option_ids_for_multi_option_routes(tmp_path):
             "default": 0,
             "pairwise": [
                 {
-                    "from": "overhead",
-                    "to": "underground",
+                    "between": ["overhead", "underground"],
                     "cost": 0,
                 }
             ],
