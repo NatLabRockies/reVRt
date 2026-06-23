@@ -247,13 +247,17 @@ class RoutingLayerManager:
                     )
                 )
 
-        option_cost *= config.get("cost_multiplier_scalar", 1) or 1
+        mult = config.get("cost_multiplier_scalar", 1) or 1
+        option_cost *= mult
+        option_li_cost *= mult
+        option_untracked_cost *= mult
 
         multiplier_layer_name = config.get("cost_multiplier_layer")
         if multiplier_layer_name:
             multiplier = self._extract_layer(multiplier_layer_name)
             option_cost *= multiplier
             option_li_cost *= multiplier
+            option_untracked_cost *= multiplier
 
         self.costs[option] = option_cost
         self.li_costs[option] = option_li_cost
@@ -338,19 +342,6 @@ class RoutingLayerManager:
         cost = self._extract_layer(mask_layer_name)
         cost *= layer_info.get("multiplier_scalar", 1)
         return cost
-
-    # def _build_barrier_mask(self):
-    #     """Build a mask for always-active explicit barriers"""
-    #     barrier_mask = da.zeros(self._full_shape, dtype=bool)
-    #     for layer_info in self._iter_hard_barrier_layers():
-    #         barrier_mask |= self._extract_barrier_layer(layer_info)
-    #     return barrier_mask
-
-    # def _iter_hard_barrier_layers(self):
-    #     """Yield barrier layers without retry importance"""
-    #     for layer_info in self.routing_scenario.barrier_layers:
-    #         if layer_info.get("barrier_importance") is None:
-    #             yield BarrierLayer(**layer_info).to_routing_dict()
 
     def _extract_barrier_layer(self, layer_info):
         """Extract one barrier layer mask from the layered file"""

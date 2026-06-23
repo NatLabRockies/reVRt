@@ -1656,6 +1656,90 @@ def test_option_cost_multiplier_layer_applies_to_invariant_costs(
         routing_layers.close()
 
 
+def test_option_cost_multipliers_apply_to_all_cost_buckets(
+    sample_layered_data,
+):
+    """Option multipliers scale tracked, invariant, and untracked costs"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {"layer_name": "layer_2", "is_invariant": True},
+                    {
+                        "layer_name": "layer_4",
+                        "include_in_final_cost": False,
+                    },
+                ],
+                "cost_multiplier_scalar": 2.0,
+                "cost_multiplier_layer": "layer_3",
+            }
+        },
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        row = 1
+        col = 3
+        cost_val = (
+            routing_layers.costs["default"].isel(y=row, x=col).compute().item()
+        )
+        li_cost_val = (
+            routing_layers.li_costs["default"]
+            .isel(y=row, x=col)
+            .compute()
+            .item()
+        )
+        final_cost_val = (
+            routing_layers.final_routing_layers["default"]
+            .isel(y=row, x=col)
+            .compute()
+            .item()
+        )
+
+        multiplier = (
+            routing_layers._layer_fh["layer_3"]
+            .isel(band=0, y=row, x=col)
+            .compute()
+            .item()
+        ) * scenario.routing_options["default"]["cost_multiplier_scalar"]
+
+        expected_cost = (
+            routing_layers._layer_fh["layer_1"]
+            .isel(band=0, y=row, x=col)
+            .compute()
+            .item()
+            * multiplier
+        )
+        expected_li_cost = (
+            routing_layers._layer_fh["layer_2"]
+            .isel(band=0, y=row, x=col)
+            .compute()
+            .item()
+            * multiplier
+        )
+        expected_untracked_cost = (
+            routing_layers._layer_fh["layer_4"]
+            .isel(band=0, y=row, x=col)
+            .compute()
+            .item()
+            * multiplier
+        )
+
+        assert cost_val == pytest.approx(expected_cost)
+        assert li_cost_val == pytest.approx(expected_li_cost)
+        assert final_cost_val == pytest.approx(
+            expected_cost + expected_li_cost + expected_untracked_cost
+        )
+        assert final_cost_val - cost_val - li_cost_val == pytest.approx(
+            expected_untracked_cost
+        )
+    finally:
+        routing_layers.close()
+
+
 def test_length_invariant_layer_costs_ignore_path_length(sample_layered_data):
     """Length invariant cost layers ignore per-cell distances"""
 
