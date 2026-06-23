@@ -195,6 +195,7 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
                         "include_in_final_cost": False,
                     }
                 ],
+                "cost_multiplier_layer": "layer_6",
                 "friction_layers": [
                     {
                         "mask": "layer_4",
@@ -246,6 +247,10 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
     assert payload["routing_options"]["overhead"]["cost_layers"] == [
         {"layer_name": "layer_1", "multiplier_scalar": 2}
     ]
+    assert (
+        payload["routing_options"]["overhead"]["cost_multiplier_layer"]
+        == "layer_6"
+    )
     assert payload["routing_options"]["overhead"]["friction_layers"] == [
         {"multiplier_layer": "layer_4", "multiplier_scalar": 1.1}
     ]
@@ -389,6 +394,51 @@ def test_basic_single_route_layered_file_short_path(
     assert route["cost"] == pytest.approx((1 + 2) / 2)
     assert route["length_km"] == pytest.approx(1 / 1000)
     assert route["cost"] == route["optimized_objective"]
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "astar",
+        "dijkstra",
+        "long-range-dijkstra",
+        "bidirectional-long-range-dijkstra",
+    ],
+)
+def test_basic_single_route_applies_cost_multiplier_layer_to_objective(
+    sample_layered_data, tmp_path, algorithm
+):
+    """Cost multiplier layers scale route cost and Rust objective"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "cost_multiplier_layer": "layer_3",
+            }
+        },
+        algorithm=algorithm,
+    )
+
+    out_csv = tmp_path / "routes.csv"
+    route_computer = BatchRouteProcessor(
+        routing_scenario=scenario,
+        route_definitions=[
+            ([(1, 1, "default")], [(1, 3, "default")]),
+        ],
+    )
+    route_computer.process(out_fp=out_csv, save_paths=False)
+
+    output = pd.read_csv(out_csv)
+    assert len(output) == 1
+    route = output.iloc[0]
+
+    expected_cost = ((1 * 2) + (2 * 2)) / 2 + ((2 * 2) + (2 * 3)) / 2
+
+    assert route["cost"] == pytest.approx(expected_cost)
+    assert route["length_km"] == pytest.approx(2 / 1000)
+    assert route["optimized_objective"] == pytest.approx(expected_cost)
 
 
 def test_route_results_passes_routing_layer_out_fp(
@@ -1551,6 +1601,57 @@ def test_cost_multiplier_layer_and_scalar_applied(sample_layered_data):
         )
 
         assert cost_val == pytest.approx(expected)
+    finally:
+        routing_layers.close()
+
+
+def test_option_cost_multiplier_layer_applies_to_invariant_costs(
+    sample_layered_data,
+):
+    """Per-option multiplier layers scale invariant costs too"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "layer_1"},
+                    {"layer_name": "layer_2", "is_invariant": True},
+                ],
+                "cost_multiplier_layer": "layer_3",
+            }
+        },
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        cost_val = (
+            routing_layers.costs["default"].isel(y=1, x=1).compute().item()
+        )
+        li_cost_val = (
+            routing_layers.li_costs["default"].isel(y=1, x=1).compute().item()
+        )
+        layer_one = (
+            routing_layers._layer_fh["layer_1"]
+            .isel(band=0, y=1, x=1)
+            .compute()
+            .item()
+        )
+        layer_two = (
+            routing_layers._layer_fh["layer_2"]
+            .isel(band=0, y=1, x=1)
+            .compute()
+            .item()
+        )
+        multiplier = (
+            routing_layers._layer_fh["layer_3"]
+            .isel(band=0, y=1, x=1)
+            .compute()
+            .item()
+        )
+
+        assert cost_val == pytest.approx(layer_one * multiplier)
+        assert li_cost_val == pytest.approx(layer_two * multiplier)
     finally:
         routing_layers.close()
 
