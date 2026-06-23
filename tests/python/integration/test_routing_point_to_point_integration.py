@@ -9,7 +9,8 @@ import geopandas as gpd
 from rasterio.transform import from_origin
 
 from revrt.utilities import LayeredFile
-from revrt.routing.base import BatchRouteProcessor, RoutingScenario
+from revrt.routing.base import RoutingScenario
+from revrt.routing.batch_route_processor import BatchRouteProcessor
 
 
 @pytest.fixture(scope="module")
