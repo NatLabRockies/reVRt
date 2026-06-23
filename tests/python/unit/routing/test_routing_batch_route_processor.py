@@ -303,8 +303,9 @@ def test_route_results_passes_routing_layer_out_fp(
     assert recorded_kwargs["routing_layer_out_fp"] == routing_layer_out_fp
 
 
-def test_multi_option_routes_write_companion_gpkg(
-    sample_layered_data, tmp_path, monkeypatch
+@pytest.mark.parametrize("save_paths", [False, True])
+def test_multi_option_routes_write_companion_output(
+    sample_layered_data, tmp_path, monkeypatch, save_paths
 ):
     """Multi-option routes should emit a companion routing-option file"""
 
@@ -353,11 +354,15 @@ def test_multi_option_routes_write_companion_gpkg(
         route_attrs={(7, (1, 1, "overhead")): {"route_id": "route_7"}},
     )
 
-    out_fp = tmp_path / "routes.gpkg"
-    route_computer.process(out_fp=out_fp, save_paths=True)
+    out_fp = tmp_path / ("routes.gpkg" if save_paths else "routes.csv")
+    route_computer.process(out_fp=out_fp, save_paths=save_paths)
 
-    full_routes = gpd.read_file(out_fp)
-    option_routes = gpd.read_file(tmp_path / "routes_routing_options.gpkg")
+    if save_paths:
+        full_routes = gpd.read_file(out_fp)
+        option_routes = gpd.read_file(tmp_path / "routes_routing_options.gpkg")
+    else:
+        full_routes = pd.read_csv(out_fp)
+        option_routes = pd.read_csv(tmp_path / "routes_routing_options.csv")
 
     assert len(full_routes) == 1
     assert len(option_routes) == 2
@@ -367,6 +372,7 @@ def test_multi_option_routes_write_companion_gpkg(
     }
     assert set(option_routes["route_id"]) == {"route_7"}
     assert np.all(option_routes["length_km"] > 0)
+    assert ("geometry" in option_routes.columns) is save_paths
 
 
 def test_routing_option_results_split_transition_segment_midpoint(

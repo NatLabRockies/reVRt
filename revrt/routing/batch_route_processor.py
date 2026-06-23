@@ -389,14 +389,11 @@ class _RouteResultWriter:
 
     def __init__(self, out_fp, save_paths, cost_crs, transform):
         out_fp = _validate_out_fp(out_fp, save_paths)
-        self._writer = _IncrementalRouteWriter(out_fp, crs=cost_crs)
+        self._save_paths = save_paths
         self._transform = transform
-        self._option_writer = (
-            None
-            if not save_paths
-            else _IncrementalRouteWriter(
-                _routing_options_output_fp(out_fp), crs=cost_crs
-            )
+        self._writer = _IncrementalRouteWriter(out_fp, crs=cost_crs)
+        self._option_writer = _IncrementalRouteWriter(
+            _routing_options_output_fp(out_fp), crs=cost_crs
         )
 
     def persist(self, route_result, indices):
@@ -412,8 +409,6 @@ class _RouteResultWriter:
             engine.
         """
         self._writer.save(route_result)
-        if self._option_writer is None:
-            return
 
         for option_result in self._routing_option_results(
             indices, route_result
@@ -421,7 +416,7 @@ class _RouteResultWriter:
             self._option_writer.save(option_result)
 
     def _routing_option_results(self, indices, route_result):
-        """Yield aggregated geometries for each routing option used"""
+        """Yield aggregated results for each routing option used"""
 
         segments_by_option = _ResultsByOption(indices).collect()
         return self._build_option_results(segments_by_option, route_result)
@@ -442,21 +437,21 @@ class _RouteResultWriter:
         }
         results = []
         for option, segments in segments_by_option.items():
-            geometry = self._option_geometry(segments)
-            if geometry is None:
-                continue
-
             length_km = sum(
                 compute_lens(segment, cell_size)[1] for segment in segments
             )
-            results.append(
-                {
-                    **base_result,
-                    "routing_option": option,
-                    "length_km": length_km,
-                    "geometry": geometry,
-                }
-            )
+            option_result = {
+                **base_result,
+                "routing_option": option,
+                "length_km": length_km,
+            }
+            if self._save_paths:
+                geometry = self._option_geometry(segments)
+                if geometry is None:
+                    continue
+                option_result["geometry"] = geometry
+
+            results.append(option_result)
 
         return results
 

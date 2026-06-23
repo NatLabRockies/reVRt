@@ -449,7 +449,7 @@ def test_cli_route_points_skips_precomputed_routes(
     )
     assert first_result.exit_code == 0, first_result.output
 
-    out_fp = list(tmp_path.glob("*test*.csv"))
+    out_fp = list(tmp_path.glob("*test*_route_points.csv"))
     assert len(out_fp) == 1
     out_fp = out_fp[0]
     assert out_fp.exists()
@@ -478,7 +478,7 @@ def test_cli_route_points_skips_precomputed_routes(
     )
     assert second_result.exit_code == 0, second_result.output
 
-    assert len(list(tmp_path.glob("*test*.csv"))) == 1
+    assert len(list(tmp_path.glob("*test*_route_points.csv"))) == 1
     all_routes = pd.read_csv(out_fp)
     assert len(all_routes) == 2
 
@@ -548,7 +548,10 @@ def test_cli_route_points_strips_required_path_whitespace(
         },
     }
     out_fp = run_gaps_cli_with_expected_file(
-        "route-points", config, tmp_path, glob_pattern="*test*.csv"
+        "route-points",
+        config,
+        tmp_path,
+        glob_pattern="*test*_route_points.csv",
     )
 
     assert Path(out_fp).exists()
@@ -698,7 +701,10 @@ def test_cli_route_points_flip_start_end(
         },
     }
     out_fp = run_gaps_cli_with_expected_file(
-        "route-points", config, tmp_path, glob_pattern="*test*.csv"
+        "route-points",
+        config,
+        tmp_path,
+        glob_pattern="*test*_route_points.csv",
     )
 
     output = pd.read_csv(out_fp)
