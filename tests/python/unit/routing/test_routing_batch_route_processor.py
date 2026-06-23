@@ -945,14 +945,14 @@ def test_routing_with_tracked_layers(sample_layered_data, tmp_path, algorithm):
     route = output.iloc[0]
 
     assert {
-        "layer_1_mean",
-        "layer_2_max",
-        "layer_3_min",
+        "layer_1_default_mean",
+        "layer_2_default_max",
+        "layer_3_default_min",
     }.issubset(route.keys())
 
-    assert route["layer_1_mean"] == pytest.approx(1.5)
-    assert route["layer_2_max"] == pytest.approx(1.0)
-    assert route["layer_3_min"] == pytest.approx(2.0)
+    assert route["layer_1_default_mean"] == pytest.approx(1.5)
+    assert route["layer_2_default_max"] == pytest.approx(1.0)
+    assert route["layer_3_default_min"] == pytest.approx(2.0)
 
 
 @pytest.mark.parametrize("use_friction", [True, False])

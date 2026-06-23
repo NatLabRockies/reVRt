@@ -241,7 +241,10 @@ class RoutingLayerManager:
                 layer_name = f"{layer_info['layer_name']}_{option}"
                 self.tracked_layers.append(
                     CharacterizedLayer(
-                        layer_name, cost, is_length_invariant=is_li
+                        layer_name,
+                        cost,
+                        option=option,
+                        is_length_invariant=is_li,
                     )
                 )
 
@@ -281,7 +284,7 @@ class RoutingLayerManager:
             if layer_info.get("include_in_report", False):
                 self.tracked_layers.append(
                     CharacterizedLayer(
-                        f"{layer_name}_{option}", friction_layer
+                        f"{layer_name}_{option}", friction_layer, option=option
                     )
                 )
             frictions += friction_layer
@@ -399,21 +402,28 @@ class RoutingLayerManager:
 
             layer = self._extract_and_scale_layer(tracked_layer_info)
             is_li = tracked_layer_info.get("is_invariant", False)
-            self.tracked_layers.append(
-                CharacterizedLayer(
-                    tracked_layer,
-                    layer,
-                    is_length_invariant=is_li,
-                    agg_method=method,
+            for option in self.routing_scenario.routing_option_names:
+                self.tracked_layers.append(
+                    CharacterizedLayer(
+                        f"{tracked_layer}_{option}",
+                        layer,
+                        option=option,
+                        is_length_invariant=is_li,
+                        agg_method=method,
+                    )
                 )
-            )
 
 
 class CharacterizedLayer:
     """Encapsulate tracked routing layer metadata"""
 
     def __init__(
-        self, name, layer, is_length_invariant=False, agg_method=None
+        self,
+        name,
+        layer,
+        option,
+        is_length_invariant=False,
+        agg_method=None,
     ):
         """
 
@@ -423,6 +433,9 @@ class CharacterizedLayer:
             Identifier used when reporting layer-derived metrics.
         layer : xarray.DataArray or dask.array.Array
             Data values sampled from the routing stack.
+        option : str
+            Routing option this layer should characterize. When set,
+            metrics only use matching route cells.
         is_length_invariant : bool, default=False
             Flag signaling cost values should ignore segment length.
             By default, ``False``.
@@ -432,32 +445,51 @@ class CharacterizedLayer:
         """
         self.name = name
         self.layer = layer
+        self.option = option
         self.is_length_invariant = is_length_invariant
         self.agg_method = agg_method
 
     def __repr__(self):
         return (
             f"CharacterizedLayer(name={self.name!r}, "
+            f"option={self.option!r}, "
             f"is_length_invariant={self.is_length_invariant}, "
             f"agg_method={self.agg_method!r})"
         )
 
-    def compute(self, route, cell_size):
+    def compute(self, route, cell_size, point_lens):
         """Compute layer metrics along a route
 
         Parameters
         ----------
         route : sequence
-            Ordered ``(row, col)`` indices describing the path.
+            Ordered ``(row, col, option)`` indices describing the path.
         cell_size : float
             Raster cell size in meters for distance calculations.
+        point_lens : array-like
+            Per-route-cell distances aligned with ``route``.
 
         Returns
         -------
         dict
             Mapping of metric names to aggregated layer values.
         """
-        rows, cols = np.array(route).T
+        route_points = []
+        filtered_point_lens = []
+        for p, point_len in zip(route, point_lens, strict=True):
+            *point, point_option = p
+            if point_option != self.option:
+                continue
+            route_points.append(point)
+            filtered_point_lens.append(point_len)
+
+        if not route_points:
+            return self._empty_metrics()
+
+        route_points = np.asarray(route_points)
+        filtered_point_lens = np.asarray(filtered_point_lens)
+
+        rows, cols = np.array(route_points).T
         layer_values = self.layer.isel(
             y=xr.DataArray(rows, dims="points"),
             x=xr.DataArray(cols, dims="points"),
@@ -465,31 +497,45 @@ class CharacterizedLayer:
 
         if self.agg_method is None:
             return self._compute_total_and_length(
-                layer_values, route, cell_size
+                layer_values,
+                route_points,
+                cell_size,
+                filtered_point_lens,
             )
 
         return self._compute_agg(layer_values)
 
-    def _compute_total_and_length(self, layer_values, route, cell_size):
-        """Compute total cost and length metrics for the layer"""
-        if len(route) == 1:
+    def _empty_metrics(self):
+        """dict: Empty metrics for routes that skip this option"""
+        if self.agg_method is None:
             return {
                 f"{self.name}_cost": 0,
                 f"{self.name}_length_km": 0,
             }
 
-        lens, __ = compute_lens(route, cell_size)
+        return {f"{self.name}_{self.agg_method}": np.float32(np.nan)}
+
+    def _compute_total_and_length(
+        self, layer_values, route, cell_size, point_lens
+    ):
+        """Compute total cost and length metrics for the layer"""
+        if len(route) == 0:
+            return {
+                f"{self.name}_cost": 0,
+                f"{self.name}_length_km": 0,
+            }
 
         layer_data = getattr(layer_values, "data", layer_values)
         if not isinstance(layer_data, da.Array):  # pragma: no cover
             layer_data = da.asarray(layer_data)
+        point_lens = da.asarray(point_lens)
 
         if self.is_length_invariant:
             layer_cost = da.sum(layer_data)
         else:
-            layer_cost = da.sum(layer_data * lens)
+            layer_cost = da.sum(layer_data * point_lens)
 
-        layer_length = da.sum(lens[layer_data > 0]) * cell_size / 1000
+        layer_length = da.sum(point_lens[layer_data > 0]) * cell_size / 1000
 
         return {
             f"{self.name}_cost": layer_cost.astype(np.float32).compute(),
@@ -658,7 +704,9 @@ class RouteMetrics:
 
         results.update(self._attrs)
         for layer in self._routing_layers.tracked_layers:
-            layer_result = layer.compute(self._route_row_col, self.cell_size)
+            layer_result = layer.compute(
+                self._route, self.cell_size, self._lens
+            )
             results.update(layer_result)
 
         if self._add_geom:

@@ -16,6 +16,7 @@ from revrt.routing.base import (
     _friction_layers_for_rust,
     _transition_cost_lookup,
 )
+from revrt.routing.utilities import compute_lens
 from revrt.exceptions import revrtKeyError
 from revrt.warn import revrtWarning, revrtDeprecationWarning
 
@@ -413,8 +414,77 @@ def test_tracked_layers_apply_multiplier_scalar_and_layer(
             optimized_objective=0.0,
         ).compute()
 
-        assert result["layer_1_max"] == pytest.approx(2.0)
-        assert result["layer_2_mean"] == pytest.approx(4.0)
+        assert result["layer_1_default_max"] == pytest.approx(2.0)
+        assert result["layer_2_default_mean"] == pytest.approx(4.0)
+    finally:
+        routing_layers.close()
+
+
+def test_user_tracked_layers_are_built_and_scoped_per_option(
+    sample_layered_data,
+):
+    """User tracked layers are added once per option and filtered"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]},
+            "alt": {"cost_layers": [{"layer_name": "layer_1"}]},
+        },
+        tracked_layers=[{"layer_name": "layer_1", "agg_method": "mean"}],
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        tracked_names = {layer.name for layer in routing_layers.tracked_layers}
+        assert "layer_1_default_mean" not in tracked_names
+        assert {"layer_1_default", "layer_1_alt"}.issubset(tracked_names)
+
+        result = RouteMetrics(
+            routing_layers,
+            route=[
+                (1, 1, "default"),
+                (1, 2, "default"),
+                (1, 3, "alt"),
+            ],
+            optimized_objective=0.0,
+        ).compute()
+
+        assert result["layer_1_default_mean"] == pytest.approx(1.5)
+        assert result["layer_1_alt_mean"] == pytest.approx(2.0)
+    finally:
+        routing_layers.close()
+
+
+def test_option_bound_characterized_layers_only_use_matching_segments(
+    sample_layered_data,
+):
+    """Per-option trackers reuse only their matching route cells"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "default": {"cost_layers": [{"layer_name": "layer_1"}]},
+            "alt": {"cost_layers": [{"layer_name": "layer_1"}]},
+        },
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        result = RouteMetrics(
+            routing_layers,
+            route=[
+                (1, 1, "default"),
+                (1, 2, "default"),
+                (1, 3, "alt"),
+            ],
+            optimized_objective=0.0,
+        ).compute()
+
+        assert result["layer_1_default_cost"] == pytest.approx(2.5)
+        assert result["layer_1_alt_cost"] == pytest.approx(1.0)
+        assert result["layer_1_default_length_km"] == pytest.approx(0.0015)
+        assert result["layer_1_alt_length_km"] == pytest.approx(0.0005)
     finally:
         routing_layers.close()
 
@@ -841,8 +911,20 @@ def test_characterized_layer_length_metric_uses_positive_mask(
             for tracked in routing_layers.tracked_layers
             if tracked.name == "layer_1_default"
         )
-        route = [(1, 1), (1, 2), (2, 3)]
-        metrics = layer.compute(route, abs(routing_layers.transform.a))
+        route = [
+            (1, 1, "default"),
+            (1, 2, "default"),
+            (2, 3, "default"),
+        ]
+        point_lens, __ = compute_lens(
+            [point[:2] for point in route],
+            abs(routing_layers.transform.a),
+        )
+        metrics = layer.compute(
+            route,
+            abs(routing_layers.transform.a),
+            point_lens,
+        )
 
         assert metrics["layer_1_default_length_km"] >= 0
     finally:
@@ -922,8 +1004,20 @@ def test_characterized_layer_total_length_computation(sample_layered_data):
             for tracked in routing_layers.tracked_layers
             if tracked.name == "layer_1_default"
         )
-        route = [(1, 1), (1, 2), (2, 3)]
-        metrics = layer.compute(route, abs(routing_layers.transform.a))
+        route = [
+            (1, 1, "default"),
+            (1, 2, "default"),
+            (2, 3, "default"),
+        ]
+        point_lens, __ = compute_lens(
+            [point[:2] for point in route],
+            abs(routing_layers.transform.a),
+        )
+        metrics = layer.compute(
+            route,
+            abs(routing_layers.transform.a),
+            point_lens,
+        )
 
         assert metrics["layer_1_default_cost"] > 0
         assert metrics["layer_1_default_length_km"] >= 0
