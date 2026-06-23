@@ -18,6 +18,7 @@ from revrt.routing.utilities import (
     _filter_transmission_features,
     _init_streaming_writer,
     _transform_lat_lon_to_row_col,
+    compute_lens,
     points_csv_to_geo_dataframe,
     convert_lat_lon_to_row_col,
     filter_points_outside_cost_domain,
