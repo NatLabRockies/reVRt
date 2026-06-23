@@ -246,6 +246,12 @@ class RoutingLayerManager:
 
         option_cost *= config.get("cost_multiplier_scalar", 1) or 1
 
+        multiplier_layer_name = config.get("cost_multiplier_layer")
+        if multiplier_layer_name:
+            multiplier = self._extract_layer(multiplier_layer_name)
+            option_cost *= multiplier
+            option_li_cost *= multiplier
+
         self.costs[option] = option_cost
         self.li_costs[option] = option_li_cost
         self._build_final_routing_layer_from_option(
