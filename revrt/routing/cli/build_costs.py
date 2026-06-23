@@ -75,7 +75,6 @@ def build_final_routing_layers(
     routing_scenario = RoutingScenario(
         cost_fpath=config["cost_fpath"],
         routing_options=route_options,
-        # cost_multiplier_layer=config.get("cost_multiplier_layer"),,
         invalid_costs_block_routing=config.get(
             "invalid_costs_block_routing", False
         ),
