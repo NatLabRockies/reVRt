@@ -320,7 +320,7 @@ def test_compute_lcp_routes_creates_csv_output(point_feature_dataset):
             "default": {
                 "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
                 "cost_multiplier_scalar": 3,
-                # "cost_multiplier_layer": "tie_line_multipliers",
+                "cost_multiplier_layer": "tie_line_multipliers",
             }
         },
         out_dir=out_dir,
