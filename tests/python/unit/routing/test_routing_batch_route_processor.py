@@ -373,6 +373,8 @@ def test_multi_option_routes_write_companion_output(
     assert set(option_routes["route_id"]) == {"route_7"}
     assert np.all(option_routes["length_km"] > 0)
     assert ("geometry" in option_routes.columns) is save_paths
+    if save_paths:
+        assert set(option_routes.geometry.geom_type) == {"MultiLineString"}
 
 
 def test_routing_option_results_split_transition_segment_midpoint(
@@ -419,12 +421,14 @@ def test_routing_option_results_split_transition_segment_midpoint(
     by_option = {result["routing_option"]: result for result in results}
 
     assert set(by_option) == {"overhead", "underground"}
+    assert by_option["overhead"]["geometry"].geom_type == "MultiLineString"
+    assert by_option["underground"]["geometry"].geom_type == "MultiLineString"
     assert np.allclose(
-        np.asarray(by_option["overhead"]["geometry"].coords),
+        np.asarray(by_option["overhead"]["geometry"].geoms[0].coords),
         np.asarray([(1.5, 5.5), (2.0, 5.5)]),
     )
     assert np.allclose(
-        np.asarray(by_option["underground"]["geometry"].coords),
+        np.asarray(by_option["underground"]["geometry"].geoms[0].coords),
         np.asarray([(2.0, 5.5), (3.5, 5.5)]),
     )
     assert by_option["overhead"]["length_km"] == pytest.approx(0.0005)

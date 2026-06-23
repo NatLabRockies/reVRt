@@ -461,9 +461,6 @@ class _RouteResultWriter:
         if not geoms:
             return None
 
-        if len(geoms) == 1:
-            return geoms[0]
-
         return MultiLineString([list(geom.coords) for geom in geoms])
 
     def _component_geometry(self, route):
