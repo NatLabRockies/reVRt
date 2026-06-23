@@ -214,7 +214,14 @@ class RoutingLayerManager:
         for option, config in self.routing_scenario.routing_options.items():
             self._build_cost_layer_from_option(option, config)
 
+    def _empty_cost_layer_data_array(self):
+        """xarray.DataArray: Empty routing-cost layer template"""
+        template = self.latitudes.astype(np.float32).copy(deep=False)
+        template.values = da.zeros(self.full_shape, dtype=np.float32)
+        return template
+
     def _build_cost_layer_from_option(self, option, config):
+        """Build a single routing option's cost layer"""
         option_cost = self._empty_cost_layer_data_array()
         option_li_cost = self._empty_cost_layer_data_array()
         option_untracked_cost = self._empty_cost_layer_data_array()
@@ -257,12 +264,6 @@ class RoutingLayerManager:
             config,
             option_cost + option_li_cost + option_untracked_cost,
         )
-
-    def _empty_cost_layer_data_array(self):
-        """xarray.DataArray: Empty routing-cost layer template"""
-        template = self.latitudes.astype(np.float32).copy(deep=False)
-        template.values = da.zeros(self.full_shape, dtype=np.float32)
-        return template
 
     def _build_final_routing_layer_from_option(
         self, option, config, option_layer
