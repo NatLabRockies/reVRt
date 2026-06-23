@@ -118,9 +118,9 @@ def test_build_final_routing_layers_command_writes_expected_layers(
                     {"layer_name": "layer_1", "multiplier_scalar": 1.5},
                     {"layer_name": "layer_2", "multiplier_scalar": 0.5},
                 ],
+                "cost_multiplier_scalar": 2.0,
             }
         },
-        "cost_multiplier_scalar": 2.0,
         "ignore_invalid_costs": True,
     }
 
@@ -146,7 +146,7 @@ def test_build_final_routing_layers_command_writes_expected_layers(
         layer_one = ds["layer_1"].isel(band=0).astype(np.float32).load()
         layer_two = ds["layer_2"].isel(band=0).astype(np.float32).load()
 
-    expected_vals = layer_one * 1.5 + layer_two * 0.5  # * 2.0  # TODO: fix
+    expected_vals = (layer_one * 1.5 + layer_two * 0.5) * 2.0
     expected_vals = expected_vals.to_numpy()
 
     with rasterio.open(cost_fp) as src:
@@ -328,10 +328,10 @@ def test_cli_build_final_routing_layers_command(
                 "cost_layers": [
                     {"layer_name": "layer_1", "multiplier_scalar": 1.5},
                     {"layer_name": "layer_2", "multiplier_scalar": 0.5},
-                ]
+                ],
+                "cost_multiplier_scalar": 2.0,
             }
         },
-        "cost_multiplier_scalar": 2.0,
         "ignore_invalid_costs": True,
     }
 
@@ -362,7 +362,7 @@ def test_cli_build_final_routing_layers_command(
         layer_one = ds["layer_1"].isel(band=0).astype(np.float32).load()
         layer_two = ds["layer_2"].isel(band=0).astype(np.float32).load()
 
-    expected_vals = layer_one * 1.5 + layer_two * 0.5  # * 2.0  # TODO: fix
+    expected_vals = (layer_one * 1.5 + layer_two * 0.5) * 2.0
 
     with rasterio.open(cost_fp) as src:
         agg_costs = src.read(1)

@@ -204,7 +204,6 @@ def _build_route_table(layered_fp, rows_cols):
 #         cost_fpath=sample_layered_data,
 #         out_fp=out_fp,
 #         routes_to_compute=routes_to_compute,
-#         cost_multiplier_scalar=1,
 #         tracked_layers=[{"layer_name": "layer_3", "agg_method": "max"}],
 #         ignore_invalid_costs=True,
 #     )
@@ -413,9 +412,9 @@ def test_update_route_options_updates_nested_layers_without_mutation():
     )
 
     assert routing_options["overhead"]["cost_layers"][0]["apply_row_mult"]
-    assert routing_options["overhead"]["cost_layers"][0][
-        "multiplier_scalar"
-    ] == 2
+    assert (
+        routing_options["overhead"]["cost_layers"][0]["multiplier_scalar"] == 2
+    )
     assert routing_options["overhead"]["friction_layers"][0][
         "apply_polarity_mult"
     ]

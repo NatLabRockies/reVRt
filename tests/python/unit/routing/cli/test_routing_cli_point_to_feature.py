@@ -319,14 +319,14 @@ def test_compute_lcp_routes_creates_csv_output(point_feature_dataset):
         routing_options={
             "default": {
                 "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+                "cost_multiplier_scalar": 3,
+                # "cost_multiplier_layer": "tie_line_multipliers",
             }
         },
         out_dir=out_dir,
         job_name="csv_run",
         transmission_config=transmission_config,
         tracked_layers=tracked_layers,
-        cost_multiplier_layer="tie_line_multipliers",
-        cost_multiplier_scalar=3,
         ignore_invalid_costs=True,
     )
 
