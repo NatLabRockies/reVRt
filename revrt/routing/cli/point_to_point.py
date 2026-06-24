@@ -44,10 +44,10 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
         return (
             int(row["start_row"]),
             int(row["start_col"]),
-            str(row.get("start_option", self._default_routing_option)),
+            str(row.get("start_option", self._routing_options.default)),
             int(row["end_row"]),
             int(row["end_col"]),
-            str(row.get("end_option", self._default_routing_option)),
+            str(row.get("end_option", self._routing_options.default)),
             *self._route_value_signature(row),
         )
 

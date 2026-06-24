@@ -96,12 +96,12 @@ class RouteToDefinitionConverter(ABC):
             for more details.
         """
         self.cost_fpath = cost_fpath
-        self._input_route_points = route_points
         self.out_fp = Path(out_fp)
         self.transmission_config = transmission_config
-        self.routing_options = routing_options
         self.drivers = drivers
         self.transition_costs = transition_costs
+        self._input_route_points = route_points
+        self._routing_options = RoutingOptions(routing_options)
 
     @cached_property
     def route_points(self):
@@ -111,9 +111,7 @@ class RouteToDefinitionConverter(ABC):
     def _rp_with_expected_cols(self):
         """Ensure route points has required columns"""
         return _validate_route_points(
-            self._input_route_points,
-            self._default_routing_option,
-            self.routing_options,
+            self._input_route_points, self._routing_options
         )
 
     @property
@@ -149,13 +147,6 @@ class RouteToDefinitionConverter(ABC):
         }
 
     @cached_property
-    def _default_routing_option(self):
-        """str: Default routing option to use if omitted from points"""
-        if "default" in self.routing_options:
-            return "default"
-        return next(iter(self.routing_options))
-
-    @cached_property
     def _group_cols_by_option_value(self):
         """dict: Explicit per-option columns used for batching"""
         return {
@@ -163,7 +154,7 @@ class RouteToDefinitionConverter(ABC):
                 value_name: f"{value_name}_{option}"
                 for value_name in (_POLARITY, _VOLTAGE)
             }
-            for option in self.routing_options
+            for option in self._routing_options
         }
 
     @cached_property
@@ -185,8 +176,7 @@ class RouteToDefinitionConverter(ABC):
                 len(routes),
                 _format_pv_by_option(pv_by_option),
             )
-            route_options = update_route_options(
-                self.routing_options,
+            route_options = self._routing_options.update_from(
                 pv_by_option=pv_by_option,
                 transmission_config=self.transmission_config,
             )
@@ -234,6 +224,75 @@ class RouteToDefinitionConverter(ABC):
     def _convert_to_route_definitions(self, routes):
         """Convert route DataFrame to route definitions format"""
         raise NotImplementedError
+
+
+class RoutingOptions:
+    """Class to manage routing options and their configurations"""
+
+    def __init__(self, routing_options):
+        """
+
+        Parameters
+        ----------
+        routing_options : dict
+            Dictionary of routing options, where each key is a routing
+            option name and each value is a dictionary containing the
+            configuration for that option.
+        """
+        self.routing_options = routing_options
+
+    def __iter__(self):
+        yield from self.routing_options
+
+    @cached_property
+    def default(self):
+        """str: Default routing option to use if omitted from points"""
+        if "default" in self.routing_options:
+            return "default"
+        return next(iter(self.routing_options))
+
+    def update_from(self, pv_by_option, transmission_config):
+        """Update multipliers for multi-option routing
+
+        Parameters
+        ----------
+        pv_by_option : dict
+            Dictionary mapping routing options to their corresponding
+            polarity and voltage values. The structure is:
+            {
+                "option_name": {"polarity": "val", "voltage": "val"},
+                ...
+            }
+        transmission_config : dict
+            Dictionary of transmission cost configuration values.
+
+        Returns
+        -------
+        dict
+            Updated routing options with multipliers applied based on
+            the provided polarity and voltage values.
+        """
+        updated_options = deepcopy(self.routing_options)
+        for option_name, option_config in updated_options.items():
+            option_polarity = pv_by_option.get(option_name, {}).get("polarity")
+            option_voltage = pv_by_option.get(option_name, {}).get("voltage")
+            option_config["cost_layers"] = update_multipliers(
+                option_config.get("cost_layers", []),
+                option_polarity,
+                option_voltage,
+                transmission_config or {},
+            )
+            option_config["friction_layers"] = update_multipliers(
+                option_config.get("friction_layers", []),
+                option_polarity,
+                option_voltage,
+                transmission_config or {},
+            )
+            option_config["barrier_layers"] = deepcopy(
+                option_config.get("barrier_layers", [])
+            )
+
+        return updated_options
 
 
 def run_lcp(
@@ -346,11 +405,11 @@ def split_routes(config, nodes):
     return config
 
 
-def _validate_route_points(points, default_routing_option, routing_options):
+def _validate_route_points(points, routing_options):
     """Ensure route points has required columns"""
     for option_col in ["start_option", "end_option"]:
         if option_col not in points.columns:
-            points[option_col] = default_routing_option
+            points[option_col] = routing_options.default
 
     return _validate_route_value_columns(points, routing_options)
 
@@ -405,33 +464,6 @@ def update_multipliers(layers, polarity, voltage, transmission_config):
             )
 
     return output_layers
-
-
-def update_route_options(
-    routing_options, pv_by_option, transmission_config=None
-):
-    """[NOT PUBLIC API] Update multipliers for multi-option routing"""
-    updated_options = deepcopy(routing_options)
-    for option_name, option_config in updated_options.items():
-        option_polarity = pv_by_option.get(option_name, {}).get("polarity")
-        option_voltage = pv_by_option.get(option_name, {}).get("voltage")
-        option_config["cost_layers"] = update_multipliers(
-            option_config.get("cost_layers", []),
-            option_polarity,
-            option_voltage,
-            transmission_config,
-        )
-        option_config["friction_layers"] = update_multipliers(
-            option_config.get("friction_layers", []),
-            option_polarity,
-            option_voltage,
-            transmission_config,
-        )
-        option_config["barrier_layers"] = deepcopy(
-            option_config.get("barrier_layers", [])
-        )
-
-    return updated_options
 
 
 def _get_row_multiplier(transmission_config, voltage):

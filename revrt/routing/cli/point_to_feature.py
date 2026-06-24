@@ -114,7 +114,7 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
         return (
             int(row["start_row"]),
             int(row["start_col"]),
-            str(row.get("start_option", self._default_routing_option)),
+            str(row.get("start_option", self._routing_options.default)),
             str(row[self.connection_identifier_column]),
             *self._route_value_signature(row),
         )

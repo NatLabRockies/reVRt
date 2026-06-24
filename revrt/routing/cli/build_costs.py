@@ -8,7 +8,7 @@ from gaps.config import load_config
 
 from revrt.costs.config import parse_config
 from revrt.utilities import strip_path_keys, save_data_array_to_geotiff
-from revrt.routing.cli.base import update_route_options
+from revrt.routing.cli.base import RoutingOptions
 from revrt.routing.base import RoutingScenario, RoutingLayerManager
 
 logger = logging.getLogger(__name__)
@@ -84,15 +84,14 @@ def build_final_routing_layers(
         for option in routing_options
     }
 
-    route_options = update_route_options(
-        routing_options=routing_options,
+    routing_options = RoutingOptions(routing_options).update_from(
         pv_by_option=pv_by_option,
         transmission_config=transmission_config,
     )
 
     routing_scenario = RoutingScenario(
         cost_fpath=config["cost_fpath"],
-        routing_options=route_options,
+        routing_options=routing_options,
         invalid_costs_block_routing=config.get(
             "invalid_costs_block_routing", False
         ),

@@ -14,7 +14,7 @@ from revrt.routing.utilities import map_to_costs
 from revrt.exceptions import revrtKeyError
 from revrt.routing.cli.base import (
     update_multipliers,
-    update_route_options,
+    RoutingOptions,
     run_lcp,
     route_points_subset,
     split_routes,
@@ -464,7 +464,7 @@ def test_update_multipliers_applies_row_and_polarity():
 
 
 def test_update_route_options_updates_nested_layers_without_mutation():
-    """update_route_options should transform nested layer configs safely"""
+    """Updated options should transform nested layer configs safely"""
 
     routing_options = {
         "overhead": {
@@ -494,8 +494,7 @@ def test_update_route_options_updates_nested_layers_without_mutation():
         "voltage_polarity_mult": {"138": {"ac": 0.5}},
     }
 
-    updated = update_route_options(
-        routing_options,
+    updated = RoutingOptions(routing_options).update_from(
         transmission_config=transmission_config,
         pv_by_option={
             "overhead": {"polarity": "ac", "voltage": 138},
@@ -526,7 +525,7 @@ def test_update_route_options_updates_nested_layers_without_mutation():
 
 
 def test_update_route_options_applies_per_option_values():
-    """update_route_options should apply explicit values per option"""
+    """Updated options should apply explicit values per option"""
 
     routing_options = {
         "overhead": {
@@ -550,8 +549,7 @@ def test_update_route_options_applies_per_option_values():
         },
     }
 
-    updated = update_route_options(
-        routing_options,
+    updated = RoutingOptions(routing_options).update_from(
         transmission_config=transmission_config,
         pv_by_option={
             "overhead": {"polarity": "ac", "voltage": 138},
