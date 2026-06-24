@@ -10,7 +10,7 @@ from rasterio.transform import from_origin
 
 from revrt.utilities import LayeredFile
 from revrt.routing.base import RoutingScenario
-from revrt.routing.batch_route_processor import BatchRouteProcessor
+from revrt.routing.processing import BatchRouteProcessor
 
 
 @pytest.fixture(scope="module")

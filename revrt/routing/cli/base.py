@@ -15,7 +15,7 @@ import xarray as xr
 
 from revrt.routing.cli.utilities import routing_layer_mover
 from revrt.routing.base import RoutingScenario
-from revrt.routing.batch_route_processor import BatchRouteProcessor
+from revrt.routing.processing import BatchRouteProcessor
 from revrt.utilities.monitoring import log_runtime
 from revrt.exceptions import revrtKeyError
 

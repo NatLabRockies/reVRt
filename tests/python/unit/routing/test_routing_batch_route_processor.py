@@ -12,7 +12,7 @@ from rasterio.transform import from_origin
 
 from revrt.utilities import LayeredFile
 from revrt.routing.base import RoutingScenario
-from revrt.routing.batch_route_processor import (
+from revrt.routing.processing import (
     BatchRouteProcessor,
     _RouteDefinitionFormatter,
     _RouteResultWriter,
@@ -291,7 +291,7 @@ def test_route_results_passes_routing_layer_out_fp(
     )
 
     monkeypatch.setattr(
-        "revrt.routing.batch_route_processor.RouteFinder", FakeRouteFinder
+        "revrt.routing.processing.RouteFinder", FakeRouteFinder
     )
 
     routing_layer_out_fp = tmp_path / "routing_layer.zarr"
@@ -335,7 +335,7 @@ def test_multi_option_routes_write_companion_output(
             )
 
     monkeypatch.setattr(
-        "revrt.routing.batch_route_processor.RouteFinder", FakeRouteFinder
+        "revrt.routing.processing.RouteFinder", FakeRouteFinder
     )
 
     scenario = RoutingScenario(
@@ -472,7 +472,7 @@ def test_batch_route_processor_forwards_algorithm(
             return iter(())
 
     monkeypatch.setattr(
-        "revrt.routing.batch_route_processor.RouteFinder", FakeRouteFinder
+        "revrt.routing.processing.RouteFinder", FakeRouteFinder
     )
 
     scenario = RoutingScenario(
