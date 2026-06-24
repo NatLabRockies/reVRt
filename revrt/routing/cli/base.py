@@ -204,15 +204,9 @@ class RouteToDefinitionConverter(ABC):
             for option, values in self._group_cols_by_option_value.items()
         }
 
-    def _validate_route_points(self):
-        """Ensure route points has required columns"""
-        for check_col in self._GROUP_COLS:
-            if check_col not in self.route_points.columns:
-                self.route_points[check_col] = "unknown"
-
-        for option_col in ["start_option", "end_option"]:
-            if option_col not in self.route_points.columns:
-                self.route_points[option_col] = self._default_routing_option
+    def _route_value_signature(self, row):
+        """object: Explicit per-option route values for one route row"""
+        return (str(row[c]) for c in self._group_cols)
 
     @abstractmethod
     def _route_as_tuple(self, row):
