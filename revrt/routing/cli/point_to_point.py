@@ -48,8 +48,7 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
             int(row["end_row"]),
             int(row["end_col"]),
             str(row.get("end_option", self._default_routing_option)),
-            str(row.get("polarity", "unknown")),
-            str(row.get("voltage", "unknown")),
+            *self._route_value_signature(row),
         )
 
     def _convert_to_route_definitions(self, routes):  # noqa:PLR6301

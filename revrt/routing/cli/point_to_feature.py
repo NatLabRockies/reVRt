@@ -116,8 +116,7 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
             int(row["start_col"]),
             str(row.get("start_option", self._default_routing_option)),
             str(row[self.connection_identifier_column]),
-            str(row.get("polarity", "unknown")),
-            str(row.get("voltage", "unknown")),
+            *self._route_value_signature(row),
         )
 
     def _convert_to_route_definitions(self, routes):
