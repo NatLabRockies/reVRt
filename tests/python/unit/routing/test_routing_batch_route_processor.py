@@ -1919,9 +1919,7 @@ def test_explicit_barrier_blocks_route_even_with_soft_invalid_costs(
         routing_options={
             "default": {
                 "cost_layers": [{"layer_name": "layer_2"}],
-                "barrier_layers": [
-                    {"layer_name": "layer_4", "barrier_values": "==1"}
-                ],
+                "barrier_layers": [{"layer_name": "layer_4", "where": "==1"}],
             }
         },
         invalid_costs_block_routing=False,
@@ -1951,12 +1949,12 @@ def test_soft_barrier_points_remain_valid_for_retry(sample_layered_data):
                 "barrier_layers": [
                     {
                         "layer_name": "layer_4",
-                        "barrier_values": "==1",
+                        "where": "==1",
                         "barrier_importance": 1,
                     },
                     {
                         "layer_name": "layer_5",
-                        "barrier_values": "==1",
+                        "where": "==1",
                         "barrier_importance": 1,
                     },
                 ],
@@ -2000,7 +1998,7 @@ def test_soft_barrier_retry_returns_route_with_metadata(
                 "barrier_layers": [
                     {
                         "layer_name": "layer_4",
-                        "barrier_values": "==1",
+                        "where": "==1",
                         "barrier_importance": 1,
                     }
                 ],
@@ -2038,7 +2036,7 @@ def test_soft_barrier_start_point_retries_and_records_metadata(
                 "barrier_layers": [
                     {
                         "layer_name": "layer_4",
-                        "barrier_values": "==1",
+                        "where": "==1",
                         "barrier_importance": 1,
                     }
                 ],
@@ -2080,7 +2078,7 @@ def test_soft_barrier_retry_exhaustion_returns_no_route(
                 "barrier_layers": [
                     {
                         "layer_name": "layer_4",
-                        "barrier_values": "==1",
+                        "where": "==1",
                         "barrier_importance": 1,
                     }
                 ],

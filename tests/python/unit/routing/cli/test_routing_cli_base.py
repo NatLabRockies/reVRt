@@ -391,7 +391,7 @@ def test_update_route_options_updates_nested_layers_without_mutation():
             "barrier_layers": [
                 {
                     "layer_name": "layer_3",
-                    "barrier_values": "==1",
+                    "where": "==1",
                 }
             ],
         }
@@ -415,7 +415,7 @@ def test_update_route_options_updates_nested_layers_without_mutation():
         "multiplier_scalar"
     ] == pytest.approx(0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
     assert updated["overhead"]["barrier_layers"] == [
-        {"layer_name": "layer_3", "barrier_values": "==1"}
+        {"layer_name": "layer_3", "where": "==1"}
     ]
     assert (
         updated["overhead"]["barrier_layers"]
@@ -471,7 +471,7 @@ def test_route_converter_updates_multi_option_layers(tmp_path):
                 "barrier_layers": [
                     {
                         "layer_name": "layer_3",
-                        "barrier_values": "==1",
+                        "where": "==1",
                     }
                 ],
             }
@@ -490,7 +490,7 @@ def test_route_converter_updates_multi_option_layers(tmp_path):
         "multiplier_scalar"
     ] == pytest.approx(0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
     assert route_ro["overhead"]["barrier_layers"] == [
-        {"layer_name": "layer_3", "barrier_values": "==1"}
+        {"layer_name": "layer_3", "where": "==1"}
     ]
     assert route_definitions == [
         (0, [(0, 1, "overhead")], [(2, 3, "overhead")])

@@ -287,7 +287,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
                 - ``"layer_name"``: (REQUIRED) Name of layer in the
                     layered file containing the values to test for
                     barrier cells.
-                - ``"barrier_values"``: (REQUIRED) Comparison expression
+                - ``"where"``: (REQUIRED) Comparison expression
                     defining which pixel values act as barriers.
                     Supported operators are ``"=="``, ``"!="``, ``">"``,
                     ``">="``, ``"<"``, and ``"<="``, followed by a
@@ -307,7 +307,7 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
         as a hard barrier and is never relaxed. This allows hard and
         soft barriers to be combined in the same routing run. Multiple
         entries may reference the same layer with different
-        ``"barrier_values"`` definitions. By default, ``None``.
+        ``"where"`` definitions. By default, ``None``.
     tracked_layers : list, optional
         List of dictionaries defining layers to characterize along the
         computed route. Each dictionary must contain:

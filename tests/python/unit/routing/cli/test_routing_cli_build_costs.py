@@ -174,7 +174,7 @@ def test_build_final_routing_layers_command_applies_explicit_barriers(
                     {"layer_name": "layer_2"},
                 ],
                 "barrier_layers": [
-                    {"layer_name": "layer_1", "barrier_values": "==0"},
+                    {"layer_name": "layer_1", "where": "==0"},
                 ],
             }
         },

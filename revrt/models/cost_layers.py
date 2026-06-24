@@ -187,17 +187,17 @@ class BarrierLayer(BaseModel, extra="forbid"):
     layer_name: str
     """Name of layer in Zarr file"""
 
-    barrier_values: str
+    where: str
     """Comparison definition describing barrier cells"""
 
     barrier_importance: int | None = None
     """Optional rank used when relaxing soft barriers"""
 
-    @field_validator("barrier_values")
+    @field_validator("where")
     @classmethod
-    def _validate_barrier_values(cls, barrier_values):
-        parse_comparison_values(barrier_values)
-        return barrier_values
+    def _validate_where(cls, where):
+        parse_comparison_values(where)
+        return where
 
     @field_validator("barrier_importance")
     @classmethod
@@ -214,7 +214,7 @@ class BarrierLayer(BaseModel, extra="forbid"):
     def to_routing_dict(self):
         """Convert barrier config to the normalized routing payload"""
         barrier_operator, barrier_threshold = parse_comparison_values(
-            self.barrier_values
+            self.where
         )
 
         return {

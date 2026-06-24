@@ -835,7 +835,7 @@ mod test {
                 "routing_options": {
                     "overhead": {
                         "cost_layers": [{"layer_name": "A"}],
-                        "barrier_layers": [{"layer_name": "barrier_mask", "barrier_values": "==1"}]
+                        "barrier_layers": [{"layer_name": "barrier_mask", "where": "==1"}]
                     }
                 }
             }"#,

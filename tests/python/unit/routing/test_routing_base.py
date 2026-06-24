@@ -202,7 +202,7 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
                 "barrier_layers": [
                     {
                         "layer_name": "layer_5",
-                        "barrier_values": "==1",
+                        "where": "==1",
                     }
                 ],
             },
@@ -215,8 +215,7 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
             "zones": [
                 {
                     "layer_name": "layer_5",
-                    "mask_operator": "eq",
-                    "mask_threshold": 1,
+                    "where": "==1",
                     "overhead": "excluded",
                     "underground": 2,
                 }
@@ -237,7 +236,18 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
     payload = json.loads(scenario.cost_function_json)
 
     assert payload["invalid_costs_block_routing"] is False
-    assert payload["drivers"] == scenario.drivers
+    assert payload["drivers"] == {
+        "default": {"overhead": 1, "underground": "excluded"},
+        "zones": [
+            {
+                "layer_name": "layer_5",
+                "mask_operator": "eq",
+                "mask_threshold": 1.0,
+                "overhead": "excluded",
+                "underground": 2,
+            }
+        ],
+    }
     assert payload["transition_costs"] == scenario.transition_costs
     assert set(payload["routing_options"]) == {"overhead", "underground"}
     assert payload["routing_options"]["overhead"]["cost_layers"] == [
@@ -260,6 +270,24 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
     assert payload["routing_options"]["underground"]["cost_layers"] == [
         {"layer_name": "layer_2"}
     ]
+
+
+def test_routing_scenario_preserves_default_only_drivers(sample_layered_data):
+    """Default-only driver rules are serialized unchanged"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "overhead": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+            }
+        },
+        drivers={"default": {"overhead": 1}},
+    )
+
+    payload = json.loads(scenario.cost_function_json)
+
+    assert payload["drivers"] == {"default": {"overhead": 1}}
 
 
 def test_multi_option_route_metrics_use_option_layers(
@@ -1122,10 +1150,10 @@ def test_barrier_layers_are_normalized_for_rust(sample_layered_data):
                 "barrier_layers": [
                     {
                         "layer_name": "layer_4",
-                        "barrier_values": "==1",
+                        "where": "==1",
                         "barrier_importance": 2,
                     },
-                    {"layer_name": "layer_6", "barrier_values": "<0"},
+                    {"layer_name": "layer_6", "where": "<0"},
                 ],
             }
         },
@@ -1160,7 +1188,7 @@ def test_barrier_layers_normalize_not_equal_for_rust(sample_layered_data):
                 "barrier_layers": [
                     {
                         "layer_name": "layer_4",
-                        "barrier_values": "!=0",
+                        "where": "!=0",
                         "barrier_importance": 1,
                     }
                 ],
@@ -1189,7 +1217,7 @@ def test_invalid_barrier_values_raise(sample_layered_data):
                 "default": {
                     "cost_layers": [{"layer_name": "layer_1"}],
                     "barrier_layers": [
-                        {"layer_name": "layer_4", "barrier_values": "~1"}
+                        {"layer_name": "layer_4", "where": "~1"}
                     ],
                 }
             },
@@ -1208,7 +1236,7 @@ def test_barrier_importance_must_be_positive(sample_layered_data):
                     "barrier_layers": [
                         {
                             "layer_name": "layer_4",
-                            "barrier_values": "==1",
+                            "where": "==1",
                             "barrier_importance": 0,
                         }
                     ],
@@ -1225,9 +1253,7 @@ def test_explicit_barriers_remain_hard(sample_layered_data):
         routing_options={
             "default": {
                 "cost_layers": [{"layer_name": "layer_2"}],
-                "barrier_layers": [
-                    {"layer_name": "layer_4", "barrier_values": "==1"}
-                ],
+                "barrier_layers": [{"layer_name": "layer_4", "where": "==1"}],
             }
         },
         invalid_costs_block_routing=False,
@@ -1262,9 +1288,7 @@ def test_not_equal_barriers_remain_hard(sample_layered_data):
         routing_options={
             "default": {
                 "cost_layers": [{"layer_name": "layer_2"}],
-                "barrier_layers": [
-                    {"layer_name": "layer_4", "barrier_values": "!=0"}
-                ],
+                "barrier_layers": [{"layer_name": "layer_4", "where": "!=0"}],
             }
         },
         invalid_costs_block_routing=False,

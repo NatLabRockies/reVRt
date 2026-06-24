@@ -16,6 +16,7 @@ from shapely.geometry.linestring import LineString
 from revrt import simplify_using_slopes
 from revrt.models.cost_layers import BarrierLayer
 from revrt.routing.utilities import compute_lens
+from revrt.utilities.parsing import parse_comparison_values
 from revrt.exceptions import revrtKeyError
 from revrt.warn import revrtWarning, revrtDeprecationWarning
 
@@ -109,7 +110,7 @@ class RoutingScenario:
             "routing_options": self._routing_options_for_rust(),
         }
         if self.drivers is not None:
-            payload["drivers"] = self.drivers
+            payload["drivers"] = _drivers_for_rust(self.drivers)
         if self.transition_costs is not None:
             payload["transition_costs"] = self.transition_costs
         return json.dumps(payload)
@@ -775,3 +776,25 @@ def _barrier_layers_for_rust(layers):
         if out_layer.get("barrier_importance") is None:
             out_layer.pop("barrier_importance")
         yield out_layer
+
+
+def _drivers_for_rust(drivers):
+    """Driver rules formatted for Rust ingestion"""
+    out_drivers = drivers.copy()
+    if "zones" in drivers:
+        out_drivers["zones"] = list(
+            _driver_zones_for_rust(drivers.get("zones", []))
+        )
+    return out_drivers
+
+
+def _driver_zones_for_rust(zones):
+    """Driver zones formatted for Rust ingestion"""
+    for zone in zones:
+        out_zone = zone.copy()
+        where = out_zone.pop("where", None)
+        if where is not None:
+            mask_operator, mask_threshold = parse_comparison_values(where)
+            out_zone["mask_operator"] = mask_operator
+            out_zone["mask_threshold"] = mask_threshold
+        yield out_zone
