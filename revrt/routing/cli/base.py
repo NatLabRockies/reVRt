@@ -170,9 +170,8 @@ class RouteToDefinitionConverter(ABC):
             )
             route_options = update_route_options(
                 self.routing_options,
-                polarity,
-                voltage,
-                self.transmission_config,
+                pv_by_option=pv_by_option,
+                transmission_config=self.transmission_config,
             )
             route_definitions, route_attrs = (
                 self._convert_to_route_definitions(routes)
@@ -182,9 +181,8 @@ class RouteToDefinitionConverter(ABC):
     @property
     def _paths_to_compute(self):
         """Generator that yields route groups to be computed"""
-        self._validate_route_points()
-
-        for group_info, routes in self.route_points.groupby(self._GROUP_COLS):
+        for __, routes in self.route_points.groupby(self._group_cols):
+            pv_by_option = self._pv_by_option_for_row(routes.iloc[0])
             if self.existing_routes:
                 mask = routes.apply(
                     lambda row: (
@@ -358,21 +356,23 @@ def update_multipliers(layers, polarity, voltage, transmission_config):
 
 
 def update_route_options(
-    routing_options, polarity, voltage, transmission_config
+    routing_options, pv_by_option, transmission_config=None
 ):
     """[NOT PUBLIC API] Update multipliers for multi-option routing"""
     updated_options = deepcopy(routing_options)
-    for option_config in updated_options.values():
+    for option_name, option_config in updated_options.items():
+        option_polarity = pv_by_option.get(option_name, {}).get("polarity")
+        option_voltage = pv_by_option.get(option_name, {}).get("voltage")
         option_config["cost_layers"] = update_multipliers(
             option_config.get("cost_layers", []),
-            polarity,
-            voltage,
+            option_polarity,
+            option_voltage,
             transmission_config,
         )
         option_config["friction_layers"] = update_multipliers(
             option_config.get("friction_layers", []),
-            polarity,
-            voltage,
+            option_polarity,
+            option_voltage,
             transmission_config,
         )
         option_config["barrier_layers"] = deepcopy(
