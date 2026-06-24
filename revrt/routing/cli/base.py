@@ -138,6 +138,26 @@ class RouteToDefinitionConverter(ABC):
             return "default"
         return next(iter(self.routing_options))
 
+    @cached_property
+    def _group_cols_by_option_value(self):
+        """dict: Explicit per-option columns used for batching"""
+        return {
+            option: {
+                value_name: f"{value_name}_{option}"
+                for value_name in (_POLARITY, _VOLTAGE)
+            }
+            for option in self.routing_options
+        }
+
+    @cached_property
+    def _group_cols(self):
+        """list: Explicit per-option columns used for batching"""
+        return [
+            c
+            for cols in self._group_cols_by_option_value.values()
+            for c in cols.values()
+        ]
+
     def __iter__(self):
         if self.num_routes == 0:
             return
