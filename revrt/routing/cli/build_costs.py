@@ -41,18 +41,20 @@ def build_final_routing_layers(
         input is used to determine which cost and friction layers to use
         when building the routing layer. The routing option must be one
         of the options specified in the config file.
-    polarity : str, optional
+    polarity : str or dict, optional
         Polarity to use when building the routing layer. This input is
         required if any cost or friction layers that have
         `apply_polarity_mult` set to `True` - they will have the
-        appropriate multiplier applied based on this polarity.
+        appropriate multiplier applied based on this polarity. If dict
+        is provided, it should map routing options to polarities.
         By default, ``None``.
-    voltage : str, optional
+    voltage : str or dict, optional
         Voltage to use when building the routing layer. This input is
         required if any cost or friction layers that have
         `apply_row_mult` or `apply_polarity_mult` set to `True` - they
         will have the appropriate multiplier applied based on this
-        voltage. By default, ``None``.
+        voltage. If dict is provided, it should map routing options to
+        voltages. By default, ``None``.
 
     Returns
     -------
@@ -68,8 +70,24 @@ def build_final_routing_layers(
         config=config.get("transmission_config")
     )
 
+    routing_options = config["routing_options"]
+    if polarity is not None and isinstance(polarity, str):
+        polarity = dict.fromkeys(routing_options, polarity)
+    if voltage is not None and isinstance(voltage, (int, float, str)):
+        voltage = dict.fromkeys(routing_options, str(voltage))
+
+    pv_by_option = {
+        option: {
+            "polarity": polarity.get(option) if polarity else None,
+            "voltage": voltage.get(option) if voltage else None,
+        }
+        for option in routing_options
+    }
+
     route_options = update_route_options(
-        config["routing_options"], polarity, voltage, transmission_config
+        routing_options=routing_options,
+        pv_by_option=pv_by_option,
+        transmission_config=transmission_config,
     )
 
     routing_scenario = RoutingScenario(

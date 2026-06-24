@@ -361,8 +361,8 @@ def test_route_generator_existing_routes_csv(tmp_path):
                 "start_col": 1,
                 "end_row": 2,
                 "end_col": 3,
-                "polarity": "ac",
-                "voltage": "230",
+                "polarity_default": "ac",
+                "voltage_default": "230",
             }
         ]
     )
@@ -386,8 +386,8 @@ def test_route_generator_existing_routes_gpkg(tmp_path):
             "start_col": [2],
             "end_row": [3],
             "end_col": [4],
-            "polarity": ["unknown"],
-            "voltage": ["unknown"],
+            "polarity_default": ["unknown"],
+            "voltage_default": ["unknown"],
             "geometry": [Point(0, 0)],
         },
         crs="EPSG:4326",

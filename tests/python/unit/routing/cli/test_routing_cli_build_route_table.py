@@ -352,6 +352,64 @@ def test_point_to_feature_route_table_builds_outputs(
     assert any(".csv" in msg for msg in warning_messages)
 
 
+def test_point_to_feature_route_table_writes_explicit_route_values(
+    tmp_path, revx_transmission_layers
+):
+    """Route-table helper should emit explicit per-option value columns"""
+
+    cost_fp = tmp_path / "explicit_route_values.zarr"
+    with xr.open_dataset(
+        revx_transmission_layers, consolidated=False, engine="zarr"
+    ) as ds:
+        subset = ds.isel(y=slice(0, 6), x=slice(0, 6))
+        subset.to_zarr(cost_fp, mode="w", zarr_format=3, consolidated=False)
+        crs = subset.rio.crs
+        transform = subset.rio.transform()
+        shape = (subset.rio.height, subset.rio.width)
+
+    resolution = shape[0] + 2
+    cell_size = max(abs(transform.a), abs(transform.e))
+    sc_points = make_rev_sc_points(
+        shape[0], shape[1], crs, transform, resolution=resolution
+    )
+    point_geom = sc_points.geometry.iloc[0]
+
+    features = gpd.GeoDataFrame(
+        {"gid": [1]},
+        geometry=[
+            LineString(
+                [
+                    (point_geom.x - cell_size, point_geom.y),
+                    (point_geom.x + cell_size, point_geom.y),
+                ]
+            )
+        ],
+        crs=crs,
+    )
+    features_fp = tmp_path / "explicit_values_features.gpkg"
+    features.to_file(features_fp, driver="GPKG")
+
+    out_dir = tmp_path / "explicit_values_outputs"
+    outputs = point_to_feature_route_table(
+        cost_fpath=cost_fp,
+        features_fpath=features_fp,
+        out_dir=out_dir,
+        resolution=resolution,
+        radius=3 * cell_size,
+        expand_radius=False,
+        voltages={"default": [138], "underground": [230]},
+        polarities={"default": ["ac"], "underground": ["dc"]},
+    )
+
+    route_table = pd.read_csv(outputs[0])
+    assert route_table["voltage_default"].tolist() == [138]
+    assert route_table["polarity_default"].tolist() == ["ac"]
+    assert route_table["voltage_underground"].tolist() == [230]
+    assert route_table["polarity_underground"].tolist() == ["dc"]
+    assert "voltage" not in route_table.columns
+    assert "polarity" not in route_table.columns
+
+
 def test_point_to_feature_route_table_resumes_existing_outputs(
     tmp_path, revx_transmission_layers
 ):
