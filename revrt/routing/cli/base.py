@@ -61,7 +61,11 @@ class RouteToDefinitionConverter(ABC):
         route_points : pandas.DataFrame
             DataFrame defining the points to be routed. This DataFrame
             should contain route definitions to be transformed and
-            passed down to the Rust routing algorithm.
+            passed down to the Rust routing algorithm. Route values for
+            polarity and voltage must be provided either as one shared
+            `polarity` / `voltage` pair that applies to every routing
+            option, or as a full per-option set of
+            `polarity_<option>` / `voltage_<option>` columns.
         out_fp : path-like
             Path to output file where computed routes will be saved.
             This file will be checked for existing routes to avoid
@@ -92,17 +96,30 @@ class RouteToDefinitionConverter(ABC):
             for more details.
         """
         self.cost_fpath = cost_fpath
-        self.route_points = route_points
+        self._input_route_points = route_points
         self.out_fp = Path(out_fp)
         self.transmission_config = transmission_config
         self.routing_options = routing_options
         self.drivers = drivers
         self.transition_costs = transition_costs
 
+    @cached_property
+    def route_points(self):
+        """pandas.DataFrame: Validated routing points"""
+        return self._rp_with_expected_cols()
+
+    def _rp_with_expected_cols(self):
+        """Ensure route points has required columns"""
+        return _validate_route_points(
+            self._input_route_points,
+            self._default_routing_option,
+            self.routing_options,
+        )
+
     @property
     def num_routes(self):
         """int: Number of routes to be computed"""
-        return len(self.route_points)
+        return len(self._input_route_points)
 
     @cached_property
     def cost_metadata(self):
@@ -327,6 +344,40 @@ def split_routes(config, nodes):
 
     config["_split_params"] = [(i, nodes) for i in range(nodes)]
     return config
+
+
+def _validate_route_points(points, default_routing_option, routing_options):
+    """Ensure route points has required columns"""
+    for option_col in ["start_option", "end_option"]:
+        if option_col not in points.columns:
+            points[option_col] = default_routing_option
+
+    return _validate_route_value_columns(points, routing_options)
+
+
+def _validate_route_value_columns(points, routing_options):
+    """Ensure explicit per-option route-value columns are present"""
+    for option in routing_options:
+        polarity_col = f"{_POLARITY}_{option}"
+        voltage_col = f"{_VOLTAGE}_{option}"
+
+        if polarity_col not in points.columns:
+            if _POLARITY in points.columns:
+                points[polarity_col] = points[_POLARITY].fillna("unknown")
+            else:
+                points[polarity_col] = "unknown"
+        else:
+            points[polarity_col] = points[polarity_col].fillna("unknown")
+
+        if voltage_col not in points.columns:
+            if _VOLTAGE in points.columns:
+                points[voltage_col] = points[_VOLTAGE].fillna("unknown")
+            else:
+                points[voltage_col] = "unknown"
+        else:
+            points[voltage_col] = points[voltage_col].fillna("unknown")
+
+    return points
 
 
 def update_multipliers(layers, polarity, voltage, transmission_config):

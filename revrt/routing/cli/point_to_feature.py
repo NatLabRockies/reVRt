@@ -92,22 +92,22 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
         self.features_fpath = features_fpath
         self.connection_identifier_column = connection_identifier_column
 
-    def _validate_route_points(self):
+    def _rp_with_expected_cols(self):
         """Ensure route points has required columns"""
 
         if (
-            "start_row" not in self.route_points.columns
-            or "start_col" not in self.route_points.columns
+            "start_row" not in self._input_route_points.columns
+            or "start_col" not in self._input_route_points.columns
         ):
             logger.info("Mapping route start points to cost grid...")
-            self.route_points = map_to_costs(
-                self.route_points,
+            self._input_route_points = map_to_costs(
+                self._input_route_points,
                 crs=self.cost_metadata["crs"],
                 transform=self.cost_metadata["transform"],
                 shape=self.cost_metadata["shape"],
             )
 
-        super()._validate_route_points()
+        return super()._rp_with_expected_cols()
 
     def _route_as_tuple(self, row):
         """Convert route row to a tuple for existing route checking"""
@@ -252,12 +252,10 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             - "apply_row_mult": (OPTIONAL) Boolean flag indicating
               whether the right-of-way width multiplier should be
               applied for this layer. If ``True``, then the transmission
-              config should have a "row_width" dictionary that maps
-              voltages to right-of-way width multipliers. Also, the
-              routing table input should have a "voltage" entry for
-              every route. Every "voltage" value in the routing table
-              must be given in the "row_width" dictionary in the
-              transmission config, otherwise an error will be thrown.
+              config should have a "row_width" dictionary. It maps
+              voltage to width multipliers. Use shared `voltage` or
+              `voltage_<option>`. Resolved voltages must exist in
+              `row_width`.
               Default is ``False``.
             - "apply_polarity_mult": (OPTIONAL) Boolean flag indicating
               whether the polarity multiplier should be applied for this
@@ -267,12 +265,13 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
               polarities to multipliers. For example, a valid
               "voltage_polarity_mult" dictionary might be
               ``{"138": {"ac": 1.15, "dc": 2}}``.
-              In addition, the routing table input should have a
-              "voltage" **and** a "polarity" entry for every route.
-              Every "voltage" + "polarity" combination in the routing
-              table must be given in the "voltage_polarity_mult"
-              dictionary in the transmission config, otherwise an error
-              will be thrown.
+              In addition, the routing table input should resolve both
+              a voltage and a polarity value for this routing option,
+              either from shared columns or from
+              `voltage_<option>` / `polarity_<option>`. Every resolved
+              voltage + polarity combination must be given in the
+              "voltage_polarity_mult" dictionary in the transmission
+              config, otherwise an error will be thrown.
 
               .. IMPORTANT::
                  The multiplier in this config is assumed to be in units
@@ -322,6 +321,13 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
               should be mapped to. This ID should match at least one of
               the feature IDs in the `features_fpath` input; otherwise,
               no route will be computed for that point.
+
+              You can also specify `polarity` and `voltage` columns
+              which apply to every routing option. If you want to
+              provide per-option polarity and voltage, use
+              `polarity_<option>` and `voltage_<option>`. Options that
+              are omitted will use `polarity` and `voltage` column
+              values.
 
     features_fpath : path-like, str, or list, default="PIPELINE"
         Feature input containing the vector geometries to map points to.
@@ -381,12 +387,10 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             - "apply_row_mult": (OPTIONAL) Boolean flag indicating
               whether the right-of-way width multiplier should be
               applied for this layer. If ``True``, then the transmission
-              config should have a "row_width" dictionary that maps
-              voltages to right-of-way width multipliers. Also, the
-              routing table input should have a "voltage" entry for
-              every route. Every "voltage" value in the routing table
-              must be given in the "row_width" dictionary in the
-              transmission config, otherwise an error will be thrown.
+              config should have a "row_width" dictionary.
+              That dictionary maps voltage to width multipliers.
+              Use shared `voltage` or `voltage_<option>`.
+              Every resolved voltage must exist in `row_width`.
               Default is ``False``.
             - "apply_polarity_mult": (OPTIONAL) Boolean flag indicating
               whether the polarity multiplier should be applied for this
@@ -396,12 +400,13 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
               polarities to multipliers. For example, a valid
               "voltage_polarity_mult" dictionary might be
               ``{"138": {"ac": 1.15, "dc": 2}}``.
-              In addition, the routing table input should have a
-              "voltage" **and** a "polarity" entry for every route.
-              Every "voltage" + "polarity" combination in the routing
-              table must be given in the "voltage_polarity_mult"
-              dictionary in the transmission config, otherwise an error
-              will be thrown.
+              In addition, the routing table input should resolve both
+              a voltage and a polarity value for this routing option,
+              either from shared columns or from
+              `voltage_<option>` / `polarity_<option>`. Every resolved
+              voltage + polarity combination must be given in the
+              "voltage_polarity_mult" dictionary in the transmission
+              config, otherwise an error will be thrown.
 
               .. IMPORTANT::
                  The multiplier in this config is assumed to be in units
