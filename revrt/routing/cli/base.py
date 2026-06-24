@@ -315,8 +315,9 @@ def split_routes(config, nodes):
 def update_multipliers(layers, polarity, voltage, transmission_config):
     """[NOT PUBLIC API] Update layer multipliers based on user input"""
     output_layers = deepcopy(layers)
-    polarity = "unknown" if polarity in {None, "unknown"} else str(polarity)
-    voltage = "unknown" if voltage in {None, "unknown"} else str(int(voltage))
+    unknowns = {None, "None", "unknown"}
+    polarity = "unknown" if polarity in unknowns else str(polarity)
+    voltage = "unknown" if voltage in unknowns else str(int(voltage))
 
     for layer in output_layers:
         if layer.pop("apply_row_mult", False):
