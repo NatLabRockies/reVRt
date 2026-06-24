@@ -162,13 +162,11 @@ class RouteToDefinitionConverter(ABC):
         if self.num_routes == 0:
             return
 
-        for polarity, voltage, routes in self._paths_to_compute:
+        for pv_by_option, routes in self._paths_to_compute:
             logger.info(
-                "Computing routes for %d points with polarity: %r and "
-                "voltage: %r",
+                "Computing routes for %d points with option values: %s",
                 len(routes),
-                polarity,
-                voltage,
+                _format_pv_by_option(pv_by_option),
             )
             route_options = update_route_options(
                 self.routing_options,
@@ -441,3 +439,15 @@ def _get_polarity_multiplier(transmission_config, voltage, polarity):
         raise revrtKeyError(msg) from e
 
     return polarity_multiplier
+
+
+def _format_pv_by_option(pv_by_option):
+    """str: Human-readable per-option route values"""
+    formatted_values = []
+    for option, values in pv_by_option.items():
+        formatted_values.append(
+            f"{option}(polarity={values['polarity']!r}, "
+            f"voltage={values['voltage']!r})"
+        )
+
+    return ", ".join(formatted_values)
