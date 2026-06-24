@@ -11,11 +11,11 @@ from revrt.constants import ALL, BARRIER_LAYER_NAME
 from revrt.exceptions import revrtConfigurationError
 
 
-_BARRIER_VALUE_PATTERN = re.compile(
+_COMPARISON_VALUE_PATTERN = re.compile(
     r"^\s*(!=|>=|<=|==|>|<)\s*"
     r"(-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*$"
 )
-_BARRIER_OPERATOR_MAP = {
+_OPERATOR_MAP = {
     "!=": "ne",
     ">": "gt",
     ">=": "ge",
@@ -195,38 +195,38 @@ class LayerBuildConfig(BaseModel, extra="forbid"):
     """Value to fill NA cells with after processing"""
 
 
-def parse_barrier_values(barrier_values):
-    """Parse barrier comparison text into an operator and threshold
+def parse_comparison_values(comparison_values):
+    """Parse comparison text into an operator and threshold
 
     Parameters
     ----------
-    barrier_values : str
+    comparison_values : str
         Comparison definition describing barrier cells.
 
     Returns
     -------
     str, float
-        Tuple of barrier operator and threshold value. The operator is
-        one of the following: 'ne', 'gt', 'ge', 'lt', 'le', 'eq'. The
-        threshold is a float value.
+        Tuple of operator and threshold value. The operator is one of
+        the following: 'ne', 'gt', 'ge', 'lt', 'le', 'eq'. The threshold
+        is a float value.
 
     Raises
     ------
     revrtConfigurationError
-        If the barrier_values string does not match the expected pattern
-        of a comparison operator followed by a number.
+        If the comparison_values string does not match the expected
+        pattern of a comparison operator followed by a number.
     """
-    match = _BARRIER_VALUE_PATTERN.fullmatch(barrier_values)
+    match = _COMPARISON_VALUE_PATTERN.fullmatch(comparison_values)
     if match is None:
         msg = (
             "Barrier values must use one of the supported comparison "
             "operators ('==', '!=', '>', '>=', '<', '<=') followed by a "
-            f"number. Got: {barrier_values!r}"
+            f"number. Got: {comparison_values!r}"
         )
         raise revrtConfigurationError(msg)
 
     operator, threshold = match.groups()
-    return _BARRIER_OPERATOR_MAP[operator], float(threshold)
+    return _OPERATOR_MAP[operator], float(threshold)
 
 
 class BarrierLayer(BaseModel, extra="forbid"):
@@ -244,7 +244,7 @@ class BarrierLayer(BaseModel, extra="forbid"):
     @field_validator("barrier_values")
     @classmethod
     def _validate_barrier_values(cls, barrier_values):
-        parse_barrier_values(barrier_values)
+        parse_comparison_values(barrier_values)
         return barrier_values
 
     @field_validator("barrier_importance")
@@ -261,7 +261,7 @@ class BarrierLayer(BaseModel, extra="forbid"):
 
     def to_routing_dict(self):
         """Convert barrier config to the normalized routing payload"""
-        barrier_operator, barrier_threshold = parse_barrier_values(
+        barrier_operator, barrier_threshold = parse_comparison_values(
             self.barrier_values
         )
 
