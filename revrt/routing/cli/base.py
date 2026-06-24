@@ -248,10 +248,10 @@ def _run_all_lcp_batches(
     """Run LCP routing for all batches of routes and save results"""
     out_fp = Path(out_fp)
     save_paths = out_fp.suffix.lower() == ".gpkg"
-    for route_ro, route_definitions, route_attrs in routes_to_compute:
+    for route_options, route_definitions, route_attrs in routes_to_compute:
         scenario = RoutingScenario(
             cost_fpath=cost_fpath,
-            routing_options=route_ro,
+            routing_options=route_options,
             drivers=routes_to_compute.drivers,
             transition_costs=routes_to_compute.transition_costs,
             tracked_layers=tracked_layers,
@@ -272,7 +272,7 @@ def _run_all_lcp_batches(
             out_fp=out_fp,
             route_attrs=route_attrs,
             job_name=job_name,
-            routing_options=route_ro,
+            routing_options=route_options,
         )
 
         with rl_mover as routing_layer_out_fp:
