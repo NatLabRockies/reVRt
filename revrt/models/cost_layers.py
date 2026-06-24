@@ -196,7 +196,26 @@ class LayerBuildConfig(BaseModel, extra="forbid"):
 
 
 def parse_barrier_values(barrier_values):
-    """Parse barrier comparison text into an operator and threshold"""
+    """Parse barrier comparison text into an operator and threshold
+
+    Parameters
+    ----------
+    barrier_values : str
+        Comparison definition describing barrier cells.
+
+    Returns
+    -------
+    str, float
+        Tuple of barrier operator and threshold value. The operator is
+        one of the following: 'ne', 'gt', 'ge', 'lt', 'le', 'eq'. The
+        threshold is a float value.
+
+    Raises
+    ------
+    revrtConfigurationError
+        If the barrier_values string does not match the expected pattern
+        of a comparison operator followed by a number.
+    """
     match = _BARRIER_VALUE_PATTERN.fullmatch(barrier_values)
     if match is None:
         msg = (
