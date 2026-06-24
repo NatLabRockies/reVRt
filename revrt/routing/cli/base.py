@@ -34,12 +34,12 @@ _RUST_MEM_FRACTION = 0.75
 
 The remaining memory is assumed to be for the Python process.
 """
+_POLARITY = "polarity"
+_VOLTAGE = "voltage"
 
 
 class RouteToDefinitionConverter(ABC):
     """Abstract base class for route definition converters"""
-
-    _GROUP_COLS = ["polarity", "voltage"]
 
     def __init__(
         self,
