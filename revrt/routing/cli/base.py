@@ -195,7 +195,14 @@ class RouteToDefinitionConverter(ABC):
             if routes.empty:
                 continue
 
-            yield *group_info, routes
+            yield pv_by_option, routes
+
+    def _pv_by_option_for_row(self, row):
+        """dict: Per-option polarity and voltage values for one row"""
+        return {
+            option: {value_name: row[c] for value_name, c in values.items()}
+            for option, values in self._group_cols_by_option_value.items()
+        }
 
     def _validate_route_points(self):
         """Ensure route points has required columns"""
