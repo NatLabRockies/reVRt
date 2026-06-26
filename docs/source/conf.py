@@ -14,6 +14,7 @@
 #
 import os
 import sys
+from sphinx.ext.autodoc import between
 
 sys.path.insert(0, os.path.abspath("../../"))
 
@@ -225,6 +226,18 @@ texinfo_documents = [
 
 
 def skip_external_methods(name, obj):
+    obj_module = getattr(obj, "__module__", "")
+    property_module = getattr(getattr(obj, "fget", None), "__module__", "")
+
+    if name == "model_config":
+        return True
+
+    if name.startswith("model_") and (
+        obj_module.startswith("pydantic")
+        or property_module.startswith("pydantic")
+    ):
+        return True
+
     mapping_methods = {
         "clear",
         "pop",
@@ -255,6 +268,7 @@ def skip_external_methods(name, obj):
         "model_dump",
         "model_construct",
         "model_copy",
+        "model_config",
         "model_fields",
         "model_computed_fields",
         "model_rebuild",
@@ -293,6 +307,13 @@ def _skip_member(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect("autodoc-skip-member", _skip_member)
+
+    # Register a sphinx.ext.autodoc.between listener to ignore everything
+    # between lines that contain the word IGNORE
+    app.connect(
+        "autodoc-process-docstring", between("^.*IGNORE.*$", exclude=True)
+    )
+    return app
 
 
 # -- Extension configuration -------------------------------------------------
@@ -377,6 +398,8 @@ nitpick_ignore = [
     ("py:class", "file"),
     ("py:class", "dir"),
     ("py:class", "ConfigDict"),
+    ("py:class", "revrt.models.routing.DriverRuleMap"),
+    ("py:class", "revrt.models.routing.RoutingOptionsMap"),
     ("py:class", "typing_extensions.TypedDict"),
 ] + [
     ("py:obj", f"revrt.models.cost_layers.{cl}.{meth}")
