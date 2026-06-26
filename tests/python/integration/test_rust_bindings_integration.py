@@ -108,12 +108,13 @@ def test_find_paths_basic_single_route_layered_file(tmp_path):
     results = find_paths(
         zarr_fp=layered_fp,
         cost_function=json.dumps(cost_definition),
-        start=[(1, 1)],
-        end=[(2, 6)],
+        start=[(1, 1, "default")],
+        end=[(2, 6, "default")],
     )
 
     assert len(results) == 1
     test_path, test_cost, dropped_barrier_layers = results[0]
+    test_path = [p[:2] for p in test_path]
 
     mcp = MCP_Geometric(cost_values[0])
     costs, __ = mcp.find_costs(starts=[(1, 1)], ends=[(2, 6)])
@@ -161,8 +162,8 @@ def test_find_paths_respects_hard_barrier_layered_file(tmp_path):
     results = find_paths(
         zarr_fp=layered_fp,
         cost_function=json.dumps(cost_definition),
-        start=[(1, 1)],
-        end=[(0, 0)],
+        start=[(1, 1, "default")],
+        end=[(0, 0, "default")],
     )
 
     assert results == []
@@ -206,8 +207,8 @@ def test_find_paths_respects_not_equal_barrier_layered_file(tmp_path):
     results = find_paths(
         zarr_fp=layered_fp,
         cost_function=json.dumps(cost_definition),
-        start=[(1, 1)],
-        end=[(0, 0)],
+        start=[(1, 1, "default")],
+        end=[(0, 0, "default")],
     )
 
     assert results == []
@@ -279,8 +280,8 @@ def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
         zarr_fp=layered_fp,
         cost_function=json.dumps(cost_definition),
         route_definitions=[
-            (2, [(1, 1)], [(2, 6)]),
-            (4, [(1, 2)], [(1000, 1000)]),
+            (2, [(1, 1, "default")], [(2, 6, "default")]),
+            (4, [(1, 2, "default")], [(1000, 1000, "default")]),
         ],
         algorithm=algorithm,
     )
@@ -291,11 +292,9 @@ def test_route_finder_basic_single_route_layered_file(tmp_path, algorithm):
         else:
             assert route_id == 2
             assert len(solutions) == 1
-            test_path, test_cost, dropped_barrier_layers, option_ids = (
-                solutions[0]
-            )
+            test_path, test_cost, dropped_barrier_layers = solutions[0]
+            test_path = [p[:2] for p in test_path]
             assert dropped_barrier_layers == []
-            assert option_ids == []
 
     mcp = MCP_Geometric(cost_values[0])
     costs, __ = mcp.find_costs(starts=[(1, 1)], ends=[(2, 6)])
@@ -369,7 +368,13 @@ def test_route_finder_retries_soft_barriers_layered_file(tmp_path, algorithm):
         RouteFinder(
             zarr_fp=layered_fp,
             cost_function=json.dumps(cost_definition),
-            route_definitions=[(7, [(0, 0), (2, 0)], [(0, 4), (2, 4)])],
+            route_definitions=[
+                (
+                    7,
+                    [(0, 0, "default"), (2, 0, "default")],
+                    [(0, 4, "default"), (2, 4, "default")],
+                )
+            ],
             algorithm=algorithm,
         )
     )
@@ -383,17 +388,15 @@ def test_route_finder_retries_soft_barriers_layered_file(tmp_path, algorithm):
         tuple(solution[0][0]): solution for solution in solutions
     }
 
-    top_solution = solutions_by_start[(0, 0)]
-    assert top_solution[0][-1] == (0, 4)
+    top_solution = solutions_by_start[(0, 0, "default")]
+    assert top_solution[0][-1] == (0, 4, "default")
     assert top_solution[1] > 0
     assert top_solution[2] == ["soft_barrier"]
-    assert top_solution[3] == []
 
-    bottom_solution = solutions_by_start[(2, 0)]
-    assert bottom_solution[0][-1] == (2, 4)
+    bottom_solution = solutions_by_start[(2, 0, "default")]
+    assert bottom_solution[0][-1] == (2, 4, "default")
     assert bottom_solution[1] > 0
     assert bottom_solution[2] == []
-    assert bottom_solution[3] == []
 
 
 @pytest.mark.parametrize(
@@ -464,7 +467,7 @@ def test_route_finder_drops_multiple_soft_barrier_groups_layered_file(
         RouteFinder(
             zarr_fp=layered_fp,
             cost_function=json.dumps(cost_definition),
-            route_definitions=[(9, [(1, 0)], [(1, 4)])],
+            route_definitions=[(9, [(1, 0, "default")], [(1, 4, "default")])],
             algorithm=algorithm,
         )
     )
@@ -475,11 +478,10 @@ def test_route_finder_drops_multiple_soft_barrier_groups_layered_file(
     assert len(solutions) == 1
 
     solution = solutions[0]
-    assert solution[0][0] == (1, 0)
-    assert solution[0][-1] == (1, 4)
+    assert solution[0][0] == (1, 0, "default")
+    assert solution[0][-1] == (1, 4, "default")
     assert solution[1] > 0
     assert solution[2] == ["soft_barrier_low", "soft_barrier_high"]
-    assert solution[3] == []
 
 
 @pytest.mark.parametrize(
@@ -550,12 +552,12 @@ def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
         zarr_fp=layered_fp,
         cost_function=json.dumps(cost_definition),
         route_definitions=[
-            (11, [(0, 0)], [(2, 2)]),
+            (11, [(0, 0, "default")], [(2, 2, "default")]),
         ],
         routing_layer_out_fp=routing_layer_out_fp,
         algorithm=algorithm,
     )
-    list(routing_results)
+    list(routing_results)  # run the routing
 
     assert routing_layer_out_fp.exists()
 
@@ -568,13 +570,18 @@ def test_route_finder_writes_routing_layer_to_expected_path_layered_file(
 
     scenario = RoutingScenario(
         cost_fpath=layered_fp,
-        cost_layers=[{"layer_name": "test_costs"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "test_costs"}],
+            }
+        },
         invalid_costs_block_routing=True,
     )
     routing_layers = RoutingLayerManager(scenario).build()
     try:
         expected_costs = (
-            routing_layers.final_routing_layer.astype(np.float32)
+            routing_layers.final_routing_layers["default"]
+            .astype(np.float32)
             .compute()
             .values
         )
