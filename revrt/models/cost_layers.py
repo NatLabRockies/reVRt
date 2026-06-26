@@ -212,7 +212,7 @@ class BarrierLayer(BaseModel, extra="forbid"):
         return barrier_importance
 
     def to_routing_dict(self):
-        """Convert barrier config to the normalized routing payload"""
+        """[NOT PUBLIC API] Convert barrier config to routing payload"""
         barrier_operator, barrier_threshold = parse_comparison_values(
             self.where
         )
