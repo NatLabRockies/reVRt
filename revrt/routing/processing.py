@@ -49,7 +49,7 @@ class BatchRouteProcessor:
 
         Parameters
         ----------
-        routing_scenario : RoutingScenario
+        routing_scenario : revrt.routing.base.RoutingScenario
             Scenario describing the cost layers and routing options.
         route_definitions : Iterable
             Sequence of ``(start_points, end_points, option)`` tuples

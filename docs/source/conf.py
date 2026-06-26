@@ -398,8 +398,6 @@ nitpick_ignore = [
     ("py:class", "file"),
     ("py:class", "dir"),
     ("py:class", "ConfigDict"),
-    ("py:class", "revrt.models.routing.DriverRuleMap"),
-    ("py:class", "revrt.models.routing.RoutingOptionsMap"),
     ("py:class", "typing_extensions.TypedDict"),
 ] + [
     ("py:obj", f"revrt.models.cost_layers.{cl}.{meth}")
