@@ -278,6 +278,9 @@ fn build_single_cost_layer(layer: &CostLayer, features: &mut LazySubset<f32>) ->
         cost = cost * multiplier_value;
         // trace!( "Cost for chunk ({}, {}) in layer {}: {}", ci, cj, layer_name, cost);
     }
+
+    cost.mapv_inplace(|v| if v > 0.0_f32 { v } else { 0.0_f32 });
+
     select_option_for_subset(cost, layer.option, features)
 }
 
@@ -767,6 +770,45 @@ mod test {
             invariant.index_axis(Axis(0), 1).to_owned(),
             ArrayD::from_elem(IxDyn(&[2, 2]), 80.0)
         );
+    }
+
+    #[test]
+    fn option_cost_multiplier_does_not_revive_invalid_cost_cells() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::new(
+                "cost",
+                samples::FillStrategy::Values(vec![-1.0, 1.0, 1.0, 1.0]),
+            ))
+            .layer(samples::LayerConfig::new(
+                "multiplier",
+                samples::FillStrategy::Values(vec![-1.0, 1.0, 1.0, 1.0]),
+            ))
+            .build()
+            .expect("Failed to create invalid-cost multiplier zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "invalid_costs_block_routing": true,
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "cost_multiplier_layer": "multiplier"
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let result = cost_fn.compute(&mut features, false);
+
+        assert!(result[[0, 0, 0]].is_nan());
+        assert_eq!(result[[0, 0, 1]], 1.0);
+        assert_eq!(result[[0, 1, 0]], 1.0);
+        assert_eq!(result[[0, 1, 1]], 1.0);
     }
 
     #[test]
