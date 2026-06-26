@@ -66,14 +66,19 @@ def test_soft_barrier_with_large_dataset(
     """Test that soft barriers work as expected in point-to-many routing"""
     scenario = RoutingScenario(
         cost_fpath=sample_large_layered_data,
-        cost_layers=[{"layer_name": "layer_1"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+            }
+        },
         invalid_costs_block_routing=invalid_costs_block_routing,
     )
 
     out_gpkg = tmp_path / "routes.gpkg"
 
     route_computer = BatchRouteProcessor(
-        routing_scenario=scenario, route_definitions=[([(5, 0)], [(5, 900)])]
+        routing_scenario=scenario,
+        route_definitions=[([(5, 0, "default")], [(5, 900, "default")])],
     )
     route_computer.process(out_fp=out_gpkg, save_paths=True)
 
