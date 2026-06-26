@@ -15,6 +15,11 @@ from shapely.geometry.linestring import LineString
 
 from revrt import simplify_using_slopes
 from revrt.models.cost_layers import BarrierLayer
+from revrt.models.routing import (
+    validate_driver_configs,
+    validate_routing_options,
+    validate_transition_cost_configs,
+)
 from revrt.routing.utilities import compute_lens
 from revrt.utilities.parsing import parse_comparison_values
 from revrt.exceptions import revrtKeyError
@@ -50,22 +55,24 @@ class RoutingScenario:
             Path to the cost layer Zarr store used for routing.
         tracked_layers : list, optional
             List of dictionaries defining layers to summarize along the
-            route after applying optional multiplier inputs. Omitting
-            ``"agg_method"`` reports per-cell cost and length for the
-            layer; setting it to a dask method name (e.g., ``"mean"``)
-            reports that aggregate statistic instead. Each dictionary
-            may also include
-            ``"multiplier_layer"`` and ``"multiplier_scalar"``.
+            route after applying optional multiplier inputs. See
+            :class:`~revrt.models.routing.TrackedLayer` for the
+            canonical schema.
         routing_options : dict
             Mapping of routing-option names to dictionaries containing
-            ``cost_layers``, ``friction_layers``, and
-            ``barrier_layers`` entries. This structure is serialized
-            for the Rust routing core.
+            cost, friction, and barrier definitions. See
+            :class:`~revrt.models.routing.RoutingOptionConfig` for the
+            canonical schema that is serialized for the Rust routing
+            core.
         drivers : dict, optional
             Optional driver-rule configuration keyed by routing option.
+            See :class:`~revrt.models.routing.DriverConfig` and
+            :class:`~revrt.models.routing.DriverZoneConfig`.
         transition_costs : dict, optional
             Optional transition-cost configuration between routing
-            options.
+            options. See
+            :class:`~revrt.models.routing.TransitionCostsConfig` and
+            :class:`~revrt.models.routing.TransitionCostRule`.
         invalid_costs_block_routing : bool, optional
             Flag indicating whether non-positive costs block traversal.
         algorithm : str, default="bidirectional_long_range_dijkstra"
@@ -81,9 +88,11 @@ class RoutingScenario:
             By default, ``"bidirectional_long_range_dijkstra"``.
         """
         self.cost_fpath = cost_fpath
-        self.routing_options = routing_options
-        self.drivers = drivers
-        self.transition_costs = transition_costs
+        self.routing_options = validate_routing_options(routing_options)
+        self.drivers = validate_driver_configs(drivers, self.routing_options)
+        self.transition_costs = validate_transition_cost_configs(
+            transition_costs, self.routing_options
+        )
         self.tracked_layers = tracked_layers or []
         self.invalid_costs_block_routing = invalid_costs_block_routing
         self.algorithm = algorithm
@@ -274,11 +283,7 @@ class RoutingLayerManager:
     ):
         frictions = da.zeros(self.full_shape, dtype=np.float32)
         for layer_info in config.get("friction_layers", []):
-            layer_name = (
-                layer_info["mask"]
-                if "mask" in layer_info
-                else layer_info.get("multiplier_layer")
-            )
+            layer_name = layer_info.get("multiplier_layer")
             friction_layer = self._extract_and_scale_friction_layer(
                 layer_name, layer_info
             )
@@ -317,9 +322,7 @@ class RoutingLayerManager:
         """Extract layer based on name and scale according to input"""
         cost = self._extract_layer(layer_info["layer_name"])
 
-        multiplier_layer_name = layer_info.get(
-            "mask", layer_info.get("multiplier_layer")
-        )
+        multiplier_layer_name = layer_info.get("multiplier_layer")
         if multiplier_layer_name:
             cost *= self._extract_layer(multiplier_layer_name)
 

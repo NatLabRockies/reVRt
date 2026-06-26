@@ -9,6 +9,7 @@ import xarray as xr
 from shapely.geometry import LineString
 from rasterio.transform import from_origin
 
+from revrt.models.routing import validate_routing_options
 from revrt.utilities import LayeredFile
 from revrt.routing.utilities import map_to_costs
 from revrt.exceptions import revrtKeyError
@@ -192,7 +193,7 @@ def test_run_lcp_with_save_paths_filters_existing_routes(
             "default": {
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
-                    {"mask": "layer_2", "apply_row_mult": True}
+                    {"multiplier_layer": "layer_2", "apply_row_mult": True}
                 ],
             }
         },
@@ -253,7 +254,7 @@ def test_run_lcp_returns_immediately_when_no_routes(tmp_path):
         cost_fpath="unused",
         route_points=pd.DataFrame(),
         out_fp=tmp_path / "unused.csv",
-        routing_options={"default": []},
+        routing_options={"default": {}},
     )
 
     run_lcp(
@@ -477,8 +478,8 @@ def test_update_route_options_updates_nested_layers_without_mutation():
             ],
             "friction_layers": [
                 {
-                    "layer_name": "layer_2",
                     "apply_polarity_mult": True,
+                    "multiplier_layer": "layer_2",
                 }
             ],
             "barrier_layers": [
@@ -524,6 +525,52 @@ def test_update_route_options_updates_nested_layers_without_mutation():
     ]
 
 
+def test_validate_routing_options_preserves_supported_schema():
+    """Routing option validation should preserve accepted payload shape"""
+
+    routing_options = {
+        "overhead": {
+            "cost_layers": [
+                {
+                    "layer_name": "layer_1",
+                    "apply_row_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "multiplier_layer": "layer_2",
+                    "multiplier_scalar": 0.5,
+                }
+            ],
+            "barrier_layers": [
+                {
+                    "layer_name": "layer_3",
+                    "where": "==1",
+                }
+            ],
+            "cost_multiplier_layer": "layer_4",
+        }
+    }
+
+    assert validate_routing_options(routing_options) == routing_options
+
+
+def test_validate_routing_options_normalizes_legacy_shapes():
+    """Routing option validation should accept legacy routing payloads"""
+
+    routing_options = {
+        "default": {},
+        "overhead": {
+            "cost_layers": None,
+            "friction_layers": None,
+            "barrier_layers": None,
+        },
+    }
+
+    out = validate_routing_options(routing_options)
+    assert out == {"default": {}, "overhead": {}}
+
+
 def test_update_route_options_applies_per_option_values():
     """Updated options should apply explicit values per option"""
 
@@ -531,13 +578,13 @@ def test_update_route_options_applies_per_option_values():
         "overhead": {
             "cost_layers": [{"layer_name": "layer_1", "apply_row_mult": True}],
             "friction_layers": [
-                {"layer_name": "layer_2", "apply_polarity_mult": True}
+                {"multiplier_layer": "layer_2", "apply_polarity_mult": True}
             ],
         },
         "underground": {
             "cost_layers": [{"layer_name": "layer_3", "apply_row_mult": True}],
             "friction_layers": [
-                {"layer_name": "layer_4", "apply_polarity_mult": True}
+                {"multiplier_layer": "layer_4", "apply_polarity_mult": True}
             ],
         },
     }
@@ -604,7 +651,7 @@ def test_route_converter_updates_multi_option_layers(tmp_path):
                 ],
                 "friction_layers": [
                     {
-                        "mask": "layer_2",
+                        "multiplier_layer": "layer_2",
                         "apply_polarity_mult": True,
                     }
                 ],

@@ -370,7 +370,7 @@ def test_route_generator_existing_routes_csv(tmp_path):
     data.to_csv(csv_fp, index=False)
 
     route_generator = PointToPointRouteDefinitionConverter(
-        None, None, csv_fp, {"default": []}, None, None
+        None, None, csv_fp, {"default": {}}, None, None
     )
     result = route_generator.existing_routes
     assert result == {(0, 1, "default", 2, 3, "default", "ac", "230")}
@@ -395,7 +395,7 @@ def test_route_generator_existing_routes_gpkg(tmp_path):
     gdf.to_file(gpkg_fp, driver="GPKG")
 
     route_generator = PointToPointRouteDefinitionConverter(
-        None, None, gpkg_fp, {"default": []}, None, None
+        None, None, gpkg_fp, {"default": {}}, None, None
     )
     result = route_generator.existing_routes
     assert result == {(1, 2, "default", 3, 4, "default", "unknown", "unknown")}
@@ -405,11 +405,11 @@ def test_route_generator_existing_routes_when_missing(tmp_path):
     """Missing outputs should result in an empty existing route set"""
 
     route_generator = PointToPointRouteDefinitionConverter(
-        None, None, tmp_path / "missing.csv", {"default": []}, None, None
+        None, None, tmp_path / "missing.csv", {"default": {}}, None, None
     )
     assert route_generator.existing_routes == set()
     route_generator = PointToPointRouteDefinitionConverter(
-        None, None, tmp_path / "missing.csv", {"default": []}, None, None
+        None, None, tmp_path / "missing.csv", {"default": {}}, None, None
     )
     assert route_generator.existing_routes == set()
 

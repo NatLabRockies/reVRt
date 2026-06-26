@@ -9,6 +9,7 @@ import xarray as xr
 from rasterio.transform import from_origin
 
 from revrt.utilities import LayeredFile
+from revrt.models.routing import DriverConfig
 from revrt.routing.base import (
     RouteMetrics,
     RoutingLayerManager,
@@ -17,8 +18,8 @@ from revrt.routing.base import (
     _transition_cost_lookup,
 )
 from revrt.routing.utilities import compute_lens
-from revrt.exceptions import revrtKeyError
-from revrt.warn import revrtWarning, revrtDeprecationWarning
+from revrt.exceptions import revrtConfigurationError, revrtKeyError
+from revrt.warn import revrtWarning
 
 
 @pytest.fixture(scope="module")
@@ -194,7 +195,7 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
                 "cost_multiplier_layer": "layer_6",
                 "friction_layers": [
                     {
-                        "mask": "layer_4",
+                        "multiplier_layer": "layer_4",
                         "multiplier_scalar": 1.1,
                         "include_in_report": False,
                     }
@@ -290,6 +291,37 @@ def test_routing_scenario_preserves_default_only_drivers(sample_layered_data):
     assert payload["drivers"] == {"default": {"overhead": 1}}
 
 
+def test_driver_config_accepts_flattened_zone_options():
+    """DriverConfig accepts flattened zone option payloads"""
+
+    validated = DriverConfig.model_validate(
+        {
+            "zones": [
+                {
+                    "layer_name": "layer_5",
+                    "where": "==1",
+                    "overhead": "excluded",
+                    "underground": 2,
+                }
+            ]
+        }
+    )
+
+    assert validated.model_dump() == {
+        "default": {},
+        "zones": [
+            {
+                "layer_name": "layer_5",
+                "where": "==1",
+                "options": {
+                    "overhead": "excluded",
+                    "underground": 2,
+                },
+            }
+        ],
+    }
+
+
 def test_multi_option_route_metrics_use_option_layers(
     sample_layered_data,
 ):
@@ -379,6 +411,67 @@ def test_transition_cost_lookup_uses_between_rules_bidirectionally():
     assert pairwise_costs[("underground", "underground")] == 0
     assert pairwise_costs[("overhead", "underground")] == pytest.approx(3.5)
     assert pairwise_costs[("underground", "overhead")] == pytest.approx(3.5)
+
+
+def test_routing_scenario_rejects_unknown_driver_option(sample_layered_data):
+    """Driver rules must reference known routing options"""
+
+    with pytest.raises(
+        revrtConfigurationError,
+        match=r"unknown routing option 'underground' in drivers.default",
+    ):
+        RoutingScenario(
+            cost_fpath=sample_layered_data,
+            routing_options={
+                "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
+            },
+            drivers={"default": {"underground": 2}},
+        )
+
+
+def test_routing_scenario_rejects_invalid_driver_zone_where(
+    sample_layered_data,
+):
+    """Driver zones validate comparison syntax up front"""
+
+    with pytest.raises(revrtConfigurationError, match="Barrier values must"):
+        RoutingScenario(
+            cost_fpath=sample_layered_data,
+            routing_options={
+                "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
+            },
+            drivers={
+                "zones": [
+                    {
+                        "layer_name": "layer_5",
+                        "where": "~1",
+                        "overhead": 1,
+                    }
+                ]
+            },
+        )
+
+
+def test_routing_scenario_rejects_unknown_transition_option(
+    sample_layered_data,
+):
+    """Transition rules must reference known routing options"""
+
+    with pytest.raises(
+        revrtConfigurationError,
+        match=r"unknown routing option 'underground' in transition_costs",
+    ):
+        RoutingScenario(
+            cost_fpath=sample_layered_data,
+            routing_options={
+                "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
+            },
+            transition_costs={
+                "pairwise": [
+                    {"between": ["overhead", "underground"], "cost": 3}
+                ]
+            },
+        )
 
 
 def test_routing_scenario_normalizes_algorithm(sample_layered_data):
@@ -531,7 +624,7 @@ def test_routing_scenario_repr_contains_fields(sample_layered_data):
                         "multiplier_scalar": 1.5,
                     }
                 ],
-                "friction_layers": [{"mask": "layer_2"}],
+                "friction_layers": [{"multiplier_layer": "layer_2"}],
             }
         },
     )
@@ -840,7 +933,7 @@ def test_friction_layers_and_lcp_agg_costs(sample_layered_data):
                 ],
                 "friction_layers": [
                     {
-                        "mask": "layer_3",
+                        "multiplier_layer": "layer_3",
                         "multiplier_scalar": 0.1,
                     },
                 ],
@@ -879,7 +972,7 @@ def test_friction_layer_include_in_report_adds_tracker(sample_layered_data):
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
                     {
-                        "mask": "layer_4",
+                        "multiplier_layer": "layer_4",
                         "multiplier_scalar": 0.5,
                         "include_in_report": True,
                     }
@@ -1051,37 +1144,6 @@ def test_characterized_layer_total_length_computation(sample_layered_data):
         assert metrics["layer_1_default_length_km"] >= 0
     finally:
         routing_layers.close()
-
-
-def test_friction_layer_with_layer_name_warns(sample_layered_data):
-    """Layer name on friction layer drops with deprecation warning"""
-
-    scenario = RoutingScenario(
-        cost_fpath=sample_layered_data,
-        routing_options={
-            "default": {
-                "cost_layers": [{"layer_name": "layer_1"}],
-                "friction_layers": [
-                    {
-                        "layer_name": "legacy_friction",
-                        "mask": "layer_4",
-                    }
-                ],
-            }
-        },
-    )
-
-    with pytest.warns(revrtDeprecationWarning) as warning_record:
-        layers_for_rust = list(
-            _friction_layers_for_rust(
-                scenario.routing_options["default"]["friction_layers"]
-            )
-        )
-
-    assert len(warning_record) == 1
-    friction_payload = layers_for_rust[-1]
-    assert "layer_name" not in friction_payload
-    assert friction_payload["multiplier_layer"] == "layer_4"
 
 
 def test_friction_layer_with_multiplier_layer_only(sample_layered_data):

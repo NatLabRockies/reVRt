@@ -13,6 +13,7 @@ import rioxarray  # noqa: F401
 import geopandas as gpd
 import xarray as xr
 
+from revrt.models.routing import validate_routing_options
 from revrt.routing.cli.utilities import routing_layer_mover
 from revrt.routing.base import RoutingScenario
 from revrt.routing.processing import BatchRouteProcessor
@@ -70,24 +71,10 @@ class RouteToDefinitionConverter(ABC):
             Path to output file where computed routes will be saved.
             This file will be checked for existing routes to avoid
             recomputation.
-        cost_layers : list
-            List of dictionaries defining the layers that are summed to
-            determine total costs raster used for routing. Each layer is
-            pre-processed before summation according to the user input.
-            See the description of
-            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
-            for more details.
-        friction_layers : list
-            Layers to be multiplied onto the aggregated cost layer to
-            influence routing but NOT be reported in final cost
-            (i.e. friction, barriers, etc.). See the description of
-            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
-            for more details.
-        barrier_layers : list
-            Layers defining explicit hard or soft routing barriers. See
-            the description of
-            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
-            for more details.
+        routing_options : dict
+            Mapping of routing-option names to dictionaries describing
+            the cost, friction, and barrier layers for each option. See
+            :class:`~revrt.models.routing.RoutingOptionConfig`.
         transmission_config : path-like or dict, optional
             Dictionary of transmission cost configuration values, or
             path to JSON/JSON5 file containing this dictionary. See the
@@ -227,7 +214,7 @@ class RouteToDefinitionConverter(ABC):
 
 
 class RoutingOptions:
-    """Class to manage routing options and their configurations"""
+    """Class to manage validated routing-option configurations"""
 
     def __init__(self, routing_options):
         """
@@ -235,11 +222,12 @@ class RoutingOptions:
         Parameters
         ----------
         routing_options : dict
-            Dictionary of routing options, where each key is a routing
-            option name and each value is a dictionary containing the
-            configuration for that option.
+            Mapping of routing-option names to dictionaries describing
+            the cost, friction, barrier, and option-level multiplier
+            inputs for that option. See
+            :class:`~revrt.models.routing.RoutingOptionConfig`.
         """
-        self.routing_options = routing_options
+        self.routing_options = validate_routing_options(routing_options)
 
     def __iter__(self):
         yield from self.routing_options
@@ -258,11 +246,8 @@ class RoutingOptions:
         ----------
         pv_by_option : dict
             Dictionary mapping routing options to their corresponding
-            polarity and voltage values. The structure is:
-            {
-                "option_name": {"polarity": "val", "voltage": "val"},
-                ...
-            }
+            polarity and voltage values, for example
+            ``{"option_name": {"polarity": "val", "voltage": "val"}}``.
         transmission_config : dict
             Dictionary of transmission cost configuration values.
 

@@ -978,7 +978,7 @@ def test_start_point_on_barrier_returns_no_route(
     )
     if use_friction:
         scenario.routing_options["default"]["friction_layers"] = [
-            {"mask": "layer_5", "multiplier_scalar": -10}
+            {"multiplier_layer": "layer_5", "multiplier_scalar": -10}
         ]
 
     out_csv = tmp_path / "routes.csv"
@@ -1450,7 +1450,7 @@ def test_length_invariant_hidden_and_friction_layers(
                 ],
                 "friction_layers": [
                     {
-                        "mask": "layer_4",
+                        "multiplier_layer": "layer_4",
                         "multiplier_scalar": 0.5,
                     },
                 ],
@@ -1532,7 +1532,7 @@ def test_friction_layer_influences_objective_without_reporting(
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
                     {
-                        "mask": "layer_4",
+                        "multiplier_layer": "layer_4",
                         "multiplier_scalar": 0.5,
                     }
                 ],
@@ -1602,7 +1602,7 @@ def test_friction_layer_influences_objective(
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
                     {
-                        "mask": "layer_5",
+                        "multiplier_layer": "layer_5",
                         "multiplier_scalar": 1000,
                     }
                 ],
@@ -1675,7 +1675,7 @@ def test_negative_friction_layer_influences_objective(
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
                     {
-                        "mask": "layer_5",
+                        "multiplier_layer": "layer_5",
                         "multiplier_scalar": -10,
                     }
                 ],
@@ -1748,7 +1748,7 @@ def test_negative_friction_layer_does_not_go_thru_barrier(
                 "cost_layers": [{"layer_name": "layer_6"}],
                 "friction_layers": [
                     {
-                        "mask": "layer_5",
+                        "multiplier_layer": "layer_5",
                         "multiplier_scalar": -10,
                     }
                 ],
@@ -1891,7 +1891,7 @@ def test_negative_cost_path_returns_no_route(
                     {"layer_name": "layer_4", "multiplier_scalar": -3},
                 ],
                 "friction_layers": [
-                    {"mask": "layer_5", "multiplier_scalar": -10}
+                    {"multiplier_layer": "layer_5", "multiplier_scalar": -10}
                 ],
             }
         },
