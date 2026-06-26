@@ -1780,7 +1780,7 @@ dependencies = [
  "object_store",
  "pathfinding",
  "pyo3",
- "pyo3-build-config 0.28.2",
+ "pyo3-build-config 0.28.3",
  "rand",
  "rayon",
  "serde",
