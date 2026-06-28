@@ -340,11 +340,7 @@ mod tests {
     }
 
     fn overhead_destination_barrier(_band: u64, row: u64, col: u64) -> f32 {
-        if row == 0 && col == 1 {
-            1.0
-        } else {
-            0.0
-        }
+        if row == 0 && col == 1 { 1.0 } else { 0.0 }
     }
 
     #[test]
