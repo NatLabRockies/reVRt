@@ -18,13 +18,6 @@ revrt.models.cost\_layers
 
    
    
-   .. rubric:: Functions
-
-   .. autosummary::
-      :toctree:
-   
-      parse_barrier_values
-   
    
 
    

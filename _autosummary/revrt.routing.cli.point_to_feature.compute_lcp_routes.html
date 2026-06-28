@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.routing.cli.point_to_feature.compute_lcp_routes &#8212; reVRt 0.8.1 documentation</title>
+    <title>revrt.routing.cli.point_to_feature.compute_lcp_routes &#8212; reVRt 0.9.0 documentation</title>
   
   
   
@@ -39,12 +39,11 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+    <script src="../_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_autosummary/revrt.routing.cli.point_to_feature.compute_lcp_routes';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -53,7 +52,7 @@
     <link rel="prev" title="revrt.routing.cli.point_to_feature" href="revrt.routing.cli.point_to_feature.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.8.1" />
+  <meta name="docsearch:version" content="0.9.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -121,7 +120,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.8.1 documentation</p>
+    <p class="title logo__title">reVRt 0.9.0 documentation</p>
   
 </a></div>
     
@@ -429,7 +428,6 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.Extents.html">revrt.models.cost_layers.Extents</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.LayerBuildComponents.html">revrt.models.cost_layers.LayerBuildComponents</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.Layers.html">revrt.models.cost_layers.Layers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.parse_barrier_values.html">revrt.models.cost_layers.parse_barrier_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.BarrierLayer.html">revrt.models.cost_layers.BarrierLayer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.DryCosts.html">revrt.models.cost_layers.DryCosts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.IsoMultipliers.html">revrt.models.cost_layers.IsoMultipliers</a></li>
@@ -443,14 +441,26 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.TransmissionLayerCreationConfig.html">revrt.models.cost_layers.TransmissionLayerCreationConfig</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingBarrierLayer.html">revrt.models.routing.RoutingBarrierLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingCostLayer.html">revrt.models.routing.RoutingCostLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingFrictionLayer.html">revrt.models.routing.RoutingFrictionLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionConfig.html">revrt.models.routing.RoutingOptionConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TrackedLayer.html">revrt.models.routing.TrackedLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostRule.html">revrt.models.routing.TransitionCostRule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostsConfig.html">revrt.models.routing.TransitionCostsConfig</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="revrt.routing.html">revrt.routing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.base.html">revrt.routing.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.LCP_AGG_COST_LAYER_NAME.html">revrt.routing.base.LCP_AGG_COST_LAYER_NAME</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.BatchRouteProcessor.html">revrt.routing.base.BatchRouteProcessor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.CharacterizedLayer.html">revrt.routing.base.CharacterizedLayer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.IncrementalRouteWriter.html">revrt.routing.base.IncrementalRouteWriter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RouteMetrics.html">revrt.routing.base.RouteMetrics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingLayerManager.html">revrt.routing.base.RoutingLayerManager</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingScenario.html">revrt.routing.base.RoutingScenario</a></li>
@@ -459,6 +469,7 @@
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.routing.cli.html">revrt.routing.cli</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.base.html">revrt.routing.cli.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.base.RouteToDefinitionConverter.html">revrt.routing.cli.base.RouteToDefinitionConverter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.base.RoutingOptions.html">revrt.routing.cli.base.RoutingOptions</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_costs.html">revrt.routing.cli.build_costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -488,6 +499,10 @@
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.utilities.routing_layer_mover.html">revrt.routing.cli.utilities.routing_layer_mover</a></li>
 </ul>
 </details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.processing.html">revrt.routing.processing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.processing.BatchRouteProcessor.html">revrt.routing.processing.BatchRouteProcessor</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -559,6 +574,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_array_backend.html">revrt.utilities.monitoring.log_array_backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_mem.html">revrt.utilities.monitoring.log_mem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_runtime.html">revrt.utilities.monitoring.log_runtime</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.parsing.html">revrt.utilities.parsing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.parsing.parse_comparison_values.html">revrt.utilities.parsing.parse_comparison_values</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -649,89 +668,18 @@
 <h1>revrt.routing.cli.point_to_feature.compute_lcp_routes<a class="headerlink" href="#revrt-routing-cli-point-to-feature-compute-lcp-routes" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="revrt.routing.cli.point_to_feature.compute_lcp_routes">
-<span class="sig-name descname"><span class="pre">compute_lcp_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_table_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PIPELINE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PIPELINE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">friction_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barrier_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_multiplier_scalar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmission_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_routing_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_invalid_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connection_identifier_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'end_feat_id'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bidirectional_long_range_dijkstra'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_utilization_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_mem_limit_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_split_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/point_to_feature.html#compute_lcp_routes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.point_to_feature.compute_lcp_routes" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">compute_lcp_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routing_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_table_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PIPELINE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PIPELINE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drivers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmission_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_routing_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid_costs_block_routing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connection_identifier_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'end_feat_id'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bidirectional_long_range_dijkstra'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_utilization_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_mem_limit_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_split_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/point_to_feature.html#compute_lcp_routes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.point_to_feature.compute_lcp_routes" title="Link to this definition">#</a></dt>
 <dd><p>Run least-cost path routing for points mapped to features</p>
 <p>Given a table that defines each route as a start point (via latitude
 and longitude input or preferably a row/column index into the data)
 and a feature ID representing the feature to connect to, compute the
-least-cost paths (LCPs) for each route using the cost layers defined
-in the <cite>cost_layers</cite> parameter.</p>
+least-cost paths (LCPs) for each route using the routing layers
+defined in <cite>routing_options</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cost_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to layered Zarr file containing cost and other required
 routing layers.</p></li>
-<li><p><strong>cost_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>) – <p>List of dictionaries defining the layers that are summed to
-determine total costs raster used for routing. Each layer is
-pre-processed before summation according to the user input.
-Each dict in the list should have the following keys:</p>
-<blockquote>
-<div><ul>
-<li><p>”layer_name”: (REQUIRED) Name of layer in layered file
-containing cost data.</p></li>
-<li><p>”multiplier_layer”: (OPTIONAL) Name of layer in layered
-file containing spatially explicit multiplier values to
-apply to this cost layer before summing it with the
-others. Default is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p>”multiplier_scalar”: (OPTIONAL) Scalar value to multiply
-this layer by before summing it with the others. Default
-is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p>”is_invariant”: (OPTIONAL) Boolean flag indicating whether
-this layer is length invariant (i.e. should NOT be
-multiplied by path length; values should be $). Default is
-<code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p>”include_in_final_cost”: (OPTIONAL) Boolean flag
-indicating whether this layer should contribute to the
-final cost output for each route in the LCP table.
-Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
-<li><p>”include_in_report”: (OPTIONAL) Boolean flag indicating
-whether the costs and distances for this layer should be
-output in the final LCP table. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
-<li><p>”apply_row_mult”: (OPTIONAL) Boolean flag indicating
-whether the right-of-way width multiplier should be
-applied for this layer. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, then the transmission
-config should have a “row_width” dictionary that maps
-voltages to right-of-way width multipliers. Also, the
-routing table input should have a “voltage” entry for
-every route. Every “voltage” value in the routing table
-must be given in the “row_width” dictionary in the
-transmission config, otherwise an error will be thrown.
-Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p>”apply_polarity_mult”: (OPTIONAL) Boolean flag indicating
-whether the polarity multiplier should be applied for this
-layer. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, then the transmission config should
-have a “voltage_polarity_mult” dictionary that maps
-voltages to a new dictionary, the latter mapping
-polarities to multipliers. For example, a valid
-“voltage_polarity_mult” dictionary might be
-<code class="docutils literal notranslate"><span class="pre">{&quot;138&quot;:</span> <span class="pre">{&quot;ac&quot;:</span> <span class="pre">1.15,</span> <span class="pre">&quot;dc&quot;:</span> <span class="pre">2}}</span></code>.
-In addition, the routing table input should have a
-“voltage” <strong>and</strong> a “polarity” entry for every route.
-Every “voltage” + “polarity” combination in the routing
-table must be given in the “voltage_polarity_mult”
-dictionary in the transmission config, otherwise an error
-will be thrown.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>The multiplier in this config is assumed to be in units
-of “million $ per mile” and will be converted to
-“$ per pixel” before being applied to the layer!</p>
-</div>
-<p>Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
-</li>
-</ul>
-</div></blockquote>
-<p>The summed layers define the cost routing surface, which
-determines the cost output for each route. Specifically, the
-cost at each pixel is multiplied by the length that the route
-takes through the pixel, and all of these values are summed for
-each route to determine the final cost.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>If a pixel has a final cost of <span class="math notranslate nohighlight">\(\leq 0\)</span>, it is treated
-as a barrier (i.e. no paths can ever cross this pixel).</p>
-</div>
-</p></li>
 <li><p><strong>out_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Directory where routing outputs should be written.</p></li>
 <li><p><strong>job_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Label used to name the generated output file.</p></li>
 <li><p><strong>route_table_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;PIPELINE&quot;</span></code>) – <p>Route-table input defining all route start points and end
@@ -757,7 +705,14 @@ cost raster).</p></li>
 <li><p><cite>connection_identifier_column</cite>: ID of the feature that
 should be mapped to. This ID should match at least one of
 the feature IDs in the <cite>features_fpath</cite> input; otherwise,
-no route will be computed for that point.</p></li>
+no route will be computed for that point.</p>
+<p>You can also specify <cite>polarity</cite> and <cite>voltage</cite> columns
+which apply to every routing option. If you want to
+provide per-option polarity and voltage, use
+<cite>polarity_&lt;option&gt;</cite> and <cite>voltage_&lt;option&gt;</cite>. Options that
+are omitted will use <cite>polarity</cite> and <cite>voltage</cite> column
+values.</p>
+</li>
 </ul>
 </div></blockquote>
 </p></li>
@@ -775,146 +730,20 @@ at the same list index.</p>
 feature back to the starting points defined in the
 <cite>route_table</cite>.</p>
 </p></li>
-<li><p><strong>friction_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – <p>Layers to be multiplied onto the aggregated cost layer to
-influence routing but NOT be reported in final cost
-(i.e. friction, barriers, etc.). These layers are first
-aggregated, and then the aggregated friction layer is applied
-to the aggregated cost. The cost at each pixel is therefore
-computed as:</p>
-<div class="math notranslate nohighlight">
-\[C = (\sum_{i} c_i) * (1 + \sum_{j} f_j)\]</div>
-<p>where <span class="math notranslate nohighlight">\(C\)</span> is the final cost at each pixel, <span class="math notranslate nohighlight">\(c_i\)</span> are
-the individual cost layers, and <span class="math notranslate nohighlight">\(f_j\)</span> are the individual
-friction layers.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><span class="math notranslate nohighlight">\(\sum_{j} f_j\)</span> is always clamped to be
-<span class="math notranslate nohighlight">\(\gt -1\)</span> to prevent zero or negative routing costs.
-In other words, <span class="math notranslate nohighlight">\((1 + \sum_{j} f_j) &gt; 0\)</span> always holds.
-This means friction can scale costs to/away from zero but
-never cause the sign of the cost layer to flip (even if
-friction values themselves are negative). This means all
-“barrier” pixels (i.e. cost value <span class="math notranslate nohighlight">\(\leq 0\)</span>) will remain
-barriers after friction is applied.</p>
-</div>
-<p>Each item in this list should be a dictionary containing the
-following keys:</p>
-<blockquote>
-<div><ul>
-<li><p>”multiplier_layer” or “mask”: (REQUIRED) Name of layer in
-layered file containing the spatial friction multipliers
-or mask that will be turned into the friction multipliers
-by applying the <cite>multiplier_scalar</cite>.</p></li>
-<li><p>”multiplier_scalar”: (OPTIONAL) Scalar value to multiply
-the spatial friction layer by before using it as a
-multiplier on the aggregated costs. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p>”include_in_report”: (OPTIONAL) Boolean flag indicating
-whether the routing and distances for this layer should be
-output in the final LCP table. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p>”apply_row_mult”: (OPTIONAL) Boolean flag indicating
-whether the right-of-way width multiplier should be
-applied for this layer. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, then the transmission
-config should have a “row_width” dictionary that maps
-voltages to right-of-way width multipliers. Also, the
-routing table input should have a “voltage” entry for
-every route. Every “voltage” value in the routing table
-must be given in the “row_width” dictionary in the
-transmission config, otherwise an error will be thrown.
-Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p>”apply_polarity_mult”: (OPTIONAL) Boolean flag indicating
-whether the polarity multiplier should be applied for this
-layer. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, then the transmission config should
-have a “voltage_polarity_mult” dictionary that maps
-voltages to a new dictionary, the latter mapping
-polarities to multipliers. For example, a valid
-“voltage_polarity_mult” dictionary might be
-<code class="docutils literal notranslate"><span class="pre">{&quot;138&quot;:</span> <span class="pre">{&quot;ac&quot;:</span> <span class="pre">1.15,</span> <span class="pre">&quot;dc&quot;:</span> <span class="pre">2}}</span></code>.
-In addition, the routing table input should have a
-“voltage” <strong>and</strong> a “polarity” entry for every route.
-Every “voltage” + “polarity” combination in the routing
-table must be given in the “voltage_polarity_mult”
-dictionary in the transmission config, otherwise an error
-will be thrown.</p>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>The multiplier in this config is assumed to be in units
-of “million $ per mile” and will be converted to
-“$ per pixel” before being applied to the layer!</p>
-</div>
-<p>Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
-</li>
-</ul>
-</div></blockquote>
-<p>By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-</p></li>
-<li><p><strong>barrier_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – <p>Layers defining explicit routing barriers that routes should
-not cross. Unlike <cite>friction_layers</cite>, barrier layers do not add
-a penalty to the routing surface. Instead, any pixel matching a
-barrier definition is treated as blocked during routing.</p>
-<p>Each item in this list should be a dictionary containing the
-following keys:</p>
-<blockquote>
-<div><ul>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">&quot;layer_name&quot;</span></code>: (REQUIRED) Name of layer in the</dt><dd><p>layered file containing the values to test for
-barrier cells.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">&quot;barrier_values&quot;</span></code>: (REQUIRED) Comparison expression</dt><dd><p>defining which pixel values act as barriers.
-Supported operators are <code class="docutils literal notranslate"><span class="pre">&quot;==&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;!=&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;&gt;&quot;</span></code>,
-<code class="docutils literal notranslate"><span class="pre">&quot;&gt;=&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;&lt;=&quot;</span></code>, followed by a
-numeric threshold. For example, <code class="docutils literal notranslate"><span class="pre">&quot;&gt;=15&quot;</span></code> marks
-pixels with values greater than or equal to <code class="docutils literal notranslate"><span class="pre">15</span></code>
-as barriers, <code class="docutils literal notranslate"><span class="pre">&quot;==1&quot;</span></code> marks pixels equal to <code class="docutils literal notranslate"><span class="pre">1</span></code>
-as barriers, and <code class="docutils literal notranslate"><span class="pre">&quot;!=0&quot;</span></code> marks every non-zero
-pixel as a barrier.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">&quot;barrier_importance&quot;</span></code>: (OPTIONAL) Positive integer</dt><dd><p>ranking used to define a soft barrier. When a route
-cannot be found, reVRt will iteratively drop the
-lowest-ranked soft barrier and retry routing until a
-route is found or all ranked barriers have been
-removed.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-<p>If <code class="docutils literal notranslate"><span class="pre">&quot;barrier_importance&quot;</span></code> is omitted, the barrier is treated
-as a hard barrier and is never relaxed. This allows hard and
-soft barriers to be combined in the same routing run. Multiple
-entries may reference the same layer with different
-<code class="docutils literal notranslate"><span class="pre">&quot;barrier_values&quot;</span></code> definitions. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-</p></li>
-<li><p><strong>tracked_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – <p>List of dictionaries defining layers to characterize along the
-computed route. Each dictionary must contain:</p>
-<blockquote>
-<div><ul>
-<li><p>”layer_name”: (REQUIRED) Name of layer in the layered
-file to aggregate along the route.</p></li>
-<li><p>”agg_method”: (REQUIRED) Name of the <code class="docutils literal notranslate"><span class="pre">dask.array</span></code>
-aggregation function to apply to the sampled route
-values, such as <code class="docutils literal notranslate"><span class="pre">&quot;sum&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;max&quot;</span></code>.</p></li>
-<li><p>”multiplier_layer”: (OPTIONAL) Name of layer in the
-layered file containing spatially explicit multipliers
-to apply before aggregation. Default is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p>”multiplier_scalar”: (OPTIONAL) Scalar multiplier to
-apply before aggregation. Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-</ul>
-</div></blockquote>
-<p>These inputs mirror the scaling behavior used by cost layers,
-but tracked layers do not contribute to routing costs. They are
-only summarized for output characterization.
-By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-</p></li>
-<li><p><strong>cost_multiplier_layer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Name of the spatial multiplier layer applied to final costs.
-By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>cost_multiplier_scalar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">1</span></code>) – Scalar multiplier applied to the final cost surface.
-By default, <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Mapping of routing-option names to dictionaries describing the
+cost, friction, barrier, and option-level multiplier inputs for
+each option. See
+<a class="reference internal" href="revrt.models.routing.RoutingOptionConfig.html#revrt.models.routing.RoutingOptionConfig" title="revrt.models.routing.RoutingOptionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoutingOptionConfig</span></code></a> for details.</p></li>
+<li><p><strong>drivers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional driver-rule configuration keyed by routing option. See
+<a class="reference internal" href="revrt.models.routing.DriverConfig.html#revrt.models.routing.DriverConfig" title="revrt.models.routing.DriverConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">DriverConfig</span></code></a> for details.</p></li>
+<li><p><strong>transition_costs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional transition-cost configuration between routing
+options. See
+<a class="reference internal" href="revrt.models.routing.TransitionCostsConfig.html#revrt.models.routing.TransitionCostsConfig" title="revrt.models.routing.TransitionCostsConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitionCostsConfig</span></code></a> for
+details.</p></li>
+<li><p><strong>tracked_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – List of dictionaries defining route-characterization layers.
+These layers do not influence the routing objective and are
+only summarized for output characterization. See
+<a class="reference internal" href="revrt.models.routing.TrackedLayer.html#revrt.models.routing.TrackedLayer" title="revrt.models.routing.TrackedLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrackedLayer</span></code></a> for details.</p></li>
 <li><p><strong>transmission_config</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – <p>Dictionary of transmission cost configuration values, or
 path to JSON/JSON5 file containing this dictionary. The
 dictionary should have a subset of the following keys:</p>
@@ -944,10 +773,10 @@ By default, <code class="docutils literal notranslate"><span class="pre">None</s
 Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>save_routing_layer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Save Rust routing layer outputs to <code class="docutils literal notranslate"><span class="pre">out_dir/extra_outputs</span></code>
 when <code class="docutils literal notranslate"><span class="pre">True</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>ignore_invalid_costs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Optional flag to treat any cost values &lt;= 0 as impassable
-(i.e. no paths can ever cross this). If <code class="docutils literal notranslate"><span class="pre">False</span></code>, cost values
-of &lt;= 0 are set to a large value to simulate a strong but
-permeable “quasi-barrier”. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>invalid_costs_block_routing</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Optional flag to treat any invalid cost values (&lt;= 0) as
+impassable (i.e. no paths can ever cross this). If <code class="docutils literal notranslate"><span class="pre">False</span></code>,
+invalid cost values (&lt;= 0) are set to a large value to simulate
+a strong but permeable “quasi-barrier”. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>connection_identifier_column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;end_feat_id&quot;</span></code>) – Column in the <cite>features_fpath</cite> data used to uniquely identify
 each feature. This column is also expected to be in the
 <cite>route_table</cite> input to map points to features. If a column name

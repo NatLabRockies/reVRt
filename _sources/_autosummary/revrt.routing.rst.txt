@@ -30,5 +30,6 @@ revrt.routing
 
    base
    cli
+   processing
    utilities
 

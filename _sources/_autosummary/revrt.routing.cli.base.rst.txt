@@ -20,6 +20,7 @@ revrt.routing.cli.base
       :template: custom-class-template.rst
    
       RouteToDefinitionConverter
+      RoutingOptions
    
    
 

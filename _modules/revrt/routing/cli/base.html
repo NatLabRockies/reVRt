@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.routing.cli.base &#8212; reVRt 0.8.1 documentation</title>
+    <title>revrt.routing.cli.base &#8212; reVRt 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../../_static/documentation_options.js?v=ec16d22d"></script>
+    <script src="../../../../_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.8.1" />
+  <meta name="docsearch:version" content="0.9.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.8.1 documentation</p>
+    <p class="title logo__title">reVRt 0.9.0 documentation</p>
   
 </a></div>
     
@@ -837,8 +837,10 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.models.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_routing_options</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.cli.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">routing_layer_mover</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchRouteProcessor</span><span class="p">,</span> <span class="n">RoutingScenario</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoutingScenario</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchRouteProcessor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.monitoring</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_runtime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtKeyError</span>
 
@@ -857,6 +859,8 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">The remaining memory is assumed to be for the Python process.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="n">_POLARITY</span> <span class="o">=</span> <span class="s2">&quot;polarity&quot;</span>
+<span class="n">_VOLTAGE</span> <span class="o">=</span> <span class="s2">&quot;voltage&quot;</span>
 
 
 <div class="viewcode-block" id="RouteToDefinitionConverter">
@@ -864,17 +868,15 @@ window.runMermaid = runMermaid;</script>
 <span class="k">class</span><span class="w"> </span><span class="nc">RouteToDefinitionConverter</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for route definition converters&quot;&quot;&quot;</span>
 
-    <span class="n">_GROUP_COLS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;polarity&quot;</span><span class="p">,</span> <span class="s2">&quot;voltage&quot;</span><span class="p">]</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">cost_fpath</span><span class="p">,</span>
         <span class="n">route_points</span><span class="p">,</span>
         <span class="n">out_fp</span><span class="p">,</span>
-        <span class="n">cost_layers</span><span class="p">,</span>
-        <span class="n">friction_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">barrier_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">routing_options</span><span class="p">,</span>
         <span class="n">transmission_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">drivers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">transition_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
@@ -886,29 +888,19 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        route_points : pandas.DataFrame</span>
 <span class="sd">            DataFrame defining the points to be routed. This DataFrame</span>
 <span class="sd">            should contain route definitions to be transformed and</span>
-<span class="sd">            passed down to the Rust routing algorithm.</span>
+<span class="sd">            passed down to the Rust routing algorithm. Route values for</span>
+<span class="sd">            polarity and voltage must be provided either as one shared</span>
+<span class="sd">            `polarity` / `voltage` pair that applies to every routing</span>
+<span class="sd">            option, or as a full per-option set of</span>
+<span class="sd">            `polarity_&lt;option&gt;` / `voltage_&lt;option&gt;` columns.</span>
 <span class="sd">        out_fp : path-like</span>
 <span class="sd">            Path to output file where computed routes will be saved.</span>
 <span class="sd">            This file will be checked for existing routes to avoid</span>
 <span class="sd">            recomputation.</span>
-<span class="sd">        cost_layers : list</span>
-<span class="sd">            List of dictionaries defining the layers that are summed to</span>
-<span class="sd">            determine total costs raster used for routing. Each layer is</span>
-<span class="sd">            pre-processed before summation according to the user input.</span>
-<span class="sd">            See the description of</span>
-<span class="sd">            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`</span>
-<span class="sd">            for more details.</span>
-<span class="sd">        friction_layers : list</span>
-<span class="sd">            Layers to be multiplied onto the aggregated cost layer to</span>
-<span class="sd">            influence routing but NOT be reported in final cost</span>
-<span class="sd">            (i.e. friction, barriers, etc.). See the description of</span>
-<span class="sd">            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`</span>
-<span class="sd">            for more details.</span>
-<span class="sd">        barrier_layers : list</span>
-<span class="sd">            Layers defining explicit hard or soft routing barriers. See</span>
-<span class="sd">            the description of</span>
-<span class="sd">            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`</span>
-<span class="sd">            for more details.</span>
+<span class="sd">        routing_options : dict</span>
+<span class="sd">            Mapping of routing-option names to dictionaries describing</span>
+<span class="sd">            the cost, friction, and barrier layers for each option. See</span>
+<span class="sd">            :class:`~revrt.models.routing.RoutingOptionConfig`.</span>
 <span class="sd">        transmission_config : path-like or dict, optional</span>
 <span class="sd">            Dictionary of transmission cost configuration values, or</span>
 <span class="sd">            path to JSON/JSON5 file containing this dictionary. See the</span>
@@ -917,17 +909,31 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            for more details.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span> <span class="o">=</span> <span class="n">cost_fpath</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span> <span class="o">=</span> <span class="n">route_points</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cost_layers</span> <span class="o">=</span> <span class="n">cost_layers</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">friction_layers</span> <span class="o">=</span> <span class="n">friction_layers</span> <span class="ow">or</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">barrier_layers</span> <span class="o">=</span> <span class="n">barrier_layers</span> <span class="ow">or</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transmission_config</span> <span class="o">=</span> <span class="n">transmission_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drivers</span> <span class="o">=</span> <span class="n">drivers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span> <span class="o">=</span> <span class="n">transition_costs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span> <span class="o">=</span> <span class="n">route_points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span> <span class="o">=</span> <span class="n">RoutingOptions</span><span class="p">(</span><span class="n">routing_options</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RouteToDefinitionConverter.route_points">
+<a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter.route_points">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">route_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;pandas.DataFrame: Validated routing points&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rp_with_expected_cols</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rp_with_expected_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure route points has required columns&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_validate_route_points</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">num_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;int: Number of routes to be computed&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RouteToDefinitionConverter.cost_metadata">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter.cost_metadata">[docs]</a>
@@ -962,32 +968,50 @@ window.runMermaid = runMermaid;</script>
         <span class="p">}</span></div>
 
 
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_group_cols_by_option_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Explicit per-option columns used for batching&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">option</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">value_name</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">for</span> <span class="n">value_name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_POLARITY</span><span class="p">,</span> <span class="n">_VOLTAGE</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span>
+        <span class="p">}</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_group_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;list: Explicit per-option columns used for batching&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">c</span>
+            <span class="k">for</span> <span class="n">cols</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_cols_by_option_value</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cols</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">]</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_routes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="k">for</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths_to_compute</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">pv_by_option</span><span class="p">,</span> <span class="n">routes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths_to_compute</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;Computing routes for </span><span class="si">%d</span><span class="s2"> points with polarity: </span><span class="si">%r</span><span class="s2"> and &quot;</span>
-                <span class="s2">&quot;voltage: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Computing routes for </span><span class="si">%d</span><span class="s2"> points with option values: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="nb">len</span><span class="p">(</span><span class="n">routes</span><span class="p">),</span>
-                <span class="n">polarity</span><span class="p">,</span>
-                <span class="n">voltage</span><span class="p">,</span>
+                <span class="n">_format_pv_by_option</span><span class="p">(</span><span class="n">pv_by_option</span><span class="p">),</span>
             <span class="p">)</span>
-            <span class="n">route_cl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_cl</span><span class="p">(</span><span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">)</span>
-            <span class="n">route_fl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_fl</span><span class="p">(</span><span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">)</span>
-            <span class="n">route_bl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">barrier_layers</span>
+            <span class="n">route_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span><span class="o">.</span><span class="n">update_from</span><span class="p">(</span>
+                <span class="n">pv_by_option</span><span class="o">=</span><span class="n">pv_by_option</span><span class="p">,</span>
+                <span class="n">transmission_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transmission_config</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_route_definitions</span><span class="p">(</span><span class="n">routes</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="k">yield</span> <span class="n">route_cl</span><span class="p">,</span> <span class="n">route_fl</span><span class="p">,</span> <span class="n">route_bl</span><span class="p">,</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span>
+            <span class="k">yield</span> <span class="n">route_options</span><span class="p">,</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_paths_to_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generator that yields route groups to be computed&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_route_points</span><span class="p">()</span>
-
-        <span class="k">for</span> <span class="n">group_info</span><span class="p">,</span> <span class="n">routes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_GROUP_COLS</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">__</span><span class="p">,</span> <span class="n">routes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_group_cols</span><span class="p">):</span>
+            <span class="n">pv_by_option</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pv_by_option_for_row</span><span class="p">(</span><span class="n">routes</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">existing_routes</span><span class="p">:</span>
                 <span class="n">mask</span> <span class="o">=</span> <span class="n">routes</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
                     <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="p">(</span>
@@ -1000,25 +1024,18 @@ window.runMermaid = runMermaid;</script>
             <span class="k">if</span> <span class="n">routes</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
                 <span class="k">continue</span>
 
-            <span class="k">yield</span> <span class="o">*</span><span class="n">group_info</span><span class="p">,</span> <span class="n">routes</span>
+            <span class="k">yield</span> <span class="n">pv_by_option</span><span class="p">,</span> <span class="n">routes</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_route_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure route points has required columns&quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">check_col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GROUP_COLS</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">check_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="p">[</span><span class="n">check_col</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pv_by_option_for_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Per-option polarity and voltage values for one row&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">option</span><span class="p">:</span> <span class="p">{</span><span class="n">value_name</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">value_name</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_cols_by_option_value</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_update_cl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update multipliers for cost layers&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">update_multipliers</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cost_layers</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_config</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_update_fl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update multipliers for friction layers&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">update_multipliers</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">friction_layers</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_config</span>
-        <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_route_value_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;object: Explicit per-option route values for one route row&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_cols</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_route_as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
@@ -1032,15 +1049,89 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">run_lcp</span><span class="p">(</span>  <span class="c1"># noqa</span>
+<div class="viewcode-block" id="RoutingOptions">
+<a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RoutingOptions.html#revrt.routing.cli.base.RoutingOptions">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RoutingOptions</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to manage validated routing-option configurations&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        routing_options : dict</span>
+<span class="sd">            Mapping of routing-option names to dictionaries describing</span>
+<span class="sd">            the cost, friction, barrier, and option-level multiplier</span>
+<span class="sd">            inputs for that option. See</span>
+<span class="sd">            :class:`~revrt.models.routing.RoutingOptionConfig`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span> <span class="o">=</span> <span class="n">validate_routing_options</span><span class="p">(</span><span class="n">routing_options</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span>
+
+<div class="viewcode-block" id="RoutingOptions.default">
+<a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RoutingOptions.html#revrt.routing.cli.base.RoutingOptions.default">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;str: Default routing option to use if omitted from points&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;default&quot;</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="RoutingOptions.update_from">
+<a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RoutingOptions.html#revrt.routing.cli.base.RoutingOptions.update_from">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pv_by_option</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update multipliers for multi-option routing</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pv_by_option : dict</span>
+<span class="sd">            Dictionary mapping routing options to their corresponding</span>
+<span class="sd">            polarity and voltage values, for example</span>
+<span class="sd">            ``{&quot;option_name&quot;: {&quot;polarity&quot;: &quot;val&quot;, &quot;voltage&quot;: &quot;val&quot;}}``.</span>
+<span class="sd">        transmission_config : dict</span>
+<span class="sd">            Dictionary of transmission cost configuration values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Updated routing options with multipliers applied based on</span>
+<span class="sd">            the provided polarity and voltage values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">updated_options</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">option_name</span><span class="p">,</span> <span class="n">option_config</span> <span class="ow">in</span> <span class="n">updated_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">option_polarity</span> <span class="o">=</span> <span class="n">pv_by_option</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;polarity&quot;</span><span class="p">)</span>
+            <span class="n">option_voltage</span> <span class="o">=</span> <span class="n">pv_by_option</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;voltage&quot;</span><span class="p">)</span>
+            <span class="n">option_config</span><span class="p">[</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
+                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="n">option_polarity</span><span class="p">,</span>
+                <span class="n">option_voltage</span><span class="p">,</span>
+                <span class="n">transmission_config</span> <span class="ow">or</span> <span class="p">{},</span>
+            <span class="p">)</span>
+            <span class="n">option_config</span><span class="p">[</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
+                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="n">option_polarity</span><span class="p">,</span>
+                <span class="n">option_voltage</span><span class="p">,</span>
+                <span class="n">transmission_config</span> <span class="ow">or</span> <span class="p">{},</span>
+            <span class="p">)</span>
+            <span class="n">option_config</span><span class="p">[</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span>
+                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">updated_options</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_lcp</span><span class="p">(</span>
     <span class="n">cost_fpath</span><span class="p">,</span>
     <span class="n">out_fp</span><span class="p">,</span>
     <span class="n">routes_to_compute</span><span class="p">,</span>
     <span class="n">job_name</span><span class="o">=</span><span class="s2">&quot;routes&quot;</span><span class="p">,</span>
-    <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">tracked_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">user_mem_limit_gb</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
     <span class="n">save_routing_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;long_range_dijkstra&quot;</span><span class="p">,</span>
@@ -1058,25 +1149,21 @@ window.runMermaid = runMermaid;</script>
             <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
             <span class="n">routes_to_compute</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="p">,</span>
             <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span>
-            <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">cost_multiplier_layer</span><span class="p">,</span>
-            <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">cost_multiplier_scalar</span><span class="p">,</span>
             <span class="n">tracked_layers</span><span class="o">=</span><span class="n">tracked_layers</span><span class="p">,</span>
-            <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
+            <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="n">invalid_costs_block_routing</span><span class="p">,</span>
             <span class="n">user_mem_limit_gb</span><span class="o">=</span><span class="n">user_mem_limit_gb</span><span class="p">,</span>
             <span class="n">save_routing_layer</span><span class="o">=</span><span class="n">save_routing_layer</span><span class="p">,</span>
             <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>
         <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_run_all_lcp_batches</span><span class="p">(</span>  <span class="c1"># noqa</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_run_all_lcp_batches</span><span class="p">(</span>
     <span class="n">cost_fpath</span><span class="p">,</span>
     <span class="n">out_fp</span><span class="p">,</span>
     <span class="n">routes_to_compute</span><span class="p">,</span>
     <span class="n">job_name</span><span class="p">,</span>
-    <span class="n">cost_multiplier_layer</span><span class="p">,</span>
-    <span class="n">cost_multiplier_scalar</span><span class="p">,</span>
     <span class="n">tracked_layers</span><span class="p">,</span>
-    <span class="n">ignore_invalid_costs</span><span class="p">,</span>
+    <span class="n">invalid_costs_block_routing</span><span class="p">,</span>
     <span class="n">user_mem_limit_gb</span><span class="p">,</span>
     <span class="n">save_routing_layer</span><span class="p">,</span>
     <span class="n">algorithm</span><span class="p">,</span>
@@ -1084,19 +1171,14 @@ window.runMermaid = runMermaid;</script>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run LCP routing for all batches of routes and save results&quot;&quot;&quot;</span>
     <span class="n">out_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span>
     <span class="n">save_paths</span> <span class="o">=</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.gpkg&quot;</span>
-    <span class="k">for</span> <span class="n">route_batch</span> <span class="ow">in</span> <span class="n">routes_to_compute</span><span class="p">:</span>
-        <span class="n">route_cl</span><span class="p">,</span> <span class="n">route_fl</span><span class="p">,</span> <span class="n">route_bl</span><span class="p">,</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">route_batch</span>
-        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">route_options</span><span class="p">,</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span> <span class="ow">in</span> <span class="n">routes_to_compute</span><span class="p">:</span>
         <span class="n">scenario</span> <span class="o">=</span> <span class="n">RoutingScenario</span><span class="p">(</span>
             <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
-            <span class="n">cost_layers</span><span class="o">=</span><span class="n">route_cl</span><span class="p">,</span>
-            <span class="n">friction_layers</span><span class="o">=</span><span class="n">route_fl</span><span class="p">,</span>
-            <span class="n">barrier_layers</span><span class="o">=</span><span class="n">route_bl</span><span class="p">,</span>
+            <span class="n">routing_options</span><span class="o">=</span><span class="n">route_options</span><span class="p">,</span>
+            <span class="n">drivers</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="o">.</span><span class="n">drivers</span><span class="p">,</span>
+            <span class="n">transition_costs</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="o">.</span><span class="n">transition_costs</span><span class="p">,</span>
             <span class="n">tracked_layers</span><span class="o">=</span><span class="n">tracked_layers</span><span class="p">,</span>
-            <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">cost_multiplier_layer</span><span class="p">,</span>
-            <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">cost_multiplier_scalar</span><span class="p">,</span>
-            <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
+            <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="n">invalid_costs_block_routing</span><span class="p">,</span>
             <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1113,9 +1195,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
             <span class="n">route_attrs</span><span class="o">=</span><span class="n">route_attrs</span><span class="p">,</span>
             <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span>
-            <span class="n">route_cl</span><span class="o">=</span><span class="n">route_cl</span><span class="p">,</span>
-            <span class="n">route_fl</span><span class="o">=</span><span class="n">route_fl</span><span class="p">,</span>
-            <span class="n">route_bl</span><span class="o">=</span><span class="n">route_bl</span><span class="p">,</span>
+            <span class="n">routing_options</span><span class="o">=</span><span class="n">route_options</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">with</span> <span class="n">rl_mover</span> <span class="k">as</span> <span class="n">routing_layer_out_fp</span><span class="p">:</span>
@@ -1155,11 +1235,46 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">config</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_route_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure route points has required columns&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">option_col</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;start_option&quot;</span><span class="p">,</span> <span class="s2">&quot;end_option&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">option_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">option_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">routing_options</span><span class="o">.</span><span class="n">default</span>
+
+    <span class="k">return</span> <span class="n">_validate_route_value_columns</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_route_value_columns</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure explicit per-option route-value columns are present&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">routing_options</span><span class="p">:</span>
+        <span class="n">polarity_col</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_POLARITY</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">voltage_col</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_VOLTAGE</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="k">if</span> <span class="n">polarity_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_POLARITY</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">_POLARITY</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">voltage_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_VOLTAGE</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">points</span><span class="p">[</span><span class="n">voltage_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">_VOLTAGE</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">points</span><span class="p">[</span><span class="n">voltage_col</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">voltage_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">voltage_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">points</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">update_multipliers</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Update layer multipliers based on user input&quot;&quot;&quot;</span>
     <span class="n">output_layers</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
-    <span class="n">polarity</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="n">polarity</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">polarity</span><span class="p">)</span>
-    <span class="n">voltage</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="n">voltage</span> <span class="ow">in</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">voltage</span><span class="p">))</span>
+    <span class="n">unknowns</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">}</span>
+    <span class="n">polarity</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="n">polarity</span> <span class="ow">in</span> <span class="n">unknowns</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">polarity</span><span class="p">)</span>
+    <span class="n">voltage</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="n">voltage</span> <span class="ow">in</span> <span class="n">unknowns</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">voltage</span><span class="p">))</span>
 
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">output_layers</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;apply_row_mult&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
@@ -1238,6 +1353,18 @@ window.runMermaid = runMermaid;</script>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
     <span class="k">return</span> <span class="n">polarity_multiplier</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_pv_by_option</span><span class="p">(</span><span class="n">pv_by_option</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;str: Human-readable per-option route values&quot;&quot;&quot;</span>
+    <span class="n">formatted_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">pv_by_option</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">formatted_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">(polarity=</span><span class="si">{</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;polarity&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;voltage=</span><span class="si">{</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;voltage&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formatted_values</span><span class="p">)</span>
 </pre></div>
 
                 </article>

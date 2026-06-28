@@ -24,11 +24,6 @@ revrt.models.cost\_layers.MergeFrictionBarriers
 
    .. autosummary::
    
-      ~MergeFrictionBarriers.model_computed_fields
-      ~MergeFrictionBarriers.model_config
-      ~MergeFrictionBarriers.model_extra
-      ~MergeFrictionBarriers.model_fields
-      ~MergeFrictionBarriers.model_fields_set
       ~MergeFrictionBarriers.friction_layer
       ~MergeFrictionBarriers.barrier_layer
       ~MergeFrictionBarriers.output_layer_name

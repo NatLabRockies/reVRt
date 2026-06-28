@@ -27,5 +27,6 @@ revrt.routing.cli.point\_to\_point.PointToPointRouteDefinitionConverter
       ~PointToPointRouteDefinitionConverter.cost_metadata
       ~PointToPointRouteDefinitionConverter.existing_routes
       ~PointToPointRouteDefinitionConverter.num_routes
+      ~PointToPointRouteDefinitionConverter.route_points
    
    

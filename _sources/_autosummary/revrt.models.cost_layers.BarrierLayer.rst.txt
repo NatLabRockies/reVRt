@@ -15,7 +15,6 @@ revrt.models.cost\_layers.BarrierLayer
 
    .. autosummary::
    
-      ~BarrierLayer.to_routing_dict
    
    
 
@@ -25,13 +24,8 @@ revrt.models.cost\_layers.BarrierLayer
 
    .. autosummary::
    
-      ~BarrierLayer.model_computed_fields
-      ~BarrierLayer.model_config
-      ~BarrierLayer.model_extra
-      ~BarrierLayer.model_fields
-      ~BarrierLayer.model_fields_set
       ~BarrierLayer.layer_name
-      ~BarrierLayer.barrier_values
+      ~BarrierLayer.where
       ~BarrierLayer.barrier_importance
    
    

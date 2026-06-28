@@ -24,11 +24,6 @@ revrt.models.cost\_layers.RangeConfig
 
    .. autosummary::
    
-      ~RangeConfig.model_computed_fields
-      ~RangeConfig.model_config
-      ~RangeConfig.model_extra
-      ~RangeConfig.model_fields
-      ~RangeConfig.model_fields_set
       ~RangeConfig.min
       ~RangeConfig.max
       ~RangeConfig.value

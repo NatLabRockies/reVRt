@@ -24,11 +24,6 @@ revrt.models.cost\_layers.Rasterize
 
    .. autosummary::
    
-      ~Rasterize.model_computed_fields
-      ~Rasterize.model_config
-      ~Rasterize.model_extra
-      ~Rasterize.model_fields
-      ~Rasterize.model_fields_set
       ~Rasterize.value
       ~Rasterize.buffer
       ~Rasterize.reproject

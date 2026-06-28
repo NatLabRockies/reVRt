@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.routing.base.CharacterizedLayer &#8212; reVRt 0.8.1 documentation</title>
+    <title>revrt.routing.base.CharacterizedLayer &#8212; reVRt 0.9.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+    <script src="../_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -48,11 +48,11 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="revrt.routing.base.IncrementalRouteWriter" href="revrt.routing.base.IncrementalRouteWriter.html" />
-    <link rel="prev" title="revrt.routing.base.BatchRouteProcessor" href="revrt.routing.base.BatchRouteProcessor.html" />
+    <link rel="next" title="revrt.routing.base.RouteMetrics" href="revrt.routing.base.RouteMetrics.html" />
+    <link rel="prev" title="revrt.routing.base.LCP_AGG_COST_LAYER_NAME" href="revrt.routing.base.LCP_AGG_COST_LAYER_NAME.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.8.1" />
+  <meta name="docsearch:version" content="0.9.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.8.1 documentation</p>
+    <p class="title logo__title">reVRt 0.9.0 documentation</p>
   
 </a></div>
     
@@ -428,7 +428,6 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.Extents.html">revrt.models.cost_layers.Extents</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.LayerBuildComponents.html">revrt.models.cost_layers.LayerBuildComponents</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.Layers.html">revrt.models.cost_layers.Layers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.parse_barrier_values.html">revrt.models.cost_layers.parse_barrier_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.BarrierLayer.html">revrt.models.cost_layers.BarrierLayer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.DryCosts.html">revrt.models.cost_layers.DryCosts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.IsoMultipliers.html">revrt.models.cost_layers.IsoMultipliers</a></li>
@@ -442,14 +441,26 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.cost_layers.TransmissionLayerCreationConfig.html">revrt.models.cost_layers.TransmissionLayerCreationConfig</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingBarrierLayer.html">revrt.models.routing.RoutingBarrierLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingCostLayer.html">revrt.models.routing.RoutingCostLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingFrictionLayer.html">revrt.models.routing.RoutingFrictionLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionConfig.html">revrt.models.routing.RoutingOptionConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TrackedLayer.html">revrt.models.routing.TrackedLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostRule.html">revrt.models.routing.TransitionCostRule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostsConfig.html">revrt.models.routing.TransitionCostsConfig</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="revrt.routing.html">revrt.routing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.routing.base.html">revrt.routing.base</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.LCP_AGG_COST_LAYER_NAME.html">revrt.routing.base.LCP_AGG_COST_LAYER_NAME</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.BatchRouteProcessor.html">revrt.routing.base.BatchRouteProcessor</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">revrt.routing.base.CharacterizedLayer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.IncrementalRouteWriter.html">revrt.routing.base.IncrementalRouteWriter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RouteMetrics.html">revrt.routing.base.RouteMetrics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingLayerManager.html">revrt.routing.base.RoutingLayerManager</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingScenario.html">revrt.routing.base.RoutingScenario</a></li>
@@ -458,6 +469,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.cli.html">revrt.routing.cli</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.base.html">revrt.routing.cli.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.base.RouteToDefinitionConverter.html">revrt.routing.cli.base.RouteToDefinitionConverter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.base.RoutingOptions.html">revrt.routing.cli.base.RoutingOptions</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="revrt.routing.cli.build_costs.html">revrt.routing.cli.build_costs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -487,6 +499,10 @@
 <li class="toctree-l4"><a class="reference internal" href="revrt.routing.cli.utilities.routing_layer_mover.html">revrt.routing.cli.utilities.routing_layer_mover</a></li>
 </ul>
 </details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.processing.html">revrt.routing.processing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.processing.BatchRouteProcessor.html">revrt.routing.processing.BatchRouteProcessor</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -558,6 +574,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_array_backend.html">revrt.utilities.monitoring.log_array_backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_mem.html">revrt.utilities.monitoring.log_mem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.monitoring.log_runtime.html">revrt.utilities.monitoring.log_runtime</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.parsing.html">revrt.utilities.parsing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.parsing.parse_comparison_values.html">revrt.utilities.parsing.parse_comparison_values</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.raster.html">revrt.utilities.raster</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -645,7 +665,7 @@
 <h1>revrt.routing.base.CharacterizedLayer<a class="headerlink" href="#revrt-routing-base-characterizedlayer" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.routing.base.CharacterizedLayer">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CharacterizedLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_length_invariant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#CharacterizedLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.CharacterizedLayer" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CharacterizedLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_length_invariant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#CharacterizedLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.CharacterizedLayer" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Encapsulate tracked routing layer metadata</p>
 <dl class="field-list simple">
@@ -653,6 +673,8 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Identifier used when reporting layer-derived metrics.</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2026.4.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.DataArray</span></code></a> or <a class="reference external" href="https://docs.dask.org/en/latest/generated/dask.array.Array.html#dask.array.Array" title="(in Dask)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask.array.Array</span></code></a>) – Data values sampled from the routing stack.</p></li>
+<li><p><strong>option</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Routing option this layer should characterize. When set,
+metrics only use matching route cells.</p></li>
 <li><p><strong>is_length_invariant</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Flag signaling cost values should ignore segment length.
 By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>agg_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Name of dask aggregation used when tracking statistics.
@@ -663,7 +685,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">None</s
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.routing.base.CharacterizedLayer.compute" title="revrt.routing.base.CharacterizedLayer.compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code></a>(route, cell_size)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.routing.base.CharacterizedLayer.compute" title="revrt.routing.base.CharacterizedLayer.compute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute</span></code></a>(route, cell_size, point_lens)</p></td>
 <td><p>Compute layer metrics along a route</p></td>
 </tr>
 </tbody>
@@ -671,13 +693,14 @@ By default, <code class="docutils literal notranslate"><span class="pre">None</s
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="revrt.routing.base.CharacterizedLayer.compute">
-<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#CharacterizedLayer.compute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.CharacterizedLayer.compute" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_lens</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#CharacterizedLayer.compute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.CharacterizedLayer.compute" title="Link to this definition">#</a></dt>
 <dd><p>Compute layer metrics along a route</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>route</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-sequence" title="(in Python v3.14)"><span class="xref std std-term">sequence</span></a>) – Ordered <code class="docutils literal notranslate"><span class="pre">(row,</span> <span class="pre">col)</span></code> indices describing the path.</p></li>
+<li><p><strong>route</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-sequence" title="(in Python v3.14)"><span class="xref std std-term">sequence</span></a>) – Ordered <code class="docutils literal notranslate"><span class="pre">(row,</span> <span class="pre">col,</span> <span class="pre">option)</span></code> indices describing the path.</p></li>
 <li><p><strong>cell_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>) – Raster cell size in meters for distance calculations.</p></li>
+<li><p><strong>point_lens</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.5)"><span class="xref std std-term">array-like</span></a>) – Per-route-cell distances aligned with <code class="docutils literal notranslate"><span class="pre">route</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -701,20 +724,20 @@ By default, <code class="docutils literal notranslate"><span class="pre">None</s
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="revrt.routing.base.BatchRouteProcessor.html"
+       href="revrt.routing.base.LCP_AGG_COST_LAYER_NAME.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">revrt.routing.base.BatchRouteProcessor</p>
+        <p class="prev-next-title">revrt.routing.base.LCP_AGG_COST_LAYER_NAME</p>
       </div>
     </a>
     <a class="right-next"
-       href="revrt.routing.base.IncrementalRouteWriter.html"
+       href="revrt.routing.base.RouteMetrics.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">revrt.routing.base.IncrementalRouteWriter</p>
+        <p class="prev-next-title">revrt.routing.base.RouteMetrics</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

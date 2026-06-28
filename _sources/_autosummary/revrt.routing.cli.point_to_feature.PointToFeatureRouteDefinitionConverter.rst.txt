@@ -27,5 +27,6 @@ revrt.routing.cli.point\_to\_feature.PointToFeatureRouteDefinitionConverter
       ~PointToFeatureRouteDefinitionConverter.cost_metadata
       ~PointToFeatureRouteDefinitionConverter.existing_routes
       ~PointToFeatureRouteDefinitionConverter.num_routes
+      ~PointToFeatureRouteDefinitionConverter.route_points
    
    

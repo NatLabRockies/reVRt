@@ -1,0 +1,36 @@
+revrt.models.routing.RoutingCostLayer
+=====================================
+
+.. currentmodule:: revrt.models.routing
+
+.. autoclass:: RoutingCostLayer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RoutingCostLayer.layer_name
+      ~RoutingCostLayer.multiplier_layer
+      ~RoutingCostLayer.multiplier_scalar
+      ~RoutingCostLayer.is_invariant
+      ~RoutingCostLayer.include_in_final_cost
+      ~RoutingCostLayer.include_in_report
+      ~RoutingCostLayer.apply_row_mult
+      ~RoutingCostLayer.apply_polarity_mult
+   
+   

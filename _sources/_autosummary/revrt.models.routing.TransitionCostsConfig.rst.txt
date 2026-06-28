@@ -1,0 +1,30 @@
+revrt.models.routing.TransitionCostsConfig
+==========================================
+
+.. currentmodule:: revrt.models.routing
+
+.. autoclass:: TransitionCostsConfig
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TransitionCostsConfig.default
+      ~TransitionCostsConfig.pairwise
+   
+   

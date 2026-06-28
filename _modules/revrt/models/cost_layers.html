@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.models.cost_layers &#8212; reVRt 0.8.1 documentation</title>
+    <title>revrt.models.cost_layers &#8212; reVRt 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=ec16d22d"></script>
+    <script src="../../../_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.8.1" />
+  <meta name="docsearch:version" content="0.9.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.8.1 documentation</p>
+    <p class="title logo__title">reVRt 0.9.0 documentation</p>
   
 </a></div>
     
@@ -824,7 +824,6 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for revrt.models.cost_layers</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Definition of friction, barrier, and costs processing config files&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypedDict</span>
@@ -833,20 +832,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">ALL</span><span class="p">,</span> <span class="n">BARRIER_LAYER_NAME</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtConfigurationError</span>
-
-
-<span class="n">_BARRIER_VALUE_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="sa">r</span><span class="s2">&quot;^\s*(!=|&gt;=|&lt;=|==|&gt;|&lt;)\s*&quot;</span>
-    <span class="sa">r</span><span class="s2">&quot;(-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*$&quot;</span>
-<span class="p">)</span>
-<span class="n">_BARRIER_OPERATOR_MAP</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;!=&quot;</span><span class="p">:</span> <span class="s2">&quot;ne&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;&gt;&quot;</span><span class="p">:</span> <span class="s2">&quot;gt&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;&gt;=&quot;</span><span class="p">:</span> <span class="s2">&quot;ge&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;&lt;&quot;</span><span class="p">:</span> <span class="s2">&quot;lt&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;&lt;=&quot;</span><span class="p">:</span> <span class="s2">&quot;le&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;==&quot;</span><span class="p">:</span> <span class="s2">&quot;eq&quot;</span><span class="p">,</span>
-<span class="p">}</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_comparison_values</span>
 
 
 <span class="n">Extents</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;wet&quot;</span><span class="p">,</span> <span class="s2">&quot;wet+&quot;</span><span class="p">,</span> <span class="s2">&quot;landfall&quot;</span><span class="p">,</span> <span class="s2">&quot;dry+&quot;</span><span class="p">,</span> <span class="s2">&quot;dry&quot;</span><span class="p">]</span>
@@ -1037,24 +1023,6 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<div class="viewcode-block" id="parse_barrier_values">
-<a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.parse_barrier_values.html#revrt.models.cost_layers.parse_barrier_values">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">parse_barrier_values</span><span class="p">(</span><span class="n">barrier_values</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse barrier comparison text into an operator and threshold&quot;&quot;&quot;</span>
-    <span class="n">match</span> <span class="o">=</span> <span class="n">_BARRIER_VALUE_PATTERN</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">barrier_values</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Barrier values must use one of the supported comparison &quot;</span>
-            <span class="s2">&quot;operators (&#39;==&#39;, &#39;!=&#39;, &#39;&gt;&#39;, &#39;&gt;=&#39;, &#39;&lt;&#39;, &#39;&lt;=&#39;) followed by a &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;number. Got: </span><span class="si">{</span><span class="n">barrier_values</span><span class="si">!r}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="n">operator</span><span class="p">,</span> <span class="n">threshold</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">_BARRIER_OPERATOR_MAP</span><span class="p">[</span><span class="n">operator</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">threshold</span><span class="p">)</span></div>
-
-
-
 <div class="viewcode-block" id="BarrierLayer">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.BarrierLayer.html#revrt.models.cost_layers.BarrierLayer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BarrierLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
@@ -1063,17 +1031,17 @@ window.runMermaid = runMermaid;</script>
     <span class="n">layer_name</span><span class="p">:</span> <span class="nb">str</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of layer in Zarr file&quot;&quot;&quot;</span>
 
-    <span class="n">barrier_values</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">where</span><span class="p">:</span> <span class="nb">str</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Comparison definition describing barrier cells&quot;&quot;&quot;</span>
 
     <span class="n">barrier_importance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional rank used when relaxing soft barriers&quot;&quot;&quot;</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;barrier_values&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;where&quot;</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_barrier_values</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">barrier_values</span><span class="p">):</span>
-        <span class="n">parse_barrier_values</span><span class="p">(</span><span class="n">barrier_values</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">barrier_values</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_where</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">where</span><span class="p">):</span>
+        <span class="n">parse_comparison_values</span><span class="p">(</span><span class="n">where</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">where</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;barrier_importance&quot;</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
@@ -1087,12 +1055,10 @@ window.runMermaid = runMermaid;</script>
 
         <span class="k">return</span> <span class="n">barrier_importance</span>
 
-<div class="viewcode-block" id="BarrierLayer.to_routing_dict">
-<a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.BarrierLayer.html#revrt.models.cost_layers.BarrierLayer.to_routing_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_routing_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert barrier config to the normalized routing payload&quot;&quot;&quot;</span>
-        <span class="n">barrier_operator</span><span class="p">,</span> <span class="n">barrier_threshold</span> <span class="o">=</span> <span class="n">parse_barrier_values</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">barrier_values</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Convert barrier config to routing payload&quot;&quot;&quot;</span>
+        <span class="n">barrier_operator</span><span class="p">,</span> <span class="n">barrier_threshold</span> <span class="o">=</span> <span class="n">parse_comparison_values</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">where</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
@@ -1101,7 +1067,6 @@ window.runMermaid = runMermaid;</script>
             <span class="s2">&quot;barrier_threshold&quot;</span><span class="p">:</span> <span class="n">barrier_threshold</span><span class="p">,</span>
             <span class="s2">&quot;barrier_importance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">barrier_importance</span><span class="p">,</span>
         <span class="p">}</span></div>
-</div>
 
 
 

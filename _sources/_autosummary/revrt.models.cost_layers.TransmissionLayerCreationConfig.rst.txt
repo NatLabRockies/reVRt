@@ -24,11 +24,6 @@ revrt.models.cost\_layers.TransmissionLayerCreationConfig
 
    .. autosummary::
    
-      ~TransmissionLayerCreationConfig.model_computed_fields
-      ~TransmissionLayerCreationConfig.model_config
-      ~TransmissionLayerCreationConfig.model_extra
-      ~TransmissionLayerCreationConfig.model_fields
-      ~TransmissionLayerCreationConfig.model_fields_set
       ~TransmissionLayerCreationConfig.template_file
       ~TransmissionLayerCreationConfig.routing_file
       ~TransmissionLayerCreationConfig.input_layer_dir

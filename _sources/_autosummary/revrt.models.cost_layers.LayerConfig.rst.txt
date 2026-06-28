@@ -24,11 +24,6 @@ revrt.models.cost\_layers.LayerConfig
 
    .. autosummary::
    
-      ~LayerConfig.model_computed_fields
-      ~LayerConfig.model_config
-      ~LayerConfig.model_extra
-      ~LayerConfig.model_fields
-      ~LayerConfig.model_fields_set
       ~LayerConfig.layer_name
       ~LayerConfig.description
       ~LayerConfig.include_in_file

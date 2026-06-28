@@ -25,5 +25,6 @@ revrt.routing.base.RoutingScenario
    .. autosummary::
    
       ~RoutingScenario.cost_function_json
+      ~RoutingScenario.routing_option_names
    
    

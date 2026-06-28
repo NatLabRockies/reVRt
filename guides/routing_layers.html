@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Routing Layer Concept Model &#8212; reVRt 0.8.1 documentation</title>
+    <title>Routing Layer Concept Model &#8212; reVRt 0.9.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=ec16d22d"></script>
+    <script src="../_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Guides and Examples" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.8.1" />
+  <meta name="docsearch:version" content="0.9.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.8.1 documentation</p>
+    <p class="title logo__title">reVRt 0.9.0 documentation</p>
   
 </a></div>
     
@@ -487,7 +487,7 @@ domain anyways.</p>
 completed (imagine a start point completely surrounded by invalid costs, either
 locally or further into the domain). In these rare cases, it might be useful to
 allow routes to be formed over the invalid costs in order to get any result back.
-In this cases, users may specify <code class="docutils literal notranslate"><span class="pre">ignore_invalid_costs:</span> <span class="pre">false</span></code> in their
+In this case, users may specify <code class="docutils literal notranslate"><span class="pre">invalid_costs_block_routing:</span> <span class="pre">false</span></code> in their
 configuration, and <code class="docutils literal notranslate"><span class="pre">reVRt</span></code> will allow routes to pass over these invalid cost
 pixels, minimizing the route’s exposure to them.</p>
 </section>
@@ -624,7 +624,7 @@ comparison operators are allowed: <code class="docutils literal notranslate"><sp
 Any pixel with a value that satisfies the comparison operator will be
 treated as a barrier that cannot be crossed by a route. For example, this
 configuration:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">}</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>would tell the routing algorithm that any pixels with a value <span class="math notranslate nohighlight">\(\ge 15\)</span>
@@ -633,8 +633,8 @@ layers, you can specify multiple barriers to be considered during routing:</p>
 <p>Using <code class="docutils literal notranslate"><span class="pre">&quot;!=0&quot;</span></code> is also valid when you want every non-zero pixel in a layer to
 act as a barrier.</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;barrier_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">},</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="p">]</span>
 </pre></div>
@@ -655,8 +655,8 @@ or all barrier layers with a rank have been dropped.</p>
 <p>To specify that a layer can be dropped in order to compute a route (i.e. a soft
 barrier), you have to provide a <code class="docutils literal notranslate"><span class="pre">barrier_importance</span></code> ranking, like so:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;barrier_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1</span><span class="p">},</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="p">]</span>
 </pre></div>
@@ -669,9 +669,9 @@ barrier, it will be dropped as well.</p>
 <p>You can also specify that a barrier should never be dropped by leaving out the
 <code class="docutils literal notranslate"><span class="pre">barrier_importance</span></code> key altogether. This can be combined with soft barriers:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;barrier_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;important_barrier&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_values&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;0.5&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;important_barrier&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;0.5&quot;</span><span class="p">},</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="p">]</span>
 </pre></div>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.routing.cli.utilities &#8212; reVRt 0.8.1 documentation</title>
+    <title>revrt.routing.cli.utilities &#8212; reVRt 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../../_static/documentation_options.js?v=ec16d22d"></script>
+    <script src="../../../../_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.8.1" />
+  <meta name="docsearch:version" content="0.9.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.8.1 documentation</p>
+    <p class="title logo__title">reVRt 0.9.0 documentation</p>
   
 </a></div>
     
@@ -853,9 +853,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">out_fp</span><span class="p">,</span>
     <span class="n">route_attrs</span><span class="p">,</span>
     <span class="n">job_name</span><span class="p">,</span>
-    <span class="n">route_cl</span><span class="p">,</span>
-    <span class="n">route_fl</span><span class="p">,</span>
-    <span class="n">route_bl</span><span class="p">,</span>
+    <span class="n">routing_options</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield temporary routing-layer path and optionally persist it</span>
 
@@ -918,9 +916,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span>
             <span class="n">polarity</span><span class="o">=</span><span class="n">polarity</span><span class="p">,</span>
             <span class="n">voltage</span><span class="o">=</span><span class="n">voltage</span><span class="p">,</span>
-            <span class="n">cost_layers</span><span class="o">=</span><span class="n">route_cl</span><span class="p">,</span>
-            <span class="n">friction_layers</span><span class="o">=</span><span class="n">route_fl</span><span class="p">,</span>
-            <span class="n">barrier_layers</span><span class="o">=</span><span class="n">route_bl</span><span class="p">,</span>
+            <span class="n">routing_options</span><span class="o">=</span><span class="n">routing_options</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saved routing layer to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">saved_fp</span><span class="p">)</span></div>
 
@@ -979,20 +975,10 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_route_layer_hash</span><span class="p">(</span><span class="n">cost_layers</span><span class="p">,</span> <span class="n">friction_layers</span><span class="p">,</span> <span class="n">barrier_layers</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_route_layer_hash</span><span class="p">(</span><span class="n">routing_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute short hash for layer definitions&quot;&quot;&quot;</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
-        <span class="p">{</span>
-            <span class="s2">&quot;routing_options&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;cost_layers&quot;</span><span class="p">:</span> <span class="n">cost_layers</span><span class="p">,</span>
-                    <span class="s2">&quot;friction_layers&quot;</span><span class="p">:</span> <span class="n">friction_layers</span><span class="p">,</span>
-                    <span class="s2">&quot;barrier_layers&quot;</span><span class="p">:</span> <span class="n">barrier_layers</span><span class="p">,</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">},</span>
-        <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">),</span>
+        <span class="n">routing_options</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">12</span><span class="p">]</span>
 
@@ -1025,17 +1011,13 @@ window.runMermaid = runMermaid;</script>
     <span class="n">job_name</span><span class="p">,</span>
     <span class="n">polarity</span><span class="p">,</span>
     <span class="n">voltage</span><span class="p">,</span>
-    <span class="n">cost_layers</span><span class="p">,</span>
-    <span class="n">friction_layers</span><span class="p">,</span>
-    <span class="n">barrier_layers</span><span class="p">,</span>
+    <span class="n">routing_options</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Save routing layer output with coordinates&quot;&quot;&quot;</span>
     <span class="n">extra_outputs</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;extra_outputs&quot;</span>
     <span class="n">extra_outputs</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">layer_hash</span> <span class="o">=</span> <span class="n">_route_layer_hash</span><span class="p">(</span>
-        <span class="n">cost_layers</span><span class="p">,</span> <span class="n">friction_layers</span><span class="p">,</span> <span class="n">barrier_layers</span>
-    <span class="p">)</span>
+    <span class="n">layer_hash</span> <span class="o">=</span> <span class="n">_route_layer_hash</span><span class="p">(</span><span class="n">routing_options</span><span class="p">)</span>
     <span class="n">base_name</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slugify</span><span class="p">(</span><span class="n">job_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_&quot;</span>
         <span class="sa">f</span><span class="s2">&quot;p-</span><span class="si">{</span><span class="n">slugify</span><span class="p">(</span><span class="n">polarity</span><span class="p">)</span><span class="si">}</span><span class="s2">_&quot;</span>

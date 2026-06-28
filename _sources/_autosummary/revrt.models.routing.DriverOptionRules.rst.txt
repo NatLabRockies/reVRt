@@ -1,0 +1,6 @@
+revrt.models.routing.DriverOptionRules
+======================================
+
+.. currentmodule:: revrt.models.routing
+
+.. autotype:: DriverOptionRules

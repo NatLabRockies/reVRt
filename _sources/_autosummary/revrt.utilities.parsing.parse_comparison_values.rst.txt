@@ -1,0 +1,6 @@
+revrt.utilities.parsing.parse\_comparison\_values
+=================================================
+
+.. currentmodule:: revrt.utilities.parsing
+
+.. autofunction:: parse_comparison_values

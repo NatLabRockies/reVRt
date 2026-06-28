@@ -24,11 +24,6 @@ revrt.models.cost\_layers.LayerBuildConfig
 
    .. autosummary::
    
-      ~LayerBuildConfig.model_computed_fields
-      ~LayerBuildConfig.model_config
-      ~LayerBuildConfig.model_extra
-      ~LayerBuildConfig.model_fields
-      ~LayerBuildConfig.model_fields_set
       ~LayerBuildConfig.extent
       ~LayerBuildConfig.global_value
       ~LayerBuildConfig.map

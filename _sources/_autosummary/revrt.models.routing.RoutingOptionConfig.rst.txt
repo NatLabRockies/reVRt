@@ -1,0 +1,33 @@
+revrt.models.routing.RoutingOptionConfig
+========================================
+
+.. currentmodule:: revrt.models.routing
+
+.. autoclass:: RoutingOptionConfig
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RoutingOptionConfig.cost_layers
+      ~RoutingOptionConfig.friction_layers
+      ~RoutingOptionConfig.barrier_layers
+      ~RoutingOptionConfig.cost_multiplier_layer
+      ~RoutingOptionConfig.cost_multiplier_scalar
+   
+   

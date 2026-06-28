@@ -32,5 +32,6 @@ revrt.utilities
    cli
    handlers
    monitoring
+   parsing
    raster
 

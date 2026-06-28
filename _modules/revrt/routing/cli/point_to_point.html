@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.routing.cli.point_to_point &#8212; reVRt 0.8.1 documentation</title>
+    <title>revrt.routing.cli.point_to_point &#8212; reVRt 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../../_static/documentation_options.js?v=ec16d22d"></script>
+    <script src="../../../../_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.8.1" />
+  <meta name="docsearch:version" content="0.9.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.8.1 documentation</p>
+    <p class="title logo__title">reVRt 0.9.0 documentation</p>
   
 </a></div>
     
@@ -848,38 +848,40 @@ window.runMermaid = runMermaid;</script>
 <span class="k">class</span><span class="w"> </span><span class="nc">PointToPointRouteDefinitionConverter</span><span class="p">(</span><span class="n">RouteToDefinitionConverter</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert route points DataFrame to route definition for Rust&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_route_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rp_with_expected_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure route points has required columns&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">&quot;start_row&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="o">.</span><span class="n">columns</span>
-            <span class="ow">or</span> <span class="s2">&quot;start_col&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="o">.</span><span class="n">columns</span>
+            <span class="s2">&quot;start_row&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="o">.</span><span class="n">columns</span>
+            <span class="ow">or</span> <span class="s2">&quot;start_col&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="o">.</span><span class="n">columns</span>
         <span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Mapping route start points to cost grid...&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span> <span class="o">=</span> <span class="n">map_to_costs</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span> <span class="o">=</span> <span class="n">map_to_costs</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="p">,</span>
                 <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;crs&quot;</span><span class="p">],</span>
                 <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">],</span>
                 <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">],</span>
             <span class="p">)</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_validate_route_points</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_rp_with_expected_cols</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_route_as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>  <span class="c1"># noqa:PLR6301</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_route_as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert route row to a tuple for existing route checking&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">]),</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;start_col&quot;</span><span class="p">]),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start_option&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span><span class="o">.</span><span class="n">default</span><span class="p">)),</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;end_row&quot;</span><span class="p">]),</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;end_col&quot;</span><span class="p">]),</span>
-            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;polarity&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)),</span>
-            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;voltage&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;end_option&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span><span class="o">.</span><span class="n">default</span><span class="p">)),</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_route_value_signature</span><span class="p">(</span><span class="n">row</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_route_definitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>  <span class="c1"># noqa:PLR6301</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert route DataFrame to route definitions format&quot;&quot;&quot;</span>
         <span class="n">start_point_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">,</span> <span class="s2">&quot;start_col&quot;</span><span class="p">]</span>
         <span class="n">end_point_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;end_row&quot;</span><span class="p">,</span> <span class="s2">&quot;end_col&quot;</span><span class="p">]</span>
+        <span class="n">start_option</span><span class="p">,</span> <span class="n">end_option</span> <span class="o">=</span> <span class="s2">&quot;start_option&quot;</span><span class="p">,</span> <span class="s2">&quot;end_option&quot;</span>
         <span class="n">num_unique_start_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">routes</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">start_point_cols</span><span class="p">))</span>
         <span class="n">num_unique_end_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">routes</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">end_point_cols</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">num_unique_end_points</span> <span class="o">&gt;</span> <span class="n">num_unique_start_points</span><span class="p">:</span>
@@ -887,22 +889,30 @@ window.runMermaid = runMermaid;</script>
                 <span class="s2">&quot;Less unique starting points detected! Swapping start and &quot;</span>
                 <span class="s2">&quot;end point set for optimal routing performance&quot;</span>
             <span class="p">)</span>
-            <span class="n">start_point_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;end_row&quot;</span><span class="p">,</span> <span class="s2">&quot;end_col&quot;</span><span class="p">]</span>
-            <span class="n">end_point_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">,</span> <span class="s2">&quot;start_col&quot;</span><span class="p">]</span>
+            <span class="n">start_point_cols</span><span class="p">,</span> <span class="n">end_point_cols</span> <span class="o">=</span> <span class="n">end_point_cols</span><span class="p">,</span> <span class="n">start_point_cols</span>
+            <span class="n">start_option</span><span class="p">,</span> <span class="n">end_option</span> <span class="o">=</span> <span class="n">end_option</span><span class="p">,</span> <span class="n">start_option</span>
 
         <span class="n">route_definitions</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">route_attrs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">route_id</span><span class="p">,</span> <span class="p">(</span><span class="n">end_idx</span><span class="p">,</span> <span class="n">sub_routes</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
-            <span class="n">routes</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">end_point_cols</span><span class="p">)</span>
+            <span class="n">routes</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="o">*</span><span class="n">end_point_cols</span><span class="p">,</span> <span class="n">end_option</span><span class="p">])</span>
         <span class="p">):</span>
             <span class="n">start_points</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">__</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">sub_routes</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-                <span class="n">start_idx</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="n">start_point_cols</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">))</span>
+                <span class="n">start_idx</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="o">*</span><span class="n">info</span><span class="p">[</span><span class="n">start_point_cols</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
+                    <span class="n">info</span><span class="p">[</span><span class="n">start_option</span><span class="p">],</span>
+                <span class="p">)</span>
                 <span class="n">route_attrs</span><span class="p">[(</span><span class="n">route_id</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">)]</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
                 <span class="n">start_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start_idx</span><span class="p">)</span>
 
+            <span class="n">er</span><span class="p">,</span> <span class="n">ec</span><span class="p">,</span> <span class="n">eo</span> <span class="o">=</span> <span class="n">end_idx</span>
             <span class="n">route_definitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">route_id</span><span class="p">,</span> <span class="n">start_points</span><span class="p">,</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">end_idx</span><span class="p">))])</span>
+                <span class="p">(</span>
+                    <span class="n">route_id</span><span class="p">,</span>
+                    <span class="n">start_points</span><span class="p">,</span>
+                    <span class="p">[(</span><span class="nb">int</span><span class="p">(</span><span class="n">er</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ec</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">eo</span><span class="p">))],</span>
+                <span class="p">)</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span></div>
@@ -914,18 +924,16 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_lcp_routes</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913, PLR0917</span>
     <span class="n">cost_fpath</span><span class="p">,</span>
     <span class="n">route_table_fpath</span><span class="p">,</span>
-    <span class="n">cost_layers</span><span class="p">,</span>
     <span class="n">out_dir</span><span class="p">,</span>
     <span class="n">job_name</span><span class="p">,</span>
-    <span class="n">friction_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">barrier_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">routing_options</span><span class="p">,</span>
+    <span class="n">drivers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">transition_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">tracked_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">transmission_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">save_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">save_routing_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">memory_utilization_limit</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
     <span class="n">system_mem_limit_gb</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
     <span class="n">_split_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -935,8 +943,8 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    Given a table that defines start and end points (via latitude and</span>
 <span class="sd">    longitude inputs; see the `route_table` parameter), compute the</span>
-<span class="sd">    least-cost paths (LCPs) between each pair of points using the cost</span>
-<span class="sd">    layers defined in the `cost_layers` parameter.</span>
+<span class="sd">    least-cost paths (LCPs) between each pair of points using the</span>
+<span class="sd">    routing layers defined in `routing_options`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -952,207 +960,33 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            - &quot;end_lat&quot;: Ending point latitude</span>
 <span class="sd">            - &quot;end_lon&quot;: Ending point longitude</span>
 
-<span class="sd">    cost_layers : list</span>
-<span class="sd">        List of dictionaries defining the layers that are summed to</span>
-<span class="sd">        determine total costs raster used for routing. Each layer is</span>
-<span class="sd">        pre-processed before summation according to the user input.</span>
-<span class="sd">        Each dict in the list should have the following keys:</span>
-
-<span class="sd">            - &quot;layer_name&quot;: (REQUIRED) Name of layer in layered file</span>
-<span class="sd">              containing cost data.</span>
-<span class="sd">            - &quot;multiplier_layer&quot;: (OPTIONAL) Name of layer in layered</span>
-<span class="sd">              file containing spatially explicit multiplier values to</span>
-<span class="sd">              apply to this cost layer before summing it with the</span>
-<span class="sd">              others. Default is ``None``.</span>
-<span class="sd">            - &quot;multiplier_scalar&quot;: (OPTIONAL) Scalar value to multiply</span>
-<span class="sd">              this layer by before summing it with the others. Default</span>
-<span class="sd">              is ``1``.</span>
-<span class="sd">            - &quot;is_invariant&quot;: (OPTIONAL) Boolean flag indicating whether</span>
-<span class="sd">              this layer is length invariant (i.e. should NOT be</span>
-<span class="sd">              multiplied by path length; values should be $). Default is</span>
-<span class="sd">              ``False``.</span>
-<span class="sd">            - &quot;include_in_final_cost&quot;: (OPTIONAL) Boolean flag</span>
-<span class="sd">              indicating whether this layer should contribute to the</span>
-<span class="sd">              final cost output for each route in the LCP table.</span>
-<span class="sd">              Default is ``True``.</span>
-<span class="sd">            - &quot;include_in_report&quot;: (OPTIONAL) Boolean flag indicating</span>
-<span class="sd">              whether the costs and distances for this layer should be</span>
-<span class="sd">              output in the final LCP table. Default is ``True``.</span>
-<span class="sd">            - &quot;apply_row_mult&quot;: (OPTIONAL) Boolean flag indicating</span>
-<span class="sd">              whether the right-of-way width multiplier should be</span>
-<span class="sd">              applied for this layer. If ``True``, then the transmission</span>
-<span class="sd">              config should have a &quot;row_width&quot; dictionary that maps</span>
-<span class="sd">              voltages to right-of-way width multipliers. Also, the</span>
-<span class="sd">              routing table input should have a &quot;voltage&quot; entry for</span>
-<span class="sd">              every route. Every &quot;voltage&quot; value in the routing table</span>
-<span class="sd">              must be given in the &quot;row_width&quot; dictionary in the</span>
-<span class="sd">              transmission config, otherwise an error will be thrown.</span>
-<span class="sd">              Default is ``False``.</span>
-<span class="sd">            - &quot;apply_polarity_mult&quot;: (OPTIONAL) Boolean flag indicating</span>
-<span class="sd">              whether the polarity multiplier should be applied for this</span>
-<span class="sd">              layer. If ``True``, then the transmission config should</span>
-<span class="sd">              have a &quot;voltage_polarity_mult&quot; dictionary that maps</span>
-<span class="sd">              voltages to a new dictionary, the latter mapping</span>
-<span class="sd">              polarities to multipliers. For example, a valid</span>
-<span class="sd">              &quot;voltage_polarity_mult&quot; dictionary might be</span>
-<span class="sd">              ``{&quot;138&quot;: {&quot;ac&quot;: 1.15, &quot;dc&quot;: 2}}``.</span>
-<span class="sd">              In addition, the routing table input should have a</span>
-<span class="sd">              &quot;voltage&quot; **and** a &quot;polarity&quot; entry for every route.</span>
-<span class="sd">              Every &quot;voltage&quot; + &quot;polarity&quot; combination in the routing</span>
-<span class="sd">              table must be given in the &quot;voltage_polarity_mult&quot;</span>
-<span class="sd">              dictionary in the transmission config, otherwise an error</span>
-<span class="sd">              will be thrown.</span>
-
-<span class="sd">              .. IMPORTANT::</span>
-<span class="sd">                 The multiplier in this config is assumed to be in units</span>
-<span class="sd">                 of &quot;million $ per mile&quot; and will be converted to</span>
-<span class="sd">                 &quot;$ per pixel&quot; before being applied to the layer!</span>
-
-<span class="sd">              Default is ``False``.</span>
-
-<span class="sd">        The summed layers define the cost routing surface, which</span>
-<span class="sd">        determines the cost output for each route. Specifically, the</span>
-<span class="sd">        cost at each pixel is multiplied by the length that the route</span>
-<span class="sd">        takes through the pixel, and all of these values are summed for</span>
-<span class="sd">        each route to determine the final cost.</span>
-
-<span class="sd">        .. IMPORTANT::</span>
-<span class="sd">           If a pixel has a final cost of :math:`\leq 0`, it is treated</span>
-<span class="sd">           as a barrier (i.e. no paths can ever cross this pixel).</span>
-
+<span class="sd">        You can also specify `polarity` and `voltage` columns which</span>
+<span class="sd">        apply to every routing option. If you want to provide per-option</span>
+<span class="sd">        polarity and voltage, use `polarity_&lt;option&gt;` and</span>
+<span class="sd">        `voltage_&lt;option&gt;`. Options that are omitted will use `polarity`</span>
+<span class="sd">        and `voltage` column values.</span>
 <span class="sd">    out_dir : path-like</span>
 <span class="sd">        Directory where routing outputs should be written.</span>
 <span class="sd">    job_name : str</span>
 <span class="sd">        Label used to name the generated output file.</span>
-<span class="sd">    friction_layers : list, optional</span>
-<span class="sd">        Layers to be multiplied onto the aggregated cost layer to</span>
-<span class="sd">        influence routing but NOT be reported in final cost</span>
-<span class="sd">        (i.e. friction, barriers, etc.). These layers are first</span>
-<span class="sd">        aggregated, and then the aggregated friction layer is applied</span>
-<span class="sd">        to the aggregated cost. The cost at each pixel is therefore</span>
-<span class="sd">        computed as:</span>
-
-<span class="sd">        .. math::</span>
-
-<span class="sd">            C = (\sum_{i} c_i) * (1 + \sum_{j} f_j)</span>
-
-<span class="sd">        where :math:`C` is the final cost at each pixel, :math:`c_i` are</span>
-<span class="sd">        the individual cost layers, and :math:`f_j` are the individual</span>
-<span class="sd">        friction layers.</span>
-
-<span class="sd">        .. NOTE:: :math:`\sum_{j} f_j` is always clamped to be</span>
-<span class="sd">           :math:`\gt -1` to prevent zero or negative routing costs.</span>
-<span class="sd">           In other words, :math:`(1 + \sum_{j} f_j) &gt; 0` always holds.</span>
-<span class="sd">           This means friction can scale costs to/away from zero but</span>
-<span class="sd">           never cause the sign of the cost layer to flip (even if</span>
-<span class="sd">           friction values themselves are negative). This means all</span>
-<span class="sd">           &quot;barrier&quot; pixels (i.e. cost value :math:`\leq 0`) will remain</span>
-<span class="sd">           barriers after friction is applied.</span>
-
-<span class="sd">        Each item in this list should be a dictionary containing the</span>
-<span class="sd">        following keys:</span>
-
-<span class="sd">            - &quot;multiplier_layer&quot; or &quot;mask&quot;: (REQUIRED) Name of layer in</span>
-<span class="sd">              layered file containing the spatial friction multipliers</span>
-<span class="sd">              or mask that will be turned into the friction multipliers</span>
-<span class="sd">              by applying the `multiplier_scalar`.</span>
-<span class="sd">            - &quot;multiplier_scalar&quot;: (OPTIONAL) Scalar value to multiply</span>
-<span class="sd">              the spatial friction layer by before using it as a</span>
-<span class="sd">              multiplier on the aggregated costs. Default is ``1``.</span>
-<span class="sd">            - &quot;include_in_report&quot;: (OPTIONAL) Boolean flag indicating</span>
-<span class="sd">              whether the routing and distances for this layer should be</span>
-<span class="sd">              output in the final LCP table. Default is ``False``.</span>
-<span class="sd">            - &quot;apply_row_mult&quot;: (OPTIONAL) Boolean flag indicating</span>
-<span class="sd">              whether the right-of-way width multiplier should be</span>
-<span class="sd">              applied for this layer. If ``True``, then the transmission</span>
-<span class="sd">              config should have a &quot;row_width&quot; dictionary that maps</span>
-<span class="sd">              voltages to right-of-way width multipliers. Also, the</span>
-<span class="sd">              routing table input should have a &quot;voltage&quot; entry for</span>
-<span class="sd">              every route. Every &quot;voltage&quot; value in the routing table</span>
-<span class="sd">              must be given in the &quot;row_width&quot; dictionary in the</span>
-<span class="sd">              transmission config, otherwise an error will be thrown.</span>
-<span class="sd">              Default is ``False``.</span>
-<span class="sd">            - &quot;apply_polarity_mult&quot;: (OPTIONAL) Boolean flag indicating</span>
-<span class="sd">              whether the polarity multiplier should be applied for this</span>
-<span class="sd">              layer. If ``True``, then the transmission config should</span>
-<span class="sd">              have a &quot;voltage_polarity_mult&quot; dictionary that maps</span>
-<span class="sd">              voltages to a new dictionary, the latter mapping</span>
-<span class="sd">              polarities to multipliers. For example, a valid</span>
-<span class="sd">              &quot;voltage_polarity_mult&quot; dictionary might be</span>
-<span class="sd">              ``{&quot;138&quot;: {&quot;ac&quot;: 1.15, &quot;dc&quot;: 2}}``.</span>
-<span class="sd">              In addition, the routing table input should have a</span>
-<span class="sd">              &quot;voltage&quot; **and** a &quot;polarity&quot; entry for every route.</span>
-<span class="sd">              Every &quot;voltage&quot; + &quot;polarity&quot; combination in the routing</span>
-<span class="sd">              table must be given in the &quot;voltage_polarity_mult&quot;</span>
-<span class="sd">              dictionary in the transmission config, otherwise an error</span>
-<span class="sd">              will be thrown.</span>
-
-<span class="sd">              .. IMPORTANT::</span>
-<span class="sd">                 The multiplier in this config is assumed to be in units</span>
-<span class="sd">                 of &quot;million $ per mile&quot; and will be converted to</span>
-<span class="sd">                 &quot;$ per pixel&quot; before being applied to the layer!</span>
-
-<span class="sd">              Default is ``False``.</span>
-
-<span class="sd">        By default, ``None``.</span>
-<span class="sd">    barrier_layers : list, optional</span>
-<span class="sd">        Layers defining explicit routing barriers that routes should</span>
-<span class="sd">        not cross. Unlike `friction_layers`, barrier layers do not add</span>
-<span class="sd">        a penalty to the routing surface. Instead, any pixel matching a</span>
-<span class="sd">        barrier definition is treated as blocked during routing.</span>
-
-<span class="sd">        Each item in this list should be a dictionary containing the</span>
-<span class="sd">        following keys:</span>
-
-<span class="sd">                - ``&quot;layer_name&quot;``: (REQUIRED) Name of layer in the</span>
-<span class="sd">                    layered file containing the values to test for</span>
-<span class="sd">                    barrier cells.</span>
-<span class="sd">                - ``&quot;barrier_values&quot;``: (REQUIRED) Comparison expression</span>
-<span class="sd">                    defining which pixel values act as barriers.</span>
-<span class="sd">                    Supported operators are ``&quot;==&quot;``, ``&quot;!=&quot;``, ``&quot;&gt;&quot;``,</span>
-<span class="sd">                    ``&quot;&gt;=&quot;``, ``&quot;&lt;&quot;``, and ``&quot;&lt;=&quot;``, followed by a</span>
-<span class="sd">                    numeric threshold. For example, ``&quot;&gt;=15&quot;`` marks</span>
-<span class="sd">                    pixels with values greater than or equal to ``15``</span>
-<span class="sd">                    as barriers, ``&quot;==1&quot;`` marks pixels equal to ``1``</span>
-<span class="sd">                    as barriers, and ``&quot;!=0&quot;`` marks every non-zero</span>
-<span class="sd">                    pixel as a barrier.</span>
-<span class="sd">                - ``&quot;barrier_importance&quot;``: (OPTIONAL) Positive integer</span>
-<span class="sd">                    ranking used to define a soft barrier. When a route</span>
-<span class="sd">                    cannot be found, reVRt will iteratively drop the</span>
-<span class="sd">                    lowest-ranked soft barrier and retry routing until a</span>
-<span class="sd">                    route is found or all ranked barriers have been</span>
-<span class="sd">                    removed.</span>
-
-<span class="sd">        If ``&quot;barrier_importance&quot;`` is omitted, the barrier is treated</span>
-<span class="sd">        as a hard barrier and is never relaxed. This allows hard and</span>
-<span class="sd">        soft barriers to be combined in the same routing run. Multiple</span>
-<span class="sd">        entries may reference the same layer with different</span>
-<span class="sd">        ``&quot;barrier_values&quot;`` definitions. By default, ``None``.</span>
+<span class="sd">    routing_options : dict</span>
+<span class="sd">        Mapping of routing-option names to dictionaries describing the</span>
+<span class="sd">        cost, friction, barrier, and option-level multiplier inputs for</span>
+<span class="sd">        each option. See</span>
+<span class="sd">        :class:`~revrt.models.routing.RoutingOptionConfig` for details.</span>
+<span class="sd">    drivers : dict, optional</span>
+<span class="sd">        Optional driver-rule configuration keyed by routing option. See</span>
+<span class="sd">        :class:`~revrt.models.routing.DriverConfig` for details.</span>
+<span class="sd">    transition_costs : dict, optional</span>
+<span class="sd">        Optional transition-cost configuration between routing</span>
+<span class="sd">        options. See</span>
+<span class="sd">        :class:`~revrt.models.routing.TransitionCostsConfig` for</span>
+<span class="sd">        details.</span>
 <span class="sd">    tracked_layers : list, optional</span>
-<span class="sd">        List of dictionaries defining layers to characterize along the</span>
-<span class="sd">        computed route. Each dictionary must contain:</span>
-
-<span class="sd">            - &quot;layer_name&quot;: (REQUIRED) Name of layer in the layered</span>
-<span class="sd">              file to aggregate along the route.</span>
-<span class="sd">            - &quot;agg_method&quot;: (REQUIRED) Name of the ``dask.array``</span>
-<span class="sd">              aggregation function to apply to the sampled route</span>
-<span class="sd">              values, such as ``&quot;sum&quot;``, ``&quot;mean&quot;``, or ``&quot;max&quot;``.</span>
-<span class="sd">            - &quot;multiplier_layer&quot;: (OPTIONAL) Name of layer in the</span>
-<span class="sd">              layered file containing spatially explicit multipliers</span>
-<span class="sd">              to apply before aggregation. Default is ``None``.</span>
-<span class="sd">            - &quot;multiplier_scalar&quot;: (OPTIONAL) Scalar multiplier to</span>
-<span class="sd">              apply before aggregation. Default is ``1``.</span>
-
-<span class="sd">        These inputs mirror the scaling behavior used by cost layers,</span>
-<span class="sd">        but tracked layers do not contribute to routing costs. They are</span>
-<span class="sd">        only summarized for output characterization.</span>
-<span class="sd">        By default, ``None``.</span>
-<span class="sd">    cost_multiplier_layer : str, optional</span>
-<span class="sd">        Name of the spatial multiplier layer applied to final costs.</span>
-<span class="sd">        By default, ``None``.</span>
-<span class="sd">    cost_multiplier_scalar : int, default=1</span>
-<span class="sd">        Scalar multiplier applied to the final cost surface.</span>
-<span class="sd">        By default, ``1``.</span>
+<span class="sd">        List of dictionaries defining route-characterization layers.</span>
+<span class="sd">        These layers do not influence the routing objective and are</span>
+<span class="sd">        only summarized for output characterization. See</span>
+<span class="sd">        :class:`~revrt.models.routing.TrackedLayer` for details.</span>
 <span class="sd">    transmission_config : path-like or dict, optional</span>
 <span class="sd">        Dictionary of transmission cost configuration values, or</span>
 <span class="sd">        path to JSON/JSON5 file containing this dictionary. The</span>
@@ -1182,11 +1016,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    save_routing_layer : bool, default=False</span>
 <span class="sd">        Save Rust routing layer outputs to ``out_dir/extra_outputs``</span>
 <span class="sd">        when ``True``. Defaults to ``False``.</span>
-<span class="sd">    ignore_invalid_costs : bool, optional</span>
-<span class="sd">        Optional flag to treat any cost values &lt;= 0 as impassable</span>
-<span class="sd">        (i.e. no paths can ever cross this). If ``False``, cost values</span>
-<span class="sd">        of &lt;= 0 are set to a large value to simulate a strong but</span>
-<span class="sd">        permeable &quot;quasi-barrier&quot;. By default, ``False``.</span>
+<span class="sd">    invalid_costs_block_routing : bool, optional</span>
+<span class="sd">        Optional flag to treat any invalid cost values (&lt;= 0) as</span>
+<span class="sd">        impassable (i.e. no paths can ever cross this). If ``False``,</span>
+<span class="sd">        invalid cost values (&lt;= 0) are set to a large value to simulate</span>
+<span class="sd">        a strong but permeable &quot;quasi-barrier&quot;. By default, ``False``.</span>
 <span class="sd">    algorithm : str, default=&quot;bidirectional_long_range_dijkstra&quot;</span>
 <span class="sd">        Routing algorithm implementation to use. Supported values</span>
 <span class="sd">        are ``&quot;astar&quot;``, ``&quot;long_range_astar&quot;``,</span>
@@ -1243,10 +1077,10 @@ window.runMermaid = runMermaid;</script>
             <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
             <span class="n">route_points</span><span class="o">=</span><span class="n">route_points</span><span class="p">,</span>
             <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
-            <span class="n">cost_layers</span><span class="o">=</span><span class="n">cost_layers</span><span class="p">,</span>
-            <span class="n">friction_layers</span><span class="o">=</span><span class="n">friction_layers</span><span class="p">,</span>
-            <span class="n">barrier_layers</span><span class="o">=</span><span class="n">barrier_layers</span><span class="p">,</span>
+            <span class="n">routing_options</span><span class="o">=</span><span class="n">routing_options</span><span class="p">,</span>
             <span class="n">transmission_config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">,</span>
+            <span class="n">drivers</span><span class="o">=</span><span class="n">drivers</span><span class="p">,</span>
+            <span class="n">transition_costs</span><span class="o">=</span><span class="n">transition_costs</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">run_lcp</span><span class="p">(</span>
@@ -1254,10 +1088,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
             <span class="n">routes_to_compute</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="p">,</span>
             <span class="n">job_name</span><span class="o">=</span><span class="n">job_name</span><span class="p">,</span>
-            <span class="n">cost_multiplier_layer</span><span class="o">=</span><span class="n">cost_multiplier_layer</span><span class="p">,</span>
-            <span class="n">cost_multiplier_scalar</span><span class="o">=</span><span class="n">cost_multiplier_scalar</span><span class="p">,</span>
             <span class="n">tracked_layers</span><span class="o">=</span><span class="n">tracked_layers</span><span class="p">,</span>
-            <span class="n">ignore_invalid_costs</span><span class="o">=</span><span class="n">ignore_invalid_costs</span><span class="p">,</span>
+            <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="n">invalid_costs_block_routing</span><span class="p">,</span>
             <span class="n">user_mem_limit_gb</span><span class="o">=</span><span class="n">memory_utilization_limit</span> <span class="o">*</span> <span class="n">system_mem_limit_gb</span><span class="p">,</span>
             <span class="n">save_routing_layer</span><span class="o">=</span><span class="n">save_routing_layer</span><span class="p">,</span>
             <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>

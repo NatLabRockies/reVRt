@@ -1,0 +1,6 @@
+revrt.models.routing.RoutingOptionsMap
+======================================
+
+.. currentmodule:: revrt.models.routing
+
+.. autotype:: RoutingOptionsMap

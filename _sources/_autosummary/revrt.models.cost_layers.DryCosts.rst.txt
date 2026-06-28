@@ -24,11 +24,6 @@ revrt.models.cost\_layers.DryCosts
 
    .. autosummary::
    
-      ~DryCosts.model_computed_fields
-      ~DryCosts.model_config
-      ~DryCosts.model_extra
-      ~DryCosts.model_fields
-      ~DryCosts.model_fields_set
       ~DryCosts.iso_region_tiff
       ~DryCosts.nlcd_tiff
       ~DryCosts.slope_tiff

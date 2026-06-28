@@ -26,9 +26,7 @@ revrt.routing.base
       :toctree:
       :template: custom-class-template.rst
    
-      BatchRouteProcessor
       CharacterizedLayer
-      IncrementalRouteWriter
       RouteMetrics
       RoutingLayerManager
       RoutingScenario

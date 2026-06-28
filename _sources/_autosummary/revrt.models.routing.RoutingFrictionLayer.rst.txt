@@ -1,0 +1,33 @@
+revrt.models.routing.RoutingFrictionLayer
+=========================================
+
+.. currentmodule:: revrt.models.routing
+
+.. autoclass:: RoutingFrictionLayer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RoutingFrictionLayer.multiplier_layer
+      ~RoutingFrictionLayer.multiplier_scalar
+      ~RoutingFrictionLayer.include_in_report
+      ~RoutingFrictionLayer.apply_row_mult
+      ~RoutingFrictionLayer.apply_polarity_mult
+   
+   
