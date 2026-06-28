@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782497717122,
+  "lastUpdate": 1782680977189,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -11843,6 +11843,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 301964889,
             "range": "± 2406054",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "73a60f662cdca3d9e32a643cc47f6e9776a03222",
+          "message": "Wire up python for routing options (#297)\n\n* Add trace logging\n\n* Add trace logging\n\n* Add trace logging\n\n* WIP\n\n* Read zone arrays correctly\n\n* New error\n\n* Test updates\n\n* Require input dataset band shape to be 1\n\n* Update command to include integration tests\n\n* Update cargo lock\n\n* Fix integration tests\n\n* Fix call\n\n* Update func\n\n* Return option\n\n* Python can now specify which options to route to and from\n\n* FIx tests\n\n* Fix tests\n\n* Add test\n\n* Add function\n\n* Fix tests\n\n* Fix test\n\n* Fix tests\n\n* Fix up build costs command\n\n* Wire up routing options\n\n* Fix test\n\n* Rename parameter\n\n* No bidirectional option\n\n* Completely remove bidirectional\n\n* Remove param\n\n* Allow `cost_multiplier_layer` input\n\n* Remove input\n\n* Remove input\n\n* Remove input\n\n* Allow user to specify `cost_multiplier_layer`\n\n* Add tests\n\n* uncomment test\n\n* Add multiplier layer logic\n\n* mutipliers apply to everything\n\n* Add function\n\n* Add import\n\n* Split out modules\n\n* Fix imports\n\n* Split into a few classes\n\n* Formatting\n\n* Formatting\n\n* Simplify\n\n* Output csv\n\n* Always use multiline\n\n* Update tracked layer handling\n\n* MInor formatting\n\n* Rename module\n\n* Update docstring\n\n* Update naming\n\n* Move function\n\n* Add test\n\n* Parity between barrier layer and driver layer inputs\n\n* Updated unknowns\n\n* Add group cols by option\n\n* Use constants\n\n* Update iterator\n\n* use `_route_value_signature`\n\n* update function\n\n* Add method\n\n* Add signature\n\n* Route poitns now validated on the fly\n\n* Handle voltage/polarity inputs when building the mapping\n\n* Fix up tests\n\n* Make routing options class\n\n* Update func\n\n* Update doc pieces\n\n* Update docs\n\n* Update docs\n\n* Use pydantic\n\n* Bump version\n\n* Bug fix\n\n* Fix tests\n\n* Fix tests\n\n* Fix tests\n\n* Update ruff\n\n* Update lockfile\n\n* PR Fixes\n\n* linter",
+          "timestamp": "2026-06-28T14:57:27-06:00",
+          "tree_id": "2853b20a0d420d434e24dd9eef2c0149dea33846",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/73a60f662cdca3d9e32a643cc47f6e9776a03222"
+        },
+        "date": 1782680976248,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 93366659,
+            "range": "± 2358132",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 64483659,
+            "range": "± 1963775",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 134926854,
+            "range": "± 2772859",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 202785778,
+            "range": "± 2741469",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 792830202,
+            "range": "± 12549301",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 158817864,
+            "range": "± 1386924",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 159831366,
+            "range": "± 2382392",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 177584035,
+            "range": "± 1920740",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 237871313,
+            "range": "± 2095371",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 462336170,
+            "range": "± 9658450",
             "unit": "ns/iter"
           }
         ]
