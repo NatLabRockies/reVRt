@@ -9,10 +9,8 @@ import xarray as xr
 from shapely.geometry import LineString
 from rasterio.transform import from_origin
 
+from revrt.exceptions import revrtConfigurationError, revrtKeyError
 from revrt.models.routing import validate_routing_options
-from revrt.utilities import LayeredFile
-from revrt.routing.utilities import map_to_costs
-from revrt.exceptions import revrtKeyError
 from revrt.routing.cli.base import (
     update_multipliers,
     RoutingOptions,
@@ -30,6 +28,8 @@ from revrt.routing.cli.utilities import (
 from revrt.routing.cli.point_to_point import (
     PointToPointRouteDefinitionConverter,
 )
+from revrt.routing.utilities import map_to_costs
+from revrt.utilities import LayeredFile
 
 
 @pytest.fixture(scope="module")
@@ -569,6 +569,24 @@ def test_validate_routing_options_normalizes_legacy_shapes():
 
     out = validate_routing_options(routing_options)
     assert out == {"default": {}, "overhead": {}}
+
+
+def test_validate_routing_options_raises_configuration_error():
+    """Routing option validation should raise configuration errors"""
+
+    routing_options = {
+        "overhead": {
+            "cost_layers": [
+                {
+                    "layer_name": "layer_1",
+                    "unknown_field": True,
+                }
+            ]
+        }
+    }
+
+    with pytest.raises(revrtConfigurationError, match="Extra inputs"):
+        validate_routing_options(routing_options)
 
 
 def test_update_route_options_applies_per_option_values():

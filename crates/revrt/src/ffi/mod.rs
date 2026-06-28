@@ -106,11 +106,13 @@ fn simplify_using_slopes(path: Vec<(f64, f64)>, slope_tolerance: f64) -> Vec<(f6
 /// zarr_fp : path-like
 ///     Path to zarr file containing cost layers.
 /// cost_function : str
-///     JSON string representation of the cost function. The following
-///     keys are allowed in the cost function: "cost_layers",
-///     "friction_layers", "barrier_layers", and
-///     "invalid_costs_block_routing". See the documentation of the cost
-///     function for details on each of these inputs.
+///     JSON string representation of the cost function. Top-level keys
+///     include ``routing_options``, ``drivers``,
+///     ``transition_costs``, and
+///     ``invalid_costs_block_routing``. The ``cost_layers``,
+///     ``friction_layers``, and ``barrier_layers`` definitions must be
+///     nested under each routing option. See the cost-function
+///     documentation for details on each of these inputs.
 /// start : list of tuple
 ///     List of three-tuples ``(i, j, option_name)`` containing
 ///     non-negative integers representing the array indices and a
@@ -204,11 +206,13 @@ fn find_paths(
 /// zarr_fp : path-like
 ///     Path to zarr file containing cost layers.
 /// cost_function : str
-///     JSON string representation of the cost function. The following
-///     keys are allowed in the cost function: "cost_layers",
-///     "friction_layers", "barrier_layers", and
-///     "invalid_costs_block_routing". See the documentation of the cost
-///     function for details on each of these inputs.
+///     JSON string representation of the cost function. Top-level keys
+///     include ``routing_options``, ``drivers``,
+///     ``transition_costs``, and
+///     ``invalid_costs_block_routing``. The ``cost_layers``,
+///     ``friction_layers``, and ``barrier_layers`` definitions must be
+///     nested under each routing option. See the cost-function
+///     documentation for details on each of these inputs.
 /// route_definitions : list of tuple
 ///     List of tuples containing path definitions. Each path definition
 ///     tuple should be of the form (int, list, list). The int input is

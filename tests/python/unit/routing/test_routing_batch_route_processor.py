@@ -1885,15 +1885,7 @@ def test_negative_cost_path_returns_no_route(
     scenario = RoutingScenario(
         cost_fpath=sample_layered_data,
         routing_options={
-            "default": {
-                "cost_layers": [
-                    {"layer_name": "layer_6"},
-                    {"layer_name": "layer_4", "multiplier_scalar": -3},
-                ],
-                "friction_layers": [
-                    {"multiplier_layer": "layer_5", "multiplier_scalar": -10}
-                ],
-            }
+            "default": {"cost_layers": [{"layer_name": "layer_7"}]}
         },
         algorithm=algorithm,
     )
@@ -1902,7 +1894,7 @@ def test_negative_cost_path_returns_no_route(
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[
-            ([(4, 0, "default")], [(2, 7, "default")]),
+            ([(4, 0, "default")], [(4, 5, "default")]),
         ],
     )
     route_computer.process(out_fp=out_csv, save_paths=False)

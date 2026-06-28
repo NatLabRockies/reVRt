@@ -441,9 +441,13 @@ class TransitionCostsConfig(BaseModel, extra="forbid"):
 
 def validate_routing_options(routing_options):
     """[NOT PUBLIC API] Normalize routing options"""
-    validated = _RoutingOptionsInput.model_validate(
-        {"routing_options": routing_options}
-    )
+    try:
+        validated = _RoutingOptionsInput.model_validate(
+            {"routing_options": routing_options}
+        )
+    except ValidationError as error:
+        raise _validation_error_to_config_error(error) from error
+
     return validated.model_dump(exclude_none=True, exclude_unset=True)[
         "routing_options"
     ]
@@ -483,10 +487,10 @@ def validate_transition_cost_configs(transition_costs, routing_options):
     normalized_rules = [
         {
             "between": [
-                _resolve_transition_option_ref(
+                _validate_transition_option_ref(
                     rule.between[0], routing_options
                 ),
-                _resolve_transition_option_ref(
+                _validate_transition_option_ref(
                     rule.between[1], routing_options
                 ),
             ],
@@ -530,26 +534,15 @@ def _validate_driver_option_names(option_rules, routing_option_names, context):
             raise revrtConfigurationError(msg)
 
 
-def _resolve_transition_option_ref(option_ref, routing_option_names):
+def _validate_transition_option_ref(option_ref, routing_option_names):
     """Normalize a transition-cost option reference to an option name"""
-    if isinstance(option_ref, str):
-        if option_ref not in routing_option_names:
-            msg = (
-                f"unknown routing option {option_ref!r} in "
-                "transition_costs. "
-                f"Known options: {routing_option_names}"
-            )
-            raise revrtConfigurationError(msg)
-        return option_ref
-
-    if option_ref < 0 or option_ref >= len(routing_option_names):
+    if option_ref not in routing_option_names:
         msg = (
-            f"transition_costs option index {option_ref!r} is out of "
-            f"range for {len(routing_option_names)} routing options"
+            f"unknown routing option {option_ref!r} in transition_costs. "
+            f"Known options: {routing_option_names}"
         )
         raise revrtConfigurationError(msg)
-
-    return routing_option_names[option_ref]
+    return option_ref
 
 
 def _validation_error_to_config_error(error):
