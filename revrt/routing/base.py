@@ -1,35 +1,37 @@
-"""reVRt routing from a point to many points"""
+"""reVRt base routing functionality"""
 
 import json
-import time
 import logging
-from pathlib import Path
 from warnings import warn
 from functools import cached_property
+from itertools import pairwise
 
 import rasterio
 import numpy as np
 import xarray as xr
-import pandas as pd
 import dask.array as da
-import geopandas as gpd
 from shapely.geometry import Point
 from shapely.geometry.linestring import LineString
 
-from revrt import RouteFinder, simplify_using_slopes
+from revrt import simplify_using_slopes
 from revrt.models.cost_layers import BarrierLayer
-from revrt.utilities.handlers import IncrementalWriter
-from revrt.utilities.monitoring import log_runtime
-from revrt.exceptions import (
-    revrtKeyError,
-    revrtLeastCostPathNotFoundError,
-    revrtRustError,
+from revrt.models.routing import (
+    validate_driver_configs,
+    validate_routing_options,
+    validate_transition_cost_configs,
 )
+from revrt.routing.utilities import compute_lens
+from revrt.utilities.parsing import parse_comparison_values
+from revrt.exceptions import revrtKeyError
 from revrt.warn import revrtWarning, revrtDeprecationWarning
+
 
 logger = logging.getLogger(__name__)
 LCP_AGG_COST_LAYER_NAME = "lcp_agg_costs"
 """Special name reserved for internally-built cost layer"""
+
+ROUTE_SOLUTION_LEN = 3
+MIN_ROUTE_POINTS_FOR_TRANSITION_COST = 2
 
 
 class RoutingScenario:
@@ -38,13 +40,11 @@ class RoutingScenario:
     def __init__(
         self,
         cost_fpath,
-        cost_layers,
-        friction_layers=None,
+        routing_options,
         tracked_layers=None,
-        barrier_layers=None,
-        cost_multiplier_layer=None,
-        cost_multiplier_scalar=1,
-        ignore_invalid_costs=True,
+        drivers=None,
+        transition_costs=None,
+        invalid_costs_block_routing=True,
         algorithm="bidirectional_long_range_dijkstra",
     ):
         """
@@ -53,26 +53,27 @@ class RoutingScenario:
         ----------
         cost_fpath : path-like
             Path to the cost layer Zarr store used for routing.
-        cost_layers : list
-            List of dictionaries containing layer definitions
-            contributing to the summed routing cost.
-        friction_layers : list, optional
-            List of dictionaries defining layers that influence routing
-            but are excluded from reports.
         tracked_layers : list, optional
             List of dictionaries defining layers to summarize along the
-            route after applying optional multiplier inputs. Each
-            dictionary must include ``"layer_name"`` and
-            ``"agg_method"`` keys, and may also include
-            ``"multiplier_layer"`` and ``"multiplier_scalar"``.
-        barrier_layers : list, optional
-            List of dictionaries defining explicit hard or soft
-            barriers in the routing surface.
-        cost_multiplier_layer : str, optional
-            Layer name providing spatial multipliers for total cost.
-        cost_multiplier_scalar : int or float, optional
-            Scalar multiplier applied to the final cost surface.
-        ignore_invalid_costs : bool, optional
+            route after applying optional multiplier inputs. See
+            :class:`~revrt.models.routing.TrackedLayer` for the
+            canonical schema.
+        routing_options : dict
+            Mapping of routing-option names to dictionaries containing
+            cost, friction, and barrier definitions. See
+            :class:`~revrt.models.routing.RoutingOptionConfig` for the
+            canonical schema that is serialized for the Rust routing
+            core.
+        drivers : dict, optional
+            Optional driver-rule configuration keyed by routing option.
+            See :class:`~revrt.models.routing.DriverConfig` and
+            :class:`~revrt.models.routing.DriverZoneConfig`.
+        transition_costs : dict, optional
+            Optional transition-cost configuration between routing
+            options. See
+            :class:`~revrt.models.routing.TransitionCostsConfig` and
+            :class:`~revrt.models.routing.TransitionCostRule`.
+        invalid_costs_block_routing : bool, optional
             Flag indicating whether non-positive costs block traversal.
         algorithm : str, default="bidirectional_long_range_dijkstra"
             Routing algorithm implementation to use. Supported values
@@ -87,78 +88,65 @@ class RoutingScenario:
             By default, ``"bidirectional_long_range_dijkstra"``.
         """
         self.cost_fpath = cost_fpath
-        self.cost_layers = cost_layers
-        self.friction_layers = friction_layers or []
-        self.barrier_layers = barrier_layers or []
+        self.routing_options = validate_routing_options(routing_options)
+        self.drivers = validate_driver_configs(drivers, self.routing_options)
+        self.transition_costs = validate_transition_cost_configs(
+            transition_costs, self.routing_options
+        )
         self.tracked_layers = tracked_layers or []
-        self.cost_multiplier_layer = cost_multiplier_layer
-        self.cost_multiplier_scalar = cost_multiplier_scalar
-        self.ignore_invalid_costs = ignore_invalid_costs
+        self.invalid_costs_block_routing = invalid_costs_block_routing
         self.algorithm = algorithm
 
     def __repr__(self):
         return (
             "RoutingScenario:"
-            f"\n\t- cost_layers: {self.cost_layers}"
-            f"\n\t- friction_layers: {self.friction_layers}"
-            f"\n\t- barrier_layers: {self.barrier_layers}"
-            f"\n\t- cost_multiplier_layer: {self.cost_multiplier_layer}"
-            f"\n\t- cost_multiplier_scalar: {self.cost_multiplier_scalar}"
+            f"\n\t- routing_options: {self.routing_options}"
+            f"\n\t- drivers: {self.drivers}"
+            f"\n\t- transition_costs: {self.transition_costs}"
             f"\n\t- algorithm: {self.algorithm}"
         )
+
+    @property
+    def routing_option_names(self):
+        """list: Routing option names in solver index order"""
+        return list(self.routing_options)
 
     @cached_property
     def cost_function_json(self):
         """str: JSON string describing configured cost layers"""
-        return json.dumps(
-            {
-                "ignore_invalid_costs": self.ignore_invalid_costs,
-                "routing_options": {
-                    "default": {
-                        "cost_layers": list(self._cost_layers_for_rust()),
-                        "friction_layers": list(
-                            self._friction_layers_for_rust()
-                        ),
-                        "barrier_layers": list(
-                            self._barrier_layers_for_rust()
-                        ),
-                    }
-                },
+        payload = {
+            "invalid_costs_block_routing": self.invalid_costs_block_routing,
+            "routing_options": self._routing_options_for_rust(),
+        }
+        if self.drivers is not None:
+            payload["drivers"] = _drivers_for_rust(self.drivers)
+        if self.transition_costs is not None:
+            payload["transition_costs"] = self.transition_costs
+        return json.dumps(payload)
+
+    def _routing_options_for_rust(self):
+        """dict: Routing options formatted for Rust ingestion"""
+        return {
+            option_name: {
+                "cost_layers": list(
+                    _cost_layers_for_rust(option_config.get("cost_layers", []))
+                ),
+                "friction_layers": list(
+                    _friction_layers_for_rust(
+                        option_config.get("friction_layers", [])
+                    )
+                ),
+                "barrier_layers": list(
+                    _barrier_layers_for_rust(
+                        option_config.get("barrier_layers", [])
+                    )
+                ),
+                "cost_multiplier_layer": option_config.get(
+                    "cost_multiplier_layer"
+                ),
             }
-        )
-
-    def _cost_layers_for_rust(self):
-        """Cost layers formatted for Rust ingestion"""
-        for layer in self.cost_layers:
-            out_layer = layer.copy()
-            out_layer.pop("include_in_report", None)
-            out_layer.pop("include_in_final_cost", None)
-            yield out_layer
-
-    def _friction_layers_for_rust(self):
-        """Friction layers formatted for Rust ingestion"""
-        for layer in self.friction_layers:
-            out_layer = layer.copy()
-            if "layer_name" in out_layer:
-                msg = (
-                    "Specifying `layer_name` for a friction layer is "
-                    "deprecated! The default behavior of friction layers is "
-                    "to be multiplied to the aggregated cost layer. Please "
-                    "remove this key in order to silence this warning."
-                )
-                warn(msg, revrtDeprecationWarning)
-                out_layer.pop("layer_name")
-
-            if "mask" in out_layer:
-                out_layer["multiplier_layer"] = out_layer.pop("mask")
-
-            out_layer.pop("include_in_report", None)
-            yield out_layer
-
-    def _barrier_layers_for_rust(self):
-        """Barrier layers formatted for Rust ingestion"""
-        for layer in self.barrier_layers:
-            yield BarrierLayer(**layer).to_routing_dict()
+            for option_name, option_config in self.routing_options.items()
+        }
 
 
 class RoutingLayerManager:
@@ -185,15 +173,13 @@ class RoutingLayerManager:
         self.tracked_layers = []
 
         self.transform = self._layer_fh.rio.transform()
-        self._full_shape = self._layer_fh.rio.shape
+        self.full_shape = self._layer_fh.rio.shape
         self.cost_crs = self._layer_fh.rio.crs
         self._layers = set(self._layer_fh.variables)
 
-        self.cost = None
-        self.li_cost = None
-        self.untracked_cost = None
-        self.final_routing_layer = None
-        self.barrier_mask = None
+        self.costs = {}
+        self.li_costs = {}
+        self.final_routing_layers = {}
 
     def __repr__(self):
         return f"RoutingLayerManager for {self.routing_scenario!r}"
@@ -225,91 +211,118 @@ class RoutingLayerManager:
         """Build lazy routing arrays from layered file"""
 
         logger.debug("Building %r", self)
-        self._build_cost_layer()
-        self._build_final_routing_layer()
+        self._build_cost_layers()
         self._build_tracked_layers()
 
         return self
 
-    def _build_cost_layer(self):
-        """Build out the main cost layer"""
-        self.cost = da.zeros(self._full_shape, dtype=np.float32)
-        self.li_cost = da.zeros(self._full_shape, dtype=np.float32)
-        self.untracked_cost = da.zeros(self._full_shape, dtype=np.float32)
-        for layer_info in self.routing_scenario.cost_layers:
-            layer_name = layer_info["layer_name"]
-            is_li = layer_info.get("is_invariant", False)
+    def _build_cost_layers(self):
+        """Build a coarse validation layer across routing options"""
+        if self.costs:
+            return
+
+        for option, config in self.routing_scenario.routing_options.items():
+            self._build_cost_layer_from_option(option, config)
+
+    def _empty_cost_layer_data_array(self):
+        """xarray.DataArray: Empty routing-cost layer template"""
+        template = self.latitudes.astype(np.float32).copy(deep=False)
+        template.values = da.zeros(self.full_shape, dtype=np.float32)
+        return template
+
+    def _build_cost_layer_from_option(self, option, config):
+        """Build a single routing option's cost layer"""
+        option_cost = self._empty_cost_layer_data_array()
+        option_li_cost = self._empty_cost_layer_data_array()
+        option_untracked_cost = self._empty_cost_layer_data_array()
+        for layer_info in config.get("cost_layers", []):
             cost = self._extract_and_scale_layer(layer_info)
             cost.values = da.where(cost > 0, cost, 0)
-
+            is_li = layer_info.get("is_invariant", False)
             if layer_info.get("include_in_final_cost", True):
                 if is_li:
-                    self.li_cost += cost
+                    option_li_cost += cost
                 else:
-                    self.cost += cost
+                    option_cost += cost
             else:
-                self.untracked_cost += cost
+                option_untracked_cost += cost
 
             if layer_info.get("include_in_report", True):
+                layer_name = f"{layer_info['layer_name']}_{option}"
                 self.tracked_layers.append(
                     CharacterizedLayer(
-                        layer_name, cost, is_length_invariant=is_li
+                        layer_name,
+                        cost,
+                        option=option,
+                        is_length_invariant=is_li,
                     )
                 )
 
-        if mll := self.routing_scenario.cost_multiplier_layer:
-            self._verify_layer_exists(mll)
-            self.cost *= self._layer_fh[mll].isel(band=0).astype(np.float32)
+        mult = config.get("cost_multiplier_scalar", 1) or 1
+        option_cost *= mult
+        option_li_cost *= mult
+        option_untracked_cost *= mult
 
-        self.cost *= self.routing_scenario.cost_multiplier_scalar
-        self.li_cost += self.cost * 0  # make sure arrays are all the same type
-        self.cost += self.li_cost * 0  # make sure arrays are all the same type
+        multiplier_layer_name = config.get("cost_multiplier_layer")
+        if multiplier_layer_name:
+            multiplier = self._extract_layer(multiplier_layer_name)
+            option_cost *= multiplier
+            option_li_cost *= multiplier
+            option_untracked_cost *= multiplier
 
-    def _build_final_routing_layer(self):
-        """Build out the routing array"""
-        self.final_routing_layer = self.cost.copy()
-        self.final_routing_layer += self.untracked_cost
+        self.costs[option] = option_cost
+        self.li_costs[option] = option_li_cost
+        self._build_final_routing_layer_from_option(
+            option,
+            config,
+            option_cost + option_li_cost + option_untracked_cost,
+        )
 
-        frictions = da.zeros(self._full_shape, dtype=np.float32)
-        for layer_info in self.routing_scenario.friction_layers:
-            layer_name = (
-                layer_info["mask"]
-                if "mask" in layer_info
-                else layer_info.get("multiplier_layer")
-            )
+    def _build_final_routing_layer_from_option(
+        self, option, config, option_layer
+    ):
+        frictions = da.zeros(self.full_shape, dtype=np.float32)
+        for layer_info in config.get("friction_layers", []):
+            layer_name = layer_info.get("multiplier_layer")
             friction_layer = self._extract_and_scale_friction_layer(
                 layer_name, layer_info
             )
             if layer_info.get("include_in_report", False):
                 self.tracked_layers.append(
-                    CharacterizedLayer(layer_name, friction_layer)
+                    CharacterizedLayer(
+                        f"{layer_name}_{option}", friction_layer, option=option
+                    )
                 )
-
             frictions += friction_layer
 
         frictions = da.where(frictions <= -1, -1.0 + 1e-7, frictions)
-        self.final_routing_layer *= 1 + frictions
-        self.final_routing_layer += self.li_cost
-        self.barrier_mask = self._build_barrier_mask()
+        option_layer *= 1 + frictions
 
-        self.final_routing_layer.values = da.where(
-            self.final_routing_layer <= 0,
-            -1 if self.routing_scenario.ignore_invalid_costs else 1e10,
-            self.final_routing_layer,
+        barrier_mask = da.zeros(self.full_shape, dtype=bool)
+        for layer_info in config.get("barrier_layers", []):
+            if layer_info.get("barrier_importance") is not None:
+                continue
+            barrier_mask |= self._extract_barrier_layer(
+                BarrierLayer(**layer_info).to_routing_dict()
+            )
+
+        option_layer.values = da.where(
+            option_layer <= 0,
+            -1 if self.routing_scenario.invalid_costs_block_routing else 1e10,
+            option_layer,
         )
-        self.final_routing_layer.values = da.where(
-            self.barrier_mask,
+        option_layer.values = da.where(
+            barrier_mask,
             da.nan,
-            self.final_routing_layer.values,
+            option_layer.values,
         )
+        self.final_routing_layers[option] = option_layer
 
     def _extract_and_scale_layer(self, layer_info):
         """Extract layer based on name and scale according to input"""
         cost = self._extract_layer(layer_info["layer_name"])
 
-        multiplier_layer_name = layer_info.get(
-            "mask", layer_info.get("multiplier_layer")
-        )
+        multiplier_layer_name = layer_info.get("multiplier_layer")
         if multiplier_layer_name:
             cost *= self._extract_layer(multiplier_layer_name)
 
@@ -328,19 +341,6 @@ class RoutingLayerManager:
         cost = self._extract_layer(mask_layer_name)
         cost *= layer_info.get("multiplier_scalar", 1)
         return cost
-
-    def _build_barrier_mask(self):
-        """Build a mask for always-active explicit barriers"""
-        barrier_mask = da.zeros(self._full_shape, dtype=bool)
-        for layer_info in self._iter_hard_barrier_layers():
-            barrier_mask |= self._extract_barrier_layer(layer_info)
-        return barrier_mask
-
-    def _iter_hard_barrier_layers(self):
-        """Yield barrier layers without retry importance"""
-        for layer_info in self.routing_scenario.barrier_layers:
-            if layer_info.get("barrier_importance") is None:
-                yield BarrierLayer(**layer_info).to_routing_dict()
 
     def _extract_barrier_layer(self, layer_info):
         """Extract one barrier layer mask from the layered file"""
@@ -405,16 +405,29 @@ class RoutingLayerManager:
                 continue
 
             layer = self._extract_and_scale_layer(tracked_layer_info)
-            self.tracked_layers.append(
-                CharacterizedLayer(tracked_layer, layer, agg_method=method)
-            )
+            is_li = tracked_layer_info.get("is_invariant", False)
+            for option in self.routing_scenario.routing_option_names:
+                self.tracked_layers.append(
+                    CharacterizedLayer(
+                        f"{tracked_layer}_{option}",
+                        layer,
+                        option=option,
+                        is_length_invariant=is_li,
+                        agg_method=method,
+                    )
+                )
 
 
 class CharacterizedLayer:
     """Encapsulate tracked routing layer metadata"""
 
     def __init__(
-        self, name, layer, is_length_invariant=False, agg_method=None
+        self,
+        name,
+        layer,
+        option,
+        is_length_invariant=False,
+        agg_method=None,
     ):
         """
 
@@ -424,6 +437,9 @@ class CharacterizedLayer:
             Identifier used when reporting layer-derived metrics.
         layer : xarray.DataArray or dask.array.Array
             Data values sampled from the routing stack.
+        option : str
+            Routing option this layer should characterize. When set,
+            metrics only use matching route cells.
         is_length_invariant : bool, default=False
             Flag signaling cost values should ignore segment length.
             By default, ``False``.
@@ -433,32 +449,51 @@ class CharacterizedLayer:
         """
         self.name = name
         self.layer = layer
+        self.option = option
         self.is_length_invariant = is_length_invariant
         self.agg_method = agg_method
 
     def __repr__(self):
         return (
             f"CharacterizedLayer(name={self.name!r}, "
+            f"option={self.option!r}, "
             f"is_length_invariant={self.is_length_invariant}, "
             f"agg_method={self.agg_method!r})"
         )
 
-    def compute(self, route, cell_size):
+    def compute(self, route, cell_size, point_lens):
         """Compute layer metrics along a route
 
         Parameters
         ----------
         route : sequence
-            Ordered ``(row, col)`` indices describing the path.
+            Ordered ``(row, col, option)`` indices describing the path.
         cell_size : float
             Raster cell size in meters for distance calculations.
+        point_lens : array-like
+            Per-route-cell distances aligned with ``route``.
 
         Returns
         -------
         dict
             Mapping of metric names to aggregated layer values.
         """
-        rows, cols = np.array(route).T
+        route_points = []
+        filtered_point_lens = []
+        for p, point_len in zip(route, point_lens, strict=True):
+            *point, point_option = p
+            if point_option != self.option:
+                continue
+            route_points.append(point)
+            filtered_point_lens.append(point_len)
+
+        if not route_points:
+            return self._empty_metrics()
+
+        route_points = np.asarray(route_points)
+        filtered_point_lens = np.asarray(filtered_point_lens)
+
+        rows, cols = np.array(route_points).T
         layer_values = self.layer.isel(
             y=xr.DataArray(rows, dims="points"),
             x=xr.DataArray(cols, dims="points"),
@@ -466,31 +501,45 @@ class CharacterizedLayer:
 
         if self.agg_method is None:
             return self._compute_total_and_length(
-                layer_values, route, cell_size
+                layer_values,
+                route_points,
+                cell_size,
+                filtered_point_lens,
             )
 
         return self._compute_agg(layer_values)
 
-    def _compute_total_and_length(self, layer_values, route, cell_size):
-        """Compute total cost and length metrics for the layer"""
-        if len(route) == 1:
+    def _empty_metrics(self):
+        """dict: Empty metrics for routes that skip this option"""
+        if self.agg_method is None:
             return {
                 f"{self.name}_cost": 0,
                 f"{self.name}_length_km": 0,
             }
 
-        lens, __ = _compute_lens(route, cell_size)
+        return {f"{self.name}_{self.agg_method}": np.float32(np.nan)}
+
+    def _compute_total_and_length(
+        self, layer_values, route, cell_size, point_lens
+    ):
+        """Compute total cost and length metrics for the layer"""
+        if len(route) == 0:
+            return {
+                f"{self.name}_cost": 0,
+                f"{self.name}_length_km": 0,
+            }
 
         layer_data = getattr(layer_values, "data", layer_values)
         if not isinstance(layer_data, da.Array):  # pragma: no cover
             layer_data = da.asarray(layer_data)
+        point_lens = da.asarray(point_lens)
 
         if self.is_length_invariant:
             layer_cost = da.sum(layer_data)
         else:
-            layer_cost = da.sum(layer_data * lens)
+            layer_cost = da.sum(layer_data * point_lens)
 
-        layer_length = da.sum(lens[layer_data > 0]) * cell_size / 1000
+        layer_length = da.sum(point_lens[layer_data > 0]) * cell_size / 1000
 
         return {
             f"{self.name}_cost": layer_cost.astype(np.float32).compute(),
@@ -548,6 +597,16 @@ class RouteMetrics:
         """float: Raster cell size in meters"""
         return abs(self._routing_layers.transform.a)
 
+    @cached_property
+    def _route_options(self):
+        """list | None: Route option ids aligned with route points"""
+        return np.asarray([p[-1] for p in self._route])
+
+    @cached_property
+    def _route_row_col(self):
+        """list: List of (row, col) tuples defining the path"""
+        return [x[:2] for x in self._route]
+
     @property
     def _lens(self):
         """array-like: Cached per-cell travel distances"""
@@ -565,25 +624,44 @@ class RouteMetrics:
     @property
     def cost(self):
         """float: Optimized objective evaluated over the route"""
-        rows, cols = np.array(self._route).T
-        cell_costs = self._routing_layers.cost.isel(
-            y=xr.DataArray(rows, dims="points"),
-            x=xr.DataArray(cols, dims="points"),
-        )
-        cost = da.sum(cell_costs * self._lens)
+        rows, cols = np.array(self._route_row_col).T
+        point_lens = xr.DataArray(self._lens, dims="points")
+        total_cost = da.zeros((), dtype=np.float32)
 
-        inv_cell_costs = self._routing_layers.li_cost.isel(
-            y=xr.DataArray(rows, dims="points"),
-            x=xr.DataArray(cols, dims="points"),
-        )
-        invariant_cost = da.sum(inv_cell_costs)
+        for option in np.unique(self._route_options):
+            mask = self._route_options == option
+            option_rows = xr.DataArray(rows[mask], dims="points")
+            option_cols = xr.DataArray(cols[mask], dims="points")
 
-        return (cost + invariant_cost).compute()
+            cell_costs = self._routing_layers.costs[option].isel(
+                y=option_rows, x=option_cols
+            )
+            total_cost += da.sum(cell_costs * point_lens[mask])
+
+            inv_cell_costs = self._routing_layers.li_costs[option].isel(
+                y=option_rows, x=option_cols
+            )
+            total_cost += da.sum(inv_cell_costs)
+
+        return total_cost.compute() + self._transition_cost()
+
+    def _transition_cost(self):
+        """float: Total transition cost implied by option changes"""
+        if len(self._route) < MIN_ROUTE_POINTS_FOR_TRANSITION_COST:
+            return 0.0
+
+        default_cost, pairwise_costs = _transition_cost_lookup(
+            self._routing_layers.routing_scenario.transition_costs
+        )
+        return sum(
+            pairwise_costs.get((src, dst), default_cost)
+            for src, dst in pairwise(self._route_options)
+        )
 
     @property
     def end_lat(self):
         """float: Latitude of the terminal path cell"""
-        row, col = self._route[-1]
+        row, col = self._route_row_col[-1]
         return (
             self._routing_layers.latitudes.isel(y=row, x=col)
             .astype(np.float32)
@@ -594,7 +672,7 @@ class RouteMetrics:
     @property
     def end_lon(self):
         """float: Longitude of the terminal path cell"""
-        row, col = self._route[-1]
+        row, col = self._route_row_col[-1]
         return (
             self._routing_layers.longitudes.isel(y=row, x=col)
             .astype(np.float32)
@@ -605,7 +683,7 @@ class RouteMetrics:
     @property
     def geom(self):
         """shapely.GeometryType: Geometry for the computed path"""
-        rows, cols = np.array(self._route).T
+        rows, cols = np.array(self._route_row_col).T
         x, y = rasterio.transform.xy(
             self._routing_layers.transform, rows, cols
         )
@@ -630,7 +708,9 @@ class RouteMetrics:
 
         results.update(self._attrs)
         for layer in self._routing_layers.tracked_layers:
-            layer_result = layer.compute(self._route, self.cell_size)
+            layer_result = layer.compute(
+                self._route, self.cell_size, self._lens
+            )
             results.update(layer_result)
 
         if self._add_geom:
@@ -640,433 +720,84 @@ class RouteMetrics:
 
     def _compute_path_length(self):
         """Compute the total length and cell by cell length of LCP"""
-        self.__lens, self._total_path_length = _compute_lens(
-            self._route, self.cell_size
+        self.__lens, self._total_path_length = compute_lens(
+            self._route_row_col, self.cell_size
         )
 
 
-class IncrementalRouteWriter(IncrementalWriter):
-    """Stream results to disk by appending each new result to a file
+def _transition_cost_lookup(transition_costs):
+    """Build the directed transition-cost lookup used in reports"""
+    if not transition_costs:
+        return 0.0, {}
 
-    A new file is created if one does not exist.
-    """
+    default_cost = transition_costs.get("default", 0) or 0
+    pairwise_costs = {}
+    for rule in transition_costs.get("pairwise", []):
+        src, dst = rule["between"]
+        pairwise_costs[(src, src)] = 0
+        pairwise_costs[(dst, dst)] = 0
+        pairwise_costs[(src, dst)] = rule["cost"]
+        pairwise_costs[(dst, src)] = rule["cost"]
 
-    def __init__(self, out_fp, crs=None):
-        """
-
-        Parameters
-        ----------
-        out_fp : path-like
-            Path to output file.
-        crs : rasterio.crs.CRS or dict, optional
-            Coordinate reference system for geometries when saving to
-            GeoPackage. By default, ``None``.
-        """
-        super().__init__(out_fp)
-        self.crs = crs
-
-    def preprocess_chunk(self, result):
-        """Turn result into a dataframe chunk
-
-        Parameters
-        ----------
-        result : dict
-            Route result dictionary as built by
-            ``RouteMetrics.compute()``.
-
-        Returns
-        -------
-        pandas.DataFrame or geopandas.GeoDataFrame
-            A dataframe holding the route result.
-        """
-        if "geometry" in result:
-            return gpd.GeoDataFrame(
-                [result], geometry="geometry", crs=self.crs
-            )
-        return pd.DataFrame([result])
+    return default_cost, pairwise_costs
 
 
-class BatchRouteProcessor:
-    """Class to manage batches of route computations"""
+def _cost_layers_for_rust(layers):
+    """Cost layers formatted for Rust ingestion"""
+    for layer in layers:
+        out_layer = layer.copy()
+        out_layer.pop("include_in_report", None)
+        out_layer.pop("include_in_final_cost", None)
+        yield out_layer
 
-    def __init__(
-        self,
-        routing_scenario,
-        route_definitions,
-        route_attrs=None,
-        mem_limit_gb=4,
-    ):
-        """
 
-        Parameters
-        ----------
-        routing_scenario : RoutingScenario
-            Scenario describing the cost layers and routing options.
-        route_definitions : Iterable
-            Sequence of ``(start_points, end_points)`` tuples defining
-            which points to route between. Each of ``start_points`` and
-            ``end_points`` should be a list of ``(row, col)`` index
-            tuples.
-        route_attrs : dict, optional
-            Mapping of tuples of the form (int, (int, int)) where the
-            first integer represents the route ID and the tuple of
-            integers represents the starting index to additional
-            attributes to include in the output for that route.
-            By default, ``None``.
-        mem_limit_gb : int or float, default=4
-            Memory limit in gigabytes for routing computations.
-            By default, ``4``.
-        """
-        self.routing_scenario = routing_scenario
-        self._route_definitions = route_definitions
-        self._route_attrs = route_attrs or {}
-        self.mem_limit_gb = mem_limit_gb
-
-    @cached_property
-    def default_attrs(self):
-        """dict: Default attributes for all routes"""
-        keys = set().union(*[set(x) for x in self._route_attrs.values()])
-        return dict.fromkeys(keys)
-
-    @cached_property
-    def route_attrs(self):
-        """dict: Mapping of frozen route node pair sets to attributes"""
-        return {
-            k: {**self.default_attrs, **v}
-            for k, v in self._route_attrs.items()
-        }
-
-    @cached_property
-    def route_definitions(self):
-        """list: Validated route definitions for computation"""
-        return self._compile_valid_route_definitions()
-
-    @cached_property
-    def routing_layers(self):
-        """RoutingLayerManager: Built routing layers for the scenario"""
-        return RoutingLayerManager(self.routing_scenario).build()
-
-    def process(self, out_fp, save_paths=False, routing_layer_out_fp=None):
-        """Compute all routes and save to disk
-
-        Parameters
-        ----------
-        out_fp : path-like
-            Path to output file. If ``save_paths=True``, a GeoPackage
-            will be created (recommend to pass in a filepath ending in
-            ".gpkg"). Otherwise, a CSV file will be created (recommend
-            to pass in a filepath ending in ".csv").
-        save_paths : bool, default=False
-            Include shapely geometries in the output when ``True``.
-            By default, ``False``.
-        routing_layer_out_fp : path-like, optional
-            Optional output path for Rust routing-layer cache data.
-            By default, ``None``.
-        """
-        if not self.route_definitions:
-            return
-
-        with log_runtime(
-            f"Routing for {len(self.route_definitions)} route definitions"
-        ):
-            try:
-                self._compute_routes(
-                    out_fp, save_paths=save_paths, rl=routing_layer_out_fp
-                )
-            finally:
-                self._reset_routing_layers()
-
-    def _compute_routes(self, out_fp, save_paths, rl=None):
-        """Evaluate route definitions and build result records"""
-
-        out_fp = _validate_out_fp(out_fp, save_paths)
-        writer = IncrementalRouteWriter(
-            out_fp, crs=self.routing_layers.cost_crs
-        )
-        for indices, optimized_objective, attrs in self._route_results(rl):
-            metrics = RouteMetrics(
-                self.routing_layers,
-                indices,
-                optimized_objective,
-                add_geom=save_paths,
-                attrs=attrs,
-            )
-            route_result = metrics.compute()
-            writer.save(route_result)
-
-    def _route_results(self, routing_layer_out_fp=None):
-        """Generator yielding route results from Rust computations"""
-        if not self.route_definitions:
-            return
-
-        logger.debug(
-            "Setting memory limit to %.2f GB for Rust computations",
-            self.mem_limit_gb,
-        )
-        route_results = RouteFinder(
-            zarr_fp=self.routing_scenario.cost_fpath,
-            cost_function=self.routing_scenario.cost_function_json,
-            route_definitions=[
-                (rid, sp, ep)
-                for rid, (sp, ep) in self.route_definitions.items()
-            ],
-            mem_limit_bytes=int(self.mem_limit_gb * 1_000_000_000),
-            algorithm=self.routing_scenario.algorithm,
-            log_level=logging.getLogger("revrt").level or None,
-            routing_layer_out_fp=routing_layer_out_fp,
-        )
-        yield from self._skip_failed_routes(route_results)
-
-    def _compile_valid_route_definitions(self):
-        """Filter route definitions to those with valid route nodes"""
-        if not self._route_definitions:
-            return {}
-
-        sample_definition = self._route_definitions[0]
-        if len(sample_definition) == 2:  # noqa: PLR2004
-            self._route_definitions = _add_route_ids(self._route_definitions)
-
-        routes_to_compute = {}
-        for route_id, start_points, end_points in self._route_definitions:
-            filtered_start_points = self._validate_start_points(start_points)
-            if not filtered_start_points:
-                msg = (
-                    f"All start points are invalid for route with ID "
-                    f"{route_id}: {start_points}\nSkipping..."
-                )
-                warn(msg, revrtWarning)
-                continue
-
-            try:
-                filtered_end_points = self._validate_end_points(end_points)
-            except revrtLeastCostPathNotFoundError:
-                continue
-
-            if not filtered_end_points:
-                msg = (
-                    f"All end points are invalid for route with ID "
-                    f"{route_id}: {end_points}\nSkipping..."
-                )
-                warn(msg, revrtWarning)
-                continue
-
-            routes_to_compute[route_id] = (
-                filtered_start_points,
-                filtered_end_points,
-            )
-
-        return routes_to_compute
-
-    def _skip_failed_routes(self, routing_results):
-        """Yield only successfully computed routes from Rust results"""
-
-        results_iter = iter(routing_results)
-        num_complete = 0
-        ts = time.monotonic()
-        while True:
-            num_complete += 1
-            try:
-                route_id, solutions = next(results_iter)
-                yield from self._formatted_solutions(solutions, route_id)
-                time_elapsed = f"{(time.monotonic() - ts) / 60:.2f} minute(s)"
-                logger.info(
-                    "%d/%d (%.2f%%) route definitions processed in %s",
-                    num_complete,
-                    len(self.route_definitions),
-                    (num_complete / len(self.route_definitions)) * 100,
-                    time_elapsed,
-                )
-            except revrtRustError:  # pragma: no cover
-                logger.exception("Rust error when computing route")
-                continue
-            except StopIteration:
-                logger.info("Routing complete")
-                break
-
-    def _formatted_solutions(self, solutions, route_id):
-        """Format reVRt output solutions and log any failures"""
-        start_points, end_points = self.route_definitions[route_id]
-        if not solutions:
+def _friction_layers_for_rust(layers):
+    """Friction layers formatted for Rust ingestion"""
+    for layer in layers:
+        out_layer = layer.copy()
+        if "layer_name" in out_layer:
             msg = (
-                f"Unable to find route from {start_points} to any of "
-                f"{end_points} (route ID: {route_id}). Please verify "
-                "that the start and end points are not separated by "
-                "hard barriers or invalid cost cells."
+                "Specifying `layer_name` for a friction layer is "
+                "deprecated! The default behavior of friction layers is "
+                "to be multiplied to the aggregated cost layer. Please "
+                "remove this key in order to silence this warning."
             )
-            logger.error(msg)
-            return
+            warn(msg, revrtDeprecationWarning)
+            out_layer.pop("layer_name")
 
-        logger.debug(
-            "Got result from Rust for route_id %d. Processing..."
-            "\n\t- Start points: %r\n\t- End points: %r",
-            route_id,
-            start_points,
-            end_points,
+        if "mask" in out_layer:
+            out_layer["multiplier_layer"] = out_layer.pop("mask")
+
+        out_layer.pop("include_in_report", None)
+        yield out_layer
+
+
+def _barrier_layers_for_rust(layers):
+    """Barrier layers formatted for Rust ingestion"""
+    for layer in layers:
+        out_layer = BarrierLayer(**layer).to_routing_dict()
+        if out_layer.get("barrier_importance") is None:
+            out_layer.pop("barrier_importance")
+        yield out_layer
+
+
+def _drivers_for_rust(drivers):
+    """Driver rules formatted for Rust ingestion"""
+    out_drivers = drivers.copy()
+    if "zones" in drivers:
+        out_drivers["zones"] = list(
+            _driver_zones_for_rust(drivers.get("zones", []))
         )
-        for indices, optimized_objective, dbl in solutions:
-            attrs_key = (route_id, indices[0])
-            attrs = {
-                **self.route_attrs.get(attrs_key, self.default_attrs),
-                "dropped_barrier_layers": json.dumps(dbl),
-            }
-            yield indices, optimized_objective, attrs
-
-    def _validate_start_points(self, points):
-        """Validate start points by removing cells invalid cost"""
-        points = _get_valid_points(
-            points, self.routing_layers.cost.shape, point_type="start"
-        )
-        if not points or not self.routing_scenario.ignore_invalid_costs:
-            return points
-
-        rows, cols = np.array(points).T
-        costs = self.routing_layers.cost.isel(
-            y=xr.DataArray(rows, dims="points"),
-            x=xr.DataArray(cols, dims="points"),
-        )
-
-        cost_values = costs.compute()
-        bad_point_inds = np.where(np.isnan(cost_values) | (cost_values <= 0))[
-            0
-        ]
-        if not bad_point_inds.size:
-            return points
-
-        invalid_points = {points[i] for i in bad_point_inds}
-        msg = (
-            f"One or more of the start points have an invalid cost "
-            f"(must be > 0): {invalid_points}\n"
-            "Dropping these from consideration..."
-        )
-        warn(msg, revrtWarning)
-
-        return [p for p in points if p not in invalid_points]
-
-    def _validate_end_points(self, points):
-        """Filter out invalid endpoints; raise if all are invalid"""
-        points = _get_valid_points(
-            points, self.routing_layers.cost.shape, point_type="end"
-        )
-        if not points or not self.routing_scenario.ignore_invalid_costs:
-            return points
-
-        all_invalid_points_msg = (
-            f"None of the end points have a valid cost (must be > 0): {points}"
-        )
-
-        rows, cols = np.array(points).T
-        costs = self.routing_layers.cost.isel(
-            y=xr.DataArray(rows, dims="points"),
-            x=xr.DataArray(cols, dims="points"),
-        )
-
-        cost_values = costs.compute()
-        bad_point_inds = np.where(np.isnan(cost_values) | (cost_values <= 0))[
-            0
-        ]
-        invalid_points = {points[i] for i in bad_point_inds}
-        if invalid_points:
-            msg = (
-                f"One or more of the end points have an invalid cost "
-                f"(must be > 0): {invalid_points}\n"
-                "Dropping these from consideration..."
-            )
-            warn(msg, revrtWarning)
-            points = [p for p in points if p not in invalid_points]
-
-        if not points:
-            raise revrtLeastCostPathNotFoundError(all_invalid_points_msg)
-
-        return points
-
-    def _reset_routing_layers(self):
-        """Close handler and remove built routing layers from memory"""
-        self.routing_layers.close()
-        del self.routing_layers
+    return out_drivers
 
 
-def _validate_out_fp(out_fp, save_paths):
-    """Validate output filepath extension"""
-    out_fp = Path(out_fp)
-
-    if save_paths and out_fp.suffix.lower() != ".gpkg":
-        msg = (
-            "When saving paths, the output file should have a '.gpkg' "
-            f"extension to ensure proper format! Got input file: '{out_fp}'. "
-            "Adding '.gpkg' extension... "
-        )
-        warn(msg, revrtWarning)
-        out_fp = out_fp.with_suffix(".gpkg")
-    elif not save_paths and out_fp.suffix.lower() != ".csv":
-        msg = (
-            "When not saving paths, the output file should have a '.csv' "
-            f"extension to ensure proper format! Got input file: '{out_fp}'. "
-            "Adding '.csv' extension... "
-        )
-        warn(msg, revrtWarning)
-        out_fp = out_fp.with_suffix(".csv")
-
-    logger.debug("Validated output filepath: %s", out_fp)
-    return out_fp
-
-
-def _get_valid_points(points, arr_shape, point_type):
-    """Get only points that are within array bounds"""
-    valid_points = []
-    invalid_points = []
-    for point in points:
-        if _is_valid_point(point, arr_shape):
-            valid_points.append(point)
-        else:
-            invalid_points.append(point)
-
-    if invalid_points:
-        msg = (
-            f"One or more of the {point_type} points are out of bounds for an "
-            f"array of shape {arr_shape}: {invalid_points}\n"
-            "Dropping these from consideration..."
-        )
-        warn(msg, revrtWarning)
-
-    return valid_points
-
-
-def _is_valid_point(point, arr_shape):
-    """Check if point is within array bounds"""
-    row, col = point
-    return 0 <= row < arr_shape[0] and 0 <= col < arr_shape[1]
-
-
-def _add_route_ids(route_definitions):
-    """Add route IDs to route definitions missing them"""
-    logger.info(
-        "Route ID's missing from route definitions - adding definition "
-        "index as route ID..."
-    )
-    return [
-        (ind, start_points, end_points)
-        for ind, (start_points, end_points) in enumerate(route_definitions)
-    ]
-
-
-def _compute_lens(route, cell_size):
-    """Compute the total length and cell by cell length of LCP"""
-    # Use Pythagorean theorem to calculate length between cells (km)
-    # Use c**2 = a**2 + b**2 to determine length of individual paths
-    lens = np.sqrt(np.sum(np.diff(route, axis=0) ** 2, axis=1))
-    total_path_length = np.sum(lens) * cell_size / 1000
-
-    # Need to determine distance coming into and out of any cell.
-    # Assume paths start and end at the center of a cell. Therefore,
-    # distance traveled in the cell is half the distance entering it
-    # and half the distance exiting it. Duplicate all lengths,
-    # pad 0s on ends for start  and end cells, and divide all
-    # distance by half.
-    lens = np.repeat(lens, 2)
-    lens = np.insert(np.append(lens, 0), 0, 0)
-    lens /= 2
-
-    # Group entrance and exits distance together, and add them
-    lens = lens.reshape((int(lens.shape[0] / 2), 2))
-    lens = np.sum(lens, axis=1)
-    return lens, total_path_length
+def _driver_zones_for_rust(zones):
+    """Driver zones formatted for Rust ingestion"""
+    for zone in zones:
+        out_zone = zone.copy()
+        where = out_zone.pop("where", None)
+        if where is not None:
+            mask_operator, mask_threshold = parse_comparison_values(where)
+            out_zone["mask_operator"] = mask_operator
+            out_zone["mask_threshold"] = mask_threshold
+        yield out_zone

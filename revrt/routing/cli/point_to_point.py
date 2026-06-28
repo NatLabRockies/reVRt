@@ -22,38 +22,40 @@ logger = logging.getLogger(__name__)
 class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
     """Convert route points DataFrame to route definition for Rust"""
 
-    def _validate_route_points(self):
+    def _rp_with_expected_cols(self):
         """Ensure route points has required columns"""
 
         if (
-            "start_row" not in self.route_points.columns
-            or "start_col" not in self.route_points.columns
+            "start_row" not in self._input_route_points.columns
+            or "start_col" not in self._input_route_points.columns
         ):
             logger.info("Mapping route start points to cost grid...")
-            self.route_points = map_to_costs(
-                self.route_points,
+            self._input_route_points = map_to_costs(
+                self._input_route_points,
                 crs=self.cost_metadata["crs"],
                 transform=self.cost_metadata["transform"],
                 shape=self.cost_metadata["shape"],
             )
 
-        super()._validate_route_points()
+        return super()._rp_with_expected_cols()
 
-    def _route_as_tuple(self, row):  # noqa:PLR6301
+    def _route_as_tuple(self, row):
         """Convert route row to a tuple for existing route checking"""
         return (
             int(row["start_row"]),
             int(row["start_col"]),
+            str(row.get("start_option", self._routing_options.default)),
             int(row["end_row"]),
             int(row["end_col"]),
-            str(row.get("polarity", "unknown")),
-            str(row.get("voltage", "unknown")),
+            str(row.get("end_option", self._routing_options.default)),
+            *self._route_value_signature(row),
         )
 
     def _convert_to_route_definitions(self, routes):  # noqa:PLR6301
         """Convert route DataFrame to route definitions format"""
         start_point_cols = ["start_row", "start_col"]
         end_point_cols = ["end_row", "end_col"]
+        start_option, end_option = "start_option", "end_option"
         num_unique_start_points = len(routes.groupby(start_point_cols))
         num_unique_end_points = len(routes.groupby(end_point_cols))
         if num_unique_end_points > num_unique_start_points:
@@ -61,22 +63,30 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
                 "Less unique starting points detected! Swapping start and "
                 "end point set for optimal routing performance"
             )
-            start_point_cols = ["end_row", "end_col"]
-            end_point_cols = ["start_row", "start_col"]
+            start_point_cols, end_point_cols = end_point_cols, start_point_cols
+            start_option, end_option = end_option, start_option
 
         route_definitions = []
         route_attrs = {}
         for route_id, (end_idx, sub_routes) in enumerate(
-            routes.groupby(end_point_cols)
+            routes.groupby([*end_point_cols, end_option])
         ):
             start_points = []
             for __, info in sub_routes.iterrows():
-                start_idx = tuple(info[start_point_cols].astype("int32"))
+                start_idx = (
+                    *info[start_point_cols].astype("int32"),
+                    info[start_option],
+                )
                 route_attrs[(route_id, start_idx)] = info.to_dict()
                 start_points.append(start_idx)
 
+            er, ec, eo = end_idx
             route_definitions.append(
-                (route_id, start_points, [tuple(map(int, end_idx))])
+                (
+                    route_id,
+                    start_points,
+                    [(int(er), int(ec), str(eo))],
+                )
             )
 
         return route_definitions, route_attrs
@@ -85,18 +95,16 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
 def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     cost_fpath,
     route_table_fpath,
-    cost_layers,
     out_dir,
     job_name,
-    friction_layers=None,
-    barrier_layers=None,
+    routing_options,
+    drivers=None,
+    transition_costs=None,
     tracked_layers=None,
-    cost_multiplier_layer=None,
-    cost_multiplier_scalar=1,
     transmission_config=None,
     save_paths=False,
     save_routing_layer=False,
-    ignore_invalid_costs=False,
+    invalid_costs_block_routing=False,
     memory_utilization_limit=0.9,
     system_mem_limit_gb=5,
     _split_params=None,
@@ -106,8 +114,8 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
 
     Given a table that defines start and end points (via latitude and
     longitude inputs; see the `route_table` parameter), compute the
-    least-cost paths (LCPs) between each pair of points using the cost
-    layers defined in the `cost_layers` parameter.
+    least-cost paths (LCPs) between each pair of points using the
+    routing layers defined in `routing_options`.
 
     Parameters
     ----------
@@ -123,207 +131,33 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             - "end_lat": Ending point latitude
             - "end_lon": Ending point longitude
 
-    cost_layers : list
-        List of dictionaries defining the layers that are summed to
-        determine total costs raster used for routing. Each layer is
-        pre-processed before summation according to the user input.
-        Each dict in the list should have the following keys:
-
-            - "layer_name": (REQUIRED) Name of layer in layered file
-              containing cost data.
-            - "multiplier_layer": (OPTIONAL) Name of layer in layered
-              file containing spatially explicit multiplier values to
-              apply to this cost layer before summing it with the
-              others. Default is ``None``.
-            - "multiplier_scalar": (OPTIONAL) Scalar value to multiply
-              this layer by before summing it with the others. Default
-              is ``1``.
-            - "is_invariant": (OPTIONAL) Boolean flag indicating whether
-              this layer is length invariant (i.e. should NOT be
-              multiplied by path length; values should be $). Default is
-              ``False``.
-            - "include_in_final_cost": (OPTIONAL) Boolean flag
-              indicating whether this layer should contribute to the
-              final cost output for each route in the LCP table.
-              Default is ``True``.
-            - "include_in_report": (OPTIONAL) Boolean flag indicating
-              whether the costs and distances for this layer should be
-              output in the final LCP table. Default is ``True``.
-            - "apply_row_mult": (OPTIONAL) Boolean flag indicating
-              whether the right-of-way width multiplier should be
-              applied for this layer. If ``True``, then the transmission
-              config should have a "row_width" dictionary that maps
-              voltages to right-of-way width multipliers. Also, the
-              routing table input should have a "voltage" entry for
-              every route. Every "voltage" value in the routing table
-              must be given in the "row_width" dictionary in the
-              transmission config, otherwise an error will be thrown.
-              Default is ``False``.
-            - "apply_polarity_mult": (OPTIONAL) Boolean flag indicating
-              whether the polarity multiplier should be applied for this
-              layer. If ``True``, then the transmission config should
-              have a "voltage_polarity_mult" dictionary that maps
-              voltages to a new dictionary, the latter mapping
-              polarities to multipliers. For example, a valid
-              "voltage_polarity_mult" dictionary might be
-              ``{"138": {"ac": 1.15, "dc": 2}}``.
-              In addition, the routing table input should have a
-              "voltage" **and** a "polarity" entry for every route.
-              Every "voltage" + "polarity" combination in the routing
-              table must be given in the "voltage_polarity_mult"
-              dictionary in the transmission config, otherwise an error
-              will be thrown.
-
-              .. IMPORTANT::
-                 The multiplier in this config is assumed to be in units
-                 of "million $ per mile" and will be converted to
-                 "$ per pixel" before being applied to the layer!
-
-              Default is ``False``.
-
-        The summed layers define the cost routing surface, which
-        determines the cost output for each route. Specifically, the
-        cost at each pixel is multiplied by the length that the route
-        takes through the pixel, and all of these values are summed for
-        each route to determine the final cost.
-
-        .. IMPORTANT::
-           If a pixel has a final cost of :math:`\leq 0`, it is treated
-           as a barrier (i.e. no paths can ever cross this pixel).
-
+        You can also specify `polarity` and `voltage` columns which
+        apply to every routing option. If you want to provide per-option
+        polarity and voltage, use `polarity_<option>` and
+        `voltage_<option>`. Options that are omitted will use `polarity`
+        and `voltage` column values.
     out_dir : path-like
         Directory where routing outputs should be written.
     job_name : str
         Label used to name the generated output file.
-    friction_layers : list, optional
-        Layers to be multiplied onto the aggregated cost layer to
-        influence routing but NOT be reported in final cost
-        (i.e. friction, barriers, etc.). These layers are first
-        aggregated, and then the aggregated friction layer is applied
-        to the aggregated cost. The cost at each pixel is therefore
-        computed as:
-
-        .. math::
-
-            C = (\sum_{i} c_i) * (1 + \sum_{j} f_j)
-
-        where :math:`C` is the final cost at each pixel, :math:`c_i` are
-        the individual cost layers, and :math:`f_j` are the individual
-        friction layers.
-
-        .. NOTE:: :math:`\sum_{j} f_j` is always clamped to be
-           :math:`\gt -1` to prevent zero or negative routing costs.
-           In other words, :math:`(1 + \sum_{j} f_j) > 0` always holds.
-           This means friction can scale costs to/away from zero but
-           never cause the sign of the cost layer to flip (even if
-           friction values themselves are negative). This means all
-           "barrier" pixels (i.e. cost value :math:`\leq 0`) will remain
-           barriers after friction is applied.
-
-        Each item in this list should be a dictionary containing the
-        following keys:
-
-            - "multiplier_layer" or "mask": (REQUIRED) Name of layer in
-              layered file containing the spatial friction multipliers
-              or mask that will be turned into the friction multipliers
-              by applying the `multiplier_scalar`.
-            - "multiplier_scalar": (OPTIONAL) Scalar value to multiply
-              the spatial friction layer by before using it as a
-              multiplier on the aggregated costs. Default is ``1``.
-            - "include_in_report": (OPTIONAL) Boolean flag indicating
-              whether the routing and distances for this layer should be
-              output in the final LCP table. Default is ``False``.
-            - "apply_row_mult": (OPTIONAL) Boolean flag indicating
-              whether the right-of-way width multiplier should be
-              applied for this layer. If ``True``, then the transmission
-              config should have a "row_width" dictionary that maps
-              voltages to right-of-way width multipliers. Also, the
-              routing table input should have a "voltage" entry for
-              every route. Every "voltage" value in the routing table
-              must be given in the "row_width" dictionary in the
-              transmission config, otherwise an error will be thrown.
-              Default is ``False``.
-            - "apply_polarity_mult": (OPTIONAL) Boolean flag indicating
-              whether the polarity multiplier should be applied for this
-              layer. If ``True``, then the transmission config should
-              have a "voltage_polarity_mult" dictionary that maps
-              voltages to a new dictionary, the latter mapping
-              polarities to multipliers. For example, a valid
-              "voltage_polarity_mult" dictionary might be
-              ``{"138": {"ac": 1.15, "dc": 2}}``.
-              In addition, the routing table input should have a
-              "voltage" **and** a "polarity" entry for every route.
-              Every "voltage" + "polarity" combination in the routing
-              table must be given in the "voltage_polarity_mult"
-              dictionary in the transmission config, otherwise an error
-              will be thrown.
-
-              .. IMPORTANT::
-                 The multiplier in this config is assumed to be in units
-                 of "million $ per mile" and will be converted to
-                 "$ per pixel" before being applied to the layer!
-
-              Default is ``False``.
-
-        By default, ``None``.
-    barrier_layers : list, optional
-        Layers defining explicit routing barriers that routes should
-        not cross. Unlike `friction_layers`, barrier layers do not add
-        a penalty to the routing surface. Instead, any pixel matching a
-        barrier definition is treated as blocked during routing.
-
-        Each item in this list should be a dictionary containing the
-        following keys:
-
-                - ``"layer_name"``: (REQUIRED) Name of layer in the
-                    layered file containing the values to test for
-                    barrier cells.
-                - ``"barrier_values"``: (REQUIRED) Comparison expression
-                    defining which pixel values act as barriers.
-                    Supported operators are ``"=="``, ``"!="``, ``">"``,
-                    ``">="``, ``"<"``, and ``"<="``, followed by a
-                    numeric threshold. For example, ``">=15"`` marks
-                    pixels with values greater than or equal to ``15``
-                    as barriers, ``"==1"`` marks pixels equal to ``1``
-                    as barriers, and ``"!=0"`` marks every non-zero
-                    pixel as a barrier.
-                - ``"barrier_importance"``: (OPTIONAL) Positive integer
-                    ranking used to define a soft barrier. When a route
-                    cannot be found, reVRt will iteratively drop the
-                    lowest-ranked soft barrier and retry routing until a
-                    route is found or all ranked barriers have been
-                    removed.
-
-        If ``"barrier_importance"`` is omitted, the barrier is treated
-        as a hard barrier and is never relaxed. This allows hard and
-        soft barriers to be combined in the same routing run. Multiple
-        entries may reference the same layer with different
-        ``"barrier_values"`` definitions. By default, ``None``.
+    routing_options : dict
+        Mapping of routing-option names to dictionaries describing the
+        cost, friction, barrier, and option-level multiplier inputs for
+        each option. See
+        :class:`~revrt.models.routing.RoutingOptionConfig` for details.
+    drivers : dict, optional
+        Optional driver-rule configuration keyed by routing option. See
+        :class:`~revrt.models.routing.DriverConfig` for details.
+    transition_costs : dict, optional
+        Optional transition-cost configuration between routing
+        options. See
+        :class:`~revrt.models.routing.TransitionCostsConfig` for
+        details.
     tracked_layers : list, optional
-        List of dictionaries defining layers to characterize along the
-        computed route. Each dictionary must contain:
-
-            - "layer_name": (REQUIRED) Name of layer in the layered
-              file to aggregate along the route.
-            - "agg_method": (REQUIRED) Name of the ``dask.array``
-              aggregation function to apply to the sampled route
-              values, such as ``"sum"``, ``"mean"``, or ``"max"``.
-            - "multiplier_layer": (OPTIONAL) Name of layer in the
-              layered file containing spatially explicit multipliers
-              to apply before aggregation. Default is ``None``.
-            - "multiplier_scalar": (OPTIONAL) Scalar multiplier to
-              apply before aggregation. Default is ``1``.
-
-        These inputs mirror the scaling behavior used by cost layers,
-        but tracked layers do not contribute to routing costs. They are
-        only summarized for output characterization.
-        By default, ``None``.
-    cost_multiplier_layer : str, optional
-        Name of the spatial multiplier layer applied to final costs.
-        By default, ``None``.
-    cost_multiplier_scalar : int, default=1
-        Scalar multiplier applied to the final cost surface.
-        By default, ``1``.
+        List of dictionaries defining route-characterization layers.
+        These layers do not influence the routing objective and are
+        only summarized for output characterization. See
+        :class:`~revrt.models.routing.TrackedLayer` for details.
     transmission_config : path-like or dict, optional
         Dictionary of transmission cost configuration values, or
         path to JSON/JSON5 file containing this dictionary. The
@@ -353,11 +187,11 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
     save_routing_layer : bool, default=False
         Save Rust routing layer outputs to ``out_dir/extra_outputs``
         when ``True``. Defaults to ``False``.
-    ignore_invalid_costs : bool, optional
-        Optional flag to treat any cost values <= 0 as impassable
-        (i.e. no paths can ever cross this). If ``False``, cost values
-        of <= 0 are set to a large value to simulate a strong but
-        permeable "quasi-barrier". By default, ``False``.
+    invalid_costs_block_routing : bool, optional
+        Optional flag to treat any invalid cost values (<= 0) as
+        impassable (i.e. no paths can ever cross this). If ``False``,
+        invalid cost values (<= 0) are set to a large value to simulate
+        a strong but permeable "quasi-barrier". By default, ``False``.
     algorithm : str, default="bidirectional_long_range_dijkstra"
         Routing algorithm implementation to use. Supported values
         are ``"astar"``, ``"long_range_astar"``,
@@ -414,10 +248,10 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             cost_fpath=cost_fpath,
             route_points=route_points,
             out_fp=out_fp,
-            cost_layers=cost_layers,
-            friction_layers=friction_layers,
-            barrier_layers=barrier_layers,
+            routing_options=routing_options,
             transmission_config=transmission_config,
+            drivers=drivers,
+            transition_costs=transition_costs,
         )
 
         run_lcp(
@@ -425,10 +259,8 @@ def compute_lcp_routes(  # noqa: PLR0913, PLR0917
             out_fp=out_fp,
             routes_to_compute=routes_to_compute,
             job_name=job_name,
-            cost_multiplier_layer=cost_multiplier_layer,
-            cost_multiplier_scalar=cost_multiplier_scalar,
             tracked_layers=tracked_layers,
-            ignore_invalid_costs=ignore_invalid_costs,
+            invalid_costs_block_routing=invalid_costs_block_routing,
             user_mem_limit_gb=memory_utilization_limit * system_mem_limit_gb,
             save_routing_layer=save_routing_layer,
             algorithm=algorithm,

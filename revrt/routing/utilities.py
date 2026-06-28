@@ -2,9 +2,10 @@
 
 import contextlib
 import logging
+from collections.abc import Iterable, Mapping
+from itertools import batched, product
 from pathlib import Path
 from warnings import warn
-from itertools import batched
 
 import dask
 import geopandas as gpd
@@ -13,7 +14,7 @@ import pandas as pd
 import rasterio
 from shapely.geometry import Point
 
-from revrt.exceptions import revrtValueError, revrtRuntimeError
+from revrt.exceptions import revrtRuntimeError, revrtValueError
 from revrt.utilities.base import region_mapper, transform_xy
 from revrt.utilities.handlers import IncrementalWriter
 from revrt.warn import revrtWarning
@@ -134,16 +135,20 @@ class PointToFeatureMapper:
             this parameter has no effect. If ``False``, all points are
             used as-is, which means points outside of the regions domain
             are mapped to the closest region. By default, ``False``.
-        voltages : iterable of str or int, optional
-            Voltage values to assign to the output route table. If
-            provided, each mapped point-to-feature connection is
-            duplicated once per voltage value and a ``voltage`` column
-            is added. By default, ``None``.
-        polarities : iterable of str, optional
-            Polarity values to assign to the output route table. If
-            provided, each mapped point-to-feature connection is
-            duplicated once per polarity value and a ``polarity``
-            column is added. By default, ``None``.
+        voltages : dict of list of str or int, optional
+            Voltage values to assign to the output route table, keyed
+            by routing option. If provided, each mapped
+            point-to-feature connection is duplicated once per
+            per-option voltage combination and explicit
+            ``voltage_<option>`` columns are added for each configured
+            routing option. By default, ``None``.
+        polarities : dict of list of str, optional
+            Polarity values to assign to the output route table, keyed
+            by routing option. If provided, each mapped
+            point-to-feature connection is duplicated once per
+            per-option polarity combination and explicit
+            ``polarity_<option>`` columns are added for each configured
+            routing option. By default, ``None``.
 
         Returns
         -------
@@ -652,6 +657,29 @@ def filter_points_outside_cost_domain(route_table, shape):
     return route_table
 
 
+def compute_lens(route, cell_size):
+    """[NOT PUBLIC API] Compute lengths of LCP"""
+    # Use Pythagorean theorem to calculate length between cells (km)
+    # Use c**2 = a**2 + b**2 to determine length of individual paths
+    lens = np.sqrt(np.sum(np.diff(route, axis=0) ** 2, axis=1))
+    total_path_length = np.sum(lens) * cell_size / 1000
+
+    # Need to determine distance coming into and out of any cell.
+    # Assume paths start and end at the center of a cell. Therefore,
+    # distance traveled in the cell is half the distance entering it
+    # and half the distance exiting it. Duplicate all lengths,
+    # pad 0s on ends for start  and end cells, and divide all
+    # distance by half.
+    lens = np.repeat(lens, 2)
+    lens = np.insert(np.append(lens, 0), 0, 0)
+    lens /= 2
+
+    # Group entrance and exits distance together, and add them
+    lens = lens.reshape((int(lens.shape[0] / 2), 2))
+    lens = np.sum(lens, axis=1)
+    return lens, total_path_length
+
+
 def _transform_lat_lon_to_row_col(transform, cost_crs, lat, lon):
     """Convert WGS84 coordinates to cost grid row and column arrays"""
     x, y = transform_xy("EPSG:4326", cost_crs, lon, lat)
@@ -791,23 +819,70 @@ def _read_route_table(route_table_out_fp):
 
 
 def _add_voltage_polarity(route_table, voltages, polarities):
-    """Add voltage and polarity columns to route table"""
-    if voltages is not None:
-        voltages = list(voltages)
+    """Add explicit per-option voltage and polarity columns"""
+    voltages_by_option = _normalize_route_value_mapping(
+        voltages, value_name="voltages"
+    )
+    polarities_by_option = _normalize_route_value_mapping(
+        polarities, value_name="polarities"
+    )
 
-    if voltages:
-        route_table = pd.concat(
-            [route_table.assign(voltage=voltage) for voltage in voltages],
-            ignore_index=True,
+    routing_options = list(
+        dict.fromkeys([*voltages_by_option, *polarities_by_option])
+    )
+    if not routing_options:
+        return route_table
+
+    per_option_values = []
+    for option in routing_options:
+        voltage_values = voltages_by_option.get(option) or ["unknown"]
+        polarity_values = polarities_by_option.get(option) or ["unknown"]
+        per_option_values.append(
+            [
+                {
+                    f"voltage_{option}": voltage,
+                    f"polarity_{option}": polarity,
+                }
+                for voltage, polarity in product(
+                    voltage_values, polarity_values
+                )
+            ]
         )
 
-    if polarities is not None:
-        polarities = list(polarities)
+    route_tables = []
+    for option_values in product(*per_option_values):
+        route_value_columns = {}
+        for value_mapping in option_values:
+            route_value_columns.update(value_mapping)
 
-    if polarities:
-        route_table = pd.concat(
-            [route_table.assign(polarity=polarity) for polarity in polarities],
-            ignore_index=True,
+        route_tables.append(route_table.assign(**route_value_columns))
+
+    return pd.concat(route_tables, ignore_index=True)
+
+
+def _normalize_route_value_mapping(route_values, value_name):
+    """Validate and normalize per-option route value mappings"""
+    if route_values is None:
+        return {}
+
+    if not isinstance(route_values, Mapping):
+        msg = (
+            f"`{value_name}` must be a dict mapping routing options to "
+            "lists of values"
         )
+        raise revrtValueError(msg)
 
-    return route_table
+    normalized = {}
+    for option, values in route_values.items():
+        if isinstance(values, (str, bytes)) or not isinstance(
+            values, Iterable
+        ):
+            msg = (
+                f"`{value_name}` values must be lists of route values. "
+                f"Got {values!r} for routing option {option!r}"
+            )
+            raise revrtValueError(msg)
+
+        normalized[option] = list(values)
+
+    return normalized

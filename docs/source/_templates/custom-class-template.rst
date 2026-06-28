@@ -14,7 +14,7 @@
 
    .. autosummary::
    {% for item in methods %}
-      {%- if not item.startswith('_') %}
+      {%- if not item.startswith('_') and not item.startswith('model_') %}
       ~{{ name }}.{{ item }}
       {%- endif -%}
    {%- endfor %}
@@ -27,7 +27,9 @@
 
    .. autosummary::
    {% for item in attributes %}
+      {%- if not item.startswith('_') and not item.startswith('model_') %}
       ~{{ name }}.{{ item }}
+      {%- endif -%}
    {%- endfor %}
    {% endif %}
    {% endblock %}

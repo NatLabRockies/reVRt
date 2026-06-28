@@ -625,9 +625,13 @@ def test_cli_build_feature_route_table_and_run_lcp(
         "cost_fpath": str(revx_transmission_layers),
         "route_table_fpath": str(route_table_path),
         "features_fpath": str(mapped_features_path),
-        "cost_layers": [
-            {"layer_name": "tie_line_costs_102MW"},
-        ],
+        "routing_options": {
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "tie_line_costs_102MW"},
+                ],
+            }
+        },
         "save_paths": True,
         "connection_identifier_column": "cfg_feat_id",
     }

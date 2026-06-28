@@ -117,16 +117,20 @@ def point_to_feature_route_table(  # noqa: PLR0913, PLR0917
         Option to expand the `radius` value for each point until at
         least one feature is found to connect to. This input has no
         effect if `radius` is ``None``. By default, ``True``.
-    voltages : list of str or int, optional
-        Voltage values to assign to the output route table. If
-        provided, each mapped point-to-feature connection is duplicated
-        once per voltage value and a ``voltage`` column is added. By
-        default, ``None``.
-    polarities : list of str, optional
-        Polarity values to assign to the output route table. If
-        provided, each mapped point-to-feature connection is duplicated
-        once per polarity value and a ``polarity`` column is added. By
-        default, ``None``.
+    voltages : dict of list of str or int, optional
+        Voltage values to assign to the output route table, keyed by
+        routing option. If provided, each mapped point-to-feature
+        connection is duplicated once per per-option voltage
+        combination and explicit ``voltage_<option>`` columns are
+        added for each configured routing option. By default,
+        ``None``.
+    polarities : dict of list of str, optional
+        Polarity values to assign to the output route table, keyed by
+        routing option. If provided, each mapped point-to-feature
+        connection is duplicated once per per-option polarity
+        combination and explicit ``polarity_<option>`` columns are
+        added for each configured routing option. By default,
+        ``None``.
     feature_out_fp : str, default="mapped_features.gpkg"
         Name of output file for mapped (and potentially clipped)
         features. This output file will contain an identifier column

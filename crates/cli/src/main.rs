@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use tracing::{debug, info, trace};
 
-use revrt::resolve;
+use revrt::resolve_with_routing_options;
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
@@ -64,7 +64,7 @@ fn main() {
     )];
     trace!("Ending point: {:?}", end);
 
-    let result = resolve(
+    let result = resolve_with_routing_options(
         cli.dataset,
         &cli.cost_function,
         "dijkstra",

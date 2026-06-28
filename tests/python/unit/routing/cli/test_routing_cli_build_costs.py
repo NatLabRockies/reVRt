@@ -118,10 +118,10 @@ def test_build_final_routing_layers_command_writes_expected_layers(
                     {"layer_name": "layer_1", "multiplier_scalar": 1.5},
                     {"layer_name": "layer_2", "multiplier_scalar": 0.5},
                 ],
+                "cost_multiplier_scalar": 2.0,
             }
         },
-        "cost_multiplier_scalar": 2.0,
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     config_fp = tmp_path / "lcp_config.json"
@@ -131,7 +131,6 @@ def test_build_final_routing_layers_command_writes_expected_layers(
     outputs = build_final_routing_layers_command.runner(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
-        routing_option="default",
         polarity=None,
         voltage=None,
     )
@@ -175,11 +174,11 @@ def test_build_final_routing_layers_command_applies_explicit_barriers(
                     {"layer_name": "layer_2"},
                 ],
                 "barrier_layers": [
-                    {"layer_name": "layer_1", "barrier_values": "==0"},
+                    {"layer_name": "layer_1", "where": "==0"},
                 ],
             }
         },
-        "ignore_invalid_costs": False,
+        "invalid_costs_block_routing": False,
     }
 
     config_fp = tmp_path / "barrier_lcp_config.json"
@@ -189,7 +188,6 @@ def test_build_final_routing_layers_command_applies_explicit_barriers(
     outputs = build_final_routing_layers_command.runner(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
-        routing_option="default",
         polarity=None,
         voltage=None,
     )
@@ -235,7 +233,7 @@ def test_build_final_routing_layers_parses_transmission_config_path(
             }
         },
         "transmission_config": str(transmission_config_fp),
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     config_fp = tmp_path / "lcp_config_with_transmission.json"
@@ -245,7 +243,6 @@ def test_build_final_routing_layers_parses_transmission_config_path(
     outputs = build_final_routing_layers(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
-        routing_option="default",
         polarity="ac",
         voltage=138,
     )
@@ -272,6 +269,102 @@ def test_build_final_routing_layers_parses_transmission_config_path(
     assert np.allclose(final_layer, expected_vals)
 
 
+def test_build_final_routing_layers_applies_per_option_pv_values(
+    sample_layered_data, tmp_path
+):
+    """build_final_routing_layers should apply per-option pv values"""
+
+    transmission_config = {
+        "row_width": {"138": 1.5, "230": 2.0},
+        "voltage_polarity_mult": {
+            "138": {"ac": 0.5},
+            "230": {"dc": 0.75},
+        },
+    }
+    config = {
+        "cost_fpath": str(sample_layered_data),
+        "routing_options": {
+            "overhead": {
+                "cost_layers": [
+                    {"layer_name": "layer_1", "apply_row_mult": True},
+                    {
+                        "layer_name": "layer_2",
+                        "apply_polarity_mult": True,
+                    },
+                ]
+            },
+            "underground": {
+                "cost_layers": [
+                    {"layer_name": "layer_3", "apply_row_mult": True},
+                    {
+                        "layer_name": "layer_2",
+                        "apply_polarity_mult": True,
+                    },
+                ]
+            },
+        },
+        "transmission_config": transmission_config,
+        "invalid_costs_block_routing": True,
+    }
+
+    config_fp = tmp_path / "multi_option_lcp_config.json"
+    config_fp.write_text(json.dumps(config))
+    output_dir = tmp_path / "multi_option_outputs"
+
+    outputs = build_final_routing_layers(
+        lcp_config_fp=config_fp,
+        output_dir=output_dir,
+        polarity={"overhead": "ac", "underground": "dc"},
+        voltage={"overhead": 138, "underground": 230},
+    )
+
+    expected_paths = {
+        output_dir / "multi_option_outputs_overhead_agg_costs.tif",
+        output_dir
+        / "multi_option_outputs_overhead_final_routing_layer.tif",
+        output_dir / "multi_option_outputs_underground_agg_costs.tif",
+        output_dir
+        / "multi_option_outputs_underground_final_routing_layer.tif",
+    }
+    assert {Path(fp) for fp in outputs} == expected_paths
+
+    with xr.open_dataset(
+        sample_layered_data, consolidated=False, engine="zarr"
+    ) as ds:
+        layer_one = ds["layer_1"].isel(band=0).astype(np.float32).load()
+        layer_two = ds["layer_2"].isel(band=0).astype(np.float32).load()
+        layer_three = ds["layer_3"].isel(band=0).astype(np.float32).load()
+
+    expected_by_option = {
+        "overhead": (
+            layer_one * 1.5
+            + layer_two
+            * (0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+        ).to_numpy(),
+        "underground": (
+            layer_three * 2.0
+            + layer_two
+            * (0.75 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+        ).to_numpy(),
+    }
+
+    for option, expected_vals in expected_by_option.items():
+        cost_fp = output_dir / f"multi_option_outputs_{option}_agg_costs.tif"
+        final_fp = (
+            output_dir
+            / f"multi_option_outputs_{option}_final_routing_layer.tif"
+        )
+
+        with rasterio.open(cost_fp) as src:
+            agg_costs = src.read(1)
+
+        with rasterio.open(final_fp) as src:
+            final_layer = src.read(1)
+
+        assert np.allclose(agg_costs, expected_vals)
+        assert np.allclose(final_layer, expected_vals)
+
+
 def test_build_final_routing_layers_writes_to_supplied_output_directory(
     sample_layered_data, tmp_path
 ):
@@ -282,7 +375,7 @@ def test_build_final_routing_layers_writes_to_supplied_output_directory(
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     config_fp = tmp_path / "custom_output_lcp_config.json"
@@ -293,13 +386,14 @@ def test_build_final_routing_layers_writes_to_supplied_output_directory(
     outputs = build_final_routing_layers(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
-        routing_option="default",
         polarity=None,
         voltage=None,
     )
 
-    expected_cost_fp = output_dir / "custom_outputs_agg_costs.tif"
-    expected_final_fp = output_dir / "custom_outputs_final_routing_layer.tif"
+    expected_cost_fp = output_dir / "custom_outputs_default_agg_costs.tif"
+    expected_final_fp = (
+        output_dir / "custom_outputs_default_final_routing_layer.tif"
+    )
 
     assert [Path(fp) for fp in outputs] == [
         expected_cost_fp,
@@ -307,8 +401,10 @@ def test_build_final_routing_layers_writes_to_supplied_output_directory(
     ]
     assert expected_cost_fp.exists()
     assert expected_final_fp.exists()
-    assert not (tmp_path / f"{tmp_path.name}_agg_costs.tif").exists()
-    assert not (tmp_path / f"{tmp_path.name}_final_routing_layer.tif").exists()
+    assert not (tmp_path / f"{tmp_path.name}_default_agg_costs.tif").exists()
+    assert not (
+        tmp_path / f"{tmp_path.name}_default_final_routing_layer.tif"
+    ).exists()
 
 
 @pytest.mark.skipif(
@@ -328,11 +424,11 @@ def test_cli_build_final_routing_layers_command(
                 "cost_layers": [
                     {"layer_name": "layer_1", "multiplier_scalar": 1.5},
                     {"layer_name": "layer_2", "multiplier_scalar": 0.5},
-                ]
+                ],
+                "cost_multiplier_scalar": 2.0,
             }
         },
-        "cost_multiplier_scalar": 2.0,
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     lcp_config_fp = tmp_path / "cli_lcp_config.json"
@@ -351,8 +447,8 @@ def test_cli_build_final_routing_layers_command(
     )
     assert result.exit_code == 0, result.output
 
-    cost_fp = tmp_path / f"{tmp_path.name}_agg_costs.tif"
-    final_fp = tmp_path / f"{tmp_path.name}_final_routing_layer.tif"
+    cost_fp = tmp_path / f"{tmp_path.name}_default_agg_costs.tif"
+    final_fp = tmp_path / f"{tmp_path.name}_default_final_routing_layer.tif"
     assert cost_fp.exists()
     assert final_fp.exists()
 
@@ -389,7 +485,7 @@ def test_cli_build_route_costs_strips_required_path_whitespace(
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     lcp_config_fp = tmp_path / "cli_trimmed_lcp_config.json"
@@ -407,8 +503,10 @@ def test_cli_build_route_costs_strips_required_path_whitespace(
         main, ["build-final-routing-layers", "-c", str(cli_config_fp)]
     )
     assert result.exit_code == 0, result.output
-    assert (tmp_path / f"{tmp_path.name}_agg_costs.tif").exists()
-    assert (tmp_path / f"{tmp_path.name}_final_routing_layer.tif").exists()
+    assert (tmp_path / f"{tmp_path.name}_default_agg_costs.tif").exists()
+    assert (
+        tmp_path / f"{tmp_path.name}_default_final_routing_layer.tif"
+    ).exists()
 
 
 @pytest.mark.skipif(
@@ -426,7 +524,7 @@ def test_cli_build_final_routing_layers_honors_output_directory(
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "layer_1"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
 
     lcp_config_fp = tmp_path / "cli_custom_output_lcp_config.json"
@@ -447,10 +545,14 @@ def test_cli_build_final_routing_layers_honors_output_directory(
     )
 
     assert result.exit_code == 0, result.output
-    assert (output_dir / "cli_outputs_agg_costs.tif").exists()
-    assert (output_dir / "cli_outputs_final_routing_layer.tif").exists()
-    assert not (tmp_path / f"{tmp_path.name}_agg_costs.tif").exists()
-    assert not (tmp_path / f"{tmp_path.name}_final_routing_layer.tif").exists()
+    assert (output_dir / "cli_outputs_default_agg_costs.tif").exists()
+    assert (
+        output_dir / "cli_outputs_default_final_routing_layer.tif"
+    ).exists()
+    assert not (tmp_path / f"{tmp_path.name}_default_agg_costs.tif").exists()
+    assert not (
+        tmp_path / f"{tmp_path.name}_default_final_routing_layer.tif"
+    ).exists()
 
 
 def test_build_final_routing_layers_command_metadata():

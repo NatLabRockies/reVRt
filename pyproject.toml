@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "NLR-reVRt"
-version = "0.8.1"
+version = "0.9.0"
 description = "National Laboratory of the Rockies' (NLR's) Transmission for reV tool"
 readme = "README.rst"
 authors = [
@@ -64,7 +64,7 @@ dev = [
   "matplotlib>=3.10.8,<4",
   "maturin>=1.9.3,<2",
   "pipreqs>=0.4.13,<0.5",
-  "ruff>=0.15.15",
+  "ruff>=0.15.19",
   "ruff-lsp>=0.0.62",
 ]
 test = [
@@ -246,7 +246,7 @@ format = "ruff format ./revrt"
 tests = "pytest --durations=20 -rapP -vv --cov=revrt --cov-report=html --cov-branch --cov-report=xml:coverage.xml --cov-fail-under=95 tests/python"
 tests-u = "pytest --durations=20 -rapP -vv --cov=revrt --cov-report=html --cov-branch --cov-report=xml:coverage.xml --cov-fail-under=95 tests/python/unit"
 tests-i = "pytest --durations=20 -rapP -vv --cov=revrt --cov-report=html --cov-branch --cov-report=xml:coverage.xml tests/python/integration"
-tests-r = "cargo test --locked --workspace --no-fail-fast"
+tests-r = "cargo test --locked --workspace --no-fail-fast --features test-integration"
 publish-revrt = "cargo publish --locked -p revrt --all-features"
 publish-cli = "cargo publish --locked -p revrt-cli --all-features"
 
@@ -294,7 +294,7 @@ jupyter_bokeh = ">=4.0.5,<5"
 matplotlib = ">=3.10.8,<4"
 pip = ">=26.0.1,<27"
 pipreqs = ">=0.4.13,<0.5"
-ruff = ">=0.15.15,<0.16"
+ruff = ">=0.15.19,<0.16"
 ruff-lsp = ">=0.0.62,<0.0.63"
 rust-src = ">=1.94.0,<2"
 maturin = ">=1.13.1,<2"

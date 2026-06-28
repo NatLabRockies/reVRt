@@ -178,15 +178,16 @@ def test_converter_maps_lat_lon_and_iterates(point_feature_dataset):
         route_points=route_points,
         features_fpath=point_feature_dataset["features_fp"],
         out_fp=point_feature_dataset["tmp_path"] / "routes.csv",
-        cost_layers=[{"layer_name": "tie_line_costs_400MW"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
     )
 
     batches = list(converter)
     assert len(batches) == 1
-    route_cl, route_fl, route_bl, route_definitions, route_attrs = batches[0]
-    assert route_cl == [{"layer_name": "tie_line_costs_400MW"}]
-    assert not route_fl
-    assert not route_bl
+    __, route_definitions, route_attrs = batches[0]
     assert len(route_definitions) == 1
 
     route_id, start_points, end_points = route_definitions[0]
@@ -195,10 +196,12 @@ def test_converter_maps_lat_lon_and_iterates(point_feature_dataset):
         (
             converter.route_points.iloc[0]["start_row"],
             converter.route_points.iloc[0]["start_col"],
+            "default",
         ),
         (
             converter.route_points.iloc[1]["start_row"],
             converter.route_points.iloc[1]["start_col"],
+            "default",
         ),
     ]
     assert end_points
@@ -207,9 +210,14 @@ def test_converter_maps_lat_lon_and_iterates(point_feature_dataset):
     assert route_attrs[first_key]["end_feat_id"] == 1
 
     tuple_repr = converter._route_as_tuple(converter.route_points.iloc[0])
-    assert tuple_repr[2] == "1"
-    assert tuple_repr[3] == "ac"
-    assert tuple_repr[4] == "138"
+    assert tuple_repr[2] == "default"
+    assert tuple_repr[3] == "1"
+    assert tuple_repr[4] == "ac"
+    assert tuple_repr[5] == "138"
+    assert route_attrs[first_key]["polarity_default"] == "ac"
+    assert route_attrs[first_key]["voltage_default"] == 138
+    assert route_attrs[first_key]["polarity"] == "ac"
+    assert route_attrs[first_key]["voltage"] == 138
 
 
 def test_converter_warns_when_feature_missing(point_feature_dataset):
@@ -239,6 +247,8 @@ def test_converter_warns_when_feature_missing(point_feature_dataset):
             "end_feat_id": [9],
             "polarity": ["dc"],
             "voltage": [230],
+            "start_option": ["default"],
+            "end_option": ["default"],
         }
     )
 
@@ -247,7 +257,11 @@ def test_converter_warns_when_feature_missing(point_feature_dataset):
         route_points=route_points,
         features_fpath=features_fp,
         out_fp=point_feature_dataset["tmp_path"] / "unused.csv",
-        cost_layers=[{"layer_name": "tie_line_costs_400MW"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
     )
 
     with pytest.warns(revrtWarning, match="No features found"):
@@ -274,7 +288,11 @@ def test_compute_lcp_routes_returns_none_when_subset_empty(
         cost_fpath=point_feature_dataset["cost_fp"],
         route_table_fpath=route_table_fp,
         features_fpath=point_feature_dataset["features_fp"],
-        cost_layers=[{"layer_name": "tie_line_costs_400MW"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
         out_dir=out_dir,
         job_name="empty",
         _split_params=(1, 1),
@@ -302,14 +320,18 @@ def test_compute_lcp_routes_creates_csv_output(point_feature_dataset):
         cost_fpath=point_feature_dataset["cost_fp"],
         route_table_fpath=route_table_fp,
         features_fpath=point_feature_dataset["features_fp"],
-        cost_layers=[{"layer_name": "tie_line_costs_400MW"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+                "cost_multiplier_scalar": 3,
+                "cost_multiplier_layer": "tie_line_multipliers",
+            }
+        },
         out_dir=out_dir,
         job_name="csv_run",
         transmission_config=transmission_config,
         tracked_layers=tracked_layers,
-        cost_multiplier_layer="tie_line_multipliers",
-        cost_multiplier_scalar=3,
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
     )
 
     output_fp = Path(csv_path)
@@ -334,7 +356,11 @@ def test_compute_lcp_routes_creates_geo_package_output(point_feature_dataset):
         cost_fpath=point_feature_dataset["cost_fp"],
         route_table_fpath=route_table_fp,
         features_fpath=point_feature_dataset["features_fp"],
-        cost_layers=[{"layer_name": "tie_line_costs_400MW"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
         out_dir=out_dir,
         job_name="paths_run",
         save_paths=True,
@@ -346,6 +372,48 @@ def test_compute_lcp_routes_creates_geo_package_output(point_feature_dataset):
     gdf = gpd.read_file(output_fp)
     assert "geometry" in gdf.columns
     assert not gdf.empty
+
+
+def test_compute_lcp_routes_with_routing_options_creates_companion_gpkg(
+    point_feature_dataset,
+):
+    """routing_options configs should emit full and per-option features"""
+
+    route_table = _build_route_table(
+        point_feature_dataset["metadata"], [(1, 2)], [1]
+    )
+    route_table_fp = point_feature_dataset["tmp_path"] / "routes_multi.csv"
+    route_table.to_csv(route_table_fp, index=False)
+
+    out_dir = point_feature_dataset["tmp_path"] / "gpkg_multi_outputs"
+    gpkg_path = compute_lcp_routes(
+        cost_fpath=point_feature_dataset["cost_fp"],
+        route_table_fpath=route_table_fp,
+        features_fpath=point_feature_dataset["features_fp"],
+        out_dir=out_dir,
+        job_name="feature_multi",
+        routing_options={
+            "overhead": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}]
+            },
+            "underground": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}]
+            },
+        },
+        drivers={"default": {"overhead": 1, "underground": 10}},
+        transition_costs={"default": 0},
+        save_paths=True,
+    )
+
+    output_fp = Path(gpkg_path)
+    split_fp = output_fp.with_name(f"{output_fp.stem}_routing_options.gpkg")
+
+    assert output_fp.exists()
+    assert split_fp.exists()
+    assert not gpd.read_file(output_fp).empty
+    split_gdf = gpd.read_file(split_fp)
+    assert not split_gdf.empty
+    assert set(split_gdf["routing_option"]) <= {"overhead", "underground"}
 
 
 def test_compute_lcp_routes_saves_routing_layer(point_feature_dataset):
@@ -362,7 +430,11 @@ def test_compute_lcp_routes_saves_routing_layer(point_feature_dataset):
         cost_fpath=point_feature_dataset["cost_fp"],
         route_table_fpath=route_table_fp,
         features_fpath=point_feature_dataset["features_fp"],
-        cost_layers=[{"layer_name": "tie_line_costs_400MW"}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
         out_dir=out_dir,
         job_name="feature_save_layer",
         save_routing_layer=True,
@@ -576,7 +648,11 @@ def test_route_features_cli_executes(
         "cost_fpath": str(point_feature_dataset["cost_fp"]),
         "route_table_fpath": str(route_table_fp),
         "features_fpath": str(point_feature_dataset["features_fp"]),
-        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
         "out_dir": str(out_dir),
         "job_name": "cli_run",
         "save_paths": False,
@@ -611,7 +687,11 @@ def test_route_features_cli_strips_required_path_whitespace(
         "cost_fpath": f"  {point_feature_dataset['cost_fp']}  ",
         "route_table_fpath": f"  {route_table_fp}  ",
         "features_fpath": f"  {point_feature_dataset['features_fp']}  ",
-        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
         "save_paths": False,
     }
     out_fp = run_gaps_cli_with_expected_file(
@@ -642,7 +722,11 @@ def test_route_features_cli_accepts_string_input_paths(
         "cost_fpath": str(point_feature_dataset["cost_fp"]),
         "route_table_fpath": str(route_table_fp),
         "features_fpath": str(point_feature_dataset["features_fp"]),
-        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
         "out_dir": str(out_dir),
         "job_name": "string_cli_run",
         "save_paths": False,
@@ -681,7 +765,11 @@ def test_route_features_cli_accepts_list_input_paths(
         "cost_fpath": str(point_feature_dataset["cost_fp"]),
         "route_table_fpath": [str(fp) for fp in route_tables],
         "features_fpath": [str(fp) for fp in feature_files],
-        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
         "out_dir": str(out_dir),
         "job_name": "list_cli_run",
         "save_paths": False,
@@ -738,7 +826,11 @@ def test_route_features_cli_accepts_pipeline_inputs(
         "cost_fpath": str(point_feature_dataset["cost_fp"]),
         "route_table_fpath": "PIPELINE",
         "features_fpath": "PIPELINE",
-        "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_400MW"}],
+            }
+        },
         "out_dir": str(out_dir),
         "job_name": "pipeline_cli_run",
         "save_paths": False,

@@ -3,6 +3,7 @@
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
+use tracing::trace;
 
 use crate::cost::CostFunction;
 use crate::cost::components::{
@@ -24,7 +25,7 @@ pub(super) struct CostFunctionInput {
     #[serde(default)]
     transition_costs: TransitionCostsConfig,
     #[serde(default = "true_option")]
-    ignore_invalid_costs: bool,
+    invalid_costs_block_routing: bool,
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
@@ -47,6 +48,8 @@ pub(super) struct RoutingOptionDefinition {
     #[serde(default)]
     cost_layers: Vec<CostLayer>,
     #[serde(default)]
+    cost_multiplier_layer: Option<String>,
+    #[serde(default)]
     friction_layers: Vec<FrictionLayerInput>,
     #[serde(default)]
     barrier_layers: Vec<BarrierLayer>,
@@ -55,6 +58,7 @@ pub(super) struct RoutingOptionDefinition {
 #[derive(Clone, Debug, Default)]
 pub(super) struct RoutingOptionLayerSet {
     pub(super) cost_layers: Vec<CostLayer>,
+    pub(super) cost_multiplier_layer: Option<String>,
     pub(super) friction_layers: Vec<FrictionLayer>,
     pub(super) barrier_layers: Vec<BarrierLayer>,
 }
@@ -103,11 +107,8 @@ pub(super) enum DriverRuleValue {
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub(super) struct TransitionCostRule {
-    pub(super) from: TransitionOptionRef,
-    pub(super) to: TransitionOptionRef,
+    pub(super) between: [TransitionOptionRef; 2],
     pub(super) cost: f32,
-    #[serde(default)]
-    pub(super) applies_bidirectionally: bool,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -159,9 +160,10 @@ impl TryFrom<CostFunctionInput> for CostFunction {
             routing_options,
             drivers,
             transition_costs,
-            ignore_invalid_costs,
+            invalid_costs_block_routing,
         } = input;
         let mut cost_layers = Vec::new();
+        let mut cost_multiplier_layers = Vec::new();
         let mut friction_layers = Vec::new();
         let mut barrier_layers = Vec::new();
         let mut routing_option_names = Vec::new();
@@ -174,11 +176,13 @@ impl TryFrom<CostFunctionInput> for CostFunction {
         {
             let RoutingOptionLayerSet {
                 cost_layers: option_cost_layers,
+                cost_multiplier_layer: option_cost_multiplier_layer,
                 friction_layers: option_friction_layers,
                 barrier_layers: option_barrier_layers,
             } = definition.into_layers(index)?;
             routing_option_names.push(name);
             cost_layers.extend(option_cost_layers);
+            cost_multiplier_layers.push(option_cost_multiplier_layer);
             friction_layers.extend(option_friction_layers);
             barrier_layers.extend(option_barrier_layers);
         }
@@ -188,12 +192,13 @@ impl TryFrom<CostFunctionInput> for CostFunction {
 
         Ok(CostFunction::from_input_parts(
             cost_layers,
+            cost_multiplier_layers,
             friction_layers,
             barrier_layers,
             routing_option_names,
             drivers,
             transition_costs,
-            ignore_invalid_costs,
+            invalid_costs_block_routing,
         ))
     }
 }
@@ -206,6 +211,7 @@ impl RoutingOptionDefinition {
                 .into_iter()
                 .map(|layer| layer.with_option(option))
                 .collect(),
+            cost_multiplier_layer: self.cost_multiplier_layer,
             friction_layers: self
                 .friction_layers
                 .into_iter()
@@ -255,13 +261,17 @@ impl TransitionCostsConfig {
         let mut pairwise = HashMap::new();
 
         for rule in self.pairwise {
-            let from = resolve_transition_option(&rule.from, routing_options)?;
-            let to = resolve_transition_option(&rule.to, routing_options)?;
+            let [from, to] = rule.between;
+            let from = resolve_transition_option(&from, routing_options)?;
+            let to = resolve_transition_option(&to, routing_options)?;
             pairwise.insert((from, to), rule.cost);
-            if rule.applies_bidirectionally {
-                pairwise.insert((to, from), rule.cost);
-            }
+            pairwise.insert((to, from), rule.cost);
         }
+
+        trace!(
+            "resolved transition cost table with default cost {} and pairwise costs: {:#?}",
+            self.default, pairwise
+        );
 
         Ok(TransitionCostTable::new(self.default, pairwise))
     }

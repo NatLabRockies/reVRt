@@ -43,18 +43,19 @@ def validate_find_paths_single_var(data, start, end, tmp_path, algorithm):
         "routing_options": {
             "default": {"cost_layers": [{"layer_name": "test_costs"}]}
         },
-        "ignore_invalid_costs": True,
+        "invalid_costs_block_routing": True,
     }
     results = find_paths(
         zarr_fp=test_cost_fp,
         cost_function=json.dumps(cost_definition),
-        start=[start],
-        end=[end],
+        start=[(*start, "default")],
+        end=[(*end, "default")],
         algorithm=algorithm,
     )
 
     assert len(results) == 1
     revrt_route, revrt_cost, dropped_barrier_layers = results[0]
+    revrt_route = [p[:2] for p in revrt_route]
 
     cost = da.values[0]
     mcp = MCP_Geometric(cost)
@@ -96,7 +97,7 @@ def validate_route_finder_single_var(data, start, end, tmp_path, algorithm):
     routing_results = RouteFinder(
         zarr_fp=test_cost_fp,
         cost_function=json.dumps(cost_definition),
-        route_definitions=[(0, [start], [end])],
+        route_definitions=[(0, [(*start, "default")], [(*end, "default")])],
         algorithm=algorithm,
     )
 
@@ -106,7 +107,8 @@ def validate_route_finder_single_var(data, start, end, tmp_path, algorithm):
     route_id, solutions = results[0]
     assert route_id == 0
     assert len(solutions) == 1
-    (revrt_route, revrt_cost, dropped_barrier_layers) = solutions[0]
+    revrt_route, revrt_cost, dropped_barrier_layers = solutions[0]
+    revrt_route = [p[:2] for p in revrt_route]
     assert dropped_barrier_layers == []
 
     cost = da.values[0]

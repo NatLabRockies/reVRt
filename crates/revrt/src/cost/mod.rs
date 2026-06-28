@@ -26,39 +26,43 @@ const HIGH_FRICTION_INVALID_COST: f32 = 1e10;
 /// `cost_layers`: A collection of cost layers with equal weight.
 /// `friction_layers`: A collection of friction layers that scale the cost layer.
 /// `barrier_layers`: A collection of layers that create impassable cells.
-/// `ignore_invalid_costs`: If true, cells with <=0 or NaN costs are skipped completely.
+/// `invalid_costs_block_routing`: If true, cells with <=0 or NaN costs are skipped completely.
 ///
 /// This was based on the original transmission router and is composed of
 /// layers that are summed together (per grid point) to give the total cost.
 pub(crate) struct CostFunction {
     cost_layers: Vec<CostLayer>,
+    option_cost_multiplier_layers: Vec<Option<String>>,
     friction_layers: Option<Vec<FrictionLayer>>,
     barrier_layers: Option<Vec<BarrierLayer>>,
     pub(crate) routing_options: Vec<String>,
     pub(crate) drivers: DriverRuleSet,
     pub(crate) transition_costs: TransitionCostTable,
     /// Option to completely ignore <=0 cost cells
-    pub(crate) ignore_invalid_costs: bool,
+    pub(crate) invalid_costs_block_routing: bool,
 }
 
 impl CostFunction {
+    #[allow(clippy::too_many_arguments)]
     fn from_input_parts(
         cost_layers: Vec<CostLayer>,
+        option_cost_multiplier_layers: Vec<Option<String>>,
         friction_layers: Vec<FrictionLayer>,
         barrier_layers: Vec<BarrierLayer>,
         routing_options: Vec<String>,
         drivers: DriverRuleSet,
         transition_costs: TransitionCostTable,
-        ignore_invalid_costs: bool,
+        invalid_costs_block_routing: bool,
     ) -> Self {
         Self {
             cost_layers,
+            option_cost_multiplier_layers,
             friction_layers: (!friction_layers.is_empty()).then_some(friction_layers),
             barrier_layers: (!barrier_layers.is_empty()).then_some(barrier_layers),
             routing_options,
             drivers,
             transition_costs,
-            ignore_invalid_costs,
+            invalid_costs_block_routing,
         }
     }
 
@@ -175,9 +179,10 @@ impl CostFunction {
             .collect::<Vec<_>>();
 
         let mut final_cost_layer = reduce_layers(cost_data);
+        self.apply_option_cost_multiplier_layers(&mut final_cost_layer, features);
         final_cost_layer.mapv_inplace(|v| {
             if v <= 0_f32 {
-                if self.ignore_invalid_costs {
+                if self.invalid_costs_block_routing {
                     f32::NAN
                 } else {
                     HIGH_FRICTION_INVALID_COST
@@ -211,6 +216,23 @@ impl CostFunction {
         // routing surface is: final_cost_layer * (1 + final_friction_layer)
         final_cost_layer
             * (ArrayD::<f32>::ones(IxDyn(final_friction_layer.shape())) + final_friction_layer)
+    }
+
+    fn apply_option_cost_multiplier_layers(
+        &self,
+        final_cost_layer: &mut CostArray,
+        features: &mut LazySubset<f32>,
+    ) {
+        for (option, multiplier_layer_name) in self.option_cost_multiplier_layers.iter().enumerate()
+        {
+            let Some(multiplier_layer_name) = multiplier_layer_name else {
+                continue;
+            };
+
+            let multiplier =
+                build_option_cost_multiplier_layer(multiplier_layer_name, option as u32, features);
+            *final_cost_layer *= &multiplier;
+        }
     }
 }
 
@@ -256,6 +278,9 @@ fn build_single_cost_layer(layer: &CostLayer, features: &mut LazySubset<f32>) ->
         cost = cost * multiplier_value;
         // trace!( "Cost for chunk ({}, {}) in layer {}: {}", ci, cj, layer_name, cost);
     }
+
+    cost.mapv_inplace(|v| if v > 0.0_f32 { v } else { 0.0_f32 });
+
     select_option_for_subset(cost, layer.option, features)
 }
 
@@ -274,6 +299,18 @@ fn build_single_friction_layer(layer: &FrictionLayer, features: &mut LazySubset<
     }
 
     select_option_for_subset(friction, layer.option, features)
+}
+
+fn build_option_cost_multiplier_layer(
+    layer_name: &str,
+    option: u32,
+    features: &mut LazySubset<f32>,
+) -> CostArray {
+    let multiplier = features
+        .get(layer_name)
+        .expect("Cost multiplier layer not found in features");
+
+    select_option_for_subset_with_fill(multiplier, option, features, 1.0_f32)
 }
 
 pub(crate) fn build_single_barrier_layer(
@@ -305,29 +342,48 @@ fn select_option_for_subset<T>(
 where
     T: Clone + Default,
 {
+    select_option_for_subset_with_fill(values, option, features, T::default())
+}
+
+fn select_option_for_subset_with_fill<T>(
+    values: ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>,
+    option: u32,
+    features: &LazySubset<f32>,
+    fill: T,
+) -> ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>
+where
+    T: Clone,
+{
     let band_start = features.subset().start()[0];
     let band_end = band_start + features.subset().shape()[0];
     let option = u64::from(option);
 
+    let output_shape = features
+        .subset()
+        .shape()
+        .iter()
+        .map(|&dim| usize::try_from(dim).expect("subset dimension exceeds usize range"))
+        .collect::<Vec<_>>();
+
     if option < band_start || option >= band_end {
-        return ndarray::ArrayD::<T>::default(ndarray::IxDyn(values.shape()));
+        return ndarray::ArrayD::<T>::from_elem(ndarray::IxDyn(&output_shape), fill);
     }
 
-    select_option(values, (option - band_start) as u32)
-}
+    let local_option = (option - band_start) as usize;
+    let mut selected = ndarray::ArrayD::<T>::from_elem(ndarray::IxDyn(&output_shape), fill);
+    let source_option = if values.shape()[0] == 1 {
+        0
+    } else {
+        local_option
+    };
 
-fn select_option<T>(
-    values: ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>,
-    option: u32,
-) -> ndarray::Array<T, ndarray::Dim<ndarray::IxDynImpl>>
-where
-    T: Clone + Default,
-{
-    let option_index = option as usize;
-    let mut selected = ndarray::ArrayD::<T>::default(ndarray::IxDyn(values.shape()));
+    if source_option >= values.shape()[0] {
+        return selected;
+    }
+
     selected
-        .index_axis_mut(Axis(0), option_index)
-        .assign(&values.index_axis(Axis(0), option_index));
+        .index_axis_mut(Axis(0), local_option)
+        .assign(&values.index_axis(Axis(0), source_option));
     selected
 }
 
@@ -572,20 +628,10 @@ mod test {
     #[test]
     fn routing_options_object_builds_ordered_names_and_band_specific_costs() {
         let tmp = samples::ZarrTestBuilder::new()
-            .dimensions(2, 2, 2)
-            .chunks(2, 2, 2)
-            .layer(samples::LayerConfig::custom(
-                "overhead_cost",
-                |band, _, _| {
-                    if band == 0 { 1.0 } else { 9.0 }
-                },
-            ))
-            .layer(samples::LayerConfig::custom(
-                "underground_cost",
-                |band, _, _| {
-                    if band == 1 { 2.0 } else { 8.0 }
-                },
-            ))
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("overhead_cost", 1.0))
+            .layer(samples::LayerConfig::constant("underground_cost", 2.0))
             .build()
             .expect("Failed to create routing option zarr");
         let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
@@ -621,11 +667,9 @@ mod test {
     #[test]
     fn routing_options_object_reuses_same_source_layer_across_options() {
         let tmp = samples::ZarrTestBuilder::new()
-            .dimensions(2, 2, 2)
-            .chunks(2, 2, 2)
-            .layer(samples::LayerConfig::custom("shared_cost", |band, _, _| {
-                if band == 0 { 3.0 } else { 4.0 }
-            }))
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("shared_cost", 3.0))
             .build()
             .expect("Failed to create shared routing option zarr");
         let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
@@ -654,8 +698,149 @@ mod test {
         );
         assert_eq!(
             result.index_axis(Axis(0), 1).to_owned(),
-            ArrayD::from_elem(IxDyn(&[2, 2]), 8.0)
+            ArrayD::from_elem(IxDyn(&[2, 2]), 6.0)
         );
+    }
+
+    #[test]
+    fn routing_options_apply_option_cost_multiplier_layers() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("overhead_cost", 1.0))
+            .layer(samples::LayerConfig::constant("underground_cost", 2.0))
+            .layer(samples::LayerConfig::constant("overhead_li", 3.0))
+            .layer(samples::LayerConfig::constant("underground_li", 4.0))
+            .layer(samples::LayerConfig::constant("overhead_multiplier", 10.0))
+            .layer(samples::LayerConfig::constant(
+                "underground_multiplier",
+                20.0,
+            ))
+            .build()
+            .expect("Failed to create routing option multiplier zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![2, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [
+                            {"layer_name": "overhead_cost"},
+                            {"layer_name": "overhead_li", "is_invariant": true}
+                        ],
+                        "cost_multiplier_layer": "overhead_multiplier"
+                    },
+                    "underground": {
+                        "cost_layers": [
+                            {"layer_name": "underground_cost"},
+                            {"layer_name": "underground_li", "is_invariant": true}
+                        ],
+                        "cost_multiplier_layer": "underground_multiplier"
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            cost_fn.option_cost_multiplier_layers,
+            vec![
+                Some("overhead_multiplier".to_string()),
+                Some("underground_multiplier".to_string()),
+            ]
+        );
+
+        let primary = cost_fn.compute(&mut features, false);
+        let invariant = cost_fn.compute(&mut features, true);
+
+        assert_eq!(
+            primary.index_axis(Axis(0), 0).to_owned(),
+            ArrayD::from_elem(IxDyn(&[2, 2]), 10.0)
+        );
+        assert_eq!(
+            primary.index_axis(Axis(0), 1).to_owned(),
+            ArrayD::from_elem(IxDyn(&[2, 2]), 40.0)
+        );
+        assert_eq!(
+            invariant.index_axis(Axis(0), 0).to_owned(),
+            ArrayD::from_elem(IxDyn(&[2, 2]), 30.0)
+        );
+        assert_eq!(
+            invariant.index_axis(Axis(0), 1).to_owned(),
+            ArrayD::from_elem(IxDyn(&[2, 2]), 80.0)
+        );
+    }
+
+    #[test]
+    fn option_cost_multiplier_does_not_revive_invalid_cost_cells() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::new(
+                "cost",
+                samples::FillStrategy::Values(vec![-1.0, 1.0, 1.0, 1.0]),
+            ))
+            .layer(samples::LayerConfig::new(
+                "multiplier",
+                samples::FillStrategy::Values(vec![-1.0, 1.0, 1.0, 1.0]),
+            ))
+            .build()
+            .expect("Failed to create invalid-cost multiplier zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "invalid_costs_block_routing": true,
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "cost"}],
+                        "cost_multiplier_layer": "multiplier"
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let result = cost_fn.compute(&mut features, false);
+
+        assert!(result[[0, 0, 0]].is_nan());
+        assert_eq!(result[[0, 0, 1]], 1.0);
+        assert_eq!(result[[0, 1, 0]], 1.0);
+        assert_eq!(result[[0, 1, 1]], 1.0);
+    }
+
+    #[test]
+    fn routing_option_specific_single_band_layers_use_local_band_zero() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("overhead_cost", 1.0))
+            .layer(samples::LayerConfig::constant("underground_cost", 2.0))
+            .build()
+            .expect("Failed to create single-band routing option zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![1, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "underground_cost"}]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let result = cost_fn.compute(&mut features, false);
+
+        assert_eq!(result.shape(), &[1, 2, 2]);
+        assert_eq!(result, ArrayD::from_elem(IxDyn(&[1, 2, 2]), 2.0));
     }
 
     #[test]
@@ -692,7 +877,7 @@ mod test {
                 "routing_options": {
                     "overhead": {
                         "cost_layers": [{"layer_name": "A"}],
-                        "barrier_layers": [{"layer_name": "barrier_mask", "barrier_values": "==1"}]
+                        "barrier_layers": [{"layer_name": "barrier_mask", "where": "==1"}]
                     }
                 }
             }"#,

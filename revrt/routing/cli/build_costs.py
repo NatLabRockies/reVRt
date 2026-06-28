@@ -8,14 +8,14 @@ from gaps.config import load_config
 
 from revrt.costs.config import parse_config
 from revrt.utilities import strip_path_keys, save_data_array_to_geotiff
-from revrt.routing.cli.base import update_multipliers
+from revrt.routing.cli.base import RoutingOptions
 from revrt.routing.base import RoutingScenario, RoutingLayerManager
 
 logger = logging.getLogger(__name__)
 
 
 def build_final_routing_layers(
-    lcp_config_fp, output_dir, routing_option, polarity=None, voltage=None
+    lcp_config_fp, output_dir, polarity=None, voltage=None
 ):
     """Build out the final routing layers based on an LCP config file
 
@@ -41,18 +41,20 @@ def build_final_routing_layers(
         input is used to determine which cost and friction layers to use
         when building the routing layer. The routing option must be one
         of the options specified in the config file.
-    polarity : str, optional
+    polarity : str or dict, optional
         Polarity to use when building the routing layer. This input is
         required if any cost or friction layers that have
         `apply_polarity_mult` set to `True` - they will have the
-        appropriate multiplier applied based on this polarity.
+        appropriate multiplier applied based on this polarity. If dict
+        is provided, it should map routing options to polarities.
         By default, ``None``.
-    voltage : str, optional
+    voltage : str or dict, optional
         Voltage to use when building the routing layer. This input is
         required if any cost or friction layers that have
         `apply_row_mult` or `apply_polarity_mult` set to `True` - they
         will have the appropriate multiplier applied based on this
-        voltage. By default, ``None``.
+        voltage. If dict is provided, it should map routing options to
+        voltages. By default, ``None``.
 
     Returns
     -------
@@ -68,42 +70,55 @@ def build_final_routing_layers(
         config=config.get("transmission_config")
     )
 
-    route_layer_config = config["routing_options"][routing_option]
-    route_cl = update_multipliers(
-        route_layer_config["cost_layers"],
-        polarity,
-        voltage,
-        transmission_config,
-    )
-    route_fl = update_multipliers(
-        route_layer_config.get("friction_layers") or [],
-        polarity,
-        voltage,
-        transmission_config,
+    routing_options = config["routing_options"]
+    if polarity is not None and isinstance(polarity, str):
+        polarity = dict.fromkeys(routing_options, polarity)
+    if voltage is not None and isinstance(voltage, (int, float, str)):
+        voltage = dict.fromkeys(routing_options, str(voltage))
+
+    pv_by_option = {
+        option: {
+            "polarity": polarity.get(option) if polarity else None,
+            "voltage": voltage.get(option) if voltage else None,
+        }
+        for option in routing_options
+    }
+
+    routing_options = RoutingOptions(routing_options).update_from(
+        pv_by_option=pv_by_option,
+        transmission_config=transmission_config,
     )
 
     routing_scenario = RoutingScenario(
         cost_fpath=config["cost_fpath"],
-        cost_layers=route_cl,
-        friction_layers=route_fl,
-        barrier_layers=route_layer_config.get("barrier_layers"),
-        cost_multiplier_layer=config.get("cost_multiplier_layer"),
-        cost_multiplier_scalar=config.get("cost_multiplier_scalar", 1),
-        ignore_invalid_costs=config.get("ignore_invalid_costs", False),
+        routing_options=routing_options,
+        invalid_costs_block_routing=config.get(
+            "invalid_costs_block_routing", False
+        ),
     )
 
     rl = RoutingLayerManager(routing_scenario)
     rl.build()
 
-    cost_out_fp = out_dir / f"{out_dir.name}_agg_costs.tif"
-    logger.debug("Writing costs to %s", cost_out_fp)
-    save_data_array_to_geotiff(rl.cost, cost_out_fp, nodata=-1)
+    out_ol = []
+    for option, layer in rl.costs.items():
+        cost_out_fp = out_dir / f"{out_dir.name}_{option}_agg_costs.tif"
+        logger.debug("Writing costs to %s", cost_out_fp)
+        save_data_array_to_geotiff(layer, cost_out_fp, nodata=-1)
+        out_ol.append(str(cost_out_fp))
 
-    frl_out_fp = out_dir / f"{out_dir.name}_final_routing_layer.tif"
-    logger.debug("Writing final routing layer to %s", frl_out_fp)
-    save_data_array_to_geotiff(rl.final_routing_layer, frl_out_fp, nodata=-1)
+    out_frl = []
+    for option, layer in rl.final_routing_layers.items():
+        final_out_fp = (
+            out_dir / f"{out_dir.name}_{option}_final_routing_layer.tif"
+        )
+        logger.debug(
+            "Writing %r final routing layer to %s", option, final_out_fp
+        )
+        save_data_array_to_geotiff(layer, final_out_fp, nodata=-1)
+        out_frl.append(str(final_out_fp))
 
-    return [str(cost_out_fp), str(frl_out_fp)]
+    return out_ol + out_frl
 
 
 def _preprocess_build_final_routing_layers(

@@ -9,11 +9,11 @@ import xarray as xr
 from shapely.geometry import LineString
 from rasterio.transform import from_origin
 
-from revrt.utilities import LayeredFile
-from revrt.routing.utilities import map_to_costs
-from revrt.exceptions import revrtKeyError
+from revrt.exceptions import revrtConfigurationError, revrtKeyError
+from revrt.models.routing import validate_routing_options
 from revrt.routing.cli.base import (
     update_multipliers,
+    RoutingOptions,
     run_lcp,
     route_points_subset,
     split_routes,
@@ -28,6 +28,8 @@ from revrt.routing.cli.utilities import (
 from revrt.routing.cli.point_to_point import (
     PointToPointRouteDefinitionConverter,
 )
+from revrt.routing.utilities import map_to_costs
+from revrt.utilities import LayeredFile
 
 
 @pytest.fixture(scope="module")
@@ -160,8 +162,10 @@ def test_run_lcp_with_save_paths_filters_existing_routes(
     existing_tuple = (
         int(mapped_routes.iloc[0]["start_row"]),
         int(mapped_routes.iloc[0]["start_col"]),
+        "default",
         int(mapped_routes.iloc[0]["end_row"]),
         int(mapped_routes.iloc[0]["end_col"]),
+        "default",
         routes.iloc[0]["polarity"],
         str(routes.iloc[0]["voltage"]),
     )
@@ -185,8 +189,14 @@ def test_run_lcp_with_save_paths_filters_existing_routes(
         cost_fpath=sample_layered_data,
         route_points=routes,
         out_fp=out_fp,
-        cost_layers=[{"layer_name": "layer_1"}],
-        friction_layers=[{"mask": "layer_2", "apply_row_mult": True}],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "layer_1"}],
+                "friction_layers": [
+                    {"multiplier_layer": "layer_2", "apply_row_mult": True}
+                ],
+            }
+        },
         transmission_config={
             "row_width": {"138": 1.0},
             "voltage_polarity_mult": {"138": {"ac": 1.0}},
@@ -197,13 +207,21 @@ def test_run_lcp_with_save_paths_filters_existing_routes(
         cost_fpath=sample_layered_data,
         out_fp=out_fp,
         routes_to_compute=routes_to_compute,
-        cost_multiplier_scalar=1,
         tracked_layers=[{"layer_name": "layer_3", "agg_method": "max"}],
-        ignore_invalid_costs=True,
+        invalid_costs_block_routing=True,
     )
 
-    assert len(saved_calls) == 1
-    saved_path, driver, mode, saved_gdf = saved_calls[0]
+    primary_calls = [call for call in saved_calls if call[0] == out_fp]
+    option_calls = [
+        call
+        for call in saved_calls
+        if call[0] == tmp_path / "routes_routing_options.gpkg"
+    ]
+
+    assert len(primary_calls) == 1
+    assert len(option_calls) == 1
+
+    saved_path, driver, mode, saved_gdf = primary_calls[0]
     assert saved_path == out_fp
     assert driver == "GPKG"
     assert mode == "a"
@@ -236,7 +254,7 @@ def test_run_lcp_returns_immediately_when_no_routes(tmp_path):
         cost_fpath="unused",
         route_points=pd.DataFrame(),
         out_fp=tmp_path / "unused.csv",
-        cost_layers=[],
+        routing_options={"default": {}},
     )
 
     run_lcp(
@@ -269,7 +287,7 @@ def test_route_points_subset_with_chunking(tmp_path):
 
 
 def test_paths_to_compute_inserts_missing_columns(tmp_path):
-    """_paths_to_compute should back-fill missing polarity/voltage columns"""
+    """_paths_to_compute should back-fill per-option value columns"""
 
     route_points = pd.DataFrame(
         {
@@ -284,17 +302,114 @@ def test_paths_to_compute_inserts_missing_columns(tmp_path):
         cost_fpath=None,
         route_points=route_points,
         out_fp=tmp_path / "not_there.csv",
-        cost_layers=None,
-        friction_layers=None,
+        routing_options={
+            "default": {
+                "cost_layers": None,
+                "friction_layers": None,
+            }
+        },
         transmission_config=None,
     )
 
     groups = list(route_generator._paths_to_compute)
     assert groups
-    polarity, voltage, grouped_routes = groups[0]
-    assert polarity == "unknown"
-    assert voltage == "unknown"
+    route_option_values, grouped_routes = groups[0]
+    assert route_option_values == {
+        "default": {"polarity": "unknown", "voltage": "unknown"}
+    }
+    assert grouped_routes.iloc[0]["polarity_default"] == "unknown"
+    assert grouped_routes.iloc[0]["voltage_default"] == "unknown"
+    assert "polarity" not in grouped_routes.columns
+    assert "voltage" not in grouped_routes.columns
     assert grouped_routes.iloc[0]["start_row"] == 0
+
+
+def test_paths_to_compute_fills_missing_columns_from_shared_values(tmp_path):
+    """Shared values should back-fill missing per-option columns"""
+
+    route_points = pd.DataFrame(
+        {
+            "start_row": [0],
+            "start_col": [1],
+            "end_row": [2],
+            "end_col": [3],
+            "polarity": ["ac"],
+            "voltage": [138],
+            "polarity_overhead": ["dc"],
+            "voltage_overhead": [230],
+        }
+    )
+
+    route_generator = PointToPointRouteDefinitionConverter(
+        cost_fpath=None,
+        route_points=route_points,
+        out_fp=tmp_path / "not_there.csv",
+        routing_options={
+            "overhead": {
+                "cost_layers": None,
+                "friction_layers": None,
+            },
+            "underground": {
+                "cost_layers": None,
+                "friction_layers": None,
+            },
+        },
+        transmission_config=None,
+    )
+
+    groups = list(route_generator._paths_to_compute)
+    assert groups
+    route_option_values, grouped_routes = groups[0]
+    assert route_option_values == {
+        "overhead": {"polarity": "dc", "voltage": 230},
+        "underground": {"polarity": "ac", "voltage": 138},
+    }
+    assert grouped_routes.iloc[0]["polarity_overhead"] == "dc"
+    assert grouped_routes.iloc[0]["voltage_overhead"] == 230
+    assert grouped_routes.iloc[0]["polarity_underground"] == "ac"
+    assert grouped_routes.iloc[0]["voltage_underground"] == 138
+
+
+def test_paths_to_compute_fills_partial_per_option_columns(tmp_path):
+    """Missing per-option route values should default to unknown"""
+
+    route_points = pd.DataFrame(
+        {
+            "start_row": [0],
+            "start_col": [1],
+            "end_row": [2],
+            "end_col": [3],
+            "polarity_overhead": ["ac"],
+            "voltage_overhead": [138],
+        }
+    )
+
+    route_generator = PointToPointRouteDefinitionConverter(
+        cost_fpath=None,
+        route_points=route_points,
+        out_fp=tmp_path / "not_there.csv",
+        routing_options={
+            "overhead": {
+                "cost_layers": None,
+                "friction_layers": None,
+            },
+            "underground": {
+                "cost_layers": None,
+                "friction_layers": None,
+            },
+        },
+        transmission_config=None,
+    )
+
+    groups = list(route_generator._paths_to_compute)
+    assert groups
+    route_option_values, grouped_routes = groups[0]
+    assert route_option_values == {
+        "overhead": {"polarity": "ac", "voltage": 138},
+        "underground": {"polarity": "unknown", "voltage": "unknown"},
+    }
+    assert grouped_routes.iloc[0]["polarity_underground"] == "unknown"
+    assert grouped_routes.iloc[0]["voltage_underground"] == "unknown"
 
 
 def test_split_routes_handles_local_and_cluster():
@@ -347,6 +462,249 @@ def test_update_multipliers_applies_row_and_polarity():
         [{"layer_name": "layer_3"}], "dc", "unknown", transmission_config
     )
     assert unchanged[0]["layer_name"] == "layer_3"
+
+
+def test_update_route_options_updates_nested_layers_without_mutation():
+    """Updated options should transform nested layer configs safely"""
+
+    routing_options = {
+        "overhead": {
+            "cost_layers": [
+                {
+                    "layer_name": "layer_1",
+                    "multiplier_scalar": 2,
+                    "apply_row_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "apply_polarity_mult": True,
+                    "multiplier_layer": "layer_2",
+                }
+            ],
+            "barrier_layers": [
+                {
+                    "layer_name": "layer_3",
+                    "where": "==1",
+                }
+            ],
+        }
+    }
+    transmission_config = {
+        "row_width": {"138": 1.5},
+        "voltage_polarity_mult": {"138": {"ac": 0.5}},
+    }
+
+    updated = RoutingOptions(routing_options).update_from(
+        transmission_config=transmission_config,
+        pv_by_option={
+            "overhead": {"polarity": "ac", "voltage": 138},
+        },
+    )
+
+    assert updated["overhead"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(3)
+    assert updated["overhead"]["friction_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+    assert updated["overhead"]["barrier_layers"] == [
+        {"layer_name": "layer_3", "where": "==1"}
+    ]
+    assert (
+        updated["overhead"]["barrier_layers"]
+        is not routing_options["overhead"]["barrier_layers"]
+    )
+
+    assert routing_options["overhead"]["cost_layers"][0]["apply_row_mult"]
+    assert (
+        routing_options["overhead"]["cost_layers"][0]["multiplier_scalar"] == 2
+    )
+    assert routing_options["overhead"]["friction_layers"][0][
+        "apply_polarity_mult"
+    ]
+
+
+def test_validate_routing_options_preserves_supported_schema():
+    """Routing option validation should preserve accepted payload shape"""
+
+    routing_options = {
+        "overhead": {
+            "cost_layers": [
+                {
+                    "layer_name": "layer_1",
+                    "apply_row_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "multiplier_layer": "layer_2",
+                    "multiplier_scalar": 0.5,
+                }
+            ],
+            "barrier_layers": [
+                {
+                    "layer_name": "layer_3",
+                    "where": "==1",
+                }
+            ],
+            "cost_multiplier_layer": "layer_4",
+        }
+    }
+
+    assert validate_routing_options(routing_options) == routing_options
+
+
+def test_validate_routing_options_normalizes_legacy_shapes():
+    """Routing option validation should accept legacy routing payloads"""
+
+    routing_options = {
+        "default": {},
+        "overhead": {
+            "cost_layers": None,
+            "friction_layers": None,
+            "barrier_layers": None,
+        },
+    }
+
+    out = validate_routing_options(routing_options)
+    assert out == {"default": {}, "overhead": {}}
+
+
+def test_validate_routing_options_raises_configuration_error():
+    """Routing option validation should raise configuration errors"""
+
+    routing_options = {
+        "overhead": {
+            "cost_layers": [
+                {
+                    "layer_name": "layer_1",
+                    "unknown_field": True,
+                }
+            ]
+        }
+    }
+
+    with pytest.raises(revrtConfigurationError, match="Extra inputs"):
+        validate_routing_options(routing_options)
+
+
+def test_update_route_options_applies_per_option_values():
+    """Updated options should apply explicit values per option"""
+
+    routing_options = {
+        "overhead": {
+            "cost_layers": [{"layer_name": "layer_1", "apply_row_mult": True}],
+            "friction_layers": [
+                {"multiplier_layer": "layer_2", "apply_polarity_mult": True}
+            ],
+        },
+        "underground": {
+            "cost_layers": [{"layer_name": "layer_3", "apply_row_mult": True}],
+            "friction_layers": [
+                {"multiplier_layer": "layer_4", "apply_polarity_mult": True}
+            ],
+        },
+    }
+    transmission_config = {
+        "row_width": {"138": 1.5, "230": 2.0},
+        "voltage_polarity_mult": {
+            "138": {"ac": 0.5},
+            "230": {"dc": 0.75},
+        },
+    }
+
+    updated = RoutingOptions(routing_options).update_from(
+        transmission_config=transmission_config,
+        pv_by_option={
+            "overhead": {"polarity": "ac", "voltage": 138},
+            "underground": {"polarity": "dc", "voltage": 230},
+        },
+    )
+
+    assert updated["overhead"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(1.5)
+    assert updated["overhead"]["friction_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+    assert updated["underground"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(2.0)
+    assert updated["underground"]["friction_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(0.75 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+
+
+def test_route_converter_updates_multi_option_layers(tmp_path):
+    """Route converter should update nested routing-option multipliers"""
+
+    route_points = pd.DataFrame(
+        {
+            "start_row": [0],
+            "start_col": [1],
+            "end_row": [2],
+            "end_col": [3],
+            "polarity": ["ac"],
+            "voltage": [138],
+        }
+    )
+    transmission_config = {
+        "row_width": {"138": 1.5},
+        "voltage_polarity_mult": {"138": {"ac": 0.5}},
+    }
+
+    converter = PointToPointRouteDefinitionConverter(
+        cost_fpath=None,
+        route_points=route_points,
+        out_fp=tmp_path / "unused.csv",
+        routing_options={
+            "overhead": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_scalar": 2,
+                        "apply_row_mult": True,
+                    }
+                ],
+                "friction_layers": [
+                    {
+                        "multiplier_layer": "layer_2",
+                        "apply_polarity_mult": True,
+                    }
+                ],
+                "barrier_layers": [
+                    {
+                        "layer_name": "layer_3",
+                        "where": "==1",
+                    }
+                ],
+            }
+        },
+        transmission_config=transmission_config,
+        drivers={"default": {"overhead": 1}},
+        transition_costs={"default": 0},
+    )
+
+    route_ro, route_definitions, route_attrs = next(iter(converter))
+
+    assert route_ro["overhead"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(3)
+    assert route_ro["overhead"]["friction_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+    assert route_ro["overhead"]["barrier_layers"] == [
+        {"layer_name": "layer_3", "where": "==1"}
+    ]
+    assert route_definitions == [
+        (0, [(0, 1, "overhead")], [(2, 3, "overhead")])
+    ]
+    route_attr = route_attrs[(0, (0, 1, "overhead"))]
+    assert route_attr["voltage_overhead"] == 138
+    assert route_attr["polarity_overhead"] == "ac"
+    assert route_attr["voltage"] == 138
+    assert route_attr["polarity"] == "ac"
 
 
 def test_get_row_multiplier_missing_config():

@@ -186,7 +186,7 @@ impl Scenario {
             }
         }
 
-        trace!("Adjusting neighbors' types: {:?}", neighbors);
+        trace!("Center: {:?} Adjusted neighbors: {:?}", position, neighbors);
         neighbors
     }
 
@@ -359,28 +359,28 @@ mod tests {
     use super::Scenario;
     use crate::ArrayIndex;
 
-    fn option_cost(band: u64, _row: u64, _col: u64) -> f32 {
-        if band == 0 { 1.0 } else { 5.0 }
+    fn overhead_cost(_band: u64, _row: u64, _col: u64) -> f32 {
+        1.0
     }
 
-    fn second_option_right_barrier(band: u64, row: u64, col: u64) -> f32 {
-        if band == 1 && row == 1 && col == 2 {
-            1.0
-        } else {
-            0.0
-        }
+    fn underground_cost(_band: u64, _row: u64, _col: u64) -> f32 {
+        5.0
+    }
+
+    fn underground_right_barrier(_band: u64, row: u64, col: u64) -> f32 {
+        if row == 1 && col == 2 { 1.0 } else { 0.0 }
     }
 
     fn option_zone(row: u64, col: u64) -> f32 {
         if row == 1 && col == 1 { 1.0 } else { 0.0 }
     }
 
-    fn overhead_option_cost(band: u64, _row: u64, _col: u64) -> f32 {
-        if band == 0 { 1.0 } else { 9.0 }
+    fn overhead_option_cost(_band: u64, _row: u64, _col: u64) -> f32 {
+        1.0
     }
 
-    fn underground_option_cost(band: u64, _row: u64, _col: u64) -> f32 {
-        if band == 1 { 5.0 } else { 8.0 }
+    fn underground_option_cost(_band: u64, _row: u64, _col: u64) -> f32 {
+        5.0
     }
 
     fn constant_positive_cost(_band: u64, _row: u64, _col: u64) -> f32 {
@@ -431,7 +431,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -492,7 +492,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -506,11 +506,15 @@ mod tests {
     #[test]
     fn successors_include_directional_option_transitions() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                option_cost,
+                "overhead_cost",
+                overhead_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "underground_cost",
+                underground_cost,
             ))
             .build()
             .unwrap();
@@ -518,13 +522,13 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -559,11 +563,15 @@ mod tests {
     #[test]
     fn successors_use_corner_geometry_for_directional_option_transitions() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                option_cost,
+                "overhead_cost",
+                overhead_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "underground_cost",
+                underground_cost,
             ))
             .build()
             .unwrap();
@@ -571,13 +579,13 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -608,15 +616,19 @@ mod tests {
     #[test]
     fn successors_skip_directional_option_transitions_into_blocked_options() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                option_cost,
+                "overhead_cost",
+                overhead_cost,
             ))
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "hard_barrier",
-                second_option_right_barrier,
+                "underground_cost",
+                underground_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "underground_hard_barrier",
+                underground_right_barrier,
             ))
             .build()
             .unwrap();
@@ -624,27 +636,20 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}],
-                        "barrier_layers": [
-                            {
-                                "layer_name": "hard_barrier",
-                                "barrier_operator": "eq",
-                                "barrier_threshold": 1.0
-                            }
-                        ]
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}],
+                        "cost_layers": [{"layer_name": "underground_cost"}],
                         "barrier_layers": [
                             {
-                                "layer_name": "hard_barrier",
+                                "layer_name": "underground_hard_barrier",
                                 "barrier_operator": "eq",
                                 "barrier_threshold": 1.0
                             }
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -670,11 +675,15 @@ mod tests {
     #[test]
     fn successors_apply_configured_transition_costs() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                option_cost,
+                "overhead_cost",
+                overhead_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "underground_cost",
+                underground_cost,
             ))
             .build()
             .unwrap();
@@ -682,24 +691,22 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
                 "transition_costs": {
                     "default": 1.0,
                     "pairwise": [
                         {
-                            "from": "overhead",
-                            "to": "underground",
-                            "cost": 3.0,
-                            "applies_bidirectionally": true
+                            "between": ["overhead", "underground"],
+                            "cost": 3.0
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -728,8 +735,8 @@ mod tests {
     #[test]
     fn successors_apply_transition_costs_from_object_routing_options() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
                 "overhead_cost",
                 overhead_option_cost,
@@ -753,14 +760,12 @@ mod tests {
                 "transition_costs": {
                     "pairwise": [
                         {
-                            "from": "overhead",
-                            "to": "underground",
-                            "cost": 3.0,
-                            "applies_bidirectionally": true
+                            "between": ["overhead", "underground"],
+                            "cost": 3.0
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -789,11 +794,15 @@ mod tests {
     #[test]
     fn allowed_states_respect_driver_exclusions() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                option_cost,
+                "overhead_cost",
+                overhead_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "underground_cost",
+                underground_cost,
             ))
             .layer(crate::dataset::samples::LayerConfig::custom(
                 "zone",
@@ -805,10 +814,10 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
                 "drivers": {
@@ -826,7 +835,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -860,11 +869,15 @@ mod tests {
     #[test]
     fn successors_apply_driver_multipliers() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                option_cost,
+                "overhead_cost",
+                overhead_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "underground_cost",
+                underground_cost,
             ))
             .layer(crate::dataset::samples::LayerConfig::custom(
                 "zone",
@@ -876,10 +889,10 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
                 "drivers": {
@@ -897,7 +910,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -926,11 +939,15 @@ mod tests {
     #[test]
     fn successors_apply_driver_multipliers_to_switched_moves() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
-                "cost",
-                option_cost,
+                "overhead_cost",
+                overhead_cost,
+            ))
+            .layer(crate::dataset::samples::LayerConfig::custom(
+                "underground_cost",
+                underground_cost,
             ))
             .layer(crate::dataset::samples::LayerConfig::custom(
                 "zone",
@@ -942,10 +959,10 @@ mod tests {
             r#"{
                 "routing_options": {
                     "overhead": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
                     },
                     "underground": {
-                        "cost_layers": [{"layer_name": "cost"}]
+                        "cost_layers": [{"layer_name": "underground_cost"}]
                     }
                 },
                 "drivers": {
@@ -963,7 +980,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -992,8 +1009,8 @@ mod tests {
     #[test]
     fn successors_skip_switched_moves_with_nonpositive_traversal_costs() {
         let store = crate::dataset::samples::ZarrTestBuilder::new()
-            .dimensions(2, 3, 3)
-            .chunks(2, 3, 3)
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
             .layer(crate::dataset::samples::LayerConfig::custom(
                 "cost",
                 constant_positive_cost,
@@ -1029,7 +1046,7 @@ mod tests {
                         }
                     ]
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -1088,7 +1105,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -1161,7 +1178,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();
@@ -1226,7 +1243,7 @@ mod tests {
                         ]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();

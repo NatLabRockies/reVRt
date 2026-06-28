@@ -52,7 +52,7 @@ impl From<ArrayIndex> for (u64, u64, u32) {
 }
 
 #[allow(missing_docs)]
-pub fn resolve<P: AsRef<std::path::Path>>(
+pub fn resolve_with_routing_options<P: AsRef<std::path::Path>>(
     store_path: P,
     cost_function: &str,
     algorithm: &str,
@@ -60,8 +60,9 @@ pub fn resolve<P: AsRef<std::path::Path>>(
     end: Vec<ArrayIndex>,
     swap_fp: Option<std::path::PathBuf>,
     mem_limit_bytes: u64,
-) -> Result<RevrtRoutingSolutions> {
+) -> Result<(RevrtRoutingSolutions, Vec<String>)> {
     let cost_function = CostFunction::from_json(cost_function)?;
+    let routing_options = cost_function.routing_options.clone();
     tracing::trace!("Cost function: {:?}", cost_function);
     let mut simulation = match swap_fp {
         Some(swap_fp) => Routing::new_wth_swap(
@@ -74,11 +75,10 @@ pub fn resolve<P: AsRef<std::path::Path>>(
         None => Routing::new(store_path, cost_function, mem_limit_bytes, algorithm)?,
     };
     let result = simulation.compute(start, end).collect();
-    Ok(result)
+    Ok((result, routing_options))
 }
 
-#[allow(missing_docs)]
-pub(crate) fn resolve_generator<P, I>(
+pub(crate) fn resolve_generator_with_routing_options<P, I>(
     store_path: P,
     cost_function: &str,
     route_definitions: I,
@@ -86,13 +86,14 @@ pub(crate) fn resolve_generator<P, I>(
     swap_fp: Option<std::path::PathBuf>,
     mem_limit_bytes: u64,
     algorithm: &str,
-) -> Result<()>
+) -> Result<Vec<String>>
 where
     P: AsRef<std::path::Path>,
     I: rayon::prelude::IntoParallelIterator<Item = RouteDefinition> + Send + 'static,
     I::Iter: Send,
 {
     let cost_function = crate::cost::CostFunction::from_json(cost_function)?;
+    let routing_options = cost_function.routing_options.clone();
     tracing::trace!("Cost function: {:?}", cost_function);
     let simulation = match swap_fp {
         Some(swap_fp) => ParRouting::new_with_swap(
@@ -105,7 +106,7 @@ where
         None => ParRouting::new(store_path, cost_function, mem_limit_bytes, algorithm)?,
     };
     simulation.lazy_scout(route_definitions, tx);
-    Ok(())
+    Ok(routing_options)
 }
 
 #[cfg(test)]
@@ -291,7 +292,7 @@ mod tests {
                         }]
                     }
                 },
-                "ignore_invalid_costs": false
+                "invalid_costs_block_routing": false
             }"#,
         )
         .unwrap();

@@ -13,8 +13,10 @@ import rioxarray  # noqa: F401
 import geopandas as gpd
 import xarray as xr
 
+from revrt.models.routing import validate_routing_options
 from revrt.routing.cli.utilities import routing_layer_mover
-from revrt.routing.base import BatchRouteProcessor, RoutingScenario
+from revrt.routing.base import RoutingScenario
+from revrt.routing.processing import BatchRouteProcessor
 from revrt.utilities.monitoring import log_runtime
 from revrt.exceptions import revrtKeyError
 
@@ -33,22 +35,22 @@ _RUST_MEM_FRACTION = 0.75
 
 The remaining memory is assumed to be for the Python process.
 """
+_POLARITY = "polarity"
+_VOLTAGE = "voltage"
 
 
 class RouteToDefinitionConverter(ABC):
     """Abstract base class for route definition converters"""
-
-    _GROUP_COLS = ["polarity", "voltage"]
 
     def __init__(
         self,
         cost_fpath,
         route_points,
         out_fp,
-        cost_layers,
-        friction_layers=None,
-        barrier_layers=None,
+        routing_options,
         transmission_config=None,
+        drivers=None,
+        transition_costs=None,
     ):
         """
 
@@ -60,29 +62,19 @@ class RouteToDefinitionConverter(ABC):
         route_points : pandas.DataFrame
             DataFrame defining the points to be routed. This DataFrame
             should contain route definitions to be transformed and
-            passed down to the Rust routing algorithm.
+            passed down to the Rust routing algorithm. Route values for
+            polarity and voltage must be provided either as one shared
+            `polarity` / `voltage` pair that applies to every routing
+            option, or as a full per-option set of
+            `polarity_<option>` / `voltage_<option>` columns.
         out_fp : path-like
             Path to output file where computed routes will be saved.
             This file will be checked for existing routes to avoid
             recomputation.
-        cost_layers : list
-            List of dictionaries defining the layers that are summed to
-            determine total costs raster used for routing. Each layer is
-            pre-processed before summation according to the user input.
-            See the description of
-            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
-            for more details.
-        friction_layers : list
-            Layers to be multiplied onto the aggregated cost layer to
-            influence routing but NOT be reported in final cost
-            (i.e. friction, barriers, etc.). See the description of
-            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
-            for more details.
-        barrier_layers : list
-            Layers defining explicit hard or soft routing barriers. See
-            the description of
-            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
-            for more details.
+        routing_options : dict
+            Mapping of routing-option names to dictionaries describing
+            the cost, friction, and barrier layers for each option. See
+            :class:`~revrt.models.routing.RoutingOptionConfig`.
         transmission_config : path-like or dict, optional
             Dictionary of transmission cost configuration values, or
             path to JSON/JSON5 file containing this dictionary. See the
@@ -91,17 +83,28 @@ class RouteToDefinitionConverter(ABC):
             for more details.
         """
         self.cost_fpath = cost_fpath
-        self.route_points = route_points
         self.out_fp = Path(out_fp)
-        self.cost_layers = cost_layers
-        self.friction_layers = friction_layers or []
-        self.barrier_layers = barrier_layers or []
         self.transmission_config = transmission_config
+        self.drivers = drivers
+        self.transition_costs = transition_costs
+        self._input_route_points = route_points
+        self._routing_options = RoutingOptions(routing_options)
+
+    @cached_property
+    def route_points(self):
+        """pandas.DataFrame: Validated routing points"""
+        return self._rp_with_expected_cols()
+
+    def _rp_with_expected_cols(self):
+        """Ensure route points has required columns"""
+        return _validate_route_points(
+            self._input_route_points, self._routing_options
+        )
 
     @property
     def num_routes(self):
         """int: Number of routes to be computed"""
-        return len(self.route_points)
+        return len(self._input_route_points)
 
     @cached_property
     def cost_metadata(self):
@@ -130,32 +133,50 @@ class RouteToDefinitionConverter(ABC):
             self._route_as_tuple(row) for __, row in existing_df.iterrows()
         }
 
+    @cached_property
+    def _group_cols_by_option_value(self):
+        """dict: Explicit per-option columns used for batching"""
+        return {
+            option: {
+                value_name: f"{value_name}_{option}"
+                for value_name in (_POLARITY, _VOLTAGE)
+            }
+            for option in self._routing_options
+        }
+
+    @cached_property
+    def _group_cols(self):
+        """list: Explicit per-option columns used for batching"""
+        return [
+            c
+            for cols in self._group_cols_by_option_value.values()
+            for c in cols.values()
+        ]
+
     def __iter__(self):
         if self.num_routes == 0:
             return
 
-        for polarity, voltage, routes in self._paths_to_compute:
+        for pv_by_option, routes in self._paths_to_compute:
             logger.info(
-                "Computing routes for %d points with polarity: %r and "
-                "voltage: %r",
+                "Computing routes for %d points with option values: %s",
                 len(routes),
-                polarity,
-                voltage,
+                _format_pv_by_option(pv_by_option),
             )
-            route_cl = self._update_cl(polarity, voltage)
-            route_fl = self._update_fl(polarity, voltage)
-            route_bl = self.barrier_layers
+            route_options = self._routing_options.update_from(
+                pv_by_option=pv_by_option,
+                transmission_config=self.transmission_config,
+            )
             route_definitions, route_attrs = (
                 self._convert_to_route_definitions(routes)
             )
-            yield route_cl, route_fl, route_bl, route_definitions, route_attrs
+            yield route_options, route_definitions, route_attrs
 
     @property
     def _paths_to_compute(self):
         """Generator that yields route groups to be computed"""
-        self._validate_route_points()
-
-        for group_info, routes in self.route_points.groupby(self._GROUP_COLS):
+        for __, routes in self.route_points.groupby(self._group_cols):
+            pv_by_option = self._pv_by_option_for_row(routes.iloc[0])
             if self.existing_routes:
                 mask = routes.apply(
                     lambda row: (
@@ -168,25 +189,18 @@ class RouteToDefinitionConverter(ABC):
             if routes.empty:
                 continue
 
-            yield *group_info, routes
+            yield pv_by_option, routes
 
-    def _validate_route_points(self):
-        """Ensure route points has required columns"""
-        for check_col in self._GROUP_COLS:
-            if check_col not in self.route_points.columns:
-                self.route_points[check_col] = "unknown"
+    def _pv_by_option_for_row(self, row):
+        """dict: Per-option polarity and voltage values for one row"""
+        return {
+            option: {value_name: row[c] for value_name, c in values.items()}
+            for option, values in self._group_cols_by_option_value.items()
+        }
 
-    def _update_cl(self, polarity, voltage):
-        """Update multipliers for cost layers"""
-        return update_multipliers(
-            self.cost_layers, polarity, voltage, self.transmission_config
-        )
-
-    def _update_fl(self, polarity, voltage):
-        """Update multipliers for friction layers"""
-        return update_multipliers(
-            self.friction_layers, polarity, voltage, self.transmission_config
-        )
+    def _route_value_signature(self, row):
+        """object: Explicit per-option route values for one route row"""
+        return (str(row[c]) for c in self._group_cols)
 
     @abstractmethod
     def _route_as_tuple(self, row):
@@ -199,15 +213,80 @@ class RouteToDefinitionConverter(ABC):
         raise NotImplementedError
 
 
-def run_lcp(  # noqa
+class RoutingOptions:
+    """Class to manage validated routing-option configurations"""
+
+    def __init__(self, routing_options):
+        """
+
+        Parameters
+        ----------
+        routing_options : dict
+            Mapping of routing-option names to dictionaries describing
+            the cost, friction, barrier, and option-level multiplier
+            inputs for that option. See
+            :class:`~revrt.models.routing.RoutingOptionConfig`.
+        """
+        self.routing_options = validate_routing_options(routing_options)
+
+    def __iter__(self):
+        yield from self.routing_options
+
+    @cached_property
+    def default(self):
+        """str: Default routing option to use if omitted from points"""
+        if "default" in self.routing_options:
+            return "default"
+        return next(iter(self.routing_options))
+
+    def update_from(self, pv_by_option, transmission_config):
+        """Update multipliers for multi-option routing
+
+        Parameters
+        ----------
+        pv_by_option : dict
+            Dictionary mapping routing options to their corresponding
+            polarity and voltage values, for example
+            ``{"option_name": {"polarity": "val", "voltage": "val"}}``.
+        transmission_config : dict
+            Dictionary of transmission cost configuration values.
+
+        Returns
+        -------
+        dict
+            Updated routing options with multipliers applied based on
+            the provided polarity and voltage values.
+        """
+        updated_options = deepcopy(self.routing_options)
+        for option_name, option_config in updated_options.items():
+            option_polarity = pv_by_option.get(option_name, {}).get("polarity")
+            option_voltage = pv_by_option.get(option_name, {}).get("voltage")
+            option_config["cost_layers"] = update_multipliers(
+                option_config.get("cost_layers", []),
+                option_polarity,
+                option_voltage,
+                transmission_config or {},
+            )
+            option_config["friction_layers"] = update_multipliers(
+                option_config.get("friction_layers", []),
+                option_polarity,
+                option_voltage,
+                transmission_config or {},
+            )
+            option_config["barrier_layers"] = deepcopy(
+                option_config.get("barrier_layers", [])
+            )
+
+        return updated_options
+
+
+def run_lcp(
     cost_fpath,
     out_fp,
     routes_to_compute,
     job_name="routes",
-    cost_multiplier_layer=None,
-    cost_multiplier_scalar=1,
     tracked_layers=None,
-    ignore_invalid_costs=True,
+    invalid_costs_block_routing=True,
     user_mem_limit_gb=4,
     save_routing_layer=False,
     algorithm="long_range_dijkstra",
@@ -225,25 +304,21 @@ def run_lcp(  # noqa
             out_fp=out_fp,
             routes_to_compute=routes_to_compute,
             job_name=job_name,
-            cost_multiplier_layer=cost_multiplier_layer,
-            cost_multiplier_scalar=cost_multiplier_scalar,
             tracked_layers=tracked_layers,
-            ignore_invalid_costs=ignore_invalid_costs,
+            invalid_costs_block_routing=invalid_costs_block_routing,
             user_mem_limit_gb=user_mem_limit_gb,
             save_routing_layer=save_routing_layer,
             algorithm=algorithm,
         )
 
 
-def _run_all_lcp_batches(  # noqa
+def _run_all_lcp_batches(
     cost_fpath,
     out_fp,
     routes_to_compute,
     job_name,
-    cost_multiplier_layer,
-    cost_multiplier_scalar,
     tracked_layers,
-    ignore_invalid_costs,
+    invalid_costs_block_routing,
     user_mem_limit_gb,
     save_routing_layer,
     algorithm,
@@ -251,19 +326,14 @@ def _run_all_lcp_batches(  # noqa
     """Run LCP routing for all batches of routes and save results"""
     out_fp = Path(out_fp)
     save_paths = out_fp.suffix.lower() == ".gpkg"
-    for route_batch in routes_to_compute:
-        route_cl, route_fl, route_bl, route_definitions, route_attrs = (
-            route_batch
-        )
+    for route_options, route_definitions, route_attrs in routes_to_compute:
         scenario = RoutingScenario(
             cost_fpath=cost_fpath,
-            cost_layers=route_cl,
-            friction_layers=route_fl,
-            barrier_layers=route_bl,
+            routing_options=route_options,
+            drivers=routes_to_compute.drivers,
+            transition_costs=routes_to_compute.transition_costs,
             tracked_layers=tracked_layers,
-            cost_multiplier_layer=cost_multiplier_layer,
-            cost_multiplier_scalar=cost_multiplier_scalar,
-            ignore_invalid_costs=ignore_invalid_costs,
+            invalid_costs_block_routing=invalid_costs_block_routing,
             algorithm=algorithm,
         )
 
@@ -280,9 +350,7 @@ def _run_all_lcp_batches(  # noqa
             out_fp=out_fp,
             route_attrs=route_attrs,
             job_name=job_name,
-            route_cl=route_cl,
-            route_fl=route_fl,
-            route_bl=route_bl,
+            routing_options=route_options,
         )
 
         with rl_mover as routing_layer_out_fp:
@@ -322,11 +390,46 @@ def split_routes(config, nodes):
     return config
 
 
+def _validate_route_points(points, routing_options):
+    """Ensure route points has required columns"""
+    for option_col in ["start_option", "end_option"]:
+        if option_col not in points.columns:
+            points[option_col] = routing_options.default
+
+    return _validate_route_value_columns(points, routing_options)
+
+
+def _validate_route_value_columns(points, routing_options):
+    """Ensure explicit per-option route-value columns are present"""
+    for option in routing_options:
+        polarity_col = f"{_POLARITY}_{option}"
+        voltage_col = f"{_VOLTAGE}_{option}"
+
+        if polarity_col not in points.columns:
+            if _POLARITY in points.columns:
+                points[polarity_col] = points[_POLARITY].fillna("unknown")
+            else:
+                points[polarity_col] = "unknown"
+        else:
+            points[polarity_col] = points[polarity_col].fillna("unknown")
+
+        if voltage_col not in points.columns:
+            if _VOLTAGE in points.columns:
+                points[voltage_col] = points[_VOLTAGE].fillna("unknown")
+            else:
+                points[voltage_col] = "unknown"
+        else:
+            points[voltage_col] = points[voltage_col].fillna("unknown")
+
+    return points
+
+
 def update_multipliers(layers, polarity, voltage, transmission_config):
     """[NOT PUBLIC API] Update layer multipliers based on user input"""
     output_layers = deepcopy(layers)
-    polarity = "unknown" if polarity in {None, "unknown"} else str(polarity)
-    voltage = "unknown" if voltage in {None, "unknown"} else str(int(voltage))
+    unknowns = {None, "None", "unknown"}
+    polarity = "unknown" if polarity in unknowns else str(polarity)
+    voltage = "unknown" if voltage in unknowns else str(int(voltage))
 
     for layer in output_layers:
         if layer.pop("apply_row_mult", False):
@@ -405,3 +508,15 @@ def _get_polarity_multiplier(transmission_config, voltage, polarity):
         raise revrtKeyError(msg) from e
 
     return polarity_multiplier
+
+
+def _format_pv_by_option(pv_by_option):
+    """str: Human-readable per-option route values"""
+    formatted_values = []
+    for option, values in pv_by_option.items():
+        formatted_values.append(
+            f"{option}(polarity={values['polarity']!r}, "
+            f"voltage={values['voltage']!r})"
+        )
+
+    return ", ".join(formatted_values)

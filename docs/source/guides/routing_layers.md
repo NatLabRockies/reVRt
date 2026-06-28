@@ -85,7 +85,7 @@ Sometimes, however, the presence of invalid costs can prevent a route from being
 completed (imagine a start point completely surrounded by invalid costs, either
 locally or further into the domain). In these rare cases, it might be useful to
 allow routes to be formed over the invalid costs in order to get any result back.
-In this cases, users may specify ``ignore_invalid_costs: false`` in their
+In this case, users may specify ``invalid_costs_block_routing: false`` in their
 configuration, and ``reVRt`` will allow routes to pass over these invalid cost
 pixels, minimizing the route's exposure to them.
 
@@ -228,7 +228,7 @@ treated as a barrier that cannot be crossed by a route. For example, this
 configuration:
 
 ```json5
-{"layer_name": "slope", "barrier_values": ">=15"}
+{"layer_name": "slope", "where": ">=15"}
 ```
 
 would tell the routing algorithm that any pixels with a value {math}`\ge 15`
@@ -240,8 +240,8 @@ act as a barrier.
 
 ```json5
 "barrier_layers": [
-    {"layer_name": "slope", "barrier_values": ">=15"},
-    {"layer_name": "barrier_bool_mask", "barrier_values": "==1"},
+    {"layer_name": "slope", "where": ">=15"},
+    {"layer_name": "barrier_bool_mask", "where": "==1"},
     // ...
 ]
 ```
@@ -265,8 +265,8 @@ barrier), you have to provide a ``barrier_importance`` ranking, like so:
 
 ```json5
 "barrier_layers": [
-    {"layer_name": "slope", "barrier_values": ">=15", "barrier_importance": 10},
-    {"layer_name": "barrier_bool_mask", "barrier_values": "==1", "barrier_importance": 1},
+    {"layer_name": "slope", "where": ">=15", "barrier_importance": 10},
+    {"layer_name": "barrier_bool_mask", "where": "==1", "barrier_importance": 1},
     // ...
 ]
 ```
@@ -282,9 +282,9 @@ You can also specify that a barrier should never be dropped by leaving out the
 
 ```json5
 "barrier_layers": [
-    {"layer_name": "slope", "barrier_values": ">=15", "barrier_importance": 10},
-    {"layer_name": "barrier_bool_mask", "barrier_values": "==1", "barrier_importance": 1},
-    {"layer_name": "important_barrier", "barrier_values": "<0.5"},
+    {"layer_name": "slope", "where": ">=15", "barrier_importance": 10},
+    {"layer_name": "barrier_bool_mask", "where": "==1", "barrier_importance": 1},
+    {"layer_name": "important_barrier", "where": "<0.5"},
     // ...
 ]
 ```

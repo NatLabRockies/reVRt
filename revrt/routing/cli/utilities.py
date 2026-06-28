@@ -27,9 +27,7 @@ def routing_layer_mover(
     out_fp,
     route_attrs,
     job_name,
-    route_cl,
-    route_fl,
-    route_bl,
+    routing_options,
 ):
     """Yield temporary routing-layer path and optionally persist it
 
@@ -92,9 +90,7 @@ def routing_layer_mover(
             job_name=job_name,
             polarity=polarity,
             voltage=voltage,
-            cost_layers=route_cl,
-            friction_layers=route_fl,
-            barrier_layers=route_bl,
+            routing_options=routing_options,
         )
         logger.info("Saved routing layer to %s", saved_fp)
 
@@ -152,20 +148,10 @@ def _extract_batch_group(route_attrs):
     return polarity, voltage
 
 
-def _route_layer_hash(cost_layers, friction_layers, barrier_layers):
+def _route_layer_hash(routing_options):
     """Compute short hash for layer definitions"""
     payload = json.dumps(
-        {
-            "routing_options": {
-                "default": {
-                    "cost_layers": cost_layers,
-                    "friction_layers": friction_layers,
-                    "barrier_layers": barrier_layers,
-                }
-            }
-        },
-        sort_keys=True,
-        separators=(",", ":"),
+        routing_options, sort_keys=True, separators=(",", ":")
     )
     return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
 
@@ -198,17 +184,13 @@ def _persist_routing_layer_output(
     job_name,
     polarity,
     voltage,
-    cost_layers,
-    friction_layers,
-    barrier_layers,
+    routing_options,
 ):
     """Save routing layer output with coordinates"""
     extra_outputs = Path(out_dir) / "extra_outputs"
     extra_outputs.mkdir(parents=True, exist_ok=True)
 
-    layer_hash = _route_layer_hash(
-        cost_layers, friction_layers, barrier_layers
-    )
+    layer_hash = _route_layer_hash(routing_options)
     base_name = (
         f"{slugify(job_name)}_"
         f"p-{slugify(polarity)}_"

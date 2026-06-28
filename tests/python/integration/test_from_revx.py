@@ -16,10 +16,9 @@ from shapely.geometry import Point
 
 from revrt.utilities import LayeredFile, features_to_route_table
 from revrt.costs.config import TransmissionConfig, parse_cap_class
-from revrt.routing.base import BatchRouteProcessor, RoutingScenario
-from revrt.routing.cli.base import (
-    _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL,
-)
+from revrt.routing.base import RoutingScenario
+from revrt.routing.processing import BatchRouteProcessor
+from revrt.routing.cli.base import _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
 from revrt.routing.cli.point_to_point import (
     PointToPointRouteDefinitionConverter,
 )
@@ -33,6 +32,12 @@ DEFAULT_BARRIER_CONFIG = {
     "multiplier_scalar": 100,
 }
 CHECK_COLS = ("start_index", "length_km", "cost", "index")
+
+
+def _set_default_route_values(route_table, voltage, polarity):
+    """Populate explicit default-option route value columns"""
+    route_table["voltage_default"] = voltage
+    route_table["polarity_default"] = polarity
 
 
 def _cap_class_to_cap(capacity):
@@ -63,12 +68,16 @@ def _run_lcp(tmp_path, routing_scenario, route_table):
         cost_fpath=routing_scenario.cost_fpath,
         route_points=route_table,
         out_fp=out_fp,
-        cost_layers=routing_scenario.cost_layers,
-        friction_layers=routing_scenario.friction_layers,
+        routing_options=routing_scenario.routing_options,
+        drivers=routing_scenario.drivers,
+        transition_costs=routing_scenario.transition_costs,
     )
+    # routes_generator._rp_with_expected_cols()
 
     route_definitions, route_attrs = (
-        routes_generator._convert_to_route_definitions(route_table)
+        routes_generator._convert_to_route_definitions(
+            routes_generator.route_points
+        )
     )
     route_computer = BatchRouteProcessor(
         routing_scenario=routing_scenario,
@@ -115,8 +124,12 @@ def _run_cli(
         "cost_fpath": str(revx_transmission_layers),
         "route_table_fpath": str(routes_fp),
         "save_paths": save_paths,
-        "cost_layers": [cost_layer_config],
-        "friction_layers": [DEFAULT_BARRIER_CONFIG],
+        "routing_options": {
+            "default": {
+                "cost_layers": [cost_layer_config],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+            }
+        },
     }
 
     out_fp = cli_command_run_func("route-points", config, tmp_path)
@@ -160,8 +173,12 @@ def test_capacity_class(
     cap = _cap_class_to_cap(capacity)
     routing_scenario = RoutingScenario(
         cost_fpath=revx_transmission_layers,
-        cost_layers=[{"layer_name": f"tie_line_costs_{cap}MW"}],
-        friction_layers=[DEFAULT_BARRIER_CONFIG],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": f"tie_line_costs_{cap}MW"}],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+            }
+        },
     )
 
     test = _run_lcp(tmp_path, routing_scenario, route_table)
@@ -189,9 +206,13 @@ def test_invariant_costs(
     }
     routing_scenario = RoutingScenario(
         cost_fpath=revx_transmission_layers,
-        cost_layers=[base_costs, invariant_cost_layer],
-        friction_layers=[DEFAULT_BARRIER_CONFIG],
-        ignore_invalid_costs=False,
+        routing_options={
+            "default": {
+                "cost_layers": [base_costs, invariant_cost_layer],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+            }
+        },
+        invalid_costs_block_routing=False,
     )
 
     test = _run_lcp(tmp_path, routing_scenario, route_table)
@@ -208,7 +229,7 @@ def test_invariant_costs(
 def test_cost_multiplier_layer(
     revx_transmission_layers, route_table, tmp_path, test_routing_data_dir
 ):
-    """Test routing with a cost_multiplier_layer"""
+    """Test routing with a per-option cost_multiplier_layer"""
 
     capacity = random.choice([100, 200, 400, 1000, 3000])  # noqa: S311
     cap = _cap_class_to_cap(capacity)
@@ -224,9 +245,13 @@ def test_cost_multiplier_layer(
 
     routing_scenario = RoutingScenario(
         cost_fpath=temp_layer_file,
-        cost_layers=[cost_layer],
-        friction_layers=[DEFAULT_BARRIER_CONFIG],
-        cost_multiplier_layer="test_layer",
+        routing_options={
+            "default": {
+                "cost_layers": [cost_layer],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+                "cost_multiplier_layer": "test_layer",
+            }
+        },
     )
     test = _run_lcp(tmp_path, routing_scenario, route_table)
 
@@ -251,9 +276,13 @@ def test_cost_multiplier_scalar(
 
     routing_scenario = RoutingScenario(
         cost_fpath=revx_transmission_layers,
-        cost_layers=[cost_layer],
-        friction_layers=[DEFAULT_BARRIER_CONFIG],
-        cost_multiplier_scalar=5,
+        routing_options={
+            "default": {
+                "cost_layers": [cost_layer],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+                "cost_multiplier_scalar": 5,
+            }
+        },
     )
     test = _run_lcp(tmp_path, routing_scenario, route_table)
 
@@ -268,7 +297,7 @@ def test_cost_multiplier_scalar(
 
 
 def test_not_hard_barrier(revx_transmission_layers, tmp_path):
-    """Test routing to cut off points using `ignore_invalid_costs=False`"""
+    """Test routing to cut off points"""
 
     temp_layer_file = tmp_path / "temp_multiplier_layer.zarr"
     shutil.copytree(revx_transmission_layers, temp_layer_file)
@@ -296,20 +325,30 @@ def test_not_hard_barrier(revx_transmission_layers, tmp_path):
         cost_fpath=temp_layer_file,
         route_points=route_table,
         out_fp=out_fp,
-        cost_layers=[{"layer_name": "test_layer"}],
-        friction_layers=[DEFAULT_BARRIER_CONFIG],
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "test_layer"}],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+            }
+        },
     )
 
     route_definitions, route_attrs = (
-        routes_generator._convert_to_route_definitions(route_table)
+        routes_generator._convert_to_route_definitions(
+            routes_generator.route_points
+        )
     )
 
     routing_scenario = RoutingScenario(
         cost_fpath=temp_layer_file,
-        cost_layers=[{"layer_name": "test_layer"}],
-        friction_layers=[DEFAULT_BARRIER_CONFIG],
-        cost_multiplier_layer="test_layer",
-        ignore_invalid_costs=True,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "test_layer"}],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+                "cost_multiplier_layer": "test_layer",
+            }
+        },
+        invalid_costs_block_routing=True,
     )
 
     assert not out_fp.exists()
@@ -323,10 +362,14 @@ def test_not_hard_barrier(revx_transmission_layers, tmp_path):
 
     routing_scenario = RoutingScenario(
         cost_fpath=temp_layer_file,
-        cost_layers=[{"layer_name": "test_layer"}],
-        friction_layers=[DEFAULT_BARRIER_CONFIG],
-        cost_multiplier_layer="test_layer",
-        ignore_invalid_costs=False,
+        routing_options={
+            "default": {
+                "cost_layers": [{"layer_name": "test_layer"}],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+                "cost_multiplier_layer": "test_layer",
+            }
+        },
+        invalid_costs_block_routing=False,
     )
 
     out_fp = tmp_path / "least_cost_paths_barrier.csv"
@@ -420,8 +463,7 @@ def test_apply_row_mult(
 ):
     """Test applying row multiplier"""
 
-    route_table["voltage"] = 138
-    route_table["polarity"] = "dc"
+    _set_default_route_values(route_table, 138, "dc")
 
     row_config = {"138": 2}
     polarity_config = {"138": {"ac": 2, "dc": 3}}
@@ -455,8 +497,7 @@ def test_apply_polarity_mult(
 ):
     """Test applying polarity multiplier"""
 
-    route_table["voltage"] = 138
-    route_table["polarity"] = "dc"
+    _set_default_route_values(route_table, 138, "dc")
 
     row_config = {"138": 2}
     polarity_config = {"138": {"ac": 2, "dc": 3}}
@@ -490,8 +531,7 @@ def test_apply_row_and_polarity_mult(
 ):
     """Test applying row multiplier"""
 
-    route_table["voltage"] = 138
-    route_table["polarity"] = "dc"
+    _set_default_route_values(route_table, 138, "dc")
 
     row_config = {"138": 2}
     polarity_config = {"138": {"ac": 2, "dc": 3}}
@@ -525,8 +565,7 @@ def test_apply_row_and_polarity_with_existing_mult(
 ):
     """Test applying both row and polarity multiplier when mult exists"""
 
-    route_table["voltage"] = 138
-    route_table["polarity"] = "dc"
+    _set_default_route_values(route_table, 138, "dc")
 
     row_config = {"138": 2}
     polarity_config = {"138": {"ac": 2, "dc": 3}}
@@ -568,10 +607,10 @@ def test_apply_multipliers_by_route(
     idx_to_polarity = {0: "ac", 1: "dc", 2: "ac", 3: "dc", 4: "dc"}
     for idx, volt in idx_to_volt.items():
         mask = route_table["start_index"] == idx
-        route_table.loc[mask, "voltage"] = volt
+        route_table.loc[mask, "voltage_default"] = volt
     for idx, polarity in idx_to_polarity.items():
         mask = route_table["start_index"] == idx
-        route_table.loc[mask, "polarity"] = polarity
+        route_table.loc[mask, "polarity_default"] = polarity
 
     row_config = {"138": 2, "69": 2.5, "345": 3, "500": 3.5}
     polarity_config = {
@@ -597,8 +636,8 @@ def test_apply_multipliers_by_route(
     )
     divisors = []
     for __, row in test.iterrows():
-        voltage = str(int(row["voltage"]))
-        polarity = row["polarity"]
+        voltage = str(int(row["voltage_default"]))
+        polarity = row["polarity_default"]
         divisors.append(
             1.2
             * row_config[voltage]
@@ -660,9 +699,13 @@ def test_tracked_layers(
         cost_fpath=temp_layer_file,
         route_table_fpath=route_table_path,
         features_fpath=mapped_features_path,
-        cost_layers=[
-            {"layer_name": "tie_line_costs_102MW"},
-        ],
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {"layer_name": "tie_line_costs_102MW"},
+                ]
+            }
+        },
         out_dir=tmp_path,
         job_name="test_route_to_features",
         tracked_layers=[
@@ -687,15 +730,15 @@ def test_tracked_layers(
     test = gpd.read_file(out_fp)
     assert len(test) == 36
 
-    assert "layer1_sum" in test
-    assert "layer2_max" in test
-    assert "layer3_min" not in test
-    assert "layer5_dne" not in test
+    assert "layer1_default_sum" in test
+    assert "layer2_default_max" in test
+    assert "layer3_default_min" not in test
+    assert "layer5_default_dne" not in test
 
     assert (
-        test["layer1_sum"] <= 2 * (test["length_km"] / 90 * 1000 + 1)
+        test["layer1_default_sum"] <= 2 * (test["length_km"] / 90 * 1000 + 1)
     ).all()
-    assert np.allclose(test["layer2_max"], 8)
+    assert np.allclose(test["layer2_default_max"], 8)
 
 
 @pytest.mark.parametrize("save_paths", [False, True])
@@ -763,8 +806,12 @@ def test_regional_end_to_end_cli(
         "cost_fpath": str(revx_transmission_layers),
         "route_table_fpath": str(route_table_path),
         "features_fpath": str(mapped_features_path),
-        "cost_layers": [{"layer_name": "tie_line_costs_1500MW"}],
-        "friction_layers": [DEFAULT_BARRIER_CONFIG],
+        "routing_options": {
+            "default": {
+                "cost_layers": [{"layer_name": "tie_line_costs_1500MW"}],
+                "friction_layers": [DEFAULT_BARRIER_CONFIG],
+            }
+        },
         "save_paths": save_paths,
     }
 
@@ -807,7 +854,7 @@ def test_regional_end_to_end_cli(
     assert "trans_gid" in test
     assert "ac_cap" in test
     assert "category" in test
-    assert "voltage_transmission_feature" in test
+    assert "voltage" in test
     assert "trans_gids" in test
 
     assert "feature_id_transmission_feature" not in test
@@ -835,11 +882,11 @@ def test_regional_end_to_end_cli(
     assert set(test[mask]["feature_id"].unique()) == {4}
 
     assert np.allclose(
-        test["tie_line_costs_1500MW_cost"].astype(float),
+        test["tie_line_costs_1500MW_default_cost"].astype(float),
         test["cost"].astype(float),
     )
     assert np.allclose(
-        test["tie_line_costs_1500MW_length_km"].astype(float),
+        test["tie_line_costs_1500MW_default_length_km"].astype(float),
         test["length_km"].astype(float),
     )
 

@@ -18,6 +18,7 @@ from revrt.routing.utilities import (
     _filter_transmission_features,
     _init_streaming_writer,
     _transform_lat_lon_to_row_col,
+    compute_lens,
     points_csv_to_geo_dataframe,
     convert_lat_lon_to_row_col,
     filter_points_outside_cost_domain,
@@ -677,8 +678,8 @@ def test_add_voltage_polarity_expands_routes_by_combination():
 
     updated = _add_voltage_polarity(
         route_table,
-        voltages=[138, 230],
-        polarities=["ac", "dc"],
+        voltages={"overhead": [138, 230], "underground": [500]},
+        polarities={"overhead": ["ac", "dc"], "underground": ["dc"]},
     )
 
     assert len(updated) == len(route_table) * 4
@@ -688,38 +689,51 @@ def test_add_voltage_polarity_expands_routes_by_combination():
     }
 
     actual = {
-        (row.route_id, row.voltage, row.polarity, row.start_row, row.start_col)
+        (
+            row.route_id,
+            row.voltage_overhead,
+            row.polarity_overhead,
+            row.voltage_underground,
+            row.polarity_underground,
+            row.start_row,
+            row.start_col,
+        )
         for row in updated.itertuples(index=False)
     }
     expected = {
-        ("route-a", 138, "ac", 0, 2),
-        ("route-a", 138, "dc", 0, 2),
-        ("route-a", 230, "ac", 0, 2),
-        ("route-a", 230, "dc", 0, 2),
-        ("route-b", 138, "ac", 1, 3),
-        ("route-b", 138, "dc", 1, 3),
-        ("route-b", 230, "ac", 1, 3),
-        ("route-b", 230, "dc", 1, 3),
+        ("route-a", 138, "ac", 500, "dc", 0, 2),
+        ("route-a", 138, "dc", 500, "dc", 0, 2),
+        ("route-a", 230, "ac", 500, "dc", 0, 2),
+        ("route-a", 230, "dc", 500, "dc", 0, 2),
+        ("route-b", 138, "ac", 500, "dc", 1, 3),
+        ("route-b", 138, "dc", 500, "dc", 1, 3),
+        ("route-b", 230, "ac", 500, "dc", 1, 3),
+        ("route-b", 230, "dc", 500, "dc", 1, 3),
     }
 
     assert actual == expected
 
 
 @pytest.mark.parametrize(
-    ("voltages", "polarities"),
+    (
+        "voltages",
+        "polarities",
+        "expected_voltage",
+        "expected_polarity",
+    ),
     [
-        (None, None),
-        ([], []),
-        (None, []),
-        ([], None),
-        ([138], None),
-        ([138], []),
-        (None, ["ac"]),
-        ([], ["ac"]),
+        (None, None, None, None),
+        ({}, {}, None, None),
+        (None, {}, None, None),
+        ({}, None, None, None),
+        ({"default": [138]}, None, 138, "unknown"),
+        ({"default": [138]}, {}, 138, "unknown"),
+        (None, {"default": ["ac"]}, "unknown", "ac"),
+        ({}, {"default": ["ac"]}, "unknown", "ac"),
     ],
 )
 def test_add_voltage_polarity_handles_none_and_empty_inputs(
-    voltages, polarities
+    voltages, polarities, expected_voltage, expected_polarity
 ):
     """_add_voltage_polarity should return a routing table for empty inputs"""
 
@@ -734,22 +748,49 @@ def test_add_voltage_polarity_handles_none_and_empty_inputs(
     updated = _add_voltage_polarity(route_table, voltages, polarities)
 
     assert isinstance(updated, pd.DataFrame)
-    if voltages:
-        assert updated["voltage"].tolist() == [138, 138]
+    if expected_voltage is not None:
+        assert updated["voltage_default"].tolist() == [expected_voltage] * 2
+        assert updated["polarity_default"].tolist() == [expected_polarity] * 2
     else:
-        assert "voltage" not in updated.columns
-
-    if polarities:
-        assert updated["polarity"].tolist() == ["ac", "ac"]
-    else:
-        assert "polarity" not in updated.columns
+        assert "voltage_default" not in updated.columns
+        assert "polarity_default" not in updated.columns
 
     expected = route_table.copy(deep=True)
-    if voltages:
-        expected["voltage"] = 138
-    if polarities:
-        expected["polarity"] = "ac"
+    if expected_voltage is not None:
+        expected["voltage_default"] = expected_voltage
+        expected["polarity_default"] = expected_polarity
     pd.testing.assert_frame_equal(updated.reset_index(drop=True), expected)
+
+
+def test_add_voltage_polarity_defaults_to_default_option():
+    """Explicit route values should default to the default option"""
+
+    route_table = pd.DataFrame(
+        {
+            "route_id": ["route-a"],
+            "start_row": [0],
+            "start_col": [2],
+        }
+    )
+
+    updated = _add_voltage_polarity(
+        route_table, voltages={"default": [138]}, polarities=None
+    )
+
+    assert updated["voltage_default"].tolist() == [138]
+    assert updated["polarity_default"].tolist() == ["unknown"]
+
+
+def test_add_voltage_polarity_requires_dict_inputs():
+    """Route value inputs should be keyed by routing option"""
+
+    route_table = pd.DataFrame({"route_id": ["route-a"]})
+
+    with pytest.raises(
+        revrtValueError,
+        match="`voltages` must be a dict mapping routing options",
+    ):
+        _add_voltage_polarity(route_table, voltages=[138], polarities=None)
 
 
 def test_filter_points_outside_cost_domain_only_start_indices(cost_grid):
@@ -773,6 +814,29 @@ def test_filter_points_outside_cost_domain_only_start_indices(cost_grid):
         filtered = filter_points_outside_cost_domain(route_points, shape)
 
     assert filtered.index.tolist() == [0]
+
+
+def test_compute_lens_splits_segment_lengths_across_route_cells():
+    """Per-cell and total route lengths are computed consistently"""
+
+    route = np.array([[0, 0], [0, 1], [1, 2]], dtype=float)
+
+    lens, total_path_length = compute_lens(route, cell_size=2000)
+
+    expected_lens = np.array([0.5, (1 + math.sqrt(2)) / 2, math.sqrt(2) / 2])
+    np.testing.assert_allclose(lens, expected_lens)
+    assert math.isclose(total_path_length, 2 * (1 + math.sqrt(2)))
+
+
+def test_compute_lens_returns_zero_lengths_for_single_cell_route():
+    """A route with one cell has zero per-cell and total length"""
+
+    route = np.array([[3, 4]])
+
+    lens, total_path_length = compute_lens(route, cell_size=90)
+
+    np.testing.assert_array_equal(lens, np.array([0.0]))
+    assert total_path_length == 0
 
 
 if __name__ == "__main__":

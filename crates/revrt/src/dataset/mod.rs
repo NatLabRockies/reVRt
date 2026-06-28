@@ -278,13 +278,14 @@ impl Dataset {
         index: &ArrayIndex,
     ) -> Option<f32> {
         let array = Array::open(self.source.clone(), &format!("/{layer_name}")).ok()?;
-        let subset = match array.shape().len() {
+        let shape = array.shape();
+        let subset = match shape.len() {
             2 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
                 index.i..(index.i + 1),
                 index.j..(index.j + 1),
             ]),
             3 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                u64::from(index.option)..(u64::from(index.option) + 1),
+                0..1,
                 index.i..(index.i + 1),
                 index.j..(index.j + 1),
             ]),
@@ -361,10 +362,12 @@ pub(crate) fn make_lazy_subset_for_tests(
 mod tests {
     use super::*;
     use crate::error::Error;
+    use ndarray::Array3;
     use std::f32::consts::SQRT_2;
     use std::sync::Arc;
     use test_case::test_case;
     use zarrs::array::{ArrayBuilder, DataType, FillValue};
+    use zarrs::array_subset::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
     use zarrs::group::GroupBuilder;
     use zarrs::storage::ReadableWritableListableStorage;
@@ -465,6 +468,92 @@ mod tests {
                 shape,
             } if variable == "A" && shape == vec![3, 4]
         ));
+    }
+
+    #[test]
+    fn get_source_cell_value_reuses_single_band_3d_layers_for_all_options() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("overhead_cost", 1.0))
+            .layer(samples::LayerConfig::constant("underground_cost", 2.0))
+            .build()
+            .unwrap();
+        let store: ReadableWritableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+
+        let zone = ArrayBuilder::new(
+            vec![1, 3, 3],
+            vec![1, 3, 3],
+            DataType::Float32,
+            FillValue::from(zarrs::array::ZARR_NAN_F32),
+        )
+        .build(store, "/zone")
+        .unwrap();
+        zone.store_metadata().unwrap();
+        zone.store_chunks_ndarray(
+            &ArraySubset::new_with_ranges(&[0..1, 0..1, 0..1]),
+            Array3::from_shape_vec(
+                (1, 3, 3),
+                vec![0.0_f32, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+            )
+            .unwrap(),
+        )
+        .unwrap();
+
+        let cost_function = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {
+                        "cost_layers": [{"layer_name": "overhead_cost"}]
+                    },
+                    "underground": {
+                        "cost_layers": [{"layer_name": "underground_cost"}]
+                    }
+                },
+                "drivers": {
+                    "default": {
+                        "overhead": 1,
+                        "underground": "excluded"
+                    },
+                    "zones": [
+                        {
+                            "layer_name": "zone",
+                            "mask_operator": "eq",
+                            "mask_threshold": 1,
+                            "overhead": "excluded",
+                            "underground": 1
+                        }
+                    ]
+                },
+                "invalid_costs_block_routing": false
+            }"#,
+        )
+        .unwrap();
+        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).unwrap();
+
+        assert_eq!(
+            dataset.get_source_cell_value(
+                "zone",
+                &ArrayIndex {
+                    i: 1,
+                    j: 1,
+                    option: 0,
+                },
+            ),
+            Some(1.0)
+        );
+        assert_eq!(
+            dataset.get_source_cell_value(
+                "zone",
+                &ArrayIndex {
+                    i: 1,
+                    j: 1,
+                    option: 1,
+                },
+            ),
+            Some(1.0)
+        );
     }
 
     #[test]
@@ -848,8 +937,8 @@ mod tests {
         }
     }
 
-    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"ignore_invalid_costs":true}"# ; "zero layer")]
-    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"ignore_invalid_costs":true}"# ; "negative layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"invalid_costs_block_routing":true}"# ; "zero layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"invalid_costs_block_routing":true}"# ; "negative layer")]
     fn test_get_3x3_with_hard_barriered_layers(json: &str) {
         let tmp = samples::ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
@@ -868,12 +957,12 @@ mod tests {
         let results = same_option_neighbors(&neighborhoods, index.option, None);
         assert!(
             results.is_empty(),
-            "Found data with `ignore_invalid_costs=true`"
+            "Found data with `invalid_costs_block_routing=true`"
         );
     }
 
-    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"ignore_invalid_costs":false}"# ; "zero layer")]
-    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"ignore_invalid_costs":false}"# ; "negative layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"B"}]}},"invalid_costs_block_routing":false}"# ; "zero layer")]
+    #[test_case(r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"C"}]}},"invalid_costs_block_routing":false}"# ; "negative layer")]
     fn test_get_3x3_with_soft_barrier_layers(json: &str) {
         let tmp = samples::ZarrTestBuilder::new()
             .dimensions(1, 3, 3)
@@ -993,7 +1082,7 @@ mod tests {
                     ]
                 }
             },
-            "ignore_invalid_costs": false
+            "invalid_costs_block_routing": false
         }
         "#;
 

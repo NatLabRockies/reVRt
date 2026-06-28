@@ -208,7 +208,7 @@ impl DerivedDataReader {
             .position(|(row, col)| *row == ci && *col == cj)
             .unwrap();
 
-        (0..self.grid_noptions as usize)
+        let cost_to_neighbors = (0..self.grid_noptions as usize)
             .map(|option_idx| {
                 let offset = option_idx * per_option_len;
                 let primary_slice = &primary_costs[offset..offset + per_option_len];
@@ -257,7 +257,14 @@ impl DerivedDataReader {
                     points,
                 }
             })
-            .collect()
+            .collect();
+
+        trace!(
+            "Center point: {:?} Neighbors {:?}",
+            index, cost_to_neighbors
+        );
+
+        cost_to_neighbors
     }
 
     /// Return soft barrier cells in the 3x3 neighborhood for a retry state.
@@ -952,8 +959,8 @@ mod tests {
         soft_retry_one_values: Vec<bool>,
     ) -> ReaderFixture {
         let source_tmp = ZarrTestBuilder::new()
-            .dimensions(grid_noptions, grid_nrows, grid_ncols)
-            .chunks(grid_noptions, grid_nrows, grid_ncols)
+            .dimensions(1, grid_nrows, grid_ncols)
+            .chunks(1, grid_nrows, grid_ncols)
             .layer(LayerConfig::ones("source"))
             .build()
             .expect("failed to create source test dataset");
