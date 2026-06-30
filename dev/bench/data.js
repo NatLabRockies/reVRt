@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782825387069,
+  "lastUpdate": 1782827997571,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12095,6 +12095,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 480316545,
             "range": "± 4813202",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "960df23c4b176dce28887459e1338458d03eb253",
+          "message": "Build(deps): Bump actions/attest-build-provenance from 4.1.0 to 4.1.1 (#302)\n\nBumps [actions/attest-build-provenance](https://github.com/actions/attest-build-provenance) from 4.1.0 to 4.1.1.\n- [Release notes](https://github.com/actions/attest-build-provenance/releases)\n- [Changelog](https://github.com/actions/attest-build-provenance/blob/main/RELEASE.md)\n- [Commits](https://github.com/actions/attest-build-provenance/compare/a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32...0f67c3f4856b2e3261c31976d6725780e5e4c373)\n\n---\nupdated-dependencies:\n- dependency-name: actions/attest-build-provenance\n  dependency-version: 4.1.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-06-30T07:41:04-06:00",
+          "tree_id": "002e6639b6362a0afd8eb0755b365245d98bd6e6",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/960df23c4b176dce28887459e1338458d03eb253"
+        },
+        "date": 1782827996202,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 92854735,
+            "range": "± 698590",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 143725622,
+            "range": "± 1305594",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 134664947,
+            "range": "± 2642108",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 200733529,
+            "range": "± 2320162",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 787849276,
+            "range": "± 11136384",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 157792290,
+            "range": "± 2375045",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 158351890,
+            "range": "± 2746267",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 176369542,
+            "range": "± 4364967",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 235091931,
+            "range": "± 1611442",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 454518043,
+            "range": "± 4160828",
             "unit": "ns/iter"
           }
         ]
