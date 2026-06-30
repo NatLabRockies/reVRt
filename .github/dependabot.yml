@@ -31,6 +31,8 @@ updates:
     github-actions:
       patterns:
         - "*"
+  commit-message:
+    prefix: "ci"
   labels:
     - "chore"
     - "dependencies"
