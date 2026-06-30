@@ -27,6 +27,10 @@ updates:
     interval: weekly
     day: monday
   open-pull-requests-limit: 10
+  groups:
+    github-actions:
+      patterns:
+        - "*"
   labels:
     - "chore"
     - "dependencies"
