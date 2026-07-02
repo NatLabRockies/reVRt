@@ -188,6 +188,7 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
     swap_path: P,
     layout: &SourceLayout,
     soft_barrier_group_count: usize,
+    has_hard_barriers: bool,
 ) -> Result<ReadableWritableListableStorage> {
     let swap: ReadableWritableListableStorage = std::sync::Arc::new(
         zarrs::filesystem::FilesystemStore::new(swap_path).map_err(|error| {
@@ -205,7 +206,9 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
     add_layer_to_data("cost_invariant", &layout.chunk_grid, &swap)?;
     add_layer_to_data("cost", &layout.chunk_grid, &swap)?;
     add_layer_to_data("driver_multiplier", &layout.chunk_grid, &swap)?;
-    add_bool_layer_to_data("hard_barrier_mask", &layout.chunk_grid, &swap)?;
+    if has_hard_barriers {
+        add_bool_layer_to_data("hard_barrier_mask", &layout.chunk_grid, &swap)?;
+    }
     for retry_state in 0..=soft_barrier_group_count {
         add_bool_layer_to_data(
             &cumulative_soft_barrier_mask_name(retry_state),
@@ -421,7 +424,7 @@ mod tests {
         let swap_dir = TempDir::new().expect("could not create temporary swap directory");
 
         let initialized_swap =
-            initialize_swap(swap_dir.path(), &layout, 2).expect("swap initialization failed");
+            initialize_swap(swap_dir.path(), &layout, 2, true).expect("swap initialization failed");
 
         let expected_layers = [
             ("/cost", DataType::Float32),
@@ -442,6 +445,34 @@ mod tests {
                 &[3, 2, 2],
                 "wrong chunk grid shape for {layer_name}"
             );
+            assert_eq!(*array.data_type(), expected_dtype);
+        }
+    }
+
+    #[test]
+    fn initialize_swap_omits_hard_barrier_layer_when_disabled() {
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "cost"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+        let layout = inspect_source_layout(&source, 3).expect("source layout inspection failed");
+        let swap_dir = TempDir::new().expect("could not create temporary swap directory");
+
+        let initialized_swap = initialize_swap(swap_dir.path(), &layout, 2, false)
+            .expect("swap initialization failed");
+
+        assert!(zarrs::array::Array::open(initialized_swap.clone(), "/hard_barrier_mask").is_err());
+
+        for (layer_name, expected_dtype) in [
+            ("/cost", DataType::Float32),
+            ("/cost_invariant", DataType::Float32),
+            ("/driver_multiplier", DataType::Float32),
+            ("/soft_barrier_mask_retry_0", DataType::Bool),
+            ("/soft_barrier_mask_retry_1", DataType::Bool),
+            ("/soft_barrier_mask_retry_2", DataType::Bool),
+        ] {
+            let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
+                .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
+            assert_eq!(array.shape(), &[3, 8, 8], "wrong shape for {layer_name}");
             assert_eq!(*array.data_type(), expected_dtype);
         }
     }

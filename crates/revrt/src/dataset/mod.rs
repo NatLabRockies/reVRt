@@ -187,6 +187,7 @@ impl Dataset {
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
         let soft_barrier_group_count = cost_function.soft_barrier_groups().len();
+        let has_hard_barriers = !cost_function.hard_barrier_layers().is_empty();
         let has_active_drivers = !cost_function.drivers.is_identity();
         let routing_option_count =
             u32::try_from(cost_function.routing_options.len()).map_err(|_| {
@@ -198,7 +199,12 @@ impl Dataset {
         let source: ReadableListableStorage = std::sync::Arc::new(filesystem);
 
         let source_layout = inspect_source_layout(&source, routing_option_count)?;
-        let swap = initialize_swap(swap_fp, &source_layout, soft_barrier_group_count)?;
+        let swap = initialize_swap(
+            swap_fp,
+            &source_layout,
+            soft_barrier_group_count,
+            has_hard_barriers,
+        )?;
 
         let derived_data_writer =
             DerivedDataWriter::new(&source_layout, source.clone(), swap.clone(), cost_function);
@@ -208,6 +214,7 @@ impl Dataset {
             cache_size,
             soft_barrier_group_count,
             has_active_drivers,
+            has_hard_barriers,
             source_layout,
         )?;
         let grid_shape = derived_data_reader.grid_shape();

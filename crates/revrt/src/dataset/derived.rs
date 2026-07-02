@@ -116,7 +116,9 @@ impl DerivedDataWriter {
         if self.has_active_drivers {
             self.calculate_chunk_driver_multiplier(cb, &mut data, &chunk_subset);
         }
-        self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
+        if self.has_hard_barriers() {
+            self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
+        }
         self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
     }
 
@@ -614,7 +616,7 @@ mod tests {
         .unwrap();
         let layout = super::super::swap::inspect_source_layout(&source, 1).unwrap();
         let swap_tmp = TempDir::new().unwrap();
-        let swap = super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2).unwrap();
+        let swap = super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2, true).unwrap();
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
 
@@ -631,8 +633,7 @@ mod tests {
             read_subset_values::<f32>(&swap, "/cost_invariant", &subset),
             vec![3.0, 3.0, 3.0, 3.0],
         );
-        let driver_multiplier =
-            read_subset_values::<f32>(&swap, "/driver_multiplier", &subset);
+        let driver_multiplier = read_subset_values::<f32>(&swap, "/driver_multiplier", &subset);
         assert_eq!(driver_multiplier.len(), 4);
         assert!(driver_multiplier.iter().all(|value| value.is_nan()));
         assert_eq!(
@@ -691,6 +692,7 @@ mod tests {
             swap_dir.path(),
             &layout,
             cost_function.soft_barrier_groups().len(),
+            true,
         )
         .expect("Error initializing swap dataset");
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
@@ -756,7 +758,7 @@ mod tests {
         let layout = inspect_source_layout(&source, cost_function.routing_options.len() as u32)
             .expect("source layout inspection failed");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
             .expect("failed to initialize swap dataset");
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
 
@@ -782,13 +784,37 @@ mod tests {
     }
 
     #[test]
+    fn materialize_chunk_skips_hard_barrier_mask_when_none_configured() {
+        let tmp = samples::multi_variable_random(1, 4, 4, 1, 2, 2, &["A"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+        let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
+        let swap_tmp = TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
+            .expect("failed to initialize swap dataset");
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .expect("failed to construct cost function");
+        let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+
+        assert!(!writer.has_hard_barriers());
+
+        writer.materialize_chunk(0, 0, 0);
+
+        assert!(Array::open(swap.clone(), "/hard_barrier_mask").is_err());
+        assert_eq!(read_subset_values::<f32>(&swap, "/cost", &subset).len(), 4,);
+    }
+
+    #[test]
     fn new_initializes_all_chunks_as_not_materialized() {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
         let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
             .expect("failed to initialize swap dataset");
         let cost_function = CostFunction::from_json(
             r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
@@ -817,7 +843,7 @@ mod tests {
         let array =
             zarrs::array::Array::open(readable_source, "/A").expect("failed to open source array");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
             .expect("failed to initialize swap dataset");
         let cost_function = CostFunction::from_json(
             r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
@@ -899,7 +925,7 @@ mod tests {
         let array = zarrs::array::Array::open(readable_source, "/overhead_cost")
             .expect("failed to open source array");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
             .expect("failed to initialize swap dataset");
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
 
