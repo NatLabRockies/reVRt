@@ -23,9 +23,7 @@ mod swap;
 
 use std::path::PathBuf;
 
-use num_traits::AsPrimitive;
 use tracing::{debug, info, trace};
-use zarrs::array::{Array, DataType, ElementOwned};
 use zarrs::storage::ReadableListableStorage;
 
 use crate::ArrayIndex;
@@ -579,11 +577,8 @@ mod tests {
 
         let index = ArrayIndex::new_ij(si, sj);
         let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
-        let results = same_option_neighbors(
-            &neighborhoods,
-            index.option,
-            dataset.get_source_cell_value("cost", &index),
-        );
+        let results =
+            same_option_neighbors(&neighborhoods, index.option, Some((si * 2 + sj) as f32));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
@@ -624,11 +619,8 @@ mod tests {
 
         let index = ArrayIndex::new_ij(si, sj);
         let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
-        let results = same_option_neighbors(
-            &neighborhoods,
-            index.option,
-            dataset.get_source_cell_value("cost", &index),
-        );
+        let results =
+            same_option_neighbors(&neighborhoods, index.option, Some((si * 3 + sj) as f32));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
@@ -672,11 +664,8 @@ mod tests {
 
         let index = ArrayIndex::new_ij(si, sj);
         let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
-        let results = same_option_neighbors(
-            &neighborhoods,
-            index.option,
-            dataset.get_source_cell_value("cost", &index),
-        );
+        let results =
+            same_option_neighbors(&neighborhoods, index.option, Some((si * 4 + sj) as f32));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
