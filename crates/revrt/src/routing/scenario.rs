@@ -18,7 +18,7 @@ use std::path::PathBuf;
 use tracing::trace;
 
 use super::cost_as_u64;
-use crate::cost::components::{DriverRuleSet, TransitionCostTable};
+use crate::cost::components::TransitionCostTable;
 use crate::dataset::NeighborhoodPoint;
 use crate::routing::features::Features;
 use crate::{ArrayIndex, Result};
@@ -33,7 +33,6 @@ pub(super) struct Scenario {
     /// Derived dataset containing cost arrays and barrier masks.
     pub dataset: crate::dataset::Dataset,
     transition_costs: TransitionCostTable,
-    driver_rules: DriverRuleSet,
     #[allow(dead_code)]
     /// Source feature metadata kept alive for scenario lifetime management.
     features: Features,
@@ -60,7 +59,6 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
-        let driver_rules = cost_function.drivers.clone();
         let transition_costs = cost_function.transition_costs.clone();
         let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open_with_swap(
@@ -73,7 +71,6 @@ impl Scenario {
         Ok(Self {
             dataset,
             transition_costs,
-            driver_rules,
             features,
         })
     }
@@ -95,7 +92,6 @@ impl Scenario {
     ) -> Result<Self> {
         trace!("Opening scenario with: {:?}", store_path.as_ref());
 
-        let driver_rules = cost_function.drivers.clone();
         let transition_costs = cost_function.transition_costs.clone();
         let features = Features::open(&store_path)?;
         let dataset = crate::dataset::Dataset::open(store_path, cost_function, cache_size)?;
@@ -103,7 +99,6 @@ impl Scenario {
         Ok(Self {
             dataset,
             transition_costs,
-            driver_rules,
             features,
         })
     }
@@ -148,7 +143,8 @@ impl Scenario {
         let Some(source_primary_cost) = current_option_neighborhood.center_primary_cost else {
             return Vec::new();
         };
-        let Some(source_driver_multiplier) = self.driver_multiplier(position) else {
+        let Some(source_driver_multiplier) = current_option_neighborhood.center_driver_multiplier
+        else {
             return Vec::new();
         };
 
@@ -160,6 +156,7 @@ impl Scenario {
                 neighbors.extend(self.same_option_successors(
                     &option_neighborhood.points,
                     source_primary_cost,
+                    source_driver_multiplier,
                     &soft_barrier_cells,
                 ));
             } else {
@@ -194,15 +191,19 @@ impl Scenario {
         &self,
         points: &[NeighborhoodPoint],
         source_primary_cost: f32,
+        source_driver_multiplier: f32,
         soft_barrier_cells: &HashSet<ArrayIndex>,
     ) -> Vec<(ArrayIndex, u64)> {
         points
             .iter()
             .filter(|point| !soft_barrier_cells.contains(&point.destination))
             .filter_map(|point| {
-                let multiplier = self.driver_multiplier(&point.destination)?;
                 point
-                    .traversal_cost(source_primary_cost, multiplier, multiplier)
+                    .traversal_cost(
+                        source_primary_cost,
+                        source_driver_multiplier,
+                        point.destination_driver_multiplier,
+                    )
                     .filter(|cost| cost.is_finite() && *cost > 0.0)
                     .map(|cost| (point, cost))
             })
@@ -222,12 +223,11 @@ impl Scenario {
             .iter()
             .filter(|point| !soft_barrier_cells.contains(&point.destination))
             .filter_map(|point| {
-                let destination_driver_multiplier = self.driver_multiplier(&point.destination)?;
                 point
                     .traversal_cost(
                         source_primary_cost,
                         source_driver_multiplier,
-                        destination_driver_multiplier,
+                        point.destination_driver_multiplier,
                     )
                     .filter(|cost| cost.is_finite() && *cost > 0.0)
                     .map(|cost| (point, cost))
@@ -327,9 +327,7 @@ impl Scenario {
     /// The multiplier for the state's routing option, or `None` when that
     /// option is excluded at the given position.
     fn driver_multiplier(&self, position: &ArrayIndex) -> Option<f32> {
-        self.driver_rules.multiplier(position.option, |layer_name| {
-            self.dataset.get_source_cell_value(layer_name, position)
-        })
+        self.dataset.get_driver_multiplier(position)
     }
 
     /// Return the integer-encoded cost of changing routing options.
@@ -932,7 +930,7 @@ mod tests {
                     j: 1,
                     option: 0,
                 }
-                && *cost == 100_000
+                && *cost == 55_000 // (0.5 * 1 * 1 + 0.5 * 1 * 10) * 10_000
         }));
     }
 

@@ -5,6 +5,7 @@
 //! length-dependent cost layers, builds the hard barrier mask, and writes
 //! cumulative soft barrier masks that can be reused across retry states.
 
+use std::collections::HashMap;
 use std::sync::RwLock;
 
 use ndarray::Array3;
@@ -38,6 +39,8 @@ pub(super) struct DerivedDataWriter {
     pub(super) soft_barrier_groups: Vec<(u32, Vec<BarrierLayer>)>,
     /// Cost function stripped of barrier layers for numeric cost derivation.
     cost_function: CostFunction,
+    /// Whether driver rules can change cost or exclude options.
+    has_active_drivers: bool,
 }
 
 impl DerivedDataWriter {
@@ -61,6 +64,7 @@ impl DerivedDataWriter {
         swap: ReadableWritableListableStorage,
         cost_function: CostFunction,
     ) -> Self {
+        let has_active_drivers = !cost_function.drivers.is_identity();
         let hard_barrier_layers = cost_function.hard_barrier_layers();
         let soft_barrier_groups = cost_function.soft_barrier_groups();
         let cost_function = cost_function.without_barriers();
@@ -81,6 +85,7 @@ impl DerivedDataWriter {
             hard_barrier_layers,
             soft_barrier_groups,
             cost_function,
+            has_active_drivers,
         }
     }
 
@@ -108,6 +113,9 @@ impl DerivedDataWriter {
 
         self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, true);
         self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, false);
+        if self.has_active_drivers {
+            self.calculate_chunk_driver_multiplier(cb, &mut data, &chunk_subset);
+        }
         self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
         self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
     }
@@ -162,6 +170,49 @@ impl DerivedDataWriter {
         trace!("Storing chunk at {:?}", chunk_indices);
         trace!("Target chunk subset: {:?}", chunk_subset);
         cost.store_chunks_ndarray(chunk_subset, output).unwrap();
+    }
+
+    /// Compute and store the per-option driver multiplier for a chunk.
+    ///
+    /// Driver multipliers depend only on the current routing option and the
+    /// source-layer values at each cell, so they can be materialized once per
+    /// chunk and reused during routing without changing route semantics.
+    fn calculate_chunk_driver_multiplier(
+        &self,
+        cb: u64,
+        features: &mut LazySubset<f32>,
+        chunk_subset: &zarrs::array_subset::ArraySubset,
+    ) {
+        trace!("Calculating driver multiplier for chunk band {}", cb);
+
+        let option = u32::try_from(cb).expect("chunk band index exceeds u32 range");
+        let rows = usize::try_from(features.subset().shape()[1]).expect("row count exceeds usize");
+        let cols =
+            usize::try_from(features.subset().shape()[2]).expect("column count exceeds usize");
+        let mut layer_cache: HashMap<String, ndarray::ArrayD<f32>> = HashMap::new();
+
+        let output = Array3::from_shape_fn((1, rows, cols), |(_, row, col)| {
+            self.cost_function
+                .drivers
+                .multiplier(option, |layer_name| {
+                    let values = layer_cache
+                        .entry(layer_name.to_string())
+                        .or_insert_with(|| {
+                            features
+                                .get(layer_name)
+                                .expect("failed to load driver-layer subset")
+                        });
+                    values.get(ndarray::IxDyn(&[0, row, col])).copied()
+                })
+                .unwrap_or(f32::NAN)
+        });
+
+        let driver_multiplier =
+            zarrs::array::Array::open(self.swap.clone(), "/driver_multiplier").unwrap();
+        driver_multiplier.store_metadata().unwrap();
+        driver_multiplier
+            .store_chunks_ndarray(chunk_subset, output)
+            .unwrap();
     }
 
     /// Compute and store the hard barrier mask for a chunk.
@@ -580,6 +631,10 @@ mod tests {
             read_subset_values::<f32>(&swap, "/cost_invariant", &subset),
             vec![3.0, 3.0, 3.0, 3.0],
         );
+        let driver_multiplier =
+            read_subset_values::<f32>(&swap, "/driver_multiplier", &subset);
+        assert_eq!(driver_multiplier.len(), 4);
+        assert!(driver_multiplier.iter().all(|value| value.is_nan()));
         assert_eq!(
             read_subset_values::<bool>(&swap, "/hard_barrier_mask", &subset),
             vec![true, true, false, false],
@@ -662,6 +717,68 @@ mod tests {
             hard_barrier_mask,
             vec![false, true, false, true, false, true, false, true, false]
         );
+    }
+
+    #[test]
+    fn materialize_chunk_writes_driver_multiplier_and_exclusions() {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(LayerConfig::constant("overhead_cost", 1.0))
+            .layer(LayerConfig::constant("underground_cost", 2.0))
+            .layer(LayerConfig::new(
+                "tech_zone",
+                FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0]),
+            ))
+            .build()
+            .expect("failed to create single-band source dataset");
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(source_tmp.path()).expect("could not open test store"));
+        let cost_function = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {"cost_layers": [{"layer_name": "overhead_cost"}]},
+                    "underground": {"cost_layers": [{"layer_name": "underground_cost"}]}
+                },
+                "drivers": {
+                    "default": {"overhead": 1, "underground": "excluded"},
+                    "zones": [{
+                        "layer_name": "tech_zone",
+                        "mask_operator": "eq",
+                        "mask_threshold": 1.0,
+                        "overhead": "excluded",
+                        "underground": 1
+                    }]
+                }
+            }"#,
+        )
+        .expect("failed to construct cost function");
+        let layout = inspect_source_layout(&source, cost_function.routing_options.len() as u32)
+            .expect("source layout inspection failed");
+        let swap_tmp = TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+            .expect("failed to initialize swap dataset");
+        let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
+
+        writer.materialize_chunk(0, 0, 0);
+        writer.materialize_chunk(1, 0, 0);
+
+        let first_option_subset = ArraySubset::new_with_ranges(&[0..1, 0..2, 0..2]);
+        let second_option_subset = ArraySubset::new_with_ranges(&[1..2, 0..2, 0..2]);
+        let band_0 = read_subset_values::<f32>(&swap, "/driver_multiplier", &first_option_subset);
+        let band_1 = read_subset_values::<f32>(&swap, "/driver_multiplier", &second_option_subset);
+
+        assert_eq!(band_0.len(), 4);
+        assert_eq!(band_0[0], 1.0);
+        assert!(band_0[1].is_nan());
+        assert_eq!(band_0[2], 1.0);
+        assert!(band_0[3].is_nan());
+
+        assert_eq!(band_1.len(), 4);
+        assert!(band_1[0].is_nan());
+        assert_eq!(band_1[1], 1.0);
+        assert!(band_1[2].is_nan());
+        assert_eq!(band_1[3], 1.0);
     }
 
     #[test]

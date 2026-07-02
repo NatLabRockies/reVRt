@@ -58,6 +58,7 @@ pub(crate) struct NeighborhoodPoint {
     pub(super) geometry: NeighborhoodGeometry,
     pub(super) destination_primary_cost: f32,
     pub(super) destination_invariant_cost: f32,
+    pub(super) destination_driver_multiplier: f32,
     pub(super) destination_is_hard_barrier: bool,
 }
 
@@ -72,7 +73,10 @@ impl NeighborhoodPoint {
         source_multiplier: f32,
         destination_multiplier: f32,
     ) -> Option<f32> {
-        if self.destination_is_hard_barrier || self.destination_primary_cost.is_nan() {
+        if self.destination_is_hard_barrier
+            || self.destination_primary_cost.is_nan()
+            || !destination_multiplier.is_finite()
+        {
             return None;
         }
 
@@ -89,6 +93,7 @@ impl NeighborhoodPoint {
 pub(super) struct RoutingOptionNeighborhood {
     pub(super) option: u32,
     pub(super) center_primary_cost: Option<f32>,
+    pub(super) center_driver_multiplier: Option<f32>,
     pub(super) points: Vec<NeighborhoodPoint>,
 }
 
@@ -184,6 +189,7 @@ impl Dataset {
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
         let soft_barrier_group_count = cost_function.soft_barrier_groups().len();
+        let has_active_drivers = !cost_function.drivers.is_identity();
         let routing_option_count =
             u32::try_from(cost_function.routing_options.len()).map_err(|_| {
                 crate::error::Error::IO(std::io::Error::other("routing option count exceeds u32"))
@@ -203,6 +209,7 @@ impl Dataset {
             swap.clone(),
             cache_size,
             soft_barrier_group_count,
+            has_active_drivers,
             source_layout,
         )?;
         let grid_shape = derived_data_reader.grid_shape();
@@ -270,28 +277,10 @@ impl Dataset {
             .get_cell_cost_components(index, &self.derived_data_writer)
     }
 
-    /// Return a single source-layer cell as `f32` for the requested index.
-    /// Useful for reading non-cost (i.e. not derived) features
-    pub(super) fn get_source_cell_value(
-        &self,
-        layer_name: &str,
-        index: &ArrayIndex,
-    ) -> Option<f32> {
-        let array = Array::open(self.source.clone(), &format!("/{layer_name}")).ok()?;
-        let shape = array.shape();
-        let subset = match shape.len() {
-            2 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                index.i..(index.i + 1),
-                index.j..(index.j + 1),
-            ]),
-            3 => zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                0..1,
-                index.i..(index.i + 1),
-                index.j..(index.j + 1),
-            ]),
-            _ => return None,
-        };
-        read_source_cell_as_f32(&array, &subset)
+    /// Return the precomputed driver multiplier for a single option state.
+    pub(super) fn get_driver_multiplier(&self, index: &ArrayIndex) -> Option<f32> {
+        self.derived_data_reader
+            .get_driver_multiplier(index, &self.derived_data_writer)
     }
 
     /// Return the number of soft barrier importance groups.
@@ -302,44 +291,6 @@ impl Dataset {
     pub(super) fn soft_barrier_groups(&self) -> &Vec<(u32, Vec<BarrierLayer>)> {
         &self.derived_data_writer.soft_barrier_groups
     }
-}
-
-fn read_source_cell_as_f32<TStorage>(
-    array: &Array<TStorage>,
-    subset: &zarrs::array_subset::ArraySubset,
-) -> Option<f32>
-where
-    TStorage: ?Sized + zarrs::storage::ReadableListableStorageTraits + 'static,
-{
-    match array.data_type() {
-        DataType::Float32 => read_typed_cell::<f32, _>(array, subset),
-        DataType::Float64 => read_typed_cell::<f64, _>(array, subset),
-        DataType::Int8 => read_typed_cell::<i8, _>(array, subset),
-        DataType::Int16 => read_typed_cell::<i16, _>(array, subset),
-        DataType::Int32 => read_typed_cell::<i32, _>(array, subset),
-        DataType::Int64 => read_typed_cell::<i64, _>(array, subset),
-        DataType::UInt8 => read_typed_cell::<u8, _>(array, subset),
-        DataType::UInt16 => read_typed_cell::<u16, _>(array, subset),
-        DataType::UInt32 => read_typed_cell::<u32, _>(array, subset),
-        DataType::UInt64 => read_typed_cell::<u64, _>(array, subset),
-        _ => None,
-    }
-}
-
-fn read_typed_cell<T, TStorage>(
-    array: &Array<TStorage>,
-    subset: &zarrs::array_subset::ArraySubset,
-) -> Option<f32>
-where
-    T: ElementOwned + Clone + AsPrimitive<f32>,
-    TStorage: ?Sized + zarrs::storage::ReadableListableStorageTraits + 'static,
-{
-    array
-        .retrieve_array_subset_elements::<T>(subset)
-        .ok()?
-        .into_iter()
-        .next()
-        .map(|value| value.as_())
 }
 
 #[cfg(test)]
@@ -362,12 +313,10 @@ pub(crate) fn make_lazy_subset_for_tests(
 mod tests {
     use super::*;
     use crate::error::Error;
-    use ndarray::Array3;
     use std::f32::consts::SQRT_2;
     use std::sync::Arc;
     use test_case::test_case;
     use zarrs::array::{ArrayBuilder, DataType, FillValue};
-    use zarrs::array_subset::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
     use zarrs::group::GroupBuilder;
     use zarrs::storage::ReadableWritableListableStorage;
@@ -468,92 +417,6 @@ mod tests {
                 shape,
             } if variable == "A" && shape == vec![3, 4]
         ));
-    }
-
-    #[test]
-    fn get_source_cell_value_reuses_single_band_3d_layers_for_all_options() {
-        let tmp = samples::ZarrTestBuilder::new()
-            .dimensions(1, 3, 3)
-            .chunks(1, 3, 3)
-            .layer(samples::LayerConfig::constant("overhead_cost", 1.0))
-            .layer(samples::LayerConfig::constant("underground_cost", 2.0))
-            .build()
-            .unwrap();
-        let store: ReadableWritableListableStorage =
-            Arc::new(FilesystemStore::new(tmp.path()).unwrap());
-
-        let zone = ArrayBuilder::new(
-            vec![1, 3, 3],
-            vec![1, 3, 3],
-            DataType::Float32,
-            FillValue::from(zarrs::array::ZARR_NAN_F32),
-        )
-        .build(store, "/zone")
-        .unwrap();
-        zone.store_metadata().unwrap();
-        zone.store_chunks_ndarray(
-            &ArraySubset::new_with_ranges(&[0..1, 0..1, 0..1]),
-            Array3::from_shape_vec(
-                (1, 3, 3),
-                vec![0.0_f32, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-            )
-            .unwrap(),
-        )
-        .unwrap();
-
-        let cost_function = CostFunction::from_json(
-            r#"{
-                "routing_options": {
-                    "overhead": {
-                        "cost_layers": [{"layer_name": "overhead_cost"}]
-                    },
-                    "underground": {
-                        "cost_layers": [{"layer_name": "underground_cost"}]
-                    }
-                },
-                "drivers": {
-                    "default": {
-                        "overhead": 1,
-                        "underground": "excluded"
-                    },
-                    "zones": [
-                        {
-                            "layer_name": "zone",
-                            "mask_operator": "eq",
-                            "mask_threshold": 1,
-                            "overhead": "excluded",
-                            "underground": 1
-                        }
-                    ]
-                },
-                "invalid_costs_block_routing": false
-            }"#,
-        )
-        .unwrap();
-        let dataset = Dataset::open(tmp.path(), cost_function, 1_000).unwrap();
-
-        assert_eq!(
-            dataset.get_source_cell_value(
-                "zone",
-                &ArrayIndex {
-                    i: 1,
-                    j: 1,
-                    option: 0,
-                },
-            ),
-            Some(1.0)
-        );
-        assert_eq!(
-            dataset.get_source_cell_value(
-                "zone",
-                &ArrayIndex {
-                    i: 1,
-                    j: 1,
-                    option: 1,
-                },
-            ),
-            Some(1.0)
-        );
     }
 
     #[test]
@@ -689,11 +552,7 @@ mod tests {
 
         let index = ArrayIndex::new_ij(0, 0);
         let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
-        let results = same_option_neighbors(
-            &neighborhoods,
-            index.option,
-            dataset.get_source_cell_value("cost", &index),
-        );
+        let results = same_option_neighbors(&neighborhoods, index.option, Some(1.0));
 
         // index 0, 0 has a cost of 0 and should therefore be filtered out
         assert!(
@@ -869,11 +728,7 @@ mod tests {
         // Request center neighbors
         let point = ArrayIndex::new_ij(1, 1);
         let neighborhoods = dataset.get_3x3_neighborhood_all_options(&point);
-        let results = same_option_neighbors(
-            &neighborhoods,
-            point.option,
-            dataset.get_source_cell_value("A", &point),
-        );
+        let results = same_option_neighbors(&neighborhoods, point.option, Some(1.0));
 
         // Build expected results: for each neighbor (excluding center),
         // averaged = 0.5 * (A_neighbor + A_center)
@@ -1049,11 +904,7 @@ mod tests {
 
         let index = ArrayIndex::new_ij(1, 1);
         let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
-        let results = same_option_neighbors(
-            &neighborhoods,
-            index.option,
-            dataset.get_source_cell_value("A", &index),
-        );
+        let results = same_option_neighbors(&neighborhoods, index.option, Some(1.0));
         assert_eq!(
             results,
             vec![
@@ -1102,11 +953,7 @@ mod tests {
 
         let index = ArrayIndex::new_ij(1, 1);
         let neighborhoods = dataset.get_3x3_neighborhood_all_options(&index);
-        let results = same_option_neighbors(
-            &neighborhoods,
-            index.option,
-            dataset.get_source_cell_value("A", &index),
-        );
+        let results = same_option_neighbors(&neighborhoods, index.option, Some(1.0));
         assert_eq!(results.len(), 8);
     }
 
@@ -1241,7 +1088,11 @@ mod tests {
             .iter()
             .filter_map(|point| {
                 point
-                    .traversal_cost(source_primary_cost, 1.0, 1.0)
+                    .traversal_cost(
+                        source_primary_cost,
+                        1.0,
+                        point.destination_driver_multiplier,
+                    )
                     .map(|cost| (point.destination.clone(), cost))
             })
             .collect()

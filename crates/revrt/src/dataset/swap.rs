@@ -204,6 +204,7 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
 
     add_layer_to_data("cost_invariant", &layout.chunk_grid, &swap)?;
     add_layer_to_data("cost", &layout.chunk_grid, &swap)?;
+    add_layer_to_data("driver_multiplier", &layout.chunk_grid, &swap)?;
     add_bool_layer_to_data("hard_barrier_mask", &layout.chunk_grid, &swap)?;
     for retry_state in 0..=soft_barrier_group_count {
         add_bool_layer_to_data(
@@ -425,6 +426,7 @@ mod tests {
         let expected_layers = [
             ("/cost", DataType::Float32),
             ("/cost_invariant", DataType::Float32),
+            ("/driver_multiplier", DataType::Float32),
             ("/hard_barrier_mask", DataType::Bool),
             ("/soft_barrier_mask_retry_0", DataType::Bool),
             ("/soft_barrier_mask_retry_1", DataType::Bool),
