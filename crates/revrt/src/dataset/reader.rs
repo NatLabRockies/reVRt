@@ -578,12 +578,21 @@ fn open_optional_readable_array(
 
 /// Split the requested cache size across all neighborhood reader caches.
 ///
-/// The total budget is split evenly across the cost cache, any optional
-/// invariant and driver caches, and a shared barrier budget when any barrier
-/// caches exist. The barrier budget is split in half between the hard barrier
-/// cache and all cumulative soft barrier caches, and the soft barrier share is
-/// divided evenly across `soft_barrier_cache_count`. Every allocated cache gets
-/// at least 1 byte, and saturating subtraction keeps tiny cache sizes valid.
+/// The allocator divides `cache_size` evenly across the always-present cost
+/// cache, any optional invariant-cost and driver-multiplier caches, and one
+/// additional barrier bucket when at least one barrier cache exists. The
+/// barrier bucket is the post-division remainder after the cost, invariant,
+/// and driver budgets are assigned.
+///
+/// When a hard barrier cache exists, it receives half of that barrier bucket.
+/// The rest is reserved for cumulative soft barrier caches and split evenly
+/// across `soft_barrier_cache_count`. When no hard barrier cache exists, the
+/// full barrier bucket is available to the soft barrier caches. When no hard
+/// or soft barrier caches exist, no barrier bucket is reserved and the entire
+/// budget is distributed across the non-barrier caches.
+///
+/// Every allocated cache gets at least 1 byte, and saturating subtraction
+/// keeps tiny cache sizes valid.
 ///
 /// # Arguments
 /// `cache_size`: Total cache budget, in bytes.
