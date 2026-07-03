@@ -1065,6 +1065,34 @@ mod tests {
         assert!(dataset.get_3x3_soft_barrier_cells(&center, 1).is_empty());
     }
 
+    #[test]
+    fn test_get_3x3_soft_barrier_cells_returns_empty_without_soft_barriers() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(samples::LayerConfig::constant("A", 1.0))
+            .build()
+            .expect("Error creating test zarr");
+        let cost_function = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{"layer_name": "A"}]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+        let dataset =
+            Dataset::open(tmp.path(), cost_function, 1_000).expect("Error opening dataset");
+
+        let center = ArrayIndex::new_ij(1, 1);
+        dataset.get_3x3_neighborhood_all_options(&center);
+
+        assert!(dataset.get_3x3_soft_barrier_cells(&center, 0).is_empty());
+        assert!(dataset.get_3x3_soft_barrier_cells(&center, 99).is_empty());
+    }
+
     fn same_option_neighbors(
         neighborhoods: &[RoutingOptionNeighborhood],
         option: u32,

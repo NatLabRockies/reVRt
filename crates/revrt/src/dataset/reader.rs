@@ -47,7 +47,7 @@ struct CacheBudgets {
     /// Cache budget for the hard barrier mask.
     hard_barrier_cache: Option<u64>,
     /// Cache budget for each cumulative soft barrier mask.
-    per_soft_barrier_cache: u64,
+    per_soft_barrier_cache: Option<u64>,
 }
 
 /// Cached access to derived data from the swap dataset.
@@ -109,14 +109,18 @@ impl DerivedDataReader {
         let cost_array_readable =
             Arc::new(zarrs::array::Array::open(swap.clone(), "/cost")?.readable());
         let cost_invariant_array = open_optional_readable_array(swap.clone(), "/cost_invariant")?;
-        let cumulative_soft_barrier_arrays = (0..=soft_barrier_group_count)
-            .map(|retry_state| {
-                let path = format!("/{}", cumulative_soft_barrier_mask_name(retry_state));
-                zarrs::array::Array::open(swap.clone(), &path)
-                    .map_err(|err| Error::IO(std::io::Error::other(err.to_string())))
-                    .map(|array| Arc::new(array.readable()))
-            })
-            .collect::<Result<Vec<_>>>()?;
+        let cumulative_soft_barrier_arrays = if soft_barrier_group_count == 0 {
+            Vec::new()
+        } else {
+            (0..=soft_barrier_group_count)
+                .map(|retry_state| {
+                    let path = format!("/{}", cumulative_soft_barrier_mask_name(retry_state));
+                    zarrs::array::Array::open(swap.clone(), &path)
+                        .map_err(|err| Error::IO(std::io::Error::other(err.to_string())))
+                        .map(|array| Arc::new(array.readable()))
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
         let driver_multiplier_array =
             open_optional_readable_array(swap.clone(), "/driver_multiplier")?;
         let hard_barrier_array = open_optional_readable_array(swap.clone(), "/hard_barrier_mask")?;
@@ -151,7 +155,14 @@ impl DerivedDataReader {
                 });
         let cumulative_soft_barrier_caches = cumulative_soft_barrier_arrays
             .into_iter()
-            .map(|array| ChunkCacheDecodedLruSizeLimit::new(array, budgets.per_soft_barrier_cache))
+            .map(|array| {
+                ChunkCacheDecodedLruSizeLimit::new(
+                    array,
+                    budgets
+                        .per_soft_barrier_cache
+                        .expect("soft barrier cache budget missing for soft barrier array"),
+                )
+            })
             .collect();
 
         Ok(Self {
@@ -338,6 +349,10 @@ impl DerivedDataReader {
         retry_state: usize,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<ArrayIndex> {
+        if retry_state >= self.cumulative_soft_barrier_caches.len() {
+            return Vec::new();
+        }
+
         let (i_range, j_range, subset) = self.neighborhood_subset(index);
         let cache = &self.cumulative_soft_barrier_caches[retry_state];
         data_materializer.ensure_derived_data_for_subset(&cache.array(), &subset);
@@ -604,9 +619,9 @@ fn distribute_cache_budgets(
     };
 
     let per_soft_barrier_cache = if soft_barrier_cache_count == 0 {
-        1
+        None
     } else {
-        (soft_cache_budget / soft_barrier_cache_count as u64).max(1)
+        Some((soft_cache_budget / soft_barrier_cache_count as u64).max(1))
     };
 
     CacheBudgets {
@@ -660,7 +675,7 @@ mod tests {
         assert_eq!(budgets.invariant_cost_cache, Some(30));
         assert_eq!(budgets.driver_multiplier_cache, Some(30));
         assert_eq!(budgets.hard_barrier_cache, Some(15));
-        assert_eq!(budgets.per_soft_barrier_cache, 3);
+        assert_eq!(budgets.per_soft_barrier_cache, Some(3));
     }
 
     #[test]
@@ -671,7 +686,7 @@ mod tests {
         assert_eq!(budgets.invariant_cost_cache, Some(1));
         assert_eq!(budgets.driver_multiplier_cache, Some(1));
         assert_eq!(budgets.hard_barrier_cache, Some(1));
-        assert_eq!(budgets.per_soft_barrier_cache, 1);
+        assert_eq!(budgets.per_soft_barrier_cache, None);
     }
 
     #[test]
@@ -682,7 +697,7 @@ mod tests {
         assert_eq!(budgets.invariant_cost_cache, Some(40));
         assert_eq!(budgets.driver_multiplier_cache, None);
         assert_eq!(budgets.hard_barrier_cache, Some(20));
-        assert_eq!(budgets.per_soft_barrier_cache, 5);
+        assert_eq!(budgets.per_soft_barrier_cache, Some(5));
     }
 
     #[test]
@@ -693,7 +708,7 @@ mod tests {
         assert_eq!(budgets.invariant_cost_cache, Some(30));
         assert_eq!(budgets.driver_multiplier_cache, Some(30));
         assert_eq!(budgets.hard_barrier_cache, None);
-        assert_eq!(budgets.per_soft_barrier_cache, 7);
+        assert_eq!(budgets.per_soft_barrier_cache, Some(7));
     }
 
     #[test]
@@ -704,7 +719,7 @@ mod tests {
         assert_eq!(budgets.invariant_cost_cache, None);
         assert_eq!(budgets.driver_multiplier_cache, Some(40));
         assert_eq!(budgets.hard_barrier_cache, None);
-        assert_eq!(budgets.per_soft_barrier_cache, 10);
+        assert_eq!(budgets.per_soft_barrier_cache, Some(10));
     }
 
     #[test_case(3, 3, 1, 1, 0..3, 0..3; "interior point")]
@@ -1249,6 +1264,60 @@ mod tests {
         let reader = DerivedDataReader::open(swap, 90, 1, layout);
 
         assert!(reader.is_ok());
+    }
+
+    #[test]
+    fn open_succeeds_without_soft_barrier_layers() {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(LayerConfig::ones("source"))
+            .build()
+            .expect("failed to create source test dataset");
+        let source: ReadableListableStorage = Arc::new(
+            FilesystemStore::new(source_tmp.path()).expect("could not open source test store"),
+        );
+        let layout =
+            inspect_source_layout(&source, 1).expect("source layout inspection should succeed");
+
+        let swap_tmp = TempDir::new().expect("could not create temporary swap");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false, false)
+            .expect("swap initialization should succeed");
+
+        let reader = DerivedDataReader::open(swap, 90, 0, layout);
+
+        assert!(reader.is_ok());
+    }
+
+    #[test]
+    fn get_3x3_soft_barrier_cells_returns_empty_without_soft_barrier_layers() {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(LayerConfig::ones("source"))
+            .build()
+            .expect("failed to create source test dataset");
+        let source: ReadableListableStorage = Arc::new(
+            FilesystemStore::new(source_tmp.path()).expect("could not open source test store"),
+        );
+        let layout =
+            inspect_source_layout(&source, 1).expect("source layout inspection should succeed");
+
+        let swap_tmp = TempDir::new().expect("could not create temporary swap");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false, false)
+            .expect("swap initialization should succeed");
+        store_f32_layer(swap.clone(), "/cost", 1, 3, 3, vec![1.0; 9]);
+        let reader = DerivedDataReader::open(swap, 90, 0, layout).expect("reader should open");
+
+        let cells = reader.get_3x3_soft_barrier_cells(
+            &ArrayIndex::new_ij(1, 1),
+            0,
+            &NoOpMaterializer {
+                has_hard_barriers: false,
+            },
+        );
+
+        assert!(cells.is_empty());
     }
 
     #[test]

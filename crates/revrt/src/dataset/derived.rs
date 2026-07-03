@@ -125,7 +125,9 @@ impl DerivedDataWriter {
         if self.has_hard_barriers() {
             self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
         }
-        self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
+        if !self.soft_barrier_groups.is_empty() {
+            self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
+        }
     }
 
     /// Compute and store one of the two chunk cost arrays.
@@ -622,15 +624,9 @@ mod tests {
         .unwrap();
         let layout = super::super::swap::inspect_source_layout(&source, 1).unwrap();
         let swap_tmp = TempDir::new().unwrap();
-        let swap = super::super::swap::initialize_swap(
-            swap_tmp.path(),
-            &layout,
-            2,
-            true,
-            true,
-            true,
-        )
-        .unwrap();
+        let swap =
+            super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2, true, true, true)
+                .unwrap();
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
 
@@ -821,6 +817,7 @@ mod tests {
 
         assert!(Array::open(swap.clone(), "/hard_barrier_mask").is_err());
         assert!(Array::open(swap.clone(), "/cost_invariant").is_err());
+        assert!(Array::open(swap.clone(), "/soft_barrier_mask_retry_0").is_err());
         assert_eq!(read_subset_values::<f32>(&swap, "/cost", &subset).len(), 4,);
     }
 

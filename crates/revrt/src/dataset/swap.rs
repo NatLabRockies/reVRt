@@ -218,12 +218,14 @@ pub(super) fn initialize_swap<P: AsRef<Path>>(
     if has_hard_barriers {
         add_bool_layer_to_data("hard_barrier_mask", &layout.chunk_grid, &swap)?;
     }
-    for retry_state in 0..=soft_barrier_group_count {
-        add_bool_layer_to_data(
-            &cumulative_soft_barrier_mask_name(retry_state),
-            &layout.chunk_grid,
-            &swap,
-        )?;
+    if soft_barrier_group_count > 0 {
+        for retry_state in 0..=soft_barrier_group_count {
+            add_bool_layer_to_data(
+                &cumulative_soft_barrier_mask_name(retry_state),
+                &layout.chunk_grid,
+                &swap,
+            )?;
+        }
     }
 
     match swap.list() {
@@ -533,6 +535,38 @@ mod tests {
             ("/soft_barrier_mask_retry_0", DataType::Bool),
             ("/soft_barrier_mask_retry_1", DataType::Bool),
             ("/soft_barrier_mask_retry_2", DataType::Bool),
+        ] {
+            let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
+                .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
+            assert_eq!(array.shape(), &[3, 8, 8], "wrong shape for {layer_name}");
+            assert_eq!(*array.data_type(), expected_dtype);
+        }
+    }
+
+    #[test]
+    fn initialize_swap_omits_soft_barrier_layers_when_none_configured() {
+        let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A", "cost"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+        let layout = inspect_source_layout(&source, 3).expect("source layout inspection failed");
+        let swap_dir = TempDir::new().expect("could not create temporary swap directory");
+
+        let initialized_swap = initialize_swap(swap_dir.path(), &layout, 0, true, true, true)
+            .expect("swap initialization failed");
+
+        for layer_name in [
+            "/soft_barrier_mask_retry_0",
+            "/soft_barrier_mask_retry_1",
+            "/soft_barrier_mask_retry_2",
+        ] {
+            assert!(zarrs::array::Array::open(initialized_swap.clone(), layer_name).is_err());
+        }
+
+        for (layer_name, expected_dtype) in [
+            ("/cost", DataType::Float32),
+            ("/cost_invariant", DataType::Float32),
+            ("/driver_multiplier", DataType::Float32),
+            ("/hard_barrier_mask", DataType::Bool),
         ] {
             let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
                 .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
