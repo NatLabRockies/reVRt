@@ -11,13 +11,21 @@ keywords.workspace = true
 
 [dependencies]
 clap = { workspace = true }
+ndarray = { workspace = true }
 revrt = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 dhat = { workspace = true }
+zarrs = { workspace = true }
 
 [features]
 dhat-heap = []
+profiling = ["revrt/profiling"]
+
+[[bin]]
+name = "rust_route_profile"
+path = "src/bin/rust_route_profile.rs"
+required-features = ["profiling"]
 
 [lints]
 workspace = true
