@@ -1801,9 +1801,11 @@ version = "0.0.6"
 dependencies = [
  "clap",
  "dhat",
+ "ndarray",
  "revrt",
  "tracing",
  "tracing-subscriber",
+ "zarrs",
 ]
 
 [[package]]

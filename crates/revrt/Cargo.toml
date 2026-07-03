@@ -49,6 +49,7 @@ harness = false
 workspace = true
 
 [features]
+profiling = []
 test-integration = []
 
 [[test]]
