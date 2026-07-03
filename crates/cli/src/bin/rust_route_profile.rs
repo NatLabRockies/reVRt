@@ -1,0 +1,280 @@
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::Instant;
+
+use clap::Parser;
+use ndarray::Array3;
+use revrt::profiling;
+use revrt::{ArrayIndex, resolve_with_routing_options};
+use zarrs::array::{ArrayBuilder, DataType, FillValue};
+use zarrs::filesystem::FilesystemStore;
+use zarrs::group::GroupBuilder;
+use zarrs::storage::ReadableWritableListableStorage;
+
+const DEFAULT_COST_FUNCTION: &str =
+    r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#;
+
+#[derive(Parser, Debug)]
+#[command(version, about = "Generate and profile a synthetic Rust routing case")]
+struct Cli {
+    #[arg(long, default_value = ".scratch/rust_route_profile")]
+    output_dir: PathBuf,
+
+    #[arg(long, default_value_t = 5_000)]
+    rows: u64,
+
+    #[arg(long, default_value_t = 5_000)]
+    cols: u64,
+
+    #[arg(long, default_value_t = 250)]
+    chunk_size: u64,
+
+    #[arg(long, default_value_t = 500)]
+    distance: u64,
+
+    #[arg(long, default_value = "bidirectional_long_range_dijkstra")]
+    algorithm: String,
+
+    #[arg(long, default_value_t = 2_000_000_000)]
+    mem_limit_bytes: u64,
+
+    #[arg(long, default_value_t = 1)]
+    repeats: u32,
+
+    #[arg(long, default_value_t = 1.0)]
+    cost_value: f32,
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::parse();
+    validate_inputs(&cli)?;
+
+    let dataset_dir = cli.output_dir.join("dataset.zarr");
+    let report_path = cli.output_dir.join("ROUTING_RUST_PROFILE_REPORT.md");
+
+    fs::create_dir_all(&cli.output_dir)?;
+    create_uniform_cost_dataset(
+        &dataset_dir,
+        cli.rows,
+        cli.cols,
+        cli.chunk_size,
+        cli.cost_value,
+    )?;
+
+    let (start, end) = centered_route(cli.rows, cli.cols, cli.distance)?;
+    let mut elapsed_runs = Vec::with_capacity(cli.repeats as usize);
+    let mut last_solution_count = 0usize;
+
+    profiling::reset();
+    profiling::enable();
+
+    for _ in 0..cli.repeats {
+        let started = Instant::now();
+        let (solutions, _routing_options) = resolve_with_routing_options(
+            &dataset_dir,
+            DEFAULT_COST_FUNCTION,
+            &cli.algorithm,
+            std::slice::from_ref(&start),
+            vec![end.clone()],
+            None,
+            cli.mem_limit_bytes,
+        )?;
+        elapsed_runs.push(started.elapsed());
+        last_solution_count = solutions.len();
+    }
+
+    profiling::disable();
+
+    let profile_snapshot = profiling::snapshot();
+    let report_inputs = ReportInputs {
+        cli: &cli,
+        dataset_dir: &dataset_dir,
+        start: &start,
+        end: &end,
+        solution_count: last_solution_count,
+        elapsed_runs: &elapsed_runs,
+        records: &profile_snapshot,
+    };
+    write_report(&report_path, &report_inputs)?;
+
+    println!("Dataset: {}", dataset_dir.display());
+    println!("Report: {}", report_path.display());
+
+    Ok(())
+}
+
+fn validate_inputs(cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
+    if cli.chunk_size == 0 {
+        return Err("chunk-size must be greater than zero".into());
+    }
+    if cli.rows == 0 || cli.cols == 0 {
+        return Err("rows and cols must be greater than zero".into());
+    }
+    if !cli.rows.is_multiple_of(cli.chunk_size) || !cli.cols.is_multiple_of(cli.chunk_size) {
+        return Err("rows and cols must be divisible by chunk-size for this generator".into());
+    }
+    if cli.distance == 0 {
+        return Err("distance must be greater than zero".into());
+    }
+    if cli.repeats == 0 {
+        return Err("repeats must be greater than zero".into());
+    }
+
+    Ok(())
+}
+
+fn centered_route(
+    rows: u64,
+    cols: u64,
+    distance: u64,
+) -> Result<(ArrayIndex, ArrayIndex), Box<dyn std::error::Error>> {
+    if distance >= cols {
+        return Err("distance must be smaller than the column count".into());
+    }
+    let half_distance = distance / 2;
+    let center_row = rows / 2;
+    let center_col = cols / 2;
+    if center_col < half_distance || center_col + (distance - half_distance) >= cols {
+        return Err("route distance does not fit inside the dataset width".into());
+    }
+
+    Ok((
+        ArrayIndex::new_ij(center_row, center_col - half_distance),
+        ArrayIndex::new_ij(center_row, center_col + (distance - half_distance)),
+    ))
+}
+
+fn create_uniform_cost_dataset(
+    dataset_dir: &Path,
+    rows: u64,
+    cols: u64,
+    chunk_size: u64,
+    cost_value: f32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if dataset_dir.exists() {
+        fs::remove_dir_all(dataset_dir)?;
+    }
+
+    let store: ReadableWritableListableStorage =
+        Arc::new(FilesystemStore::new(dataset_dir).expect("could not open filesystem store"));
+
+    GroupBuilder::new()
+        .build(store.clone(), "/")?
+        .store_metadata()?;
+
+    let array = ArrayBuilder::new(
+        vec![1, rows, cols],
+        vec![1, chunk_size, chunk_size],
+        DataType::Float32,
+        FillValue::from(zarrs::array::ZARR_NAN_F32),
+    )
+    .dimension_names(["band", "y", "x"].into())
+    .build(store, "/cost")?;
+
+    array.store_metadata()?;
+
+    let values = vec![cost_value; usize::try_from(rows * cols)?];
+    let data = Array3::from_shape_vec((1, rows as usize, cols as usize), values)?;
+    let subset_start = [0, 0, 0];
+    array.store_array_subset_ndarray(&subset_start, data)?;
+
+    Ok(())
+}
+
+struct ReportInputs<'a> {
+    cli: &'a Cli,
+    dataset_dir: &'a Path,
+    start: &'a ArrayIndex,
+    end: &'a ArrayIndex,
+    solution_count: usize,
+    elapsed_runs: &'a [std::time::Duration],
+    records: &'a [profiling::ProfileRecord],
+}
+
+fn write_report(
+    report_path: &Path,
+    inputs: &ReportInputs,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let total_profiled = inputs
+        .records
+        .iter()
+        .map(|record| record.total)
+        .sum::<std::time::Duration>();
+    let avg_elapsed = std::time::Duration::from_secs_f64(
+        inputs
+            .elapsed_runs
+            .iter()
+            .map(std::time::Duration::as_secs_f64)
+            .sum::<f64>()
+            / inputs.elapsed_runs.len() as f64,
+    );
+
+    let mut report = String::new();
+    report.push_str("# Rust Routing Profile Report\n\n");
+    report.push_str("## Benchmark Setup\n\n");
+    report.push_str(&format!("- Dataset: `{}`\n", inputs.dataset_dir.display()));
+    report.push_str(&format!(
+        "- Grid: `{} x {}`\n",
+        inputs.cli.rows, inputs.cli.cols
+    ));
+    report.push_str(&format!(
+        "- Chunk size: `{} x {}`\n",
+        inputs.cli.chunk_size, inputs.cli.chunk_size
+    ));
+    report.push_str(&format!("- Cell value: `{}`\n", inputs.cli.cost_value));
+    report.push_str(&format!("- Algorithm: `{}`\n", inputs.cli.algorithm));
+    report.push_str(&format!(
+        "- Memory limit: `{}` bytes\n",
+        inputs.cli.mem_limit_bytes
+    ));
+    report.push_str(&format!("- Repeats: `{}`\n", inputs.cli.repeats));
+    report.push_str(&format!("- Start: `{:?}`\n", inputs.start));
+    report.push_str(&format!("- End: `{:?}`\n", inputs.end));
+    report.push_str(&format!(
+        "- Solutions returned on last run: `{}`\n",
+        inputs.solution_count
+    ));
+    report.push_str(&format!(
+        "- Average wall-clock time per run: `{:.3}` s\n",
+        avg_elapsed.as_secs_f64()
+    ));
+    report.push_str("\n## Timing Notes\n\n");
+    report.push_str(
+        "These timings are inclusive wall-clock measurements captured inside the Rust routing core. Parent rows include time spent in child rows, so totals are useful for hotspot ranking rather than additive accounting.\n\n",
+    );
+    report.push_str("## Run Times\n\n");
+    report.push_str("| Run | Seconds |\n");
+    report.push_str("|---|---:|\n");
+    for (index, elapsed) in inputs.elapsed_runs.iter().enumerate() {
+        report.push_str(&format!(
+            "| {} | {:.3} |\n",
+            index + 1,
+            elapsed.as_secs_f64()
+        ));
+    }
+
+    report.push_str("\n## Hot Functions\n\n");
+    report.push_str("| Rank | Function | Calls | Total ms | Avg ms | Max ms | Profiled % |\n");
+    report.push_str("|---:|---|---:|---:|---:|---:|---:|\n");
+    for (index, record) in inputs.records.iter().enumerate() {
+        let pct = if total_profiled.is_zero() {
+            0.0
+        } else {
+            100.0 * record.total.as_secs_f64() / total_profiled.as_secs_f64()
+        };
+        report.push_str(&format!(
+            "| {} | `{}` | {} | {:.3} | {:.3} | {:.3} | {:.2} |\n",
+            index + 1,
+            record.name,
+            record.calls,
+            record.total.as_secs_f64() * 1_000.0,
+            record.average().as_secs_f64() * 1_000.0,
+            record.max.as_secs_f64() * 1_000.0,
+            pct,
+        ));
+    }
+
+    fs::write(report_path, report)?;
+    Ok(())
+}
