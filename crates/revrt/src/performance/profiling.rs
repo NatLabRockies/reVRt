@@ -4,8 +4,7 @@ use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 static PROFILING_ENABLED: AtomicBool = AtomicBool::new(false);
-static PROFILE_DATA: OnceLock<Mutex<HashMap<&'static str, ProfileStat>>> =
-    OnceLock::new();
+static PROFILE_DATA: OnceLock<Mutex<HashMap<&'static str, ProfileStat>>> = OnceLock::new();
 
 #[derive(Clone, Copy, Debug, Default)]
 struct ProfileStat {
@@ -127,7 +126,7 @@ mod tests {
         reset();
         enable();
         {
-            let _scope = scope("profiling::tests::collects_elapsed_time");
+            scope("profiling::tests::collects_elapsed_time");
             std::thread::sleep(Duration::from_millis(1));
         }
         disable();

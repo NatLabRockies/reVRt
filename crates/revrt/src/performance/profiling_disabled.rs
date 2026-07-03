@@ -49,7 +49,7 @@ mod tests {
         reset();
         enable();
         {
-            let _scope = scope("profiling::tests::profiling_api_is_a_noop_without_feature");
+            scope("profiling::tests::profiling_api_is_a_noop_without_feature");
         }
         disable();
 
