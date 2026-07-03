@@ -373,6 +373,13 @@ To run specific tests, just add their name after the command, like so:
 
     cargo test test_get_3x3_two_by_two_array::bottom_right_corner
 
+If you want to run performance profiling locally, you can use this command:
+
+.. code-block:: shell
+
+    ./support/run_rust_route_profile.sh --output-dir rust_route_profile --rows 5000 --cols 5000 --chunk-size 100 --distance 500 --algorithm bidirectional_long_range_dijkstra --mem-limit-bytes 100000000 --repeats 1
+
+
 If you want to run the benchmarks locally, you can use this command:
 
 .. code-block:: shell
