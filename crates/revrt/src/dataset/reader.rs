@@ -578,14 +578,12 @@ fn open_optional_readable_array(
 
 /// Split the requested cache size across all neighborhood reader caches.
 ///
-/// One quarter of `cache_size` is assigned to each of the two cost caches and
-/// the driver multiplier cache, with a minimum of 1 byte per cache. The
-/// remaining budget is then split in half: one half goes to the hard barrier
-/// cache and the other half is reserved for all cumulative soft barrier
-/// caches. The soft barrier share is divided evenly across
-/// `soft_barrier_cache_count`, again with a minimum of 1 byte per cache.
-/// Saturating subtraction is used for the remainder calculations so very
-/// small cache sizes still produce valid nonzero budgets.
+/// The total budget is split evenly across the cost cache, any optional
+/// invariant and driver caches, and a shared barrier budget when any barrier
+/// caches exist. The barrier budget is split in half between the hard barrier
+/// cache and all cumulative soft barrier caches, and the soft barrier share is
+/// divided evenly across `soft_barrier_cache_count`. Every allocated cache gets
+/// at least 1 byte, and saturating subtraction keeps tiny cache sizes valid.
 ///
 /// # Arguments
 /// `cache_size`: Total cache budget, in bytes.
@@ -602,26 +600,36 @@ fn distribute_cache_budgets(
     has_active_drivers: bool,
     has_hard_barriers: bool,
 ) -> CacheBudgets {
-    let divisor = 2 + u64::from(has_invariant_costs) + u64::from(has_active_drivers);
+    let has_barrier_caches = has_hard_barriers || soft_barrier_cache_count > 0;
+    let divisor = 1
+        + u64::from(has_invariant_costs)
+        + u64::from(has_active_drivers)
+        + u64::from(has_barrier_caches);
     let cost_cache = (cache_size / divisor).max(1);
     let invariant_cost_cache = has_invariant_costs.then_some(cost_cache);
     let driver_multiplier_cache = has_active_drivers.then_some(cost_cache);
-    let remaining_cache = cache_size
-        .saturating_sub(cost_cache)
-        .saturating_sub(invariant_cost_cache.unwrap_or(0))
-        .saturating_sub(driver_multiplier_cache.unwrap_or(0))
-        .max(1);
-    let hard_barrier_cache = has_hard_barriers.then_some((remaining_cache / 2).max(1));
-    let soft_cache_budget = if let Some(hard_barrier_cache) = hard_barrier_cache {
-        remaining_cache.saturating_sub(hard_barrier_cache).max(1)
-    } else {
-        remaining_cache
-    };
+    let (hard_barrier_cache, per_soft_barrier_cache) = if has_barrier_caches {
+        let remaining_cache = cache_size
+            .saturating_sub(cost_cache)
+            .saturating_sub(invariant_cost_cache.unwrap_or(0))
+            .saturating_sub(driver_multiplier_cache.unwrap_or(0))
+            .max(1);
+        let hard_barrier_cache = has_hard_barriers.then_some((remaining_cache / 2).max(1));
+        let soft_cache_budget = if let Some(hard_barrier_cache) = hard_barrier_cache {
+            remaining_cache.saturating_sub(hard_barrier_cache).max(1)
+        } else {
+            remaining_cache
+        };
 
-    let per_soft_barrier_cache = if soft_barrier_cache_count == 0 {
-        None
+        let per_soft_barrier_cache = if soft_barrier_cache_count == 0 {
+            None
+        } else {
+            Some((soft_cache_budget / soft_barrier_cache_count as u64).max(1))
+        };
+
+        (hard_barrier_cache, per_soft_barrier_cache)
     } else {
-        Some((soft_cache_budget / soft_barrier_cache_count as u64).max(1))
+        (None, None)
     };
 
     CacheBudgets {
@@ -720,6 +728,17 @@ mod tests {
         assert_eq!(budgets.driver_multiplier_cache, Some(40));
         assert_eq!(budgets.hard_barrier_cache, None);
         assert_eq!(budgets.per_soft_barrier_cache, Some(10));
+    }
+
+    #[test]
+    fn distribute_cache_budgets_skips_barrier_reserve_without_barriers() {
+        let budgets = distribute_cache_budgets(120, 0, true, true, false);
+
+        assert_eq!(budgets.cost_cache, 40);
+        assert_eq!(budgets.invariant_cost_cache, Some(40));
+        assert_eq!(budgets.driver_multiplier_cache, Some(40));
+        assert_eq!(budgets.hard_barrier_cache, None);
+        assert_eq!(budgets.per_soft_barrier_cache, None);
     }
 
     #[test_case(3, 3, 1, 1, 0..3, 0..3; "interior point")]
