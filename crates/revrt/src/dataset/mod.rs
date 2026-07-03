@@ -187,6 +187,7 @@ impl Dataset {
     ) -> Result<Self> {
         debug!("Opening dataset: {:?}", path.as_ref());
         let soft_barrier_group_count = cost_function.soft_barrier_groups().len();
+        let has_invariant_costs = cost_function.has_invariant_layers();
         let has_hard_barriers = !cost_function.hard_barrier_layers().is_empty();
         let has_active_drivers = !cost_function.drivers.is_identity();
         let routing_option_count =
@@ -203,6 +204,7 @@ impl Dataset {
             swap_fp,
             &source_layout,
             soft_barrier_group_count,
+            has_invariant_costs,
             has_active_drivers,
             has_hard_barriers,
         )?;

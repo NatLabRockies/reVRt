@@ -39,7 +39,9 @@ pub(super) trait DerivedDataMaterializer {
 /// so neighborhood lookups can reuse decoded chunks efficiently.
 struct CacheBudgets {
     /// Cache budget for the primary cost array.
-    per_cost_cache: u64,
+    cost_cache: u64,
+    /// Cache budget for the invariant cost array.
+    invariant_cost_cache: Option<u64>,
     /// Cache budget for the driver multiplier array.
     driver_multiplier_cache: Option<u64>,
     /// Cache budget for the hard barrier mask.
@@ -57,7 +59,7 @@ pub(super) struct DerivedDataReader {
     /// Decoded chunk cache for the main per-cell routing cost.
     cost_cache: ChunkCacheDecodedLruSizeLimit,
     /// Decoded chunk cache for invariant movement costs.
-    cost_invariant_cache: ChunkCacheDecodedLruSizeLimit,
+    cost_invariant_cache: Option<ChunkCacheDecodedLruSizeLimit>,
     /// Decoded chunk cache for precomputed driver multipliers.
     driver_multiplier_cache: Option<ChunkCacheDecodedLruSizeLimit>,
     /// Decoded chunk cache for the hard barrier mask.
@@ -106,8 +108,7 @@ impl DerivedDataReader {
         );
         let cost_array_readable =
             Arc::new(zarrs::array::Array::open(swap.clone(), "/cost")?.readable());
-        let cost_invariant_array_readable =
-            Arc::new(zarrs::array::Array::open(swap.clone(), "/cost_invariant")?.readable());
+        let cost_invariant_array = open_optional_readable_array(swap.clone(), "/cost_invariant")?;
         let cumulative_soft_barrier_arrays = (0..=soft_barrier_group_count)
             .map(|retry_state| {
                 let path = format!("/{}", cumulative_soft_barrier_mask_name(retry_state));
@@ -123,17 +124,20 @@ impl DerivedDataReader {
         let budgets = distribute_cache_budgets(
             cache_size,
             cumulative_soft_barrier_arrays.len(),
+            cost_invariant_array.is_some(),
             driver_multiplier_array.is_some(),
             hard_barrier_array.is_some(),
         );
         debug!("Cache budgets: {:?}", budgets);
 
         let cost_cache =
-            ChunkCacheDecodedLruSizeLimit::new(cost_array_readable.clone(), budgets.per_cost_cache);
-        let cost_invariant_cache = ChunkCacheDecodedLruSizeLimit::new(
-            cost_invariant_array_readable.clone(),
-            budgets.per_cost_cache,
-        );
+            ChunkCacheDecodedLruSizeLimit::new(cost_array_readable.clone(), budgets.cost_cache);
+        let cost_invariant_cache =
+            cost_invariant_array
+                .zip(budgets.invariant_cost_cache)
+                .map(|(array, cache_budget)| {
+                    ChunkCacheDecodedLruSizeLimit::new(Arc::new(array), cache_budget)
+                });
         let driver_multiplier_cache = driver_multiplier_array
             .zip(budgets.driver_multiplier_cache)
             .map(|(array, cache_budget)| {
@@ -206,8 +210,13 @@ impl DerivedDataReader {
             .unwrap();
         let invariant_costs: Vec<f32> = self
             .cost_invariant_cache
-            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
-            .unwrap();
+            .as_ref()
+            .map(|cache| {
+                cache
+                    .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+                    .unwrap()
+            })
+            .unwrap_or_else(|| std::iter::repeat_n(0.0, primary_costs.len()).collect());
         let driver_multipliers: Vec<f32> = if let Some(cache) = &self.driver_multiplier_cache {
             cache
                 .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
@@ -394,10 +403,14 @@ impl DerivedDataReader {
 
         let invariant = self
             .cost_invariant_cache
-            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
-            .ok()?
-            .into_iter()
-            .next()?;
+            .as_ref()
+            .and_then(|cache| {
+                cache
+                    .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+                    .ok()
+            })
+            .and_then(|values| values.into_iter().next())
+            .unwrap_or(0.0);
 
         Some((cost, invariant))
     }
@@ -570,14 +583,17 @@ fn open_optional_readable_array(
 fn distribute_cache_budgets(
     cache_size: u64,
     soft_barrier_cache_count: usize,
+    has_invariant_costs: bool,
     has_active_drivers: bool,
     has_hard_barriers: bool,
 ) -> CacheBudgets {
-    let divisor = if has_active_drivers { 4 } else { 3 };
-    let per_cost_cache = (cache_size / divisor).max(1);
-    let driver_multiplier_cache = has_active_drivers.then_some(per_cost_cache);
+    let divisor = 2 + u64::from(has_invariant_costs) + u64::from(has_active_drivers);
+    let cost_cache = (cache_size / divisor).max(1);
+    let invariant_cost_cache = has_invariant_costs.then_some(cost_cache);
+    let driver_multiplier_cache = has_active_drivers.then_some(cost_cache);
     let remaining_cache = cache_size
-        .saturating_sub(2 * per_cost_cache)
+        .saturating_sub(cost_cache)
+        .saturating_sub(invariant_cost_cache.unwrap_or(0))
         .saturating_sub(driver_multiplier_cache.unwrap_or(0))
         .max(1);
     let hard_barrier_cache = has_hard_barriers.then_some((remaining_cache / 2).max(1));
@@ -594,7 +610,8 @@ fn distribute_cache_budgets(
     };
 
     CacheBudgets {
-        per_cost_cache,
+        cost_cache,
+        invariant_cost_cache,
         driver_multiplier_cache,
         hard_barrier_cache,
         per_soft_barrier_cache,
@@ -637,9 +654,10 @@ mod tests {
 
     #[test]
     fn distribute_cache_budgets_splits_budget_across_cache_types() {
-        let budgets = distribute_cache_budgets(120, 4, true, true);
+        let budgets = distribute_cache_budgets(120, 4, true, true, true);
 
-        assert_eq!(budgets.per_cost_cache, 30);
+        assert_eq!(budgets.cost_cache, 30);
+        assert_eq!(budgets.invariant_cost_cache, Some(30));
         assert_eq!(budgets.driver_multiplier_cache, Some(30));
         assert_eq!(budgets.hard_barrier_cache, Some(15));
         assert_eq!(budgets.per_soft_barrier_cache, 3);
@@ -647,9 +665,10 @@ mod tests {
 
     #[test]
     fn distribute_cache_budgets_keeps_nonzero_budgets_for_tiny_cache_sizes() {
-        let budgets = distribute_cache_budgets(1, 0, true, true);
+        let budgets = distribute_cache_budgets(1, 0, true, true, true);
 
-        assert_eq!(budgets.per_cost_cache, 1);
+        assert_eq!(budgets.cost_cache, 1);
+        assert_eq!(budgets.invariant_cost_cache, Some(1));
         assert_eq!(budgets.driver_multiplier_cache, Some(1));
         assert_eq!(budgets.hard_barrier_cache, Some(1));
         assert_eq!(budgets.per_soft_barrier_cache, 1);
@@ -657,9 +676,10 @@ mod tests {
 
     #[test]
     fn distribute_cache_budgets_skips_driver_cache_for_identity_rules() {
-        let budgets = distribute_cache_budgets(120, 4, false, true);
+        let budgets = distribute_cache_budgets(120, 4, true, false, true);
 
-        assert_eq!(budgets.per_cost_cache, 40);
+        assert_eq!(budgets.cost_cache, 40);
+        assert_eq!(budgets.invariant_cost_cache, Some(40));
         assert_eq!(budgets.driver_multiplier_cache, None);
         assert_eq!(budgets.hard_barrier_cache, Some(20));
         assert_eq!(budgets.per_soft_barrier_cache, 5);
@@ -667,12 +687,24 @@ mod tests {
 
     #[test]
     fn distribute_cache_budgets_skips_hard_barrier_cache_when_disabled() {
-        let budgets = distribute_cache_budgets(120, 4, true, false);
+        let budgets = distribute_cache_budgets(120, 4, true, true, false);
 
-        assert_eq!(budgets.per_cost_cache, 30);
+        assert_eq!(budgets.cost_cache, 30);
+        assert_eq!(budgets.invariant_cost_cache, Some(30));
         assert_eq!(budgets.driver_multiplier_cache, Some(30));
         assert_eq!(budgets.hard_barrier_cache, None);
         assert_eq!(budgets.per_soft_barrier_cache, 7);
+    }
+
+    #[test]
+    fn distribute_cache_budgets_skips_invariant_cache_when_disabled() {
+        let budgets = distribute_cache_budgets(120, 4, false, true, false);
+
+        assert_eq!(budgets.cost_cache, 40);
+        assert_eq!(budgets.invariant_cost_cache, None);
+        assert_eq!(budgets.driver_multiplier_cache, Some(40));
+        assert_eq!(budgets.hard_barrier_cache, None);
+        assert_eq!(budgets.per_soft_barrier_cache, 10);
     }
 
     #[test_case(3, 3, 1, 1, 0..3, 0..3; "interior point")]
@@ -1091,7 +1123,7 @@ mod tests {
         let has_hard_barriers = !hard_barrier_values.is_empty();
 
         let swap_tmp = TempDir::new().expect("could not create temporary swap");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, has_hard_barriers)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 1, true, false, has_hard_barriers)
             .expect("swap initialization should succeed");
 
         store_f32_layer(
@@ -1211,7 +1243,7 @@ mod tests {
             inspect_source_layout(&source, 1).expect("source layout inspection should succeed");
 
         let swap_tmp = TempDir::new().expect("could not create temporary swap");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, false)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, false, false)
             .expect("swap initialization should succeed");
 
         let reader = DerivedDataReader::open(swap, 90, 1, layout);
@@ -1234,7 +1266,7 @@ mod tests {
             inspect_source_layout(&source, 1).expect("source layout inspection should succeed");
 
         let swap_tmp = TempDir::new().expect("could not create temporary swap");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, false)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, false, false)
             .expect("swap initialization should succeed");
 
         let reader = DerivedDataReader::open(swap, 90, 1, layout).expect("reader should open");
@@ -1247,6 +1279,55 @@ mod tests {
                 },
             ),
             Some(1.0)
+        );
+    }
+
+    #[test]
+    fn get_cell_cost_components_defaults_invariant_cost_to_zero_without_layer() {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(LayerConfig::ones("source"))
+            .build()
+            .expect("failed to create source test dataset");
+        let source: ReadableListableStorage = Arc::new(
+            FilesystemStore::new(source_tmp.path()).expect("could not open source test store"),
+        );
+        let layout =
+            inspect_source_layout(&source, 1).expect("source layout inspection should succeed");
+
+        let swap_tmp = TempDir::new().expect("could not create temporary swap");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, false, false)
+            .expect("swap initialization should succeed");
+
+        store_f32_layer(swap.clone(), "/cost", 1, 2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        store_bool_layer(
+            swap.clone(),
+            "/soft_barrier_mask_retry_0",
+            1,
+            2,
+            2,
+            vec![false; 4],
+        );
+        store_bool_layer(
+            swap.clone(),
+            "/soft_barrier_mask_retry_1",
+            1,
+            2,
+            2,
+            vec![false; 4],
+        );
+
+        let reader = DerivedDataReader::open(swap, 90, 1, layout).expect("reader should open");
+
+        assert_eq!(
+            reader.get_cell_cost_components(
+                &ArrayIndex::new_ij(1, 0),
+                &NoOpMaterializer {
+                    has_hard_barriers: false,
+                },
+            ),
+            Some((3.0, 0.0))
         );
     }
 
