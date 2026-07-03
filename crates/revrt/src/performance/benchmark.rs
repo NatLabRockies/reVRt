@@ -21,7 +21,7 @@ use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 
 use revrt::ArrayIndex;
-use revrt::bench_minimalist;
+use revrt::performance::benchmark::bench_minimalist;
 
 use ndarray::Array3;
 use rand::RngExt;
