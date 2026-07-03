@@ -16,6 +16,7 @@ revrt = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 dhat = { workspace = true }
+pprof = { workspace = true }
 zarrs = { workspace = true }
 
 [features]
