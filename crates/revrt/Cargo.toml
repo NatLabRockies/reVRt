@@ -42,7 +42,7 @@ criterion = { workspace = true }
 
 [[bench]]
 name = "standard"
-path = "benches/standard.rs"
+path = "src/performance/benchmark.rs"
 harness = false
 
 [lints]
