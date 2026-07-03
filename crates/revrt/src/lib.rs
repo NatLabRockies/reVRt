@@ -15,9 +15,9 @@ mod solution;
 
 use std::sync::mpsc;
 
+pub use benchmark::bench_minimalist;
 use cost::CostFunction;
 use error::Result;
-pub use performance::benchmark::bench_minimalist;
 pub use performance::profiling;
 use routing::{ParRouting, RouteDefinition, Routing};
 use solution::{RevrtRoutingSolutions, Solution};
