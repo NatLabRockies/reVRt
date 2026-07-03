@@ -31,6 +31,7 @@ impl ProfileRecord {
     }
 }
 
+#[must_use = "profiling scopes must be bound to a variable to measure the surrounding scope"]
 pub struct ScopeGuard {
     name: Option<&'static str>,
     start: Instant,
@@ -126,7 +127,7 @@ mod tests {
         reset();
         enable();
         {
-            scope("profiling::tests::collects_elapsed_time");
+            let _scope = scope("profiling::tests::collects_elapsed_time");
             std::thread::sleep(Duration::from_millis(1));
         }
         disable();
