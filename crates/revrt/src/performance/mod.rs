@@ -1,5 +1,7 @@
 //! Performance-related APIs
 
+pub mod benchmark;
+
 #[cfg(feature = "profiling")]
 #[path = "./profiling.rs"]
 pub mod profiling;
