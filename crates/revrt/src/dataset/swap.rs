@@ -499,9 +499,7 @@ mod tests {
         let initialized_swap = initialize_swap(swap_dir.path(), &layout, 2, true, false, false)
             .expect("swap initialization failed");
 
-        assert!(
-            zarrs::array::Array::open(initialized_swap.clone(), "/driver_multiplier").is_err()
-        );
+        assert!(zarrs::array::Array::open(initialized_swap.clone(), "/driver_multiplier").is_err());
 
         for (layer_name, expected_dtype) in [
             ("/cost", DataType::Float32),
