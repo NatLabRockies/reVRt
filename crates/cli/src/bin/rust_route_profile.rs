@@ -5,8 +5,8 @@ use std::time::Instant;
 
 use clap::Parser;
 use ndarray::Array3;
-use revrt::profiling;
-use revrt::{ArrayIndex, resolve_with_routing_options};
+use pprof::ProfilerGuardBuilder;
+use revrt::{ArrayIndex, profiling, resolve_with_routing_options};
 use zarrs::array::{ArrayBuilder, DataType, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
@@ -14,6 +14,8 @@ use zarrs::storage::ReadableWritableListableStorage;
 
 const DEFAULT_COST_FUNCTION: &str =
     r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#;
+const PPROF_SAMPLE_FREQUENCY_HZ: i32 = 1_000;
+const PPROF_BLOCKLIST: [&str; 4] = ["libc", "libgcc", "pthread", "vdso"];
 
 #[derive(Parser, Debug)]
 #[command(version, about = "Generate and profile a synthetic Rust routing case")]
@@ -52,6 +54,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let dataset_dir = cli.output_dir.join("dataset.zarr");
     let report_path = cli.output_dir.join("ROUTING_RUST_PROFILE_REPORT.md");
+    let flamegraph_path = cli.output_dir.join("routing_profile_flamegraph.svg");
+    let stack_report_path = cli.output_dir.join("routing_profile_stacks.txt");
 
     fs::create_dir_all(&cli.output_dir)?;
     create_uniform_cost_dataset(
@@ -68,6 +72,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     profiling::reset();
     profiling::enable();
+
+    let guard = ProfilerGuardBuilder::default()
+        .frequency(PPROF_SAMPLE_FREQUENCY_HZ)
+        .blocklist(&PPROF_BLOCKLIST)
+        .build()?;
 
     for _ in 0..cli.repeats {
         let started = Instant::now();
@@ -86,7 +95,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     profiling::disable();
 
+    let pprof_report = guard.report().build()?;
+    pprof_report.flamegraph(fs::File::create(&flamegraph_path)?)?;
+    let stack_report = format!("{pprof_report:?}");
+    fs::write(&stack_report_path, &stack_report)?;
     let profile_snapshot = profiling::snapshot();
+
     let report_inputs = ReportInputs {
         cli: &cli,
         dataset_dir: &dataset_dir,
@@ -95,10 +109,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         solution_count: last_solution_count,
         elapsed_runs: &elapsed_runs,
         records: &profile_snapshot,
+        flamegraph_path: &flamegraph_path,
+        stack_report_path: &stack_report_path,
     };
     write_report(&report_path, &report_inputs)?;
 
     println!("Dataset: {}", dataset_dir.display());
+    println!("Flamegraph: {}", flamegraph_path.display());
+    println!("Stacks: {}", stack_report_path.display());
     println!("Report: {}", report_path.display());
 
     Ok(())
@@ -190,6 +208,8 @@ struct ReportInputs<'a> {
     solution_count: usize,
     elapsed_runs: &'a [std::time::Duration],
     records: &'a [profiling::ProfileRecord],
+    flamegraph_path: &'a Path,
+    stack_report_path: &'a Path,
 }
 
 fn write_report(
@@ -239,10 +259,53 @@ fn write_report(
         "- Average wall-clock time per run: `{:.3}` s\n",
         avg_elapsed.as_secs_f64()
     ));
-    report.push_str("\n## Timing Notes\n\n");
+    report.push_str(&format!(
+        "- PProf sample frequency: `{}` Hz\n",
+        PPROF_SAMPLE_FREQUENCY_HZ
+    ));
+    report.push_str("\n## PProf Outputs\n\n");
     report.push_str(
-        "These timings are inclusive wall-clock measurements captured inside the Rust routing core. Parent rows include time spent in child rows, so totals are useful for hotspot ranking rather than additive accounting.\n\n",
+        "The flamegraph and stack summary aggregate sampled CPU stacks across all profiled runs. Use the flamegraph to find inclusive hotspots visually and the stack summary text file to inspect sampled call stacks directly.\n\n",
     );
+    report.push_str(
+        "Because pprof uses sampling, very short runs may produce sparse data. Increase `--repeats` or the synthetic case size if the flamegraph is too thin to be useful.\n\n",
+    );
+    report.push_str(&format!(
+        "- Flamegraph: `{}`\n",
+        inputs.flamegraph_path.display()
+    ));
+    report.push_str(&format!(
+        "- Stack summary: `{}`\n",
+        inputs.stack_report_path.display()
+    ));
+    report.push_str("\n");
+    report.push_str("## Hot Functions\n\n");
+    if inputs.records.is_empty() {
+        report.push_str(
+            "No in-process profiling records were captured. Ensure the profiling feature is enabled and the workload exercises the instrumented paths.\n\n",
+        );
+    } else {
+        report.push_str("| Rank | Function | Calls | Total ms | Avg ms | Max ms | Profiled % |\n");
+        report.push_str("|---:|---|---:|---:|---:|---:|---:|\n");
+        for (index, record) in inputs.records.iter().enumerate() {
+            let pct = if total_profiled.is_zero() {
+                0.0
+            } else {
+                100.0 * record.total.as_secs_f64() / total_profiled.as_secs_f64()
+            };
+            report.push_str(&format!(
+                "| {} | `{}` | {} | {:.3} | {:.3} | {:.3} | {:.2} |\n",
+                index + 1,
+                record.name,
+                record.calls,
+                record.total.as_secs_f64() * 1_000.0,
+                record.average().as_secs_f64() * 1_000.0,
+                record.max.as_secs_f64() * 1_000.0,
+                pct,
+            ));
+        }
+        report.push_str("\n");
+    }
     report.push_str("## Run Times\n\n");
     report.push_str("| Run | Seconds |\n");
     report.push_str("|---|---:|\n");
@@ -251,27 +314,6 @@ fn write_report(
             "| {} | {:.3} |\n",
             index + 1,
             elapsed.as_secs_f64()
-        ));
-    }
-
-    report.push_str("\n## Hot Functions\n\n");
-    report.push_str("| Rank | Function | Calls | Total ms | Avg ms | Max ms | Profiled % |\n");
-    report.push_str("|---:|---|---:|---:|---:|---:|---:|\n");
-    for (index, record) in inputs.records.iter().enumerate() {
-        let pct = if total_profiled.is_zero() {
-            0.0
-        } else {
-            100.0 * record.total.as_secs_f64() / total_profiled.as_secs_f64()
-        };
-        report.push_str(&format!(
-            "| {} | `{}` | {} | {:.3} | {:.3} | {:.3} | {:.2} |\n",
-            index + 1,
-            record.name,
-            record.calls,
-            record.total.as_secs_f64() * 1_000.0,
-            record.average().as_secs_f64() * 1_000.0,
-            record.max.as_secs_f64() * 1_000.0,
-            pct,
         ));
     }
 
