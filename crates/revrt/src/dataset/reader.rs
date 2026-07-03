@@ -95,8 +95,6 @@ impl DerivedDataReader {
         swap: ReadableWritableListableStorage,
         cache_size: u64,
         soft_barrier_group_count: usize,
-        has_active_drivers: bool,
-        has_hard_barriers: bool,
         layout: SourceLayout,
     ) -> Result<Self> {
         if cache_size < 1_000_000 {
@@ -118,12 +116,15 @@ impl DerivedDataReader {
                     .map(|array| Arc::new(array.readable()))
             })
             .collect::<Result<Vec<_>>>()?;
+        let driver_multiplier_array =
+            open_optional_readable_array(swap.clone(), "/driver_multiplier")?;
+        let hard_barrier_array = open_optional_readable_array(swap.clone(), "/hard_barrier_mask")?;
 
         let budgets = distribute_cache_budgets(
             cache_size,
             cumulative_soft_barrier_arrays.len(),
-            has_active_drivers,
-            has_hard_barriers,
+            driver_multiplier_array.is_some(),
+            hard_barrier_array.is_some(),
         );
         debug!("Cache budgets: {:?}", budgets);
 
@@ -133,26 +134,17 @@ impl DerivedDataReader {
             cost_invariant_array_readable.clone(),
             budgets.per_cost_cache,
         );
-        let driver_multiplier_cache = if let Some(cache_budget) = budgets.driver_multiplier_cache {
-            let driver_multiplier_array_readable =
-                Arc::new(zarrs::array::Array::open(swap.clone(), "/driver_multiplier")?.readable());
-            Some(ChunkCacheDecodedLruSizeLimit::new(
-                driver_multiplier_array_readable,
-                cache_budget,
-            ))
-        } else {
-            None
-        };
-        let hard_barrier_cache = if let Some(cache_budget) = budgets.hard_barrier_cache {
-            let hard_barrier_array_readable =
-                Arc::new(zarrs::array::Array::open(swap.clone(), "/hard_barrier_mask")?.readable());
-            Some(ChunkCacheDecodedLruSizeLimit::new(
-                hard_barrier_array_readable,
-                cache_budget,
-            ))
-        } else {
-            None
-        };
+        let driver_multiplier_cache = driver_multiplier_array
+            .zip(budgets.driver_multiplier_cache)
+            .map(|(array, cache_budget)| {
+                ChunkCacheDecodedLruSizeLimit::new(Arc::new(array), cache_budget)
+            });
+        let hard_barrier_cache =
+            hard_barrier_array
+                .zip(budgets.hard_barrier_cache)
+                .map(|(array, cache_budget)| {
+                    ChunkCacheDecodedLruSizeLimit::new(Arc::new(array), cache_budget)
+                });
         let cumulative_soft_barrier_caches = cumulative_soft_barrier_arrays
             .into_iter()
             .map(|array| ChunkCacheDecodedLruSizeLimit::new(array, budgets.per_soft_barrier_cache))
@@ -542,6 +534,17 @@ impl DerivedDataReader {
         ]);
 
         (i_range, j_range, subset)
+    }
+}
+
+fn open_optional_readable_array(
+    swap: ReadableWritableListableStorage,
+    path: &str,
+) -> Result<Option<zarrs::array::Array<dyn ReadableStorageTraits>>> {
+    match zarrs::array::Array::open(swap, path) {
+        Ok(array) => Ok(Some(array.readable())),
+        Err(zarrs::array::ArrayCreateError::MissingMetadata) => Ok(None),
+        Err(error) => Err(error.into()),
     }
 }
 
@@ -1088,7 +1091,7 @@ mod tests {
         let has_hard_barriers = !hard_barrier_values.is_empty();
 
         let swap_tmp = TempDir::new().expect("could not create temporary swap");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 1, has_hard_barriers)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, has_hard_barriers)
             .expect("swap initialization should succeed");
 
         store_f32_layer(
@@ -1134,8 +1137,7 @@ mod tests {
             soft_retry_one_values,
         );
 
-        let reader = DerivedDataReader::open(swap, 90, 1, true, has_hard_barriers, layout)
-            .expect("reader should open");
+        let reader = DerivedDataReader::open(swap, 90, 1, layout).expect("reader should open");
 
         ReaderFixture {
             _source_tmp: source_tmp,
@@ -1209,12 +1211,43 @@ mod tests {
             inspect_source_layout(&source, 1).expect("source layout inspection should succeed");
 
         let swap_tmp = TempDir::new().expect("could not create temporary swap");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, false)
             .expect("swap initialization should succeed");
 
-        let reader = DerivedDataReader::open(swap, 90, 1, true, false, layout);
+        let reader = DerivedDataReader::open(swap, 90, 1, layout);
 
         assert!(reader.is_ok());
+    }
+
+    #[test]
+    fn get_driver_multiplier_defaults_to_identity_without_driver_layer() {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(1, 3, 3)
+            .chunks(1, 3, 3)
+            .layer(LayerConfig::ones("source"))
+            .build()
+            .expect("failed to create source test dataset");
+        let source: ReadableListableStorage = Arc::new(
+            FilesystemStore::new(source_tmp.path()).expect("could not open source test store"),
+        );
+        let layout =
+            inspect_source_layout(&source, 1).expect("source layout inspection should succeed");
+
+        let swap_tmp = TempDir::new().expect("could not create temporary swap");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 1, false, false)
+            .expect("swap initialization should succeed");
+
+        let reader = DerivedDataReader::open(swap, 90, 1, layout).expect("reader should open");
+
+        assert_eq!(
+            reader.get_driver_multiplier(
+                &ArrayIndex::new_ij(0, 0),
+                &NoOpMaterializer {
+                    has_hard_barriers: false,
+                },
+            ),
+            Some(1.0)
+        );
     }
 
     fn chunk_subset<T: ?Sized>(array: &Array<T>) -> ArraySubset {

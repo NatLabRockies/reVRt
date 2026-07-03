@@ -616,7 +616,8 @@ mod tests {
         .unwrap();
         let layout = super::super::swap::inspect_source_layout(&source, 1).unwrap();
         let swap_tmp = TempDir::new().unwrap();
-        let swap = super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2, true).unwrap();
+        let swap =
+            super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2, true, true).unwrap();
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
 
@@ -692,6 +693,7 @@ mod tests {
             swap_dir.path(),
             &layout,
             cost_function.soft_barrier_groups().len(),
+            false,
             true,
         )
         .expect("Error initializing swap dataset");
@@ -758,7 +760,7 @@ mod tests {
         let layout = inspect_source_layout(&source, cost_function.routing_options.len() as u32)
             .expect("source layout inspection failed");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, true, false)
             .expect("failed to initialize swap dataset");
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
 
@@ -790,7 +792,7 @@ mod tests {
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
         let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false)
             .expect("failed to initialize swap dataset");
         let cost_function = CostFunction::from_json(
             r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
@@ -814,7 +816,7 @@ mod tests {
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
         let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false)
             .expect("failed to initialize swap dataset");
         let cost_function = CostFunction::from_json(
             r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
@@ -843,7 +845,7 @@ mod tests {
         let array =
             zarrs::array::Array::open(readable_source, "/A").expect("failed to open source array");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false)
             .expect("failed to initialize swap dataset");
         let cost_function = CostFunction::from_json(
             r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
@@ -925,7 +927,7 @@ mod tests {
         let array = zarrs::array::Array::open(readable_source, "/overhead_cost")
             .expect("failed to open source array");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false)
             .expect("failed to initialize swap dataset");
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
 

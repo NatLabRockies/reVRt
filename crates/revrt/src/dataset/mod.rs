@@ -203,6 +203,7 @@ impl Dataset {
             swap_fp,
             &source_layout,
             soft_barrier_group_count,
+            has_active_drivers,
             has_hard_barriers,
         )?;
 
@@ -213,8 +214,6 @@ impl Dataset {
             swap.clone(),
             cache_size,
             soft_barrier_group_count,
-            has_active_drivers,
-            has_hard_barriers,
             source_layout,
         )?;
         let grid_shape = derived_data_reader.grid_shape();
