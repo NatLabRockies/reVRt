@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782876256854,
+  "lastUpdate": 1783109218962,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12263,6 +12263,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 454211549,
             "range": "± 5543790",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d6a876367bbd8c2346f0971572d4a7567dd633cb",
+          "message": "More flexible swap (#304)\n\n* Add `is_identity`\n\n* Store driver layer as a swap\n\n* Fix tests\n\n* Barrier layers now optionally swapped\n\n* Read optionals from cache\n\n* Add `has_invariant_layers`\n\n* Only use swap for invariant costs if they are specified by the user\n\n* Only cache the soft barriers as necessary\n\n* Update logic\n\n* update docs\n\n* linter fix",
+          "timestamp": "2026-07-03T13:54:46-06:00",
+          "tree_id": "646e2e1751713e1acd6d8c0b1480bf978c6405f1",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/d6a876367bbd8c2346f0971572d4a7567dd633cb"
+        },
+        "date": 1783109217999,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 47567690,
+            "range": "± 1504686",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 62320757,
+            "range": "± 1525274",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 62835364,
+            "range": "± 1775242",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 89317855,
+            "range": "± 2753091",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 439380294,
+            "range": "± 11982566",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 144355575,
+            "range": "± 974632",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 146636893,
+            "range": "± 2589167",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 155276734,
+            "range": "± 1558505",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 179949418,
+            "range": "± 2829997",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 278677022,
+            "range": "± 6556743",
             "unit": "ns/iter"
           }
         ]
