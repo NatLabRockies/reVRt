@@ -34,6 +34,14 @@ impl DriverRuleSet {
         Self { default, zones }
     }
 
+    pub(crate) fn is_identity(&self) -> bool {
+        self.zones.is_empty()
+            && self
+                .default
+                .iter()
+                .all(|multiplier| matches!(multiplier, Some(value) if *value == 1.0))
+    }
+
     pub(crate) fn multiplier<F>(&self, option: u32, mut layer_value: F) -> Option<f32>
     where
         F: FnMut(&str) -> Option<f32>,

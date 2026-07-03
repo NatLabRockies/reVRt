@@ -5,6 +5,7 @@
 //! length-dependent cost layers, builds the hard barrier mask, and writes
 //! cumulative soft barrier masks that can be reused across retry states.
 
+use std::collections::HashMap;
 use std::sync::RwLock;
 
 use ndarray::Array3;
@@ -38,6 +39,10 @@ pub(super) struct DerivedDataWriter {
     pub(super) soft_barrier_groups: Vec<(u32, Vec<BarrierLayer>)>,
     /// Cost function stripped of barrier layers for numeric cost derivation.
     cost_function: CostFunction,
+    /// Whether invariant cost layers need to be materialized.
+    has_invariant_costs: bool,
+    /// Whether driver rules can change cost or exclude options.
+    has_active_drivers: bool,
 }
 
 impl DerivedDataWriter {
@@ -61,6 +66,8 @@ impl DerivedDataWriter {
         swap: ReadableWritableListableStorage,
         cost_function: CostFunction,
     ) -> Self {
+        let has_invariant_costs = cost_function.has_invariant_layers();
+        let has_active_drivers = !cost_function.drivers.is_identity();
         let hard_barrier_layers = cost_function.hard_barrier_layers();
         let soft_barrier_groups = cost_function.soft_barrier_groups();
         let cost_function = cost_function.without_barriers();
@@ -81,6 +88,8 @@ impl DerivedDataWriter {
             hard_barrier_layers,
             soft_barrier_groups,
             cost_function,
+            has_invariant_costs,
+            has_active_drivers,
         }
     }
 
@@ -106,10 +115,19 @@ impl DerivedDataWriter {
         ]);
         let mut data = LazySubset::<f32>::new(self.source.clone(), subset.clone());
 
-        self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, true);
+        if self.has_invariant_costs {
+            self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, true);
+        }
         self.calculate_chunk_cost_single_layer(cb, ci, cj, &mut data, &chunk_subset, false);
-        self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
-        self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
+        if self.has_active_drivers {
+            self.calculate_chunk_driver_multiplier(cb, &mut data, &chunk_subset);
+        }
+        if self.has_hard_barriers() {
+            self.calculate_chunk_hard_barrier_mask(&mut data, &subset, &chunk_subset);
+        }
+        if !self.soft_barrier_groups.is_empty() {
+            self.calculate_chunk_cumulative_soft_barrier_masks(&mut data, &subset, &chunk_subset);
+        }
     }
 
     /// Compute and store one of the two chunk cost arrays.
@@ -162,6 +180,49 @@ impl DerivedDataWriter {
         trace!("Storing chunk at {:?}", chunk_indices);
         trace!("Target chunk subset: {:?}", chunk_subset);
         cost.store_chunks_ndarray(chunk_subset, output).unwrap();
+    }
+
+    /// Compute and store the per-option driver multiplier for a chunk.
+    ///
+    /// Driver multipliers depend only on the current routing option and the
+    /// source-layer values at each cell, so they can be materialized once per
+    /// chunk and reused during routing without changing route semantics.
+    fn calculate_chunk_driver_multiplier(
+        &self,
+        cb: u64,
+        features: &mut LazySubset<f32>,
+        chunk_subset: &zarrs::array_subset::ArraySubset,
+    ) {
+        trace!("Calculating driver multiplier for chunk band {}", cb);
+
+        let option = u32::try_from(cb).expect("chunk band index exceeds u32 range");
+        let rows = usize::try_from(features.subset().shape()[1]).expect("row count exceeds usize");
+        let cols =
+            usize::try_from(features.subset().shape()[2]).expect("column count exceeds usize");
+        let mut layer_cache: HashMap<String, ndarray::ArrayD<f32>> = HashMap::new();
+
+        let output = Array3::from_shape_fn((1, rows, cols), |(_, row, col)| {
+            self.cost_function
+                .drivers
+                .multiplier(option, |layer_name| {
+                    let values = layer_cache
+                        .entry(layer_name.to_string())
+                        .or_insert_with(|| {
+                            features
+                                .get(layer_name)
+                                .expect("failed to load driver-layer subset")
+                        });
+                    values.get(ndarray::IxDyn(&[0, row, col])).copied()
+                })
+                .unwrap_or(f32::NAN)
+        });
+
+        let driver_multiplier =
+            zarrs::array::Array::open(self.swap.clone(), "/driver_multiplier").unwrap();
+        driver_multiplier.store_metadata().unwrap();
+        driver_multiplier
+            .store_chunks_ndarray(chunk_subset, output)
+            .unwrap();
     }
 
     /// Compute and store the hard barrier mask for a chunk.
@@ -563,7 +624,9 @@ mod tests {
         .unwrap();
         let layout = super::super::swap::inspect_source_layout(&source, 1).unwrap();
         let swap_tmp = TempDir::new().unwrap();
-        let swap = super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2).unwrap();
+        let swap =
+            super::super::swap::initialize_swap(swap_tmp.path(), &layout, 2, true, true, true)
+                .unwrap();
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
         let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
 
@@ -580,6 +643,9 @@ mod tests {
             read_subset_values::<f32>(&swap, "/cost_invariant", &subset),
             vec![3.0, 3.0, 3.0, 3.0],
         );
+        let driver_multiplier = read_subset_values::<f32>(&swap, "/driver_multiplier", &subset);
+        assert_eq!(driver_multiplier.len(), 4);
+        assert!(driver_multiplier.iter().all(|value| value.is_nan()));
         assert_eq!(
             read_subset_values::<bool>(&swap, "/hard_barrier_mask", &subset),
             vec![true, true, false, false],
@@ -636,6 +702,9 @@ mod tests {
             swap_dir.path(),
             &layout,
             cost_function.soft_barrier_groups().len(),
+            cost_function.has_invariant_layers(),
+            false,
+            true,
         )
         .expect("Error initializing swap dataset");
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
@@ -665,13 +734,101 @@ mod tests {
     }
 
     #[test]
+    fn materialize_chunk_writes_driver_multiplier_and_exclusions() {
+        let source_tmp = ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(LayerConfig::constant("overhead_cost", 1.0))
+            .layer(LayerConfig::constant("underground_cost", 2.0))
+            .layer(LayerConfig::new(
+                "tech_zone",
+                FillStrategy::Values(vec![0.0, 1.0, 0.0, 1.0]),
+            ))
+            .build()
+            .expect("failed to create single-band source dataset");
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(source_tmp.path()).expect("could not open test store"));
+        let cost_function = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "overhead": {"cost_layers": [{"layer_name": "overhead_cost"}]},
+                    "underground": {"cost_layers": [{"layer_name": "underground_cost"}]}
+                },
+                "drivers": {
+                    "default": {"overhead": 1, "underground": "excluded"},
+                    "zones": [{
+                        "layer_name": "tech_zone",
+                        "mask_operator": "eq",
+                        "mask_threshold": 1.0,
+                        "overhead": "excluded",
+                        "underground": 1
+                    }]
+                }
+            }"#,
+        )
+        .expect("failed to construct cost function");
+        let layout = inspect_source_layout(&source, cost_function.routing_options.len() as u32)
+            .expect("source layout inspection failed");
+        let swap_tmp = TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, true, false)
+            .expect("failed to initialize swap dataset");
+        let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
+
+        writer.materialize_chunk(0, 0, 0);
+        writer.materialize_chunk(1, 0, 0);
+
+        let first_option_subset = ArraySubset::new_with_ranges(&[0..1, 0..2, 0..2]);
+        let second_option_subset = ArraySubset::new_with_ranges(&[1..2, 0..2, 0..2]);
+        let band_0 = read_subset_values::<f32>(&swap, "/driver_multiplier", &first_option_subset);
+        let band_1 = read_subset_values::<f32>(&swap, "/driver_multiplier", &second_option_subset);
+
+        assert_eq!(band_0.len(), 4);
+        assert_eq!(band_0[0], 1.0);
+        assert!(band_0[1].is_nan());
+        assert_eq!(band_0[2], 1.0);
+        assert!(band_0[3].is_nan());
+
+        assert_eq!(band_1.len(), 4);
+        assert!(band_1[0].is_nan());
+        assert_eq!(band_1[1], 1.0);
+        assert!(band_1[2].is_nan());
+        assert_eq!(band_1[3], 1.0);
+    }
+
+    #[test]
+    fn materialize_chunk_skips_hard_barrier_mask_when_none_configured() {
+        let tmp = samples::multi_variable_random(1, 4, 4, 1, 2, 2, &["A"]);
+        let source: ReadableListableStorage =
+            Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
+        let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
+        let swap_tmp = TempDir::new().expect("could not create swap dir");
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false, false)
+            .expect("failed to initialize swap dataset");
+        let cost_function = CostFunction::from_json(
+            r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
+        )
+        .expect("failed to construct cost function");
+        let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+
+        assert!(!writer.has_hard_barriers());
+
+        writer.materialize_chunk(0, 0, 0);
+
+        assert!(Array::open(swap.clone(), "/hard_barrier_mask").is_err());
+        assert!(Array::open(swap.clone(), "/cost_invariant").is_err());
+        assert!(Array::open(swap.clone(), "/soft_barrier_mask_retry_0").is_err());
+        assert_eq!(read_subset_values::<f32>(&swap, "/cost", &subset).len(), 4,);
+    }
+
+    #[test]
     fn new_initializes_all_chunks_as_not_materialized() {
         let tmp = samples::multi_variable_random(1, 8, 8, 1, 4, 4, &["A"]);
         let source: ReadableListableStorage =
             Arc::new(FilesystemStore::new(tmp.path()).expect("could not open test store"));
         let layout = inspect_source_layout(&source, 1).expect("source layout inspection failed");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false, false)
             .expect("failed to initialize swap dataset");
         let cost_function = CostFunction::from_json(
             r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
@@ -700,7 +857,7 @@ mod tests {
         let array =
             zarrs::array::Array::open(readable_source, "/A").expect("failed to open source array");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false, false)
             .expect("failed to initialize swap dataset");
         let cost_function = CostFunction::from_json(
             r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"A"}]}}}"#,
@@ -782,7 +939,7 @@ mod tests {
         let array = zarrs::array::Array::open(readable_source, "/overhead_cost")
             .expect("failed to open source array");
         let swap_tmp = TempDir::new().expect("could not create swap dir");
-        let swap = initialize_swap(swap_tmp.path(), &layout, 0)
+        let swap = initialize_swap(swap_tmp.path(), &layout, 0, false, false, false)
             .expect("failed to initialize swap dataset");
         let writer = DerivedDataWriter::new(&layout, source, swap.clone(), cost_function);
 

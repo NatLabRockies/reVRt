@@ -142,6 +142,13 @@ impl CostFunction {
         groups.into_iter().collect()
     }
 
+    /// Whether any configured cost layers contribute invariant costs.
+    pub(crate) fn has_invariant_layers(&self) -> bool {
+        self.cost_layers
+            .iter()
+            .any(|layer| layer.is_invariant.unwrap_or(false))
+    }
+
     /// Calculate the cost from a given collection of input features
     ///
     /// Applies the cost function to a collection of input features, which
