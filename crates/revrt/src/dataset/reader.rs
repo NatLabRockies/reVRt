@@ -200,7 +200,8 @@ impl DerivedDataReader {
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<RoutingOptionNeighborhood> {
-        crate::profiling::scope("dataset::DerivedDataReader::get_3x3_neighborhood_all_options");
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::get_3x3_neighborhood_all_options");
         let &ArrayIndex { i: ci, j: cj, .. } = index;
 
         trace!(
@@ -350,7 +351,8 @@ impl DerivedDataReader {
         retry_state: usize,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<ArrayIndex> {
-        crate::profiling::scope("dataset::DerivedDataReader::get_3x3_soft_barrier_cells");
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::get_3x3_soft_barrier_cells");
         if retry_state >= self.cumulative_soft_barrier_caches.len() {
             return Vec::new();
         }
@@ -389,7 +391,8 @@ impl DerivedDataReader {
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Option<(f32, f32)> {
-        crate::profiling::scope("dataset::DerivedDataReader::get_cell_cost_components");
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::get_cell_cost_components");
         let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
             u64::from(index.option)..u64::from(index.option) + 1,
             index.i..index.i + 1,
@@ -442,7 +445,8 @@ impl DerivedDataReader {
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Option<f32> {
-        crate::profiling::scope("dataset::DerivedDataReader::get_driver_multiplier");
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::get_driver_multiplier");
         let Some(driver_multiplier_cache) = &self.driver_multiplier_cache else {
             return Some(1.0);
         };

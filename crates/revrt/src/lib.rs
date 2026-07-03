@@ -63,7 +63,7 @@ pub fn resolve_with_routing_options<P: AsRef<std::path::Path>>(
     swap_fp: Option<std::path::PathBuf>,
     mem_limit_bytes: u64,
 ) -> Result<(RevrtRoutingSolutions, Vec<String>)> {
-    performance::profiling::scope("lib::resolve_with_routing_options");
+    let _profiling_scope = performance::profiling::scope("lib::resolve_with_routing_options");
     let cost_function = CostFunction::from_json(cost_function)?;
     let routing_options = cost_function.routing_options.clone();
     tracing::trace!("Cost function: {:?}", cost_function);

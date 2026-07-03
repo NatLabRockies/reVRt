@@ -123,7 +123,7 @@ impl Scenario {
         position: &ArrayIndex,
         dropped_soft_groups: usize,
     ) -> Vec<(ArrayIndex, u64)> {
-        crate::profiling::scope("routing::Scenario::successors_for_attempt");
+        let _profiling_scope = crate::profiling::scope("routing::Scenario::successors_for_attempt");
         let soft_barrier_cells: HashSet<_> = self
             .dataset
             .get_3x3_soft_barrier_cells(position, dropped_soft_groups)

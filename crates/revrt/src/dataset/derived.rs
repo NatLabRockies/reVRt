@@ -104,7 +104,8 @@ impl DerivedDataWriter {
     /// `ci`: Chunk row index in the swap dataset.
     /// `cj`: Chunk column index in the swap dataset.
     fn materialize_chunk(&self, cb: u64, ci: u64, cj: u64) {
-        crate::profiling::scope("dataset::DerivedDataWriter::materialize_chunk");
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataWriter::materialize_chunk");
         trace!("Creating a LazySubset for ({}, {}, {})", cb, ci, cj);
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
@@ -342,7 +343,8 @@ impl DerivedDataMaterializer for DerivedDataWriter {
         array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
         subset: &zarrs::array_subset::ArraySubset,
     ) {
-        crate::profiling::scope("dataset::DerivedDataWriter::ensure_derived_data_for_subset");
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataWriter::ensure_derived_data_for_subset");
         let chunks = &array.chunks_in_array_subset(subset).unwrap().unwrap();
         trace!("Derived-data chunks: {:?}", chunks);
         trace!(
