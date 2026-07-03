@@ -379,6 +379,13 @@ If you want to run performance profiling locally, you can use this command:
 
     ./support/run_rust_route_profile.sh --output-dir rust_route_profile --rows 5000 --cols 5000 --chunk-size 100 --distance 500 --algorithm bidirectional_long_range_dijkstra --mem-limit-bytes 100000000 --repeats 1
 
+This writes a Markdown summary together with a sampled CPU flamegraph and
+stack summary text file into the output directory.
+It also includes an inclusive wall-clock hotspot table from the
+in-process scoped profiler.
+For very short runs, increase ``--repeats`` or the synthetic case size so the
+sampling profiler has enough data to highlight hotspots clearly.
+
 
 If you want to run the benchmarks locally, you can use this command:
 
