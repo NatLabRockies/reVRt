@@ -6,7 +6,7 @@ use std::time::Instant;
 use clap::Parser;
 use ndarray::Array3;
 use pprof::ProfilerGuardBuilder;
-use revrt::{ArrayIndex, profiling, resolve_with_routing_options};
+use revrt::{ArrayIndex, profiling, resolve_parallel_with_routing_options};
 use zarrs::array::{ArrayBuilder, DataType, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for _ in 0..cli.repeats {
         let started = Instant::now();
-        let (solutions, _routing_options) = resolve_with_routing_options(
+        let (solutions, _routing_options) = resolve_parallel_with_routing_options(
             &dataset_dir,
             DEFAULT_COST_FUNCTION,
             &cli.algorithm,

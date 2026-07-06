@@ -81,6 +81,39 @@ pub fn resolve_with_routing_options<P: AsRef<std::path::Path>>(
     Ok((result, routing_options))
 }
 
+#[allow(missing_docs)]
+pub fn resolve_parallel_with_routing_options<P: AsRef<std::path::Path>>(
+    store_path: P,
+    cost_function: &str,
+    algorithm: &str,
+    start: &[ArrayIndex],
+    end: Vec<ArrayIndex>,
+    swap_fp: Option<std::path::PathBuf>,
+    mem_limit_bytes: u64,
+) -> Result<(RevrtRoutingSolutions, Vec<String>)> {
+    let _profiling_scope =
+        performance::profiling::scope("lib::resolve_parallel_with_routing_options");
+    let (tx, rx) = mpsc::channel();
+    let route_definitions = vec![RouteDefinition {
+        route_id: 0,
+        start_inds: start.to_vec(),
+        end_inds: end.into_iter().collect(),
+    }];
+    let routing_options = resolve_generator_with_routing_options(
+        store_path,
+        cost_function,
+        route_definitions,
+        tx,
+        swap_fp,
+        mem_limit_bytes,
+        algorithm,
+    )?;
+    let (_route_id, solutions) = rx
+        .recv()
+        .map_err(|error| error::Error::Undefined(error.to_string()))?;
+    Ok((solutions, routing_options))
+}
+
 pub(crate) fn resolve_generator_with_routing_options<P, I>(
     store_path: P,
     cost_function: &str,
