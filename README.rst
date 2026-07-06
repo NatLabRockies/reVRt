@@ -52,6 +52,9 @@ The quickest way to install reVRt for users and analysts is from PyPi:
 
     pip install nlr-revrt
 
+This is highly recommended as you will get the release build of the Rust code,
+which is significantly faster than the debug build that is installed when building from source.
+
 If you would like to install and run reVRt from source, we recommend using `pixi <https://pixi.sh/latest/>`_:
 
 .. code-block:: bash

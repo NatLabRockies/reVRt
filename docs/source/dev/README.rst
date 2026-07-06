@@ -64,17 +64,11 @@ We keep a version-controlled ``pixi.lock`` in the repository to allow locking wi
 the full requirements tree so we can reproduce behaviors and bugs and easily compare
 results.
 
-You can use the ``pdev`` feature in ``pixi`` to get all necessary python development tools:
+You can use the ``dev`` feature in ``pixi`` to get all necessary python development tools:
 
 .. code-block:: shell
 
-    pixi shell -e pdev
-
-To work on the Rust-based CLI, you can use the ``rdev`` feature instead:
-
-.. code-block:: shell
-
-    pixi shell -e rdev
+    pixi shell -e dev
 
 You are welcome to use a different environment manager (e.g. ``conda``, ``mamba``, etc),
 but we make no promises to provide support on environment-related issues/bugs in this case.
