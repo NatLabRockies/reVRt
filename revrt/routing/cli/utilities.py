@@ -82,10 +82,12 @@ def routing_layer_mover(
             )
             return
 
+        out_dir = Path(out_fp).parent
+        logger.info("Copying routing layers file to %s", out_dir)
         polarity, voltage = _extract_batch_group(route_attrs)
         saved_fp = _persist_routing_layer_output(
             src_fp=cost_fpath,
-            out_dir=Path(out_fp).parent,
+            out_dir=out_dir,
             tmp_routing_layer_fp=temp_zarr_file,
             job_name=job_name,
             polarity=polarity,
