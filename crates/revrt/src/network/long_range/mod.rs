@@ -3,7 +3,7 @@ pub(super) mod utilities;
 
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
-use tracing::debug;
+use tracing::{debug, trace};
 
 use super::cost::NodeCost;
 use crate::ArrayIndex;
@@ -252,7 +252,7 @@ impl FrontierOnlySearchState {
         }
 
         if self.finalized_bits.contains(slot) {
-            debug!(
+            trace!(
                 "Looking for known cost in swap! Buffer contains slot {}: {}",
                 slot,
                 self.swap.slot_in_buffer(slot)
