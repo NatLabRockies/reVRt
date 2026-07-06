@@ -205,14 +205,22 @@ def _persist_routing_layer_output(
             tmp_routing_layer_fp, engine="zarr", consolidated=False
         ) as tmp_ds,
     ):
-        coord_axes = [
-            key
-            for key in ("band", "y", "x", "latitude", "longitude")
-            if key in src_ds
-        ]
-        fixed_ds = tmp_ds.assign_coords(
-            {key: src_ds[key] for key in coord_axes}
-        )
+        compatible_coords = {}
+        for key in ("band", "y", "x", "latitude", "longitude"):
+            if key not in src_ds:
+                continue
+
+            source_coord = src_ds[key]
+            if any(
+                dim not in tmp_ds.sizes
+                or tmp_ds.sizes[dim] != source_coord.sizes[dim]
+                for dim in source_coord.dims
+            ):
+                continue
+
+            compatible_coords[key] = source_coord
+
+        fixed_ds = tmp_ds.assign_coords(compatible_coords)
 
         if src_ds.rio.crs is not None:
             fixed_ds = fixed_ds.rio.write_crs(src_ds.rio.crs)
