@@ -32,8 +32,8 @@ pub struct ArrayIndex {
 
 impl ArrayIndex {
     #[allow(missing_docs)]
-    pub fn new(i: u64, j: u64) -> Self {
-        Self { i, j, option: 0 }
+    pub fn new(i: u64, j: u64, option: u32) -> Self {
+        Self { i, j, option }
     }
 
     pub fn new_ij(i: u64, j: u64) -> Self {
