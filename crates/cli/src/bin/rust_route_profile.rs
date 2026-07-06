@@ -279,6 +279,17 @@ fn write_report(
         inputs.stack_report_path.display()
     ));
     report.push_str("\n");
+    report.push_str("## Run Times\n\n");
+    report.push_str("| Run | Seconds |\n");
+    report.push_str("|---|---:|\n");
+    for (index, elapsed) in inputs.elapsed_runs.iter().enumerate() {
+        report.push_str(&format!(
+            "| {} | {:.3} |\n",
+            index + 1,
+            elapsed.as_secs_f64()
+        ));
+    }
+    report.push_str("\n");
     report.push_str("## Hot Functions\n\n");
     if inputs.records.is_empty() {
         report.push_str(
@@ -305,16 +316,6 @@ fn write_report(
             ));
         }
         report.push_str("\n");
-    }
-    report.push_str("## Run Times\n\n");
-    report.push_str("| Run | Seconds |\n");
-    report.push_str("|---|---:|\n");
-    for (index, elapsed) in inputs.elapsed_runs.iter().enumerate() {
-        report.push_str(&format!(
-            "| {} | {:.3} |\n",
-            index + 1,
-            elapsed.as_secs_f64()
-        ));
     }
 
     fs::write(report_path, report)?;
