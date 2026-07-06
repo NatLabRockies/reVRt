@@ -1,12 +1,15 @@
 use std::fs;
+use std::fs::OpenOptions;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use clap::Parser;
+use clap::{ArgAction, Parser};
 use ndarray::Array3;
 use pprof::ProfilerGuardBuilder;
 use revrt::{ArrayIndex, profiling, resolve_parallel_with_routing_options};
+use tracing_subscriber::fmt::writer::BoxMakeWriter;
 use zarrs::array::{ArrayBuilder, DataType, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
@@ -22,6 +25,9 @@ const PPROF_BLOCKLIST: [&str; 4] = ["libc", "libgcc", "pthread", "vdso"];
 struct Cli {
     #[arg(long, default_value = ".scratch/rust_route_profile")]
     output_dir: PathBuf,
+
+    #[arg(short, long, action = ArgAction::Count, default_value_t = 2)]
+    verbose: u8,
 
     #[arg(long, default_value_t = 5_000)]
     rows: u64,
@@ -48,16 +54,40 @@ struct Cli {
     cost_value: f32,
 }
 
+struct SharedFileWriter {
+    file: Arc<Mutex<fs::File>>,
+}
+
+impl Write for SharedFileWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let mut file = self
+            .file
+            .lock()
+            .map_err(|err| io::Error::other(err.to_string()))?;
+        file.write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        let mut file = self
+            .file
+            .lock()
+            .map_err(|err| io::Error::other(err.to_string()))?;
+        file.flush()
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     validate_inputs(&cli)?;
 
     let dataset_dir = cli.output_dir.join("dataset.zarr");
     let report_path = cli.output_dir.join("ROUTING_RUST_PROFILE_REPORT.md");
+    let log_path = cli.output_dir.join("routing_profile.log");
     let flamegraph_path = cli.output_dir.join("routing_profile_flamegraph.svg");
     let stack_report_path = cli.output_dir.join("routing_profile_stacks.txt");
 
     fs::create_dir_all(&cli.output_dir)?;
+    init_logging(cli.verbose, &log_path)?;
     create_uniform_cost_dataset(
         &dataset_dir,
         cli.rows,
@@ -109,15 +139,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         solution_count: last_solution_count,
         elapsed_runs: &elapsed_runs,
         records: &profile_snapshot,
+        log_path: &log_path,
         flamegraph_path: &flamegraph_path,
         stack_report_path: &stack_report_path,
     };
     write_report(&report_path, &report_inputs)?;
 
     println!("Dataset: {}", dataset_dir.display());
+    println!("Log: {}", log_path.display());
     println!("Flamegraph: {}", flamegraph_path.display());
     println!("Stacks: {}", stack_report_path.display());
     println!("Report: {}", report_path.display());
+
+    Ok(())
+}
+
+fn init_logging(verbose: u8, log_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let tracing_level = match verbose {
+        0 => tracing::Level::WARN,
+        1 => tracing::Level::INFO,
+        2 => tracing::Level::DEBUG,
+        _ => tracing::Level::TRACE,
+    };
+
+    let file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(log_path)?;
+    let shared_file = Arc::new(Mutex::new(file));
+    let writer = {
+        let shared_file = Arc::clone(&shared_file);
+        BoxMakeWriter::new(move || SharedFileWriter {
+            file: Arc::clone(&shared_file),
+        })
+    };
+
+    tracing_subscriber::fmt()
+        .with_max_level(tracing_level)
+        .with_thread_ids(true)
+        .with_ansi(false)
+        .with_writer(writer)
+        .try_init()
+        .map_err(|err| io::Error::other(err.to_string()))?;
 
     Ok(())
 }
@@ -208,6 +272,7 @@ struct ReportInputs<'a> {
     solution_count: usize,
     elapsed_runs: &'a [std::time::Duration],
     records: &'a [profiling::ProfileRecord],
+    log_path: &'a Path,
     flamegraph_path: &'a Path,
     stack_report_path: &'a Path,
 }
@@ -263,6 +328,7 @@ fn write_report(
         "- PProf sample frequency: `{}` Hz\n",
         PPROF_SAMPLE_FREQUENCY_HZ
     ));
+    report.push_str(&format!("- Tracing log: `{}`\n", inputs.log_path.display()));
     report.push_str("\n## PProf Outputs\n\n");
     report.push_str(
         "The flamegraph and stack summary aggregate sampled CPU stacks across all profiled runs. Use the flamegraph to find inclusive hotspots visually and the stack summary text file to inspect sampled call stacks directly.\n\n",
