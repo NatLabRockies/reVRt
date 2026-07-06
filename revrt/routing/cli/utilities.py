@@ -82,19 +82,16 @@ def routing_layer_mover(
             )
             return
 
-        out_dir = Path(out_fp).parent
-        logger.info("Copying routing layers file to %s", out_dir)
         polarity, voltage = _extract_batch_group(route_attrs)
-        saved_fp = _persist_routing_layer_output(
+        _persist_routing_layer_output(
             src_fp=cost_fpath,
-            out_dir=out_dir,
+            out_dir=Path(out_fp).parent,
             tmp_routing_layer_fp=temp_zarr_file,
             job_name=job_name,
             polarity=polarity,
             voltage=voltage,
             routing_options=routing_options,
         )
-        logger.info("Saved routing layer to %s", saved_fp)
 
 
 def _make_scratch_dir():
@@ -200,6 +197,7 @@ def _persist_routing_layer_output(
         f"h-{layer_hash}"
     )
     out_fp = _unique_output_path(extra_outputs / f"{base_name}.zarr")
+    logger.info("Copying routing layers to %s", out_fp)
 
     with (
         xr.open_dataset(src_fp, engine="zarr", consolidated=False) as src_ds,
@@ -237,7 +235,7 @@ def _persist_routing_layer_output(
             consolidated=False,
         )
 
-    return out_fp
+    logger.info("Saved routing layers to %s", out_fp)
 
 
 def _routing_layer_zarr_encoding(ds):
