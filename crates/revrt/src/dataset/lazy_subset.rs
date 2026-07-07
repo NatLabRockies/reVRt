@@ -26,7 +26,7 @@ use std::sync::Arc;
 
 use tokio::sync::RwLock;
 use tracing::trace;
-use zarrs::array::{Array, ArraySubset, DataType, ElementOwned};
+use zarrs::array::{Array, ArraySubset, ElementOwned};
 use zarrs::array::data_type;
 use zarrs::storage::AsyncReadableListableStorage;
 use zarrs::storage::{ReadableListableStorage, ReadableListableStorageTraits};

@@ -9,7 +9,6 @@ use std::path::Path;
 use tracing::{debug, trace};
 use zarrs::array::ChunkGrid;
 use zarrs::array::chunk_grid::regular::RegularChunkGrid;
-use zarrs::array::data_type;
 use zarrs::storage::{
     ListableStorageTraits, ReadableListableStorage, ReadableWritableListableStorage,
 };
@@ -350,7 +349,8 @@ mod tests {
     use std::sync::Arc;
 
     use tempfile::TempDir;
-    use zarrs::array::{ArrayBuilder, DataType, FillValue};
+    use zarrs::array::data_type;
+    use zarrs::array::{ArrayBuilder, FillValue};
     use zarrs::filesystem::FilesystemStore;
     use zarrs::group::GroupBuilder;
 

@@ -322,7 +322,7 @@ mod tests {
     use std::f32::consts::SQRT_2;
     use std::sync::Arc;
     use test_case::test_case;
-    use zarrs::array::{ArrayBuilder, DataType, FillValue};
+    use zarrs::array::{ArrayBuilder, FillValue};
     use zarrs::array::data_type;
     use zarrs::filesystem::FilesystemStore;
     use zarrs::group::GroupBuilder;
