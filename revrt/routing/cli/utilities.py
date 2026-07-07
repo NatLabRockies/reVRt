@@ -83,7 +83,7 @@ def routing_layer_mover(
             return
 
         polarity, voltage = _extract_batch_group(route_attrs)
-        saved_fp = _persist_routing_layer_output(
+        _persist_routing_layer_output(
             src_fp=cost_fpath,
             out_dir=Path(out_fp).parent,
             tmp_routing_layer_fp=temp_zarr_file,
@@ -92,7 +92,6 @@ def routing_layer_mover(
             voltage=voltage,
             routing_options=routing_options,
         )
-        logger.info("Saved routing layer to %s", saved_fp)
 
 
 def _make_scratch_dir():
@@ -198,6 +197,7 @@ def _persist_routing_layer_output(
         f"h-{layer_hash}"
     )
     out_fp = _unique_output_path(extra_outputs / f"{base_name}.zarr")
+    logger.info("Copying routing layers to %s", out_fp)
 
     with (
         xr.open_dataset(src_fp, engine="zarr", consolidated=False) as src_ds,
@@ -205,14 +205,22 @@ def _persist_routing_layer_output(
             tmp_routing_layer_fp, engine="zarr", consolidated=False
         ) as tmp_ds,
     ):
-        coord_axes = [
-            key
-            for key in ("band", "y", "x", "latitude", "longitude")
-            if key in src_ds
-        ]
-        fixed_ds = tmp_ds.assign_coords(
-            {key: src_ds[key] for key in coord_axes}
-        )
+        compatible_coords = {}
+        for key in ("band", "y", "x", "latitude", "longitude"):
+            if key not in src_ds:
+                continue
+
+            source_coord = src_ds[key]
+            if any(
+                dim not in tmp_ds.sizes
+                or tmp_ds.sizes[dim] != source_coord.sizes[dim]
+                for dim in source_coord.dims
+            ):
+                continue
+
+            compatible_coords[key] = source_coord
+
+        fixed_ds = tmp_ds.assign_coords(compatible_coords)
 
         if src_ds.rio.crs is not None:
             fixed_ds = fixed_ds.rio.write_crs(src_ds.rio.crs)
@@ -227,7 +235,7 @@ def _persist_routing_layer_output(
             consolidated=False,
         )
 
-    return out_fp
+    logger.info("Saved routing layers to %s", out_fp)
 
 
 def _routing_layer_zarr_encoding(ds):

@@ -164,6 +164,7 @@ impl CostFunction {
     /// A 2D array containing the cost for the subset covered by the input
     /// features.
     pub(crate) fn compute(&self, features: &mut LazySubset<f32>, is_invariant: bool) -> CostArray {
+        let _profiling_scope = crate::profiling::scope("cost::CostFunction::compute");
         debug!(
             "Calculating (is_invariant={}) cost for ({})",
             is_invariant,

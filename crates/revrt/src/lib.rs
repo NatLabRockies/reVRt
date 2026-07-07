@@ -9,6 +9,7 @@ mod error;
 #[allow(non_camel_case_types)]
 mod ffi;
 mod network;
+pub mod performance;
 mod routing;
 mod solution;
 
@@ -17,6 +18,7 @@ use std::sync::mpsc;
 pub use benchmark::bench_minimalist;
 use cost::CostFunction;
 use error::Result;
+pub use performance::profiling;
 use routing::{ParRouting, RouteDefinition, Routing};
 use solution::{RevrtRoutingSolutions, Solution};
 
@@ -30,8 +32,8 @@ pub struct ArrayIndex {
 
 impl ArrayIndex {
     #[allow(missing_docs)]
-    pub fn new(i: u64, j: u64) -> Self {
-        Self { i, j, option: 0 }
+    pub fn new(i: u64, j: u64, option: u32) -> Self {
+        Self { i, j, option }
     }
 
     pub fn new_ij(i: u64, j: u64) -> Self {
@@ -61,6 +63,7 @@ pub fn resolve_with_routing_options<P: AsRef<std::path::Path>>(
     swap_fp: Option<std::path::PathBuf>,
     mem_limit_bytes: u64,
 ) -> Result<(RevrtRoutingSolutions, Vec<String>)> {
+    let _profiling_scope = performance::profiling::scope("lib::resolve_with_routing_options");
     let cost_function = CostFunction::from_json(cost_function)?;
     let routing_options = cost_function.routing_options.clone();
     tracing::trace!("Cost function: {:?}", cost_function);
@@ -76,6 +79,39 @@ pub fn resolve_with_routing_options<P: AsRef<std::path::Path>>(
     };
     let result = simulation.compute(start, end).collect();
     Ok((result, routing_options))
+}
+
+#[allow(missing_docs)]
+pub fn resolve_parallel_with_routing_options<P: AsRef<std::path::Path>>(
+    store_path: P,
+    cost_function: &str,
+    algorithm: &str,
+    start: &[ArrayIndex],
+    end: Vec<ArrayIndex>,
+    swap_fp: Option<std::path::PathBuf>,
+    mem_limit_bytes: u64,
+) -> Result<(RevrtRoutingSolutions, Vec<String>)> {
+    let _profiling_scope =
+        performance::profiling::scope("lib::resolve_parallel_with_routing_options");
+    let (tx, rx) = mpsc::channel();
+    let route_definitions = vec![RouteDefinition {
+        route_id: 0,
+        start_inds: start.to_vec(),
+        end_inds: end.into_iter().collect(),
+    }];
+    let routing_options = resolve_generator_with_routing_options(
+        store_path,
+        cost_function,
+        route_definitions,
+        tx,
+        swap_fp,
+        mem_limit_bytes,
+        algorithm,
+    )?;
+    let (_route_id, solutions) = rx
+        .recv()
+        .map_err(|error| error::Error::Undefined(error.to_string()))?;
+    Ok((solutions, routing_options))
 }
 
 pub(crate) fn resolve_generator_with_routing_options<P, I>(

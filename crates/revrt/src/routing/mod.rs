@@ -34,6 +34,7 @@ impl Routing {
         start: &[ArrayIndex],
         end: Vec<ArrayIndex>,
     ) -> impl Iterator<Item = Solution<ArrayIndex, f32>> {
+        let _profiling_scope = crate::profiling::scope("routing::Routing::compute");
         debug!("Starting compute with {} start points", start.len());
         compute_route_attempt_result(&self.scenario, &self.algorithm, start, &end).into_iter()
     }
@@ -174,6 +175,7 @@ fn compute_route_attempt_result(
     start: &[ArrayIndex],
     end: &[ArrayIndex],
 ) -> RevrtRoutingSolutions {
+    let _profiling_scope = crate::profiling::scope("routing::compute_route_attempt_result");
     start
         .into_par_iter()
         .filter_map(|start_point| compute_solution_for_start(scenario, algorithm, start_point, end))
@@ -186,6 +188,7 @@ fn compute_solution_for_start(
     start_point: &ArrayIndex,
     end: &[ArrayIndex],
 ) -> Option<Solution<ArrayIndex, f32>> {
+    let _profiling_scope = crate::profiling::scope("routing::compute_solution_for_start");
     let grid_shape = scenario.grid_shape();
 
     // if end_inds.last() == Some(&ArrayIndex { i: 2, j: 6 }) {

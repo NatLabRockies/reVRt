@@ -285,6 +285,49 @@ def test_compute_lcp_routes_saves_routing_layer(sample_layered_data, tmp_path):
         _assert_shared_compressor(ds["longitude"].encoding["compressors"][0])
 
 
+def test_compute_lcp_routes_saves_multi_option_routing_layer(
+    sample_layered_data, tmp_path
+):
+    """Saved routing layers should keep routing-option band dimensions"""
+
+    routes = _build_route_table(
+        sample_layered_data,
+        rows_cols=[((1, 1), (2, 3))],
+    )
+    route_table_fp = tmp_path / "route_table_multi_layer.csv"
+    routes.to_csv(route_table_fp, index=False)
+
+    out_dir = tmp_path / "multi_option_layer_outputs"
+    result_fp = compute_lcp_routes(
+        cost_fpath=sample_layered_data,
+        route_table_fpath=route_table_fp,
+        out_dir=out_dir,
+        job_name="multi_option_layer",
+        routing_options={
+            "overhead": {"cost_layers": [{"layer_name": "layer_1"}]},
+            "underground": {"cost_layers": [{"layer_name": "layer_2"}]},
+        },
+        drivers={"default": {"overhead": 1, "underground": 10}},
+        transition_costs={"default": 0},
+        save_routing_layer=True,
+        _split_params=(0, 1),
+    )
+
+    assert Path(result_fp).exists()
+
+    extra_outputs = out_dir / "extra_outputs"
+    saved_layers = sorted(extra_outputs.glob("*.zarr"))
+    assert saved_layers
+
+    with xr.open_dataset(
+        saved_layers[0], engine="zarr", consolidated=False
+    ) as ds:
+        assert ds.sizes["band"] == 2
+        assert "cost" in ds
+        assert "latitude" in ds.coords
+        assert "longitude" in ds.coords
+
+
 def test_compute_lcp_routes_with_routing_options_writes_companion_gpkg(
     sample_layered_data, tmp_path
 ):

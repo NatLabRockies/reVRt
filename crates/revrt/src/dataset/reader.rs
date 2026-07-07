@@ -200,6 +200,8 @@ impl DerivedDataReader {
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<RoutingOptionNeighborhood> {
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::get_3x3_neighborhood_all_options");
         let &ArrayIndex { i: ci, j: cj, .. } = index;
 
         trace!(
@@ -213,49 +215,154 @@ impl DerivedDataReader {
 
         let (i_range, j_range, subset) = self.neighborhood_subset_all_options(index);
         trace!("Cost subset: {:?}", subset);
-        data_materializer.ensure_derived_data_for_subset(&cost_array, &subset);
+        self.ensure_neighborhood_all_option_data(&cost_array, &subset, data_materializer);
 
-        let primary_costs: Vec<f32> = self
-            .cost_cache
-            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
-            .unwrap();
-        let invariant_costs: Vec<f32> = self
-            .cost_invariant_cache
+        let primary_costs = self.retrieve_neighborhood_primary_costs(&subset);
+        let invariant_costs =
+            self.retrieve_neighborhood_invariant_costs(&subset, primary_costs.len());
+        let driver_multipliers =
+            self.retrieve_neighborhood_driver_multipliers(&subset, primary_costs.len());
+        let hard_barrier_values = self.retrieve_neighborhood_hard_barriers(
+            &subset,
+            primary_costs.len(),
+            data_materializer,
+        );
+
+        let ij_coordinates = Self::rebuild_neighborhood_coordinates(&i_range, &j_range);
+        let cost_to_neighbors = self.rebuild_option_neighborhoods(
+            index,
+            &ij_coordinates,
+            &primary_costs,
+            &invariant_costs,
+            &driver_multipliers,
+            &hard_barrier_values,
+        );
+
+        trace!(
+            "Center point: {:?} Neighbors {:?}",
+            index, cost_to_neighbors
+        );
+
+        cost_to_neighbors
+    }
+
+    /// Ensure derived data exists for an all-option neighborhood read.
+    fn ensure_neighborhood_all_option_data(
+        &self,
+        cost_array: &zarrs::array::Array<dyn ReadableStorageTraits>,
+        subset: &zarrs::array_subset::ArraySubset,
+        data_materializer: &impl DerivedDataMaterializer,
+    ) {
+        let _profiling_scope = crate::profiling::scope(
+            "dataset::DerivedDataReader::ensure_neighborhood_all_option_data",
+        );
+        data_materializer.ensure_derived_data_for_subset(cost_array, subset);
+    }
+
+    /// Read primary costs for an all-option neighborhood subset.
+    fn retrieve_neighborhood_primary_costs(
+        &self,
+        subset: &zarrs::array_subset::ArraySubset,
+    ) -> Vec<f32> {
+        let _profiling_scope = crate::profiling::scope(
+            "dataset::DerivedDataReader::retrieve_neighborhood_primary_costs",
+        );
+        self.cost_cache
+            .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
+            .unwrap()
+    }
+
+    /// Read invariant costs for an all-option neighborhood subset.
+    fn retrieve_neighborhood_invariant_costs(
+        &self,
+        subset: &zarrs::array_subset::ArraySubset,
+        len: usize,
+    ) -> Vec<f32> {
+        let _profiling_scope = crate::profiling::scope(
+            "dataset::DerivedDataReader::retrieve_neighborhood_invariant_costs",
+        );
+        self.cost_invariant_cache
             .as_ref()
             .map(|cache| {
                 cache
-                    .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+                    .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
                     .unwrap()
             })
-            .unwrap_or_else(|| std::iter::repeat_n(0.0, primary_costs.len()).collect());
-        let driver_multipliers: Vec<f32> = if let Some(cache) = &self.driver_multiplier_cache {
+            .unwrap_or_else(|| std::iter::repeat_n(0.0, len).collect())
+    }
+
+    /// Read driver multipliers for an all-option neighborhood subset.
+    fn retrieve_neighborhood_driver_multipliers(
+        &self,
+        subset: &zarrs::array_subset::ArraySubset,
+        len: usize,
+    ) -> Vec<f32> {
+        let _profiling_scope = crate::profiling::scope(
+            "dataset::DerivedDataReader::retrieve_neighborhood_driver_multipliers",
+        );
+        if let Some(cache) = &self.driver_multiplier_cache {
             cache
-                .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+                .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
                 .unwrap()
         } else {
-            std::iter::repeat_n(1.0, primary_costs.len()).collect()
-        };
-        let hard_barrier_values: Vec<bool> = if data_materializer.has_hard_barriers() {
+            std::iter::repeat_n(1.0, len).collect()
+        }
+    }
+
+    /// Read hard barrier flags for an all-option neighborhood subset.
+    fn retrieve_neighborhood_hard_barriers(
+        &self,
+        subset: &zarrs::array_subset::ArraySubset,
+        len: usize,
+        data_materializer: &impl DerivedDataMaterializer,
+    ) -> Vec<bool> {
+        let _profiling_scope = crate::profiling::scope(
+            "dataset::DerivedDataReader::retrieve_neighborhood_hard_barriers",
+        );
+        if data_materializer.has_hard_barriers() {
             self.hard_barrier_cache
                 .as_ref()
                 .expect("hard barrier cache missing for materializer with hard barriers")
-                .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
+                .retrieve_array_subset_elements::<bool>(subset, &CodecOptions::default())
                 .unwrap()
         } else {
-            std::iter::repeat_n(false, primary_costs.len()).collect()
-        };
+            std::iter::repeat_n(false, len).collect()
+        }
+    }
 
-        let ij_coordinates = i_range
+    /// Rebuild coordinates for a clipped 3x3 neighborhood subset.
+    fn rebuild_neighborhood_coordinates(
+        i_range: &std::ops::Range<u64>,
+        j_range: &std::ops::Range<u64>,
+    ) -> Vec<(u64, u64)> {
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::rebuild_neighborhood_coordinates");
+        i_range
             .clone()
             .flat_map(|row| iter::repeat(row).zip(j_range.clone()))
-            .collect::<Vec<(u64, u64)>>();
+            .collect()
+    }
+
+    /// Rebuild per-option neighborhoods from cached subset arrays.
+    fn rebuild_option_neighborhoods(
+        &self,
+        index: &ArrayIndex,
+        ij_coordinates: &[(u64, u64)],
+        primary_costs: &[f32],
+        invariant_costs: &[f32],
+        driver_multipliers: &[f32],
+        hard_barrier_values: &[bool],
+    ) -> Vec<RoutingOptionNeighborhood> {
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::rebuild_option_neighborhoods");
+        let &ArrayIndex { i: ci, j: cj, .. } = index;
         let per_option_len = ij_coordinates.len();
         let center_index = ij_coordinates
             .iter()
             .position(|(row, col)| *row == ci && *col == cj)
             .unwrap();
 
-        let cost_to_neighbors = (0..self.grid_noptions as usize)
+        (0..self.grid_noptions as usize)
             .map(|option_idx| {
                 let offset = option_idx * per_option_len;
                 let primary_slice = &primary_costs[offset..offset + per_option_len];
@@ -317,14 +424,7 @@ impl DerivedDataReader {
                     points,
                 }
             })
-            .collect();
-
-        trace!(
-            "Center point: {:?} Neighbors {:?}",
-            index, cost_to_neighbors
-        );
-
-        cost_to_neighbors
+            .collect()
     }
 
     /// Return soft barrier cells in the 3x3 neighborhood for a retry state.
@@ -349,6 +449,8 @@ impl DerivedDataReader {
         retry_state: usize,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<ArrayIndex> {
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::get_3x3_soft_barrier_cells");
         if retry_state >= self.cumulative_soft_barrier_caches.len() {
             return Vec::new();
         }
@@ -387,6 +489,8 @@ impl DerivedDataReader {
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Option<(f32, f32)> {
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::get_cell_cost_components");
         let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
             u64::from(index.option)..u64::from(index.option) + 1,
             index.i..index.i + 1,
@@ -439,6 +543,8 @@ impl DerivedDataReader {
         index: &ArrayIndex,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Option<f32> {
+        let _profiling_scope =
+            crate::profiling::scope("dataset::DerivedDataReader::get_driver_multiplier");
         let Some(driver_multiplier_cache) = &self.driver_multiplier_cache else {
             return Some(1.0);
         };

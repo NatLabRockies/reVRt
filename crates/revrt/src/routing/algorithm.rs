@@ -137,6 +137,7 @@ impl Algorithm {
         // Temporary solution while we can't compare f32
         u64: From<C>,
     {
+        let _profiling_scope = crate::profiling::scope("routing::Algorithm::compute");
         let ans = match *self {
             Self::Astar => {
                 let min_cost = std::cell::Cell::new(None);
