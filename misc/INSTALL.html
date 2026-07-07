@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installing reVRt &#8212; reVRt 0.9.0 documentation</title>
+    <title>Installing reVRt &#8212; reVRt 0.9.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -50,7 +50,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.9.0" />
+  <meta name="docsearch:version" content="0.9.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.9.0 documentation</p>
+    <p class="title logo__title">reVRt 0.9.1 documentation</p>
   
 </a></div>
     
@@ -445,7 +445,13 @@ instructions</a>.</p>
 <p>from the source code repository. You can now start using <code class="docutils literal notranslate"><span class="pre">reVRt</span></code>!</p>
 <p>If you are planning to contribute to <code class="docutils literal notranslate"><span class="pre">reVRt</span></code>, you can use the <code class="docutils literal notranslate"><span class="pre">dev</span></code> feature in <code class="docutils literal notranslate"><span class="pre">pixi</span></code> to
 get all necessary Python and Rust development tools:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>shell<span class="w"> </span>-e<span class="w"> </span>pdev
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>shell<span class="w"> </span>-e<span class="w"> </span>dev
+</pre></div>
+</div>
+<p>Note that installing from source will install the debug build of the Rust code,
+which is significantly slower than the release build that is installed when installing from PyPI.
+To remedy this, you can run the following command to build the release version of the Rust code:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>run<span class="w"> </span>-e<span class="w"> </span>dev<span class="w"> </span>maturin<span class="w"> </span>develop<span class="w"> </span>--release
 </pre></div>
 </div>
 <p>You are welcome to use a different environment manager (e.g. <code class="docutils literal notranslate"><span class="pre">conda</span></code>, <code class="docutils literal notranslate"><span class="pre">mamba</span></code>, etc),

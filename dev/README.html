@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contributing to reVRt &#8212; reVRt 0.9.0 documentation</title>
+    <title>Contributing to reVRt &#8212; reVRt 0.9.1 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="../_static/documentation_options.js?v=9dc39874"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -50,7 +50,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.9.0" />
+  <meta name="docsearch:version" content="0.9.1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.9.0 documentation</p>
+    <p class="title logo__title">reVRt 0.9.1 documentation</p>
   
 </a></div>
     
@@ -433,12 +433,8 @@ to move your development environment to a new piece of hardware.</p>
 <p>We keep a version-controlled <code class="docutils literal notranslate"><span class="pre">pixi.lock</span></code> in the repository to allow locking with
 the full requirements tree so we can reproduce behaviors and bugs and easily compare
 results.</p>
-<p>You can use the <code class="docutils literal notranslate"><span class="pre">pdev</span></code> feature in <code class="docutils literal notranslate"><span class="pre">pixi</span></code> to get all necessary python development tools:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>shell<span class="w"> </span>-e<span class="w"> </span>pdev
-</pre></div>
-</div>
-<p>To work on the Rust-based CLI, you can use the <code class="docutils literal notranslate"><span class="pre">rdev</span></code> feature instead:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>shell<span class="w"> </span>-e<span class="w"> </span>rdev
+<p>You can use the <code class="docutils literal notranslate"><span class="pre">dev</span></code> feature in <code class="docutils literal notranslate"><span class="pre">pixi</span></code> to get all necessary python development tools:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixi<span class="w"> </span>shell<span class="w"> </span>-e<span class="w"> </span>dev
 </pre></div>
 </div>
 <p>You are welcome to use a different environment manager (e.g. <code class="docutils literal notranslate"><span class="pre">conda</span></code>, <code class="docutils literal notranslate"><span class="pre">mamba</span></code>, etc),
@@ -563,7 +559,7 @@ which renders as <a class="reference internal" href="../_autosummary/revrt.utili
 </dl>
 </li>
 <li><dl class="simple">
-<dt>dask.distributed: <code class="docutils literal notranslate"><span class="pre">distributed</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`~distributed.Client`</span></code>, which renders as <a class="reference external" href="https://distributed.dask.org/en/stable/api.html#distributed.Client" title="(in Dask.distributed v2026.6.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a></p>
+<dt>dask.distributed: <code class="docutils literal notranslate"><span class="pre">distributed</span></code></dt><dd><p>For example, use <code class="docutils literal notranslate"><span class="pre">:class:`~distributed.Client`</span></code>, which renders as <a class="reference external" href="https://distributed.dask.org/en/stable/api.html#distributed.Client" title="(in Dask.distributed v2026.7.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code></a></p>
 </dd>
 </dl>
 </li>
@@ -749,6 +745,16 @@ to run all tests locally:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span><span class="nb">test</span><span class="w"> </span>test_get_3x3_two_by_two_array::bottom_right_corner
 </pre></div>
 </div>
+<p>If you want to run performance profiling locally, you can use this command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./support/run_rust_route_profile.sh<span class="w"> </span>--output-dir<span class="w"> </span>rust_route_profile<span class="w"> </span>--rows<span class="w"> </span><span class="m">5000</span><span class="w"> </span>--cols<span class="w"> </span><span class="m">5000</span><span class="w"> </span>--chunk-size<span class="w"> </span><span class="m">100</span><span class="w"> </span>--distance<span class="w"> </span><span class="m">500</span><span class="w"> </span>--algorithm<span class="w"> </span>bidirectional_long_range_dijkstra<span class="w"> </span>--mem-limit-bytes<span class="w"> </span><span class="m">100000000</span><span class="w"> </span>--repeats<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<p>This writes a Markdown summary together with a sampled CPU flamegraph and
+stack summary text file into the output directory.
+It also includes an inclusive wall-clock hotspot table from the
+in-process scoped profiler.
+For very short runs, increase <code class="docutils literal notranslate"><span class="pre">--repeats</span></code> or the synthetic case size so the
+sampling profiler has enough data to highlight hotspots clearly.</p>
 <p>If you want to run the benchmarks locally, you can use this command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span>criterion<span class="w"> </span>--output-format<span class="w"> </span>bencher<span class="w"> </span>--benches<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>output.txt
 </pre></div>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.routing.cli.utilities &#8212; reVRt 0.9.0 documentation</title>
+    <title>revrt.routing.cli.utilities &#8212; reVRt 0.9.1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../../_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="../../../../_static/documentation_options.js?v=9dc39874"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.9.0" />
+  <meta name="docsearch:version" content="0.9.1" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.9.0 documentation</p>
+    <p class="title logo__title">reVRt 0.9.1 documentation</p>
   
 </a></div>
     
@@ -909,7 +909,7 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span>
 
         <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span> <span class="o">=</span> <span class="n">_extract_batch_group</span><span class="p">(</span><span class="n">route_attrs</span><span class="p">)</span>
-        <span class="n">saved_fp</span> <span class="o">=</span> <span class="n">_persist_routing_layer_output</span><span class="p">(</span>
+        <span class="n">_persist_routing_layer_output</span><span class="p">(</span>
             <span class="n">src_fp</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
             <span class="n">out_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span>
             <span class="n">tmp_routing_layer_fp</span><span class="o">=</span><span class="n">temp_zarr_file</span><span class="p">,</span>
@@ -917,8 +917,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">polarity</span><span class="o">=</span><span class="n">polarity</span><span class="p">,</span>
             <span class="n">voltage</span><span class="o">=</span><span class="n">voltage</span><span class="p">,</span>
             <span class="n">routing_options</span><span class="o">=</span><span class="n">routing_options</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saved routing layer to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">saved_fp</span><span class="p">)</span></div>
+        <span class="p">)</span></div>
 
 
 
@@ -1025,6 +1024,7 @@ window.runMermaid = runMermaid;</script>
         <span class="sa">f</span><span class="s2">&quot;h-</span><span class="si">{</span><span class="n">layer_hash</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">)</span>
     <span class="n">out_fp</span> <span class="o">=</span> <span class="n">_unique_output_path</span><span class="p">(</span><span class="n">extra_outputs</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">.zarr&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Copying routing layers to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="p">(</span>
         <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">src_fp</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_ds</span><span class="p">,</span>
@@ -1032,14 +1032,22 @@ window.runMermaid = runMermaid;</script>
             <span class="n">tmp_routing_layer_fp</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">tmp_ds</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="n">coord_axes</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">key</span>
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;band&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;latitude&quot;</span><span class="p">,</span> <span class="s2">&quot;longitude&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">src_ds</span>
-        <span class="p">]</span>
-        <span class="n">fixed_ds</span> <span class="o">=</span> <span class="n">tmp_ds</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span>
-            <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">src_ds</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">coord_axes</span><span class="p">}</span>
-        <span class="p">)</span>
+        <span class="n">compatible_coords</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;band&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;latitude&quot;</span><span class="p">,</span> <span class="s2">&quot;longitude&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">src_ds</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">source_coord</span> <span class="o">=</span> <span class="n">src_ds</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="n">dim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tmp_ds</span><span class="o">.</span><span class="n">sizes</span>
+                <span class="ow">or</span> <span class="n">tmp_ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">!=</span> <span class="n">source_coord</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">source_coord</span><span class="o">.</span><span class="n">dims</span>
+            <span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">compatible_coords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_coord</span>
+
+        <span class="n">fixed_ds</span> <span class="o">=</span> <span class="n">tmp_ds</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">compatible_coords</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fixed_ds</span> <span class="o">=</span> <span class="n">fixed_ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">src_ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
@@ -1054,7 +1062,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">out_fp</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saved routing layers to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_routing_layer_zarr_encoding</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
