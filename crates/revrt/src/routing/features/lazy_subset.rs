@@ -504,7 +504,7 @@ mod tests {
         let (_tmp, storage) = FeaturesTestBuilder::new()
             .dimensions(4, 4)
             .chunks(2, 2)
-            .layer(LayerConfig::constant("elev", 1.5).with_dtype(Featuredata_type::float64()))
+            .layer(LayerConfig::constant("elev", 1.5).with_dtype(FeatureDataType::Float64))
             .build()
             .unwrap();
 
@@ -632,11 +632,11 @@ mod tests {
             .dimensions(2, 3)
             .chunks(2, 3)
             .layer(LayerConfig::sequential("from_f32"))
-            .layer(LayerConfig::sequential("from_f64").with_dtype(Featuredata_type::float64()))
-            .layer(LayerConfig::sequential("from_i16").with_dtype(Featuredata_type::int16()))
-            .layer(LayerConfig::sequential("from_i32").with_dtype(Featuredata_type::int32()))
-            .layer(LayerConfig::sequential("from_u8").with_dtype(Featuredata_type::uint8()))
-            .layer(LayerConfig::sequential("from_u32").with_dtype(Featuredata_type::uint32()))
+            .layer(LayerConfig::sequential("from_f64").with_dtype(FeatureDataType::Float64))
+            .layer(LayerConfig::sequential("from_i16").with_dtype(FeatureDataType::Int16))
+            .layer(LayerConfig::sequential("from_i32").with_dtype(FeatureDataType::Int32))
+            .layer(LayerConfig::sequential("from_u8").with_dtype(FeatureDataType::UInt8))
+            .layer(LayerConfig::sequential("from_u32").with_dtype(FeatureDataType::UInt32))
             .build()
             .unwrap();
 

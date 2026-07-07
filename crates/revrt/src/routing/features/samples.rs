@@ -285,21 +285,21 @@ impl FeaturesTestBuilder {
             ($T:ty) => {{
                 let data: Array2<$T> =
                     Array2::from_shape_vec(shape, flat.into_iter().map(|v| v as $T).collect())?;
-                array.store_chunks_ndarray(&subset, data)?;
+                array.store_chunks_ndarray(&subset, &data)?;
             }};
         }
 
         match config.dtype {
-            Featuredata_type::float32() => store_as!(f32),
-            Featuredata_type::float64() => store_as!(f64),
-            Featuredata_type::int8() => store_as!(i8),
-            Featuredata_type::int16() => store_as!(i16),
-            Featuredata_type::int32() => store_as!(i32),
-            Featuredata_type::int64() => store_as!(i64),
-            Featuredata_type::uint8() => store_as!(u8),
-            Featuredata_type::uint16() => store_as!(u16),
-            Featuredata_type::uint32() => store_as!(u32),
-            Featuredata_type::uint64() => store_as!(u64),
+            FeatureDataType::Float32 => store_as!(f32),
+            FeatureDataType::Float64 => store_as!(f64),
+            FeatureDataType::Int8 => store_as!(i8),
+            FeatureDataType::Int16 => store_as!(i16),
+            FeatureDataType::Int32 => store_as!(i32),
+            FeatureDataType::Int64 => store_as!(i64),
+            FeatureDataType::UInt8 => store_as!(u8),
+            FeatureDataType::UInt16 => store_as!(u16),
+            FeatureDataType::UInt32 => store_as!(u32),
+            FeatureDataType::UInt64 => store_as!(u64),
         }
 
         Ok(())
@@ -618,7 +618,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(4, 4)
             .chunks(2, 2)
-            .layer(LayerConfig::ones("elev").with_dtype(Featuredata_type::float64()))
+            .layer(LayerConfig::ones("elev").with_dtype(FeatureDataType::Float64))
             .build()
             .unwrap();
 
@@ -632,7 +632,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(4, 4)
             .chunks(2, 2)
-            .layer(LayerConfig::sequential("band").with_dtype(Featuredata_type::int32()))
+            .layer(LayerConfig::sequential("band").with_dtype(FeatureDataType::Int32))
             .build()
             .unwrap();
 
@@ -646,7 +646,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(4, 4)
             .chunks(2, 2)
-            .layer(LayerConfig::constant("mask", 1.0).with_dtype(Featuredata_type::uint8()))
+            .layer(LayerConfig::constant("mask", 1.0).with_dtype(FeatureDataType::UInt8))
             .build()
             .unwrap();
 
@@ -660,7 +660,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(2, 2)
             .chunks(2, 2)
-            .layer(LayerConfig::constant("temp", 1.62).with_dtype(Featuredata_type::float64()))
+            .layer(LayerConfig::constant("temp", 1.62).with_dtype(FeatureDataType::Float64))
             .build()
             .unwrap();
 
@@ -681,7 +681,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(2, 3)
             .chunks(2, 3)
-            .layer(LayerConfig::sequential("idx").with_dtype(Featuredata_type::int16()))
+            .layer(LayerConfig::sequential("idx").with_dtype(FeatureDataType::Int16))
             .build()
             .unwrap();
 
@@ -698,7 +698,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(2, 2)
             .chunks(2, 2)
-            .layer(LayerConfig::constant("cls", 255.0).with_dtype(Featuredata_type::uint32()))
+            .layer(LayerConfig::constant("cls", 255.0).with_dtype(FeatureDataType::UInt32))
             .build()
             .unwrap();
 
@@ -716,8 +716,8 @@ mod tests {
             .dimensions(4, 4)
             .chunks(2, 2)
             .layer(LayerConfig::random("cost", 0.0, 100.0)) // Float32 (default)
-            .layer(LayerConfig::constant("land_cover", 3.0).with_dtype(Featuredata_type::uint8()))
-            .layer(LayerConfig::sequential("elevation").with_dtype(Featuredata_type::int16()))
+            .layer(LayerConfig::constant("land_cover", 3.0).with_dtype(FeatureDataType::UInt8))
+            .layer(LayerConfig::sequential("elevation").with_dtype(FeatureDataType::Int16))
             .build()
             .unwrap();
 
