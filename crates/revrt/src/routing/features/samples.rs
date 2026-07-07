@@ -7,8 +7,8 @@ use ndarray::Array2;
 use object_store::local::LocalFileSystem;
 use rand::RngExt;
 use tempfile::TempDir;
-use zarrs::array::{ArrayBuilder, DataType, FillValue};
-use zarrs::array_subset::ArraySubset;
+use zarrs::array::data_type;
+use zarrs::array::{ArrayBuilder, ArraySubset, DataType, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
 use zarrs::storage::{AsyncReadableListableStorage, ReadableWritableListableStorage};
@@ -491,7 +491,7 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/seq").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..3]);
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..3]);
         let vals: Vec<f32> = array.retrieve_array_subset_elements(&subset).unwrap();
         // Sequential starts at 1
         let expected: Vec<f32> = (1..=6).map(|x| x as f32).collect();
@@ -509,7 +509,7 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/idx").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..3, 0..3]);
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..3, 0..3]);
         let vals: Vec<f32> = array.retrieve_array_subset_elements(&subset).unwrap();
 
         for i in 0..3u64 {
@@ -666,7 +666,7 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/temp").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]);
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..2]);
         let vals: Vec<f64> = array.retrieve_array_subset_elements(&subset).unwrap();
         for v in vals {
             let diff = (v - 1.62_f64).abs();
@@ -687,7 +687,7 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/idx").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..3]);
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..3]);
         let vals: Vec<i16> = array.retrieve_array_subset_elements(&subset).unwrap();
         let expected: Vec<i16> = (1..=6).collect();
         assert_eq!(vals, expected);
@@ -704,7 +704,7 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/cls").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]);
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..2]);
         let vals: Vec<u32> = array.retrieve_array_subset_elements(&subset).unwrap();
         assert!(vals.iter().all(|&v| v == 255));
     }

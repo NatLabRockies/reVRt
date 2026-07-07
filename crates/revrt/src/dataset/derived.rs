@@ -110,7 +110,7 @@ impl DerivedDataWriter {
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
         let subset = variable.chunk_subset(&[cb, ci, cj]).unwrap();
-        let chunk_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+        let chunk_subset = zarrs::array::ArraySubset::new_with_ranges(&[
             cb..(cb + 1),
             ci..(ci + 1),
             cj..(cj + 1),
@@ -153,7 +153,7 @@ impl DerivedDataWriter {
         ci: u64,
         cj: u64,
         features: &mut LazySubset<f32>,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
+        chunk_subset: &zarrs::array::ArraySubset,
         is_invariant: bool,
     ) {
         let output;
@@ -193,7 +193,7 @@ impl DerivedDataWriter {
         &self,
         cb: u64,
         features: &mut LazySubset<f32>,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
+        chunk_subset: &zarrs::array::ArraySubset,
     ) {
         trace!("Calculating driver multiplier for chunk band {}", cb);
 
@@ -241,8 +241,8 @@ impl DerivedDataWriter {
     fn calculate_chunk_hard_barrier_mask(
         &self,
         features: &mut LazySubset<f32>,
-        subset: &zarrs::array_subset::ArraySubset,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
+        chunk_subset: &zarrs::array::ArraySubset,
     ) {
         trace!("Calculating hard barrier mask for subset {:?}", subset);
 
@@ -285,8 +285,8 @@ impl DerivedDataWriter {
     fn calculate_chunk_cumulative_soft_barrier_masks(
         &self,
         features: &mut LazySubset<f32>,
-        subset: &zarrs::array_subset::ArraySubset,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
+        chunk_subset: &zarrs::array::ArraySubset,
     ) {
         trace!(
             "Calculating cumulative soft barrier masks for subset {:?}",
@@ -341,7 +341,7 @@ impl DerivedDataMaterializer for DerivedDataWriter {
     fn ensure_derived_data_for_subset(
         &self,
         array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
-        subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
     ) {
         let _profiling_scope =
             crate::profiling::scope("dataset::DerivedDataWriter::ensure_derived_data_for_subset");
@@ -402,7 +402,7 @@ impl DerivedDataMaterializer for DerivedDataWriter {
 /// # Returns
 /// A boolean array with the same dimensionality as `subset`, initialized to
 /// `false` in every cell.
-fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD<bool> {
+fn empty_bool_mask(subset: &zarrs::array::ArraySubset) -> ndarray::ArrayD<bool> {
     ndarray::ArrayD::<bool>::from_elem(
         ndarray::IxDyn(
             &subset
@@ -432,7 +432,7 @@ fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD
 fn combine_barrier_layers_for_subset(
     barrier_layers: &[BarrierLayer],
     features: &mut LazySubset<f32>,
-    subset: &zarrs::array_subset::ArraySubset,
+    subset: &zarrs::array::ArraySubset,
 ) -> Option<ndarray::ArrayD<bool>> {
     if barrier_layers.is_empty() {
         return None;
@@ -459,7 +459,7 @@ mod tests {
     use ndarray::{ArrayD, IxDyn};
     use tempfile::TempDir;
     use zarrs::array::Array;
-    use zarrs::array_subset::ArraySubset;
+    use zarrs::array::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
     use zarrs::storage::ReadableListableStorage;
 

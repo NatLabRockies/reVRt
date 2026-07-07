@@ -29,7 +29,7 @@ use std::sync::Arc;
 
 use object_store::local::LocalFileSystem;
 use tracing::debug;
-use zarrs::array_subset::ArraySubset;
+use zarrs::array::ArraySubset;
 use zarrs::storage::AsyncReadableListableStorage;
 use zarrs_object_store::AsyncObjectStore;
 
@@ -88,7 +88,7 @@ impl Features {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use zarrs::array_subset::ArraySubset;
+    /// use zarrs::array::ArraySubset;
     ///
     /// let features = Features::open("path/to/zarr").unwrap();
     /// let region = ArraySubset::new_with_start_shape(vec![0, 0], vec![8, 8]).unwrap();
@@ -111,7 +111,7 @@ impl Features {
 
 #[cfg(test)]
 mod test {
-    use zarrs::array_subset::ArraySubset;
+    use zarrs::array::ArraySubset;
 
     use super::Features;
     use super::samples::{FeaturesTestBuilder, LayerConfig};
@@ -178,7 +178,7 @@ mod test {
     async fn features_lazy_subset_concurrent_access() {
         use super::samples::{FeaturesTestBuilder, LayerConfig};
         use std::sync::Arc;
-        use zarrs::array_subset::ArraySubset;
+        use zarrs::array::ArraySubset;
 
         let (_tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(4, 4)

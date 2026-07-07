@@ -27,7 +27,7 @@ pub(super) trait DerivedDataMaterializer {
     fn ensure_derived_data_for_subset(
         &self,
         array: &zarrs::array::Array<dyn ReadableStorageTraits>,
-        subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
     );
 }
 
@@ -250,7 +250,7 @@ impl DerivedDataReader {
     fn ensure_neighborhood_all_option_data(
         &self,
         cost_array: &zarrs::array::Array<dyn ReadableStorageTraits>,
-        subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
         data_materializer: &impl DerivedDataMaterializer,
     ) {
         let _profiling_scope = crate::profiling::scope(
@@ -262,7 +262,7 @@ impl DerivedDataReader {
     /// Read primary costs for an all-option neighborhood subset.
     fn retrieve_neighborhood_primary_costs(
         &self,
-        subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
     ) -> Vec<f32> {
         let _profiling_scope = crate::profiling::scope(
             "dataset::DerivedDataReader::retrieve_neighborhood_primary_costs",
@@ -275,7 +275,7 @@ impl DerivedDataReader {
     /// Read invariant costs for an all-option neighborhood subset.
     fn retrieve_neighborhood_invariant_costs(
         &self,
-        subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
         len: usize,
     ) -> Vec<f32> {
         let _profiling_scope = crate::profiling::scope(
@@ -294,7 +294,7 @@ impl DerivedDataReader {
     /// Read driver multipliers for an all-option neighborhood subset.
     fn retrieve_neighborhood_driver_multipliers(
         &self,
-        subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
         len: usize,
     ) -> Vec<f32> {
         let _profiling_scope = crate::profiling::scope(
@@ -312,7 +312,7 @@ impl DerivedDataReader {
     /// Read hard barrier flags for an all-option neighborhood subset.
     fn retrieve_neighborhood_hard_barriers(
         &self,
-        subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
         len: usize,
         data_materializer: &impl DerivedDataMaterializer,
     ) -> Vec<bool> {
@@ -491,7 +491,7 @@ impl DerivedDataReader {
     ) -> Option<(f32, f32)> {
         let _profiling_scope =
             crate::profiling::scope("dataset::DerivedDataReader::get_cell_cost_components");
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[
             u64::from(index.option)..u64::from(index.option) + 1,
             index.i..index.i + 1,
             index.j..index.j + 1,
@@ -548,7 +548,7 @@ impl DerivedDataReader {
         let Some(driver_multiplier_cache) = &self.driver_multiplier_cache else {
             return Some(1.0);
         };
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[
             u64::from(index.option)..u64::from(index.option) + 1,
             index.i..index.i + 1,
             index.j..index.j + 1,
@@ -589,7 +589,7 @@ impl DerivedDataReader {
     ) -> (
         std::ops::Range<u64>,
         std::ops::Range<u64>,
-        zarrs::array_subset::ArraySubset,
+        zarrs::array::ArraySubset,
     ) {
         let &ArrayIndex { i, j, option } = index;
         debug_assert!(self.grid_nrows > 0);
@@ -612,7 +612,7 @@ impl DerivedDataReader {
             _ => j - 1..j + 2,
         };
 
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[
             u64::from(option)..u64::from(option) + 1,
             i_range.clone(),
             j_range.clone(),
@@ -639,7 +639,7 @@ impl DerivedDataReader {
     ) -> (
         std::ops::Range<u64>,
         std::ops::Range<u64>,
-        zarrs::array_subset::ArraySubset,
+        zarrs::array::ArraySubset,
     ) {
         let &ArrayIndex { i, j, .. } = index;
         debug_assert!(self.grid_nrows > 0);
@@ -661,7 +661,7 @@ impl DerivedDataReader {
             _ => j - 1..j + 2,
         };
 
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[
             0..u64::from(self.grid_noptions),
             i_range.clone(),
             j_range.clone(),
@@ -765,7 +765,7 @@ mod tests {
     use tempfile::TempDir;
     use test_case::test_case;
     use zarrs::array::Array;
-    use zarrs::array_subset::ArraySubset;
+    use zarrs::array::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
     use zarrs::storage::ReadableListableStorage;
 
@@ -785,7 +785,7 @@ mod tests {
         fn ensure_derived_data_for_subset(
             &self,
             _array: &zarrs::array::Array<dyn ReadableStorageTraits>,
-            _subset: &zarrs::array_subset::ArraySubset,
+            _subset: &zarrs::array::ArraySubset,
         ) {
         }
     }

@@ -310,7 +310,7 @@ impl Dataset {
 /// An initialized `LazySubset<f32>` instance.
 pub(crate) fn make_lazy_subset_for_tests(
     source: ReadableListableStorage,
-    subset: zarrs::array_subset::ArraySubset,
+    subset: zarrs::array::ArraySubset,
 ) -> LazySubset<f32> {
     LazySubset::new(source, subset)
 }
@@ -350,7 +350,7 @@ mod tests {
                     .any(|point| point.destination.i == 0 && point.destination.j == 0)
             );
             let ArrayIndex { i: ci, j: cj, .. } = point;
-            let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            let center_subset = zarrs::array::ArraySubset::new_with_ranges(&[
                 0..1,
                 ci..(ci + 1),
                 cj..(cj + 1),
@@ -361,7 +361,7 @@ mod tests {
             let results = same_option_neighbors(&neighborhoods, point.option, Some(center_cost));
 
             for (ArrayIndex { i, j, .. }, val) in results {
-                let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                let subset = zarrs::array::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
                     j..(j + 1),
@@ -443,7 +443,7 @@ mod tests {
 
             for neighborhood_point in results {
                 let ArrayIndex { i, j, .. } = neighborhood_point.destination;
-                let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                let subset = zarrs::array::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
                     j..(j + 1),
@@ -482,7 +482,7 @@ mod tests {
                     .any(|point| point.destination.i == 0 && point.destination.j == 0)
             );
             let ArrayIndex { i: ci, j: cj, .. } = point;
-            let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+            let center_subset = zarrs::array::ArraySubset::new_with_ranges(&[
                 0..1,
                 ci..(ci + 1),
                 cj..(cj + 1),
@@ -502,7 +502,7 @@ mod tests {
             let results = same_option_neighbors(&neighborhoods, point.option, Some(center_cost));
 
             for (ArrayIndex { i, j, .. }, val) in results {
-                let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                let subset = zarrs::array::ArraySubset::new_with_ranges(&[
                     0..1,
                     i..(i + 1),
                     j..(j + 1),
@@ -739,7 +739,7 @@ mod tests {
         let c_array = zarrs::array::Array::open(dataset.source.clone(), "/C").unwrap();
 
         let mut expected: Vec<(ArrayIndex, f32)> = vec![];
-        let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, 1..2, 1..2]);
+        let center_subset = zarrs::array::ArraySubset::new_with_ranges(&[0..1, 1..2, 1..2]);
         let center_a: f32 = a_array
             .retrieve_array_subset_elements(&center_subset)
             .unwrap()[0];
@@ -749,7 +749,7 @@ mod tests {
                 if ir == 1 && jr == 1 {
                     continue; // skip center
                 }
-                let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
+                let subset = zarrs::array::ArraySubset::new_with_ranges(&[
                     0..1,
                     ir..(ir + 1),
                     jr..(jr + 1),
