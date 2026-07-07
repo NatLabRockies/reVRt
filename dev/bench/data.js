@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783381498273,
+  "lastUpdate": 1783401978332,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12431,6 +12431,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 284194703,
             "range": "± 2329011",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "23fad1ecc4bb049336c7adf859c3fdebe9c55809",
+          "message": "Add profiling capabilities (#306)\n\n* Add `is_identity`\n\n* Store driver layer as a swap\n\n* Fix tests\n\n* Barrier layers now optionally swapped\n\n* Read optionals from cache\n\n* Add `has_invariant_layers`\n\n* Only use swap for invariant costs if they are specified by the user\n\n* Only cache the soft barriers as necessary\n\n* add performance module\n\n* add CLI\n\n* Add deps\n\n* New feature flag\n\n* minor update\n\n* Set up profiling scopes\n\n* Use scope\n\n* Add script\n\n* Add command\n\n* Move file\n\n* Fix imports\n\n* Fix imports\n\n* Fix path\n\n* Hold the profiling scope\n\n* Add note\n\n* Use pprof to generate flame graph\n\n* Update docs\n\n* Add dep\n\n* Better breakout of profiling\n\n* Change up order\n\n* Update method\n\n* Use par routing in the profiling\n\n* Update docs\n\n* Add log outputs\n\n* Fix copy error\n\n* bump version\n\n* Update log level\n\n* Add logging\n\n* Update logging statements\n\n* Don't include non-windows crate\n\n* Update crates\n\n* Update docs",
+          "timestamp": "2026-07-06T23:15:37-06:00",
+          "tree_id": "acc8a5dd36f3c08b155460ff9b0fe1649519c89a",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/23fad1ecc4bb049336c7adf859c3fdebe9c55809"
+        },
+        "date": 1783401977352,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 50525295,
+            "range": "± 758999",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 67007759,
+            "range": "± 1340417",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 64211777,
+            "range": "± 1234375",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 93286094,
+            "range": "± 1715384",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 456220986,
+            "range": "± 15545687",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 144613188,
+            "range": "± 1494764",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 148094114,
+            "range": "± 1887986",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 156811056,
+            "range": "± 1574681",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 187091489,
+            "range": "± 2147015",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 292933156,
+            "range": "± 4075316",
             "unit": "ns/iter"
           }
         ]
