@@ -7,6 +7,7 @@ use std::time::Instant;
 
 use clap::{ArgAction, Parser};
 use ndarray::Array3;
+#[cfg(unix)]
 use pprof::ProfilerGuardBuilder;
 use revrt::{ArrayIndex, profiling, resolve_parallel_with_routing_options};
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
@@ -19,6 +20,72 @@ const DEFAULT_COST_FUNCTION: &str =
     r#"{"routing_options":{"default":{"cost_layers":[{"layer_name":"cost"}]}}}"#;
 const PPROF_SAMPLE_FREQUENCY_HZ: i32 = 1_000;
 const PPROF_BLOCKLIST: [&str; 4] = ["libc", "libgcc", "pthread", "vdso"];
+
+struct PprofOutputs {
+    sample_frequency_hz: Option<i32>,
+    flamegraph_available: bool,
+    stack_summary_available: bool,
+    note: Option<&'static str>,
+}
+
+#[cfg(unix)]
+struct ActiveProfiler {
+    guard: pprof::ProfilerGuard<'static>,
+}
+
+#[cfg(not(unix))]
+struct ActiveProfiler;
+
+impl ActiveProfiler {
+    #[cfg(unix)]
+    fn start() -> Result<Self, Box<dyn std::error::Error>> {
+        let guard = ProfilerGuardBuilder::default()
+            .frequency(PPROF_SAMPLE_FREQUENCY_HZ)
+            .blocklist(&PPROF_BLOCKLIST)
+            .build()?;
+        Ok(Self { guard })
+    }
+
+    #[cfg(not(unix))]
+    fn start() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self)
+    }
+
+    #[cfg(unix)]
+    fn finish(
+        self,
+        flamegraph_path: &Path,
+        stack_report_path: &Path,
+    ) -> Result<PprofOutputs, Box<dyn std::error::Error>> {
+        let pprof_report = self.guard.report().build()?;
+        pprof_report.flamegraph(fs::File::create(flamegraph_path)?)?;
+        let stack_report = format!("{pprof_report:?}");
+        fs::write(stack_report_path, &stack_report)?;
+
+        Ok(PprofOutputs {
+            sample_frequency_hz: Some(PPROF_SAMPLE_FREQUENCY_HZ),
+            flamegraph_available: true,
+            stack_summary_available: true,
+            note: None,
+        })
+    }
+
+    #[cfg(not(unix))]
+    fn finish(
+        self,
+        _flamegraph_path: &Path,
+        _stack_report_path: &Path,
+    ) -> Result<PprofOutputs, Box<dyn std::error::Error>> {
+        Ok(PprofOutputs {
+            sample_frequency_hz: None,
+            flamegraph_available: false,
+            stack_summary_available: false,
+            note: Some(
+                "pprof output is unavailable on non-Unix targets in this crate; use Linux or macOS for sampled flamegraphs.",
+            ),
+        })
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(version, about = "Generate and profile a synthetic Rust routing case")]
@@ -103,10 +170,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     profiling::reset();
     profiling::enable();
 
-    let guard = ProfilerGuardBuilder::default()
-        .frequency(PPROF_SAMPLE_FREQUENCY_HZ)
-        .blocklist(&PPROF_BLOCKLIST)
-        .build()?;
+    let profiler = ActiveProfiler::start()?;
 
     for _ in 0..cli.repeats {
         let started = Instant::now();
@@ -125,10 +189,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     profiling::disable();
 
-    let pprof_report = guard.report().build()?;
-    pprof_report.flamegraph(fs::File::create(&flamegraph_path)?)?;
-    let stack_report = format!("{pprof_report:?}");
-    fs::write(&stack_report_path, &stack_report)?;
+    let pprof_outputs = profiler.finish(&flamegraph_path, &stack_report_path)?;
     let profile_snapshot = profiling::snapshot();
 
     let report_inputs = ReportInputs {
@@ -142,13 +203,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         log_path: &log_path,
         flamegraph_path: &flamegraph_path,
         stack_report_path: &stack_report_path,
+        pprof_outputs: &pprof_outputs,
     };
     write_report(&report_path, &report_inputs)?;
 
     println!("Dataset: {}", dataset_dir.display());
     println!("Log: {}", log_path.display());
-    println!("Flamegraph: {}", flamegraph_path.display());
-    println!("Stacks: {}", stack_report_path.display());
+    if pprof_outputs.flamegraph_available {
+        println!("Flamegraph: {}", flamegraph_path.display());
+    }
+    if pprof_outputs.stack_summary_available {
+        println!("Stacks: {}", stack_report_path.display());
+    }
     println!("Report: {}", report_path.display());
 
     Ok(())
@@ -275,6 +341,7 @@ struct ReportInputs<'a> {
     log_path: &'a Path,
     flamegraph_path: &'a Path,
     stack_report_path: &'a Path,
+    pprof_outputs: &'a PprofOutputs,
 }
 
 fn write_report(
@@ -324,26 +391,33 @@ fn write_report(
         "- Average wall-clock time per run: `{:.3}` s\n",
         avg_elapsed.as_secs_f64()
     ));
-    report.push_str(&format!(
-        "- PProf sample frequency: `{}` Hz\n",
-        PPROF_SAMPLE_FREQUENCY_HZ
-    ));
+    if let Some(sample_frequency_hz) = inputs.pprof_outputs.sample_frequency_hz {
+        report.push_str(&format!(
+            "- PProf sample frequency: `{}` Hz\n",
+            sample_frequency_hz
+        ));
+    }
     report.push_str(&format!("- Tracing log: `{}`\n", inputs.log_path.display()));
     report.push_str("\n## PProf Outputs\n\n");
-    report.push_str(
-        "The flamegraph and stack summary aggregate sampled CPU stacks across all profiled runs. Use the flamegraph to find inclusive hotspots visually and the stack summary text file to inspect sampled call stacks directly.\n\n",
-    );
-    report.push_str(
-        "Because pprof uses sampling, very short runs may produce sparse data. Increase `--repeats` or the synthetic case size if the flamegraph is too thin to be useful.\n\n",
-    );
-    report.push_str(&format!(
-        "- Flamegraph: `{}`\n",
-        inputs.flamegraph_path.display()
-    ));
-    report.push_str(&format!(
-        "- Stack summary: `{}`\n",
-        inputs.stack_report_path.display()
-    ));
+    if inputs.pprof_outputs.flamegraph_available && inputs.pprof_outputs.stack_summary_available {
+        report.push_str(
+            "The flamegraph and stack summary aggregate sampled CPU stacks across all profiled runs. Use the flamegraph to find inclusive hotspots visually and the stack summary text file to inspect sampled call stacks directly.\n\n",
+        );
+        report.push_str(
+            "Because pprof uses sampling, very short runs may produce sparse data. Increase `--repeats` or the synthetic case size if the flamegraph is too thin to be useful.\n\n",
+        );
+        report.push_str(&format!(
+            "- Flamegraph: `{}`\n",
+            inputs.flamegraph_path.display()
+        ));
+        report.push_str(&format!(
+            "- Stack summary: `{}`\n",
+            inputs.stack_report_path.display()
+        ));
+    } else if let Some(note) = inputs.pprof_outputs.note {
+        report.push_str(note);
+        report.push_str("\n\n");
+    }
     report.push_str("\n");
     report.push_str("## Run Times\n\n");
     report.push_str("| Run | Seconds |\n");
