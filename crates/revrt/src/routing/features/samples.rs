@@ -63,16 +63,16 @@ pub(crate) enum FeatureDataType {
 impl FeatureDataType {
     fn zarrs_dtype(self) -> DataType {
         match self {
-            Self::Float32 => DataType::Float32,
-            Self::Float64 => DataType::Float64,
-            Self::Int8 => DataType::Int8,
-            Self::Int16 => DataType::Int16,
-            Self::Int32 => DataType::Int32,
-            Self::Int64 => DataType::Int64,
-            Self::UInt8 => DataType::UInt8,
-            Self::UInt16 => DataType::UInt16,
-            Self::UInt32 => DataType::UInt32,
-            Self::UInt64 => DataType::UInt64,
+            Self::Float32 => data_type::float32(),
+            Self::Float64 => data_type::float64(),
+            Self::Int8 => data_type::int8(),
+            Self::Int16 => data_type::int16(),
+            Self::Int32 => data_type::int32(),
+            Self::Int64 => data_type::int64(),
+            Self::UInt8 => data_type::uint8(),
+            Self::UInt16 => data_type::uint16(),
+            Self::UInt32 => data_type::uint32(),
+            Self::UInt64 => data_type::uint64(),
         }
     }
 
@@ -290,16 +290,16 @@ impl FeaturesTestBuilder {
         }
 
         match config.dtype {
-            FeatureDataType::Float32 => store_as!(f32),
-            FeatureDataType::Float64 => store_as!(f64),
-            FeatureDataType::Int8 => store_as!(i8),
-            FeatureDataType::Int16 => store_as!(i16),
-            FeatureDataType::Int32 => store_as!(i32),
-            FeatureDataType::Int64 => store_as!(i64),
-            FeatureDataType::UInt8 => store_as!(u8),
-            FeatureDataType::UInt16 => store_as!(u16),
-            FeatureDataType::UInt32 => store_as!(u32),
-            FeatureDataType::UInt64 => store_as!(u64),
+            Featuredata_type::float32() => store_as!(f32),
+            Featuredata_type::float64() => store_as!(f64),
+            Featuredata_type::int8() => store_as!(i8),
+            Featuredata_type::int16() => store_as!(i16),
+            Featuredata_type::int32() => store_as!(i32),
+            Featuredata_type::int64() => store_as!(i64),
+            Featuredata_type::uint8() => store_as!(u8),
+            Featuredata_type::uint16() => store_as!(u16),
+            Featuredata_type::uint32() => store_as!(u32),
+            Featuredata_type::uint64() => store_as!(u64),
         }
 
         Ok(())
@@ -618,13 +618,13 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(4, 4)
             .chunks(2, 2)
-            .layer(LayerConfig::ones("elev").with_dtype(FeatureDataType::Float64))
+            .layer(LayerConfig::ones("elev").with_dtype(Featuredata_type::float64()))
             .build()
             .unwrap();
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/elev").unwrap();
-        assert!(matches!(array.data_type(), zarrs::array::DataType::Float64));
+        assert_eq!(array.data_type(), &data_type::float64());
     }
 
     #[test]
@@ -632,13 +632,13 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(4, 4)
             .chunks(2, 2)
-            .layer(LayerConfig::sequential("band").with_dtype(FeatureDataType::Int32))
+            .layer(LayerConfig::sequential("band").with_dtype(Featuredata_type::int32()))
             .build()
             .unwrap();
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/band").unwrap();
-        assert!(matches!(array.data_type(), zarrs::array::DataType::Int32));
+        assert_eq!(array.data_type(), &data_type::int32());
     }
 
     #[test]
@@ -646,13 +646,13 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(4, 4)
             .chunks(2, 2)
-            .layer(LayerConfig::constant("mask", 1.0).with_dtype(FeatureDataType::UInt8))
+            .layer(LayerConfig::constant("mask", 1.0).with_dtype(Featuredata_type::uint8()))
             .build()
             .unwrap();
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/mask").unwrap();
-        assert!(matches!(array.data_type(), zarrs::array::DataType::UInt8));
+        assert_eq!(array.data_type(), &data_type::uint8());
     }
 
     #[test]
@@ -660,7 +660,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(2, 2)
             .chunks(2, 2)
-            .layer(LayerConfig::constant("temp", 1.62).with_dtype(FeatureDataType::Float64))
+            .layer(LayerConfig::constant("temp", 1.62).with_dtype(Featuredata_type::float64()))
             .build()
             .unwrap();
 
@@ -681,7 +681,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(2, 3)
             .chunks(2, 3)
-            .layer(LayerConfig::sequential("idx").with_dtype(FeatureDataType::Int16))
+            .layer(LayerConfig::sequential("idx").with_dtype(Featuredata_type::int16()))
             .build()
             .unwrap();
 
@@ -698,7 +698,7 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(2, 2)
             .chunks(2, 2)
-            .layer(LayerConfig::constant("cls", 255.0).with_dtype(FeatureDataType::UInt32))
+            .layer(LayerConfig::constant("cls", 255.0).with_dtype(Featuredata_type::uint32()))
             .build()
             .unwrap();
 
@@ -716,8 +716,8 @@ mod tests {
             .dimensions(4, 4)
             .chunks(2, 2)
             .layer(LayerConfig::random("cost", 0.0, 100.0)) // Float32 (default)
-            .layer(LayerConfig::constant("land_cover", 3.0).with_dtype(FeatureDataType::UInt8))
-            .layer(LayerConfig::sequential("elevation").with_dtype(FeatureDataType::Int16))
+            .layer(LayerConfig::constant("land_cover", 3.0).with_dtype(Featuredata_type::uint8()))
+            .layer(LayerConfig::sequential("elevation").with_dtype(Featuredata_type::int16()))
             .build()
             .unwrap();
 
@@ -726,17 +726,8 @@ mod tests {
         let lc_array = zarrs::array::Array::open(sync_store.clone(), "/land_cover").unwrap();
         let elev_array = zarrs::array::Array::open(sync_store.clone(), "/elevation").unwrap();
 
-        assert!(matches!(
-            cost_array.data_type(),
-            zarrs::array::DataType::Float32
-        ));
-        assert!(matches!(
-            lc_array.data_type(),
-            zarrs::array::DataType::UInt8
-        ));
-        assert!(matches!(
-            elev_array.data_type(),
-            zarrs::array::DataType::Int16
-        ));
+        assert_eq!(cost_array.data_type(), &data_type::float32());
+        assert_eq!(lc_array.data_type(), &data_type::uint8());
+        assert_eq!(elev_array.data_type(), &data_type::int16());
     }
 }

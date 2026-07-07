@@ -11,6 +11,7 @@ use object_store::local::LocalFileSystem;
 use rand::RngExt;
 use tempfile::TempDir;
 use zarrs::array::{ArrayBuilder, ArraySubset, DataType, FillValue};
+use zarrs::array::data_type;
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
 #[cfg(test)]
@@ -140,7 +141,7 @@ impl ZarrTestBuilder {
             ci: 4,
             cj: 4,
             layers: Vec::new(),
-            dtype: DataType::Float32,
+            dtype: data_type::float32(),
             fill_value: FillValue::from(zarrs::array::ZARR_NAN_F32),
         }
     }

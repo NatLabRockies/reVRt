@@ -8,8 +8,8 @@ use std::iter;
 use std::sync::Arc;
 
 use tracing::{debug, trace, warn};
-use zarrs::array::codec::CodecOptions;
-use zarrs::array::{ChunkCache, ChunkCacheDecodedLruSizeLimit};
+use zarrs::array::CodecOptions;
+use zarrs::array::chunk_cache::{ChunkCache, ChunkCacheDecodedLruSizeLimit};
 use zarrs::storage::{ReadableStorageTraits, ReadableWritableListableStorage};
 
 use super::swap::SourceLayout;

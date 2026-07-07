@@ -28,7 +28,6 @@ use tokio::sync::RwLock;
 use tracing::trace;
 use zarrs::array::{Array, ArraySubset, DataType, ElementOwned};
 use zarrs::array::data_type;
-use zarrs::array::ArraySubset;
 use zarrs::storage::AsyncReadableListableStorage;
 use zarrs::storage::{ReadableListableStorage, ReadableListableStorageTraits};
 
@@ -188,59 +187,49 @@ impl LazySubset<f32> {
     ) -> Result<ndarray::ArrayBase<ndarray::OwnedRepr<f32>, ndarray::Dim<ndarray::IxDynImpl>>> {
         let dtype = variable.data_type();
 
-        match dtype {
-            DataType::Float32 => {
-                self.retrieve_and_convert::<f32, TStorage, _>(variable, varname, subset, |v| v)
-            }
-            DataType::Float64 => {
-                self.retrieve_and_convert::<f64, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            DataType::Int8 => {
-                self.retrieve_and_convert::<i8, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            DataType::Int16 => {
-                self.retrieve_and_convert::<i16, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            DataType::Int32 => {
-                self.retrieve_and_convert::<i32, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            DataType::Int64 => {
-                self.retrieve_and_convert::<i64, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            DataType::UInt8 => {
-                self.retrieve_and_convert::<u8, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            DataType::UInt16 => {
-                self.retrieve_and_convert::<u16, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            DataType::UInt32 => {
-                self.retrieve_and_convert::<u32, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            DataType::UInt64 => {
-                self.retrieve_and_convert::<u64, TStorage, _>(variable, varname, subset, |v| {
-                    v as f32
-                })
-            }
-            other => Err(Error::IO(std::io::Error::other(format!(
+        if *dtype == data_type::float32() {
+            self.retrieve_and_convert::<f32, TStorage, _>(variable, varname, subset, |v| v)
+        } else if *dtype == data_type::float64() {
+            self.retrieve_and_convert::<f64, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else if *dtype == data_type::int8() {
+            self.retrieve_and_convert::<i8, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else if *dtype == data_type::int16() {
+            self.retrieve_and_convert::<i16, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else if *dtype == data_type::int32() {
+            self.retrieve_and_convert::<i32, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else if *dtype == data_type::int64() {
+            self.retrieve_and_convert::<i64, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else if *dtype == data_type::uint8() {
+            self.retrieve_and_convert::<u8, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else if *dtype == data_type::uint16() {
+            self.retrieve_and_convert::<u16, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else if *dtype == data_type::uint32() {
+            self.retrieve_and_convert::<u32, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else if *dtype == data_type::uint64() {
+            self.retrieve_and_convert::<u64, TStorage, _>(variable, varname, subset, |v| {
+                v as f32
+            })
+        } else {
+            Err(Error::IO(std::io::Error::other(format!(
                 "Unsupported data type {:?} for layer '{varname}'",
-                other
-            )))),
+                dtype
+            ))))
         }
     }
 

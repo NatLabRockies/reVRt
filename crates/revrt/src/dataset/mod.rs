@@ -323,6 +323,7 @@ mod tests {
     use std::sync::Arc;
     use test_case::test_case;
     use zarrs::array::{ArrayBuilder, DataType, FillValue};
+    use zarrs::array::data_type;
     use zarrs::filesystem::FilesystemStore;
     use zarrs::group::GroupBuilder;
     use zarrs::storage::ReadableWritableListableStorage;
@@ -398,7 +399,7 @@ mod tests {
         ArrayBuilder::new(
             vec![3, 4],
             vec![3, 4],
-            DataType::Float32,
+            data_type::float32(),
             FillValue::from(zarrs::array::ZARR_NAN_F32),
         )
         .build(store, "/A")

@@ -9,6 +9,7 @@ use std::path::Path;
 use tracing::{debug, trace};
 use zarrs::array::ChunkGrid;
 use zarrs::array::chunk_grid::regular::RegularChunkGrid;
+use zarrs::array::data_type;
 use zarrs::storage::{
     ListableStorageTraits, ReadableListableStorage, ReadableWritableListableStorage,
 };
@@ -274,7 +275,7 @@ fn add_layer_to_data(
     let dataset_path = format!("/{layer_name}");
     let mut builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
         chunk_shape.clone(),
-        zarrs::array::DataType::Float32,
+        zarrs::array::data_type::float32(),
         zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
     );
 
@@ -317,7 +318,7 @@ fn add_bool_layer_to_data(
     let dataset_path = format!("/{layer_name}");
     let mut builder = zarrs::array::ArrayBuilder::new_with_chunk_grid(
         chunk_shape.clone(),
-        zarrs::array::DataType::Bool,
+        zarrs::array::data_type::bool(),
         zarrs::array::FillValue::from(false),
     );
 
@@ -438,13 +439,13 @@ mod tests {
             .expect("swap initialization failed");
 
         let expected_layers = [
-            ("/cost", DataType::Float32),
-            ("/cost_invariant", DataType::Float32),
-            ("/driver_multiplier", DataType::Float32),
-            ("/hard_barrier_mask", DataType::Bool),
-            ("/soft_barrier_mask_retry_0", DataType::Bool),
-            ("/soft_barrier_mask_retry_1", DataType::Bool),
-            ("/soft_barrier_mask_retry_2", DataType::Bool),
+            ("/cost", data_type::float32()),
+            ("/cost_invariant", data_type::float32()),
+            ("/driver_multiplier", data_type::float32()),
+            ("/hard_barrier_mask", data_type::bool()),
+            ("/soft_barrier_mask_retry_0", data_type::bool()),
+            ("/soft_barrier_mask_retry_1", data_type::bool()),
+            ("/soft_barrier_mask_retry_2", data_type::bool()),
         ];
 
         for (layer_name, expected_dtype) in expected_layers {
@@ -474,12 +475,12 @@ mod tests {
         assert!(zarrs::array::Array::open(initialized_swap.clone(), "/hard_barrier_mask").is_err());
 
         for (layer_name, expected_dtype) in [
-            ("/cost", DataType::Float32),
-            ("/cost_invariant", DataType::Float32),
-            ("/driver_multiplier", DataType::Float32),
-            ("/soft_barrier_mask_retry_0", DataType::Bool),
-            ("/soft_barrier_mask_retry_1", DataType::Bool),
-            ("/soft_barrier_mask_retry_2", DataType::Bool),
+            ("/cost", data_type::float32()),
+            ("/cost_invariant", data_type::float32()),
+            ("/driver_multiplier", data_type::float32()),
+            ("/soft_barrier_mask_retry_0", data_type::bool()),
+            ("/soft_barrier_mask_retry_1", data_type::bool()),
+            ("/soft_barrier_mask_retry_2", data_type::bool()),
         ] {
             let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
                 .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
@@ -502,11 +503,11 @@ mod tests {
         assert!(zarrs::array::Array::open(initialized_swap.clone(), "/driver_multiplier").is_err());
 
         for (layer_name, expected_dtype) in [
-            ("/cost", DataType::Float32),
-            ("/cost_invariant", DataType::Float32),
-            ("/soft_barrier_mask_retry_0", DataType::Bool),
-            ("/soft_barrier_mask_retry_1", DataType::Bool),
-            ("/soft_barrier_mask_retry_2", DataType::Bool),
+            ("/cost", data_type::float32()),
+            ("/cost_invariant", data_type::float32()),
+            ("/soft_barrier_mask_retry_0", data_type::bool()),
+            ("/soft_barrier_mask_retry_1", data_type::bool()),
+            ("/soft_barrier_mask_retry_2", data_type::bool()),
         ] {
             let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
                 .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
@@ -529,10 +530,10 @@ mod tests {
         assert!(zarrs::array::Array::open(initialized_swap.clone(), "/cost_invariant").is_err());
 
         for (layer_name, expected_dtype) in [
-            ("/cost", DataType::Float32),
-            ("/soft_barrier_mask_retry_0", DataType::Bool),
-            ("/soft_barrier_mask_retry_1", DataType::Bool),
-            ("/soft_barrier_mask_retry_2", DataType::Bool),
+            ("/cost", data_type::float32()),
+            ("/soft_barrier_mask_retry_0", data_type::bool()),
+            ("/soft_barrier_mask_retry_1", data_type::bool()),
+            ("/soft_barrier_mask_retry_2", data_type::bool()),
         ] {
             let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
                 .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
@@ -561,10 +562,10 @@ mod tests {
         }
 
         for (layer_name, expected_dtype) in [
-            ("/cost", DataType::Float32),
-            ("/cost_invariant", DataType::Float32),
-            ("/driver_multiplier", DataType::Float32),
-            ("/hard_barrier_mask", DataType::Bool),
+            ("/cost", data_type::float32()),
+            ("/cost_invariant", data_type::float32()),
+            ("/driver_multiplier", data_type::float32()),
+            ("/hard_barrier_mask", data_type::bool()),
         ] {
             let array = zarrs::array::Array::open(initialized_swap.clone(), layer_name)
                 .unwrap_or_else(|_| panic!("expected layer {layer_name} to exist"));
@@ -587,7 +588,7 @@ mod tests {
         ArrayBuilder::new(
             vec![3, 4],
             vec![3, 4],
-            DataType::Float32,
+            data_type::float32(),
             FillValue::from(zarrs::array::ZARR_NAN_F32),
         )
         .build(store, "/A")
