@@ -181,7 +181,7 @@ impl DerivedDataWriter {
         let chunk_indices: Vec<u64> = vec![cb, ci, cj];
         trace!("Storing chunk at {:?}", chunk_indices);
         trace!("Target chunk subset: {:?}", chunk_subset);
-        cost.store_chunks_ndarray(chunk_subset, output).unwrap();
+        cost.store_chunks_ndarray(chunk_subset, &output).unwrap();
     }
 
     /// Compute and store the per-option driver multiplier for a chunk.
@@ -223,7 +223,7 @@ impl DerivedDataWriter {
             zarrs::array::Array::open(self.swap.clone(), "/driver_multiplier").unwrap();
         driver_multiplier.store_metadata().unwrap();
         driver_multiplier
-            .store_chunks_ndarray(chunk_subset, output)
+            .store_chunks_ndarray(chunk_subset, &output)
             .unwrap();
     }
 
@@ -267,7 +267,7 @@ impl DerivedDataWriter {
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
         variable.store_metadata().unwrap();
-        variable.store_chunks_ndarray(chunk_subset, output).unwrap();
+        variable.store_chunks_ndarray(chunk_subset, &output).unwrap();
     }
 
     /// Compute and store cumulative soft barrier masks for every retry state.
@@ -316,7 +316,7 @@ impl DerivedDataWriter {
             }
 
             target.store_metadata().unwrap();
-            target.store_chunks_ndarray(chunk_subset, output).unwrap();
+            target.store_chunks_ndarray(chunk_subset, &output).unwrap();
         }
     }
 }

@@ -87,7 +87,7 @@ fn features(ni: u64, nj: u64, ci: u64, cj: u64, ftype: FeaturesType) -> std::pat
                     0..(ni / ci),
                     0..(nj / cj),
                 ]),
-                data,
+                &data,
             )
             .unwrap();
     }

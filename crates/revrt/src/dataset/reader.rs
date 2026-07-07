@@ -1348,7 +1348,7 @@ mod tests {
         let subset = chunk_subset(&array);
 
         array
-            .store_chunks_ndarray(&subset, data)
+            .store_chunks_ndarray(&subset, &data)
             .expect("could not store f32 layer data");
     }
 
@@ -1373,7 +1373,7 @@ mod tests {
         let subset = chunk_subset(&array);
 
         array
-            .store_chunks_ndarray(&subset, data)
+            .store_chunks_ndarray(&subset, &data)
             .expect("could not store bool layer data");
     }
 
