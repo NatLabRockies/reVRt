@@ -71,14 +71,6 @@ Once you have both ``pixi`` and the ``reVRt`` source code, simply run:
 
 from the source code repository. You can now start using ``reVRt``!
 
-Note that installing from source will install the debug build of the Rust code,
-which is significantly slower than the release build that is installed when installing from PyPI.
-To remedy this, you can run the following command to build the release version of the Rust code:
-
-.. code-block:: shell
-
-    pixi run maturin develop --release
-
 If you are planning to contribute to ``reVRt``, you can use the ``dev`` feature in ``pixi`` to
 get all necessary Python and Rust development tools:
 
@@ -86,7 +78,10 @@ get all necessary Python and Rust development tools:
 
     pixi shell -e dev
 
-And similarly, you can get a release build of the Rust code with the ``dev`` feature by running:
+
+Note that installing from source will install the debug build of the Rust code,
+which is significantly slower than the release build that is installed when installing from PyPI.
+To remedy this, you can run the following command to build the release version of the Rust code:
 
 .. code-block:: shell
 
