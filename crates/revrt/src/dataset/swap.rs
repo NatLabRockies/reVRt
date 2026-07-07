@@ -85,14 +85,20 @@ pub(super) fn inspect_source_layout(
                 "source chunk shape was unavailable for representative array",
             ))
         })?;
+    let chunk_shape_nz = chunk_shape
+        .into_iter()
+        .map(|dim| {
+            std::num::NonZeroU64::new(dim).ok_or_else(|| {
+                Error::IO(std::io::Error::other(
+                    "source chunk shape dimension was zero",
+                ))
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
     let chunk_grid = ChunkGrid::new(
         RegularChunkGrid::new(
             vec![u64::from(routing_option_count), shape[1], shape[2]],
-            chunk_shape.try_into().map_err(|error| {
-                Error::IO(std::io::Error::other(format!(
-                    "failed to convert source chunk shape: {error}"
-                )))
-            })?,
+            chunk_shape_nz,
         )
         .map_err(|error| {
             Error::IO(std::io::Error::other(format!(
