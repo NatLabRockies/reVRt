@@ -240,7 +240,7 @@ impl LazySubset<f32> {
         F: Fn(T) -> f32 + Copy,
     {
         let raw = variable
-            .retrieve_array_subset_ndarray::<T>(subset)
+            .retrieve_array_subset::<ndarray::ArrayD<T>>(subset)
             .map_err(|err| {
                 Error::IO(std::io::Error::other(format!(
                     "Failed to retrieve array subset for layer '{varname}': {err}"
@@ -424,7 +424,7 @@ impl<T: LazySubsetElement> AsyncLazySubset<T> {
         let variable = Array::async_open(self.source.clone(), &format!("/{varname}")).await?;
 
         let values = variable
-            .async_retrieve_array_subset_ndarray(&self.subset)
+            .async_retrieve_array_subset::<ndarray::ArrayD<T>>(&self.subset)
             .await
             .expect("Failed to retrieve array subset");
 

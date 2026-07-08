@@ -265,7 +265,7 @@ impl DerivedDataReader {
             "dataset::DerivedDataReader::retrieve_neighborhood_primary_costs",
         );
         self.cost_cache
-            .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
+            .retrieve_array_subset::<Vec<f32>>(subset, &CodecOptions::default())
             .unwrap()
     }
 
@@ -282,7 +282,7 @@ impl DerivedDataReader {
             .as_ref()
             .map(|cache| {
                 cache
-                    .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
+                    .retrieve_array_subset::<Vec<f32>>(subset, &CodecOptions::default())
                     .unwrap()
             })
             .unwrap_or_else(|| std::iter::repeat_n(0.0, len).collect())
@@ -299,7 +299,7 @@ impl DerivedDataReader {
         );
         if let Some(cache) = &self.driver_multiplier_cache {
             cache
-                .retrieve_array_subset_elements::<f32>(subset, &CodecOptions::default())
+                .retrieve_array_subset::<Vec<f32>>(subset, &CodecOptions::default())
                 .unwrap()
         } else {
             std::iter::repeat_n(1.0, len).collect()
@@ -320,7 +320,7 @@ impl DerivedDataReader {
             self.hard_barrier_cache
                 .as_ref()
                 .expect("hard barrier cache missing for materializer with hard barriers")
-                .retrieve_array_subset_elements::<bool>(subset, &CodecOptions::default())
+                .retrieve_array_subset::<Vec<bool>>(subset, &CodecOptions::default())
                 .unwrap()
         } else {
             std::iter::repeat_n(false, len).collect()
@@ -456,7 +456,7 @@ impl DerivedDataReader {
         let cache = &self.cumulative_soft_barrier_caches[retry_state];
         data_materializer.ensure_derived_data_for_subset(&cache.array(), &subset);
         let barrier_values = cache
-            .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
+            .retrieve_array_subset::<Vec<bool>>(&subset, &CodecOptions::default())
             .unwrap();
         let mut barrier_cells = Vec::new();
 
@@ -498,14 +498,14 @@ impl DerivedDataReader {
 
         let cost = self
             .cost_cache
-            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+            .retrieve_array_subset::<Vec<f32>>(&subset, &CodecOptions::default())
             .ok()?
             .into_iter()
             .next()?;
         let is_hard_barrier = if data_materializer.has_hard_barriers() {
             self.hard_barrier_cache
                 .as_ref()?
-                .retrieve_array_subset_elements::<bool>(&subset, &CodecOptions::default())
+                .retrieve_array_subset::<Vec<bool>>(&subset, &CodecOptions::default())
                 .ok()?
                 .into_iter()
                 .next()?
@@ -522,7 +522,7 @@ impl DerivedDataReader {
             .as_ref()
             .and_then(|cache| {
                 cache
-                    .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+                    .retrieve_array_subset::<Vec<f32>>(&subset, &CodecOptions::default())
                     .ok()
             })
             .and_then(|values| values.into_iter().next())
@@ -554,7 +554,7 @@ impl DerivedDataReader {
         data_materializer.ensure_derived_data_for_subset(&driver_multiplier_array, &subset);
 
         driver_multiplier_cache
-            .retrieve_array_subset_elements::<f32>(&subset, &CodecOptions::default())
+            .retrieve_array_subset::<Vec<f32>>(&subset, &CodecOptions::default())
             .ok()?
             .into_iter()
             .next()
@@ -1345,7 +1345,7 @@ mod tests {
         let subset = chunk_subset(&array);
 
         array
-            .store_chunks_ndarray(&subset, &data)
+            .store_chunks(&subset, &data)
             .expect("could not store f32 layer data");
     }
 
@@ -1370,7 +1370,7 @@ mod tests {
         let subset = chunk_subset(&array);
 
         array
-            .store_chunks_ndarray(&subset, &data)
+            .store_chunks(&subset, &data)
             .expect("could not store bool layer data");
     }
 

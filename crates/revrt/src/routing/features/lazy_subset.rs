@@ -256,7 +256,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
         macro_rules! read_and_convert {
             ($native:ty) => {{
                 let native_data = array
-                    .async_retrieve_array_subset_ndarray::<$native>(subset)
+                    .async_retrieve_array_subset::<ndarray::ArrayD<$native>>(subset)
                     .await
                     .map_err(|err| {
                         Error::IO(std::io::Error::other(format!(

@@ -239,7 +239,7 @@ impl ZarrTestBuilder {
             0..(self.nj / self.cj),
         ]);
 
-        array.store_chunks_ndarray(&subset, &data)?;
+        array.store_chunks(&subset, &data)?;
 
         Ok(())
     }

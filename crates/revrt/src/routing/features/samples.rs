@@ -285,7 +285,7 @@ impl FeaturesTestBuilder {
             ($T:ty) => {{
                 let data: Array2<$T> =
                     Array2::from_shape_vec(shape, flat.into_iter().map(|v| v as $T).collect())?;
-                array.store_chunks_ndarray(&subset, &data)?;
+                array.store_chunks(&subset, &data)?;
             }};
         }
 
@@ -492,7 +492,7 @@ mod tests {
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/seq").unwrap();
         let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..3]);
-        let vals: Vec<f32> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let vals: Vec<f32> = array.retrieve_array_subset(&subset).unwrap();
         // Sequential starts at 1
         let expected: Vec<f32> = (1..=6).map(|x| x as f32).collect();
         assert_eq!(vals, expected);
@@ -510,7 +510,7 @@ mod tests {
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/idx").unwrap();
         let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..3, 0..3]);
-        let vals: Vec<f32> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let vals: Vec<f32> = array.retrieve_array_subset(&subset).unwrap();
 
         for i in 0..3u64 {
             for j in 0..3u64 {
@@ -578,7 +578,7 @@ mod tests {
             .await
             .unwrap();
         let chunk: Vec<f32> = array
-            .async_retrieve_chunk_elements::<f32>(&[0, 0])
+            .async_retrieve_chunk::<Vec<f32>>(&[0, 0])
             .await
             .unwrap();
         assert!(chunk.iter().all(|&v| v == 42.0));
@@ -603,7 +603,7 @@ mod tests {
             .await
             .unwrap();
         let chunk: Vec<f32> = array
-            .async_retrieve_chunk_elements::<f32>(&[0, 0])
+            .async_retrieve_chunk::<Vec<f32>>(&[0, 0])
             .await
             .unwrap();
         assert!(!chunk.is_empty());
@@ -667,7 +667,7 @@ mod tests {
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/temp").unwrap();
         let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..2]);
-        let vals: Vec<f64> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let vals: Vec<f64> = array.retrieve_array_subset(&subset).unwrap();
         for v in vals {
             let diff = (v - 1.62_f64).abs();
             // The fill value is specified as f32 (1.62f32 ≈ 1.6200001e0),
@@ -688,7 +688,7 @@ mod tests {
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/idx").unwrap();
         let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..3]);
-        let vals: Vec<i16> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let vals: Vec<i16> = array.retrieve_array_subset(&subset).unwrap();
         let expected: Vec<i16> = (1..=6).collect();
         assert_eq!(vals, expected);
     }
@@ -705,7 +705,7 @@ mod tests {
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/cls").unwrap();
         let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..2]);
-        let vals: Vec<u32> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let vals: Vec<u32> = array.retrieve_array_subset(&subset).unwrap();
         assert!(vals.iter().all(|&v| v == 255));
     }
 

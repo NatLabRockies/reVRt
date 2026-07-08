@@ -178,7 +178,7 @@ impl DerivedDataWriter {
         let chunk_indices: Vec<u64> = vec![cb, ci, cj];
         trace!("Storing chunk at {:?}", chunk_indices);
         trace!("Target chunk subset: {:?}", chunk_subset);
-        cost.store_chunks_ndarray(chunk_subset, &output).unwrap();
+        cost.store_chunks(chunk_subset, &output).unwrap();
     }
 
     /// Compute and store the per-option driver multiplier for a chunk.
@@ -220,7 +220,7 @@ impl DerivedDataWriter {
             zarrs::array::Array::open(self.swap.clone(), "/driver_multiplier").unwrap();
         driver_multiplier.store_metadata().unwrap();
         driver_multiplier
-            .store_chunks_ndarray(chunk_subset, &output)
+            .store_chunks(chunk_subset, &output)
             .unwrap();
     }
 
@@ -265,7 +265,7 @@ impl DerivedDataWriter {
         let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
         variable.store_metadata().unwrap();
         variable
-            .store_chunks_ndarray(chunk_subset, &output)
+            .store_chunks(chunk_subset, &output)
             .unwrap();
     }
 
@@ -315,7 +315,7 @@ impl DerivedDataWriter {
             }
 
             target.store_metadata().unwrap();
-            target.store_chunks_ndarray(chunk_subset, &output).unwrap();
+            target.store_chunks(chunk_subset, &output).unwrap();
         }
     }
 }
@@ -520,7 +520,7 @@ mod tests {
     ) -> Vec<T> {
         zarrs::array::Array::open(store.clone(), path)
             .unwrap()
-            .retrieve_array_subset_elements(subset)
+            .retrieve_array_subset(subset)
             .unwrap()
     }
 
@@ -719,11 +719,11 @@ mod tests {
         let subset = ArraySubset::new_with_ranges(&[0..1, 0..3, 0..3]);
         let cost_values: Vec<f32> = Array::open(swap.clone(), "/cost")
             .expect("could not open derived cost array")
-            .retrieve_array_subset_elements(&subset)
+            .retrieve_array_subset(&subset)
             .expect("could not read derived costs");
         let hard_barrier_mask: Vec<bool> = Array::open(swap, "/hard_barrier_mask")
             .expect("could not open hard barrier mask")
-            .retrieve_array_subset_elements(&subset)
+            .retrieve_array_subset(&subset)
             .expect("could not read hard barrier mask");
 
         assert_eq!(
@@ -969,11 +969,11 @@ mod tests {
 
         let cost_band_0: Vec<f32> = Array::open(swap.clone(), "/cost")
             .expect("could not open derived cost array")
-            .retrieve_array_subset_elements(&first_option_subset)
+            .retrieve_array_subset(&first_option_subset)
             .expect("could not read first option cost array");
         let cost_band_1: Vec<f32> = Array::open(swap, "/cost")
             .expect("could not open derived cost array")
-            .retrieve_array_subset_elements(&second_option_subset)
+            .retrieve_array_subset(&second_option_subset)
             .expect("could not read second option cost array");
 
         assert_eq!(cost_band_0, vec![1.0; 4]);
