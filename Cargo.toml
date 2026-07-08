@@ -11,7 +11,7 @@ authors = [
 ]
 edition = "2024"
 license = "BSD-3-Clause"
-rust-version = "1.87.0"
+rust-version = "1.91.0"
 repository = "https://github.com/NatLabRockies/reVRt"
 categories = ["simulation"]
 keywords = ["NRL", "routing", "transmission", "reV", "reVX"]
