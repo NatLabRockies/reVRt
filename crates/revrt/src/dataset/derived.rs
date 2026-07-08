@@ -264,9 +264,7 @@ impl DerivedDataWriter {
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
         variable.store_metadata().unwrap();
-        variable
-            .store_chunks(chunk_subset, &output)
-            .unwrap();
+        variable.store_chunks(chunk_subset, &output).unwrap();
     }
 
     /// Compute and store cumulative soft barrier masks for every retry state.
