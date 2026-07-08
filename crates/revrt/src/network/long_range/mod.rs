@@ -354,14 +354,10 @@ impl BidirectionalSearchState {
         C: Copy,
         u64: From<C>,
     {
-        loop {
-            let Some(forward_cost) = self.forward_frontier.peek_next_cost() else {
-                break;
-            };
-            let Some(backward_cost) = self.backward_frontier.peek_next_cost() else {
-                break;
-            };
-
+        while let (Some(forward_cost), Some(backward_cost)) = (
+            self.forward_frontier.peek_next_cost(),
+            self.backward_frontier.peek_next_cost(),
+        ) {
             if self.found_best_cost(forward_cost, backward_cost) {
                 break;
             }
