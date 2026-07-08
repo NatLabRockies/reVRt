@@ -1,5 +1,5 @@
 [workspace]
-members = [ "crates/cli", "crates/revrt"]
+members = ["crates/cli", "crates/revrt"]
 default-members = ["crates/revrt"]
 resolver = "3"
 
@@ -27,11 +27,11 @@ object_store = "0.12.5"
 pathfinding = "4.14.0"
 pprof = { version = "0.14.1", features = ["flamegraph"] }
 pyo3 = { version = "0.29.0", features = [
-    "abi3-py311",
-    "extension-module",
-    "macros",
-    "chrono",
-    "chrono-tz",
+  "abi3-py311",
+  "extension-module",
+  "macros",
+  "chrono",
+  "chrono-tz",
 ] }
 pyo3-build-config = "0.28.2"
 rand = "0.10.1"
@@ -42,7 +42,10 @@ tempfile = "3.23.0"
 thiserror = "2.0.16"
 tokio = { version = "1.49.0", features = ["fs", "rt-multi-thread"] }
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"], default-features = true }
+tracing-subscriber = { version = "0.3.20", features = [
+  "env-filter",
+  "fmt",
+], default-features = true }
 zarrs = { version = "0.22.10", features = ["async", "filesystem"] }
 zarrs_object_store = { version = "0.5.0", features = ["fs"] }
 
