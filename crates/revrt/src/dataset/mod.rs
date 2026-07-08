@@ -322,8 +322,8 @@ mod tests {
     use std::f32::consts::SQRT_2;
     use std::sync::Arc;
     use test_case::test_case;
-    use zarrs::array::{ArrayBuilder, FillValue};
     use zarrs::array::data_type;
+    use zarrs::array::{ArrayBuilder, FillValue};
     use zarrs::filesystem::FilesystemStore;
     use zarrs::group::GroupBuilder;
     use zarrs::storage::ReadableWritableListableStorage;
@@ -351,22 +351,16 @@ mod tests {
                     .any(|point| point.destination.i == 0 && point.destination.j == 0)
             );
             let ArrayIndex { i: ci, j: cj, .. } = point;
-            let center_subset = zarrs::array::ArraySubset::new_with_ranges(&[
-                0..1,
-                ci..(ci + 1),
-                cj..(cj + 1),
-            ]);
+            let center_subset =
+                zarrs::array::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
             let center_cost: f32 = array
                 .retrieve_array_subset_elements(&center_subset)
                 .expect("Error reading zarr data")[0];
             let results = same_option_neighbors(&neighborhoods, point.option, Some(center_cost));
 
             for (ArrayIndex { i, j, .. }, val) in results {
-                let subset = zarrs::array::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    i..(i + 1),
-                    j..(j + 1),
-                ]);
+                let subset =
+                    zarrs::array::ArraySubset::new_with_ranges(&[0..1, i..(i + 1), j..(j + 1)]);
                 let subset_elements: Vec<f32> = array
                     .retrieve_array_subset_elements(&subset)
                     .expect("Error reading zarr data");
@@ -444,11 +438,8 @@ mod tests {
 
             for neighborhood_point in results {
                 let ArrayIndex { i, j, .. } = neighborhood_point.destination;
-                let subset = zarrs::array::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    i..(i + 1),
-                    j..(j + 1),
-                ]);
+                let subset =
+                    zarrs::array::ArraySubset::new_with_ranges(&[0..1, i..(i + 1), j..(j + 1)]);
                 let subset_elements: Vec<f32> = array
                     .retrieve_array_subset_elements(&subset)
                     .expect("Error reading zarr data");
@@ -483,11 +474,8 @@ mod tests {
                     .any(|point| point.destination.i == 0 && point.destination.j == 0)
             );
             let ArrayIndex { i: ci, j: cj, .. } = point;
-            let center_subset = zarrs::array::ArraySubset::new_with_ranges(&[
-                0..1,
-                ci..(ci + 1),
-                cj..(cj + 1),
-            ]);
+            let center_subset =
+                zarrs::array::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
             let center_a = array_a
                 .retrieve_array_subset_elements::<f32>(&center_subset)
                 .expect("Error reading zarr data")[0];
@@ -503,11 +491,8 @@ mod tests {
             let results = same_option_neighbors(&neighborhoods, point.option, Some(center_cost));
 
             for (ArrayIndex { i, j, .. }, val) in results {
-                let subset = zarrs::array::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    i..(i + 1),
-                    j..(j + 1),
-                ]);
+                let subset =
+                    zarrs::array::ArraySubset::new_with_ranges(&[0..1, i..(i + 1), j..(j + 1)]);
                 let subset_elements_a: Vec<f32> = array_a
                     .retrieve_array_subset_elements(&subset)
                     .expect("Error reading zarr data");
@@ -750,11 +735,8 @@ mod tests {
                 if ir == 1 && jr == 1 {
                     continue; // skip center
                 }
-                let subset = zarrs::array::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    ir..(ir + 1),
-                    jr..(jr + 1),
-                ]);
+                let subset =
+                    zarrs::array::ArraySubset::new_with_ranges(&[0..1, ir..(ir + 1), jr..(jr + 1)]);
                 let a_n: f32 = a_array.retrieve_array_subset_elements(&subset).unwrap()[0];
                 let b_n: f32 = b_array.retrieve_array_subset_elements(&subset).unwrap()[0];
                 let c_n: f32 = c_array.retrieve_array_subset_elements(&subset).unwrap()[0];

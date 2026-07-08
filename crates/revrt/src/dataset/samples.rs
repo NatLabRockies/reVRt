@@ -10,8 +10,8 @@ use ndarray::Array3;
 use object_store::local::LocalFileSystem;
 use rand::RngExt;
 use tempfile::TempDir;
-use zarrs::array::{ArrayBuilder, ArraySubset, DataType, FillValue};
 use zarrs::array::data_type;
+use zarrs::array::{ArrayBuilder, ArraySubset, DataType, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
 #[cfg(test)]

@@ -26,8 +26,8 @@ use std::sync::Arc;
 use ndarray::{ArrayD, IxDyn, SliceInfoElem};
 use tokio::sync::RwLock;
 use tracing::{error, trace};
-use zarrs::array::{Array, ArraySubset, ElementOwned};
 use zarrs::array::data_type;
+use zarrs::array::{Array, ArraySubset, ElementOwned};
 use zarrs::storage::{AsyncReadableListableStorage, AsyncReadableListableStorageTraits};
 
 use crate::error::{Error, Result};

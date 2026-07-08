@@ -110,11 +110,8 @@ impl DerivedDataWriter {
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
         let subset = variable.chunk_subset(&[cb, ci, cj]).unwrap();
-        let chunk_subset = zarrs::array::ArraySubset::new_with_ranges(&[
-            cb..(cb + 1),
-            ci..(ci + 1),
-            cj..(cj + 1),
-        ]);
+        let chunk_subset =
+            zarrs::array::ArraySubset::new_with_ranges(&[cb..(cb + 1), ci..(ci + 1), cj..(cj + 1)]);
         let mut data = LazySubset::<f32>::new(self.source.clone(), subset.clone());
 
         if self.has_invariant_costs {
@@ -267,7 +264,9 @@ impl DerivedDataWriter {
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
         variable.store_metadata().unwrap();
-        variable.store_chunks_ndarray(chunk_subset, &output).unwrap();
+        variable
+            .store_chunks_ndarray(chunk_subset, &output)
+            .unwrap();
     }
 
     /// Compute and store cumulative soft barrier masks for every retry state.

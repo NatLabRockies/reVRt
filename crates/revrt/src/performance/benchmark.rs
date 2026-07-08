@@ -82,11 +82,7 @@ fn features(ni: u64, nj: u64, ci: u64, cj: u64, ftype: FeaturesType) -> std::pat
 
         array
             .store_chunks_ndarray(
-                &zarrs::array::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    0..(ni / ci),
-                    0..(nj / cj),
-                ]),
+                &zarrs::array::ArraySubset::new_with_ranges(&[0..1, 0..(ni / ci), 0..(nj / cj)]),
                 &data,
             )
             .unwrap();

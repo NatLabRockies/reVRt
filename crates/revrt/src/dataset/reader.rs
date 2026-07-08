@@ -260,10 +260,7 @@ impl DerivedDataReader {
     }
 
     /// Read primary costs for an all-option neighborhood subset.
-    fn retrieve_neighborhood_primary_costs(
-        &self,
-        subset: &zarrs::array::ArraySubset,
-    ) -> Vec<f32> {
+    fn retrieve_neighborhood_primary_costs(&self, subset: &zarrs::array::ArraySubset) -> Vec<f32> {
         let _profiling_scope = crate::profiling::scope(
             "dataset::DerivedDataReader::retrieve_neighborhood_primary_costs",
         );
