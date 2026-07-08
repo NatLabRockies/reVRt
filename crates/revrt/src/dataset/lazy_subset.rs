@@ -187,25 +187,25 @@ impl LazySubset<f32> {
     ) -> Result<ndarray::ArrayBase<ndarray::OwnedRepr<f32>, ndarray::Dim<ndarray::IxDynImpl>>> {
         let dtype = variable.data_type();
 
-        if *dtype == data_type::float32() {
+        if dtype == &data_type::float32() {
             self.retrieve_and_convert::<f32, TStorage, _>(variable, varname, subset, |v| v)
-        } else if *dtype == data_type::float64() {
+        } else if dtype == &data_type::float64() {
             self.retrieve_and_convert::<f64, TStorage, _>(variable, varname, subset, |v| v as f32)
-        } else if *dtype == data_type::int8() {
+        } else if dtype == &data_type::int8() {
             self.retrieve_and_convert::<i8, TStorage, _>(variable, varname, subset, |v| v as f32)
-        } else if *dtype == data_type::int16() {
+        } else if dtype == &data_type::int16() {
             self.retrieve_and_convert::<i16, TStorage, _>(variable, varname, subset, |v| v as f32)
-        } else if *dtype == data_type::int32() {
+        } else if dtype == &data_type::int32() {
             self.retrieve_and_convert::<i32, TStorage, _>(variable, varname, subset, |v| v as f32)
-        } else if *dtype == data_type::int64() {
+        } else if dtype == &data_type::int64() {
             self.retrieve_and_convert::<i64, TStorage, _>(variable, varname, subset, |v| v as f32)
-        } else if *dtype == data_type::uint8() {
+        } else if dtype == &data_type::uint8() {
             self.retrieve_and_convert::<u8, TStorage, _>(variable, varname, subset, |v| v as f32)
-        } else if *dtype == data_type::uint16() {
+        } else if dtype == &data_type::uint16() {
             self.retrieve_and_convert::<u16, TStorage, _>(variable, varname, subset, |v| v as f32)
-        } else if *dtype == data_type::uint32() {
+        } else if dtype == &data_type::uint32() {
             self.retrieve_and_convert::<u32, TStorage, _>(variable, varname, subset, |v| v as f32)
-        } else if *dtype == data_type::uint64() {
+        } else if dtype == &data_type::uint64() {
             self.retrieve_and_convert::<u64, TStorage, _>(variable, varname, subset, |v| v as f32)
         } else {
             Err(Error::IO(std::io::Error::other(format!(

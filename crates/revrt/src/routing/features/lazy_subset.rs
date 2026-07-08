@@ -269,21 +269,21 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
         }
 
         let dtype = array.data_type();
-        if *dtype == data_type::float32() {
+        if dtype == &data_type::float32() {
             read_and_convert!(f32)
-        } else if *dtype == data_type::float64() {
+        } else if dtype == &data_type::float64() {
             read_and_convert!(f64)
-        } else if *dtype == data_type::int16() {
+        } else if dtype == &data_type::int16() {
             read_and_convert!(i16)
-        } else if *dtype == data_type::int32() {
+        } else if dtype == &data_type::int32() {
             read_and_convert!(i32)
-        } else if *dtype == data_type::int64() {
+        } else if dtype == &data_type::int64() {
             read_and_convert!(i64)
-        } else if *dtype == data_type::uint8() {
+        } else if dtype == &data_type::uint8() {
             read_and_convert!(u8)
-        } else if *dtype == data_type::uint16() {
+        } else if dtype == &data_type::uint16() {
             read_and_convert!(u16)
-        } else if *dtype == data_type::uint32() {
+        } else if dtype == &data_type::uint32() {
             read_and_convert!(u32)
         } else {
             Err(Error::UnsupportedDataType(
