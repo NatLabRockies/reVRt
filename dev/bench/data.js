@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783401978332,
+  "lastUpdate": 1783517563669,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12515,6 +12515,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 292933156,
             "range": "± 4075316",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2f5e58a127604d8c258f7e9b00754c46cfc74a21",
+          "message": "Ordinary update, Rust side 202607 (#307)\n\n* cfg: Bump Rust in pixi to 1.96.X\n\n* cfg: Updating Cargo.lock\n\n* cfg: Minimum Rust in pixi to 1.96.1\n\n* refact: Following clippy suggestion to use `while let`\n\n* refact: Using sort_by_key as requested by clippy\n\n* style: Combine conditionals instead of nested\n\nAs recommended by clippy.\n\n* cfg: Minimum Supported Rust version bumped to 1.91\n\n* cfg, style: Organizing Cargo.toml\n\n* cfg: Another round of dependencies update\n\n* cfg: Updating toolchain used by CI",
+          "timestamp": "2026-07-08T07:18:07-06:00",
+          "tree_id": "22a62f81a9c7999a911fb7b653a9415bb3c7b6f2",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/2f5e58a127604d8c258f7e9b00754c46cfc74a21"
+        },
+        "date": 1783517562714,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 47950030,
+            "range": "± 7764011",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 76063465,
+            "range": "± 15339196",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 62838419,
+            "range": "± 8149102",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 89936228,
+            "range": "± 15380603",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 439159334,
+            "range": "± 110049624",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 143594676,
+            "range": "± 3847501",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147274054,
+            "range": "± 4335016",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 155765208,
+            "range": "± 5117397",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 182652937,
+            "range": "± 12564232",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 290980118,
+            "range": "± 45533527",
             "unit": "ns/iter"
           }
         ]
