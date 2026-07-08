@@ -57,10 +57,10 @@ impl DriverRuleSet {
                 continue;
             };
 
-            if zone.matches(value) {
-                if let Some(zone_multiplier) = zone.options.get(&option) {
-                    multiplier = *zone_multiplier; // TODO: This is not quite right. We want replacement. Maybe error if two zones overlap?
-                }
+            if zone.matches(value)
+                && let Some(zone_multiplier) = zone.options.get(&option)
+            {
+                multiplier = *zone_multiplier; // TODO: This is not quite right. We want replacement. Maybe error if two zones overlap?
             }
         }
 
