@@ -113,7 +113,7 @@ pub fn snapshot() -> Vec<ProfileRecord> {
             max: stat.max,
         })
         .collect::<Vec<_>>();
-    records.sort_by(|left, right| right.total.cmp(&left.total));
+    records.sort_by_key(|record| std::cmp::Reverse(record.total));
     records
 }
 
