@@ -22,7 +22,7 @@ clap = { version = "4.5.48", features = ["derive", "cargo"] }
 criterion = { version = "0.8.1", features = ["html_reports"] }
 derive_builder = "0.20.2"
 dhat = "0.3.3"
-ndarray = { version = "0.16.1", features = ["rayon"] }
+ndarray = { version = "0.17.1", features = ["rayon"] }
 object_store = "0.12.5"
 pathfinding = "4.14.0"
 pprof = { version = "0.14.1", features = ["flamegraph"] }
@@ -46,7 +46,7 @@ tracing-subscriber = { version = "0.3.20", features = [
   "env-filter",
   "fmt",
 ], default-features = true }
-zarrs = { version = "0.22.10", features = ["async", "filesystem"] }
+zarrs = { version = "0.23.13", features = ["async", "filesystem"] }
 zarrs_object_store = { version = "0.5.0", features = ["fs"] }
 
 [workspace.lints.rust]

@@ -10,8 +10,8 @@ use ndarray::Array3;
 use object_store::local::LocalFileSystem;
 use rand::RngExt;
 use tempfile::TempDir;
-use zarrs::array::{ArrayBuilder, DataType, FillValue};
-use zarrs::array_subset::ArraySubset;
+use zarrs::array::data_type;
+use zarrs::array::{ArrayBuilder, ArraySubset, DataType, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
 #[cfg(test)]
@@ -141,7 +141,7 @@ impl ZarrTestBuilder {
             ci: 4,
             cj: 4,
             layers: Vec::new(),
-            dtype: DataType::Float32,
+            dtype: data_type::float32(),
             fill_value: FillValue::from(zarrs::array::ZARR_NAN_F32),
         }
     }
@@ -239,7 +239,7 @@ impl ZarrTestBuilder {
             0..(self.nj / self.cj),
         ]);
 
-        array.store_chunks_ndarray(&subset, data)?;
+        array.store_chunks(&subset, &data)?;
 
         Ok(())
     }

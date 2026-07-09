@@ -310,7 +310,7 @@ impl Dataset {
 /// An initialized `LazySubset<f32>` instance.
 pub(crate) fn make_lazy_subset_for_tests(
     source: ReadableListableStorage,
-    subset: zarrs::array_subset::ArraySubset,
+    subset: zarrs::array::ArraySubset,
 ) -> LazySubset<f32> {
     LazySubset::new(source, subset)
 }
@@ -322,7 +322,8 @@ mod tests {
     use std::f32::consts::SQRT_2;
     use std::sync::Arc;
     use test_case::test_case;
-    use zarrs::array::{ArrayBuilder, DataType, FillValue};
+    use zarrs::array::data_type;
+    use zarrs::array::{ArrayBuilder, FillValue};
     use zarrs::filesystem::FilesystemStore;
     use zarrs::group::GroupBuilder;
     use zarrs::storage::ReadableWritableListableStorage;
@@ -350,24 +351,18 @@ mod tests {
                     .any(|point| point.destination.i == 0 && point.destination.j == 0)
             );
             let ArrayIndex { i: ci, j: cj, .. } = point;
-            let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                0..1,
-                ci..(ci + 1),
-                cj..(cj + 1),
-            ]);
+            let center_subset =
+                zarrs::array::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
             let center_cost: f32 = array
-                .retrieve_array_subset_elements(&center_subset)
+                .retrieve_array_subset::<Vec<f32>>(&center_subset)
                 .expect("Error reading zarr data")[0];
             let results = same_option_neighbors(&neighborhoods, point.option, Some(center_cost));
 
             for (ArrayIndex { i, j, .. }, val) in results {
-                let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    i..(i + 1),
-                    j..(j + 1),
-                ]);
+                let subset =
+                    zarrs::array::ArraySubset::new_with_ranges(&[0..1, i..(i + 1), j..(j + 1)]);
                 let subset_elements: Vec<f32> = array
-                    .retrieve_array_subset_elements(&subset)
+                    .retrieve_array_subset(&subset)
                     .expect("Error reading zarr data");
                 assert_eq!(subset_elements.len(), 1);
 
@@ -398,7 +393,7 @@ mod tests {
         ArrayBuilder::new(
             vec![3, 4],
             vec![3, 4],
-            DataType::Float32,
+            data_type::float32(),
             FillValue::from(zarrs::array::ZARR_NAN_F32),
         )
         .build(store, "/A")
@@ -443,13 +438,10 @@ mod tests {
 
             for neighborhood_point in results {
                 let ArrayIndex { i, j, .. } = neighborhood_point.destination;
-                let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    i..(i + 1),
-                    j..(j + 1),
-                ]);
+                let subset =
+                    zarrs::array::ArraySubset::new_with_ranges(&[0..1, i..(i + 1), j..(j + 1)]);
                 let subset_elements: Vec<f32> = array
-                    .retrieve_array_subset_elements(&subset)
+                    .retrieve_array_subset(&subset)
                     .expect("Error reading zarr data");
                 assert_eq!(subset_elements.len(), 1);
                 assert_eq!(
@@ -482,19 +474,16 @@ mod tests {
                     .any(|point| point.destination.i == 0 && point.destination.j == 0)
             );
             let ArrayIndex { i: ci, j: cj, .. } = point;
-            let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                0..1,
-                ci..(ci + 1),
-                cj..(cj + 1),
-            ]);
+            let center_subset =
+                zarrs::array::ArraySubset::new_with_ranges(&[0..1, ci..(ci + 1), cj..(cj + 1)]);
             let center_a = array_a
-                .retrieve_array_subset_elements::<f32>(&center_subset)
+                .retrieve_array_subset::<Vec<f32>>(&center_subset)
                 .expect("Error reading zarr data")[0];
             let center_b = array_b
-                .retrieve_array_subset_elements::<f32>(&center_subset)
+                .retrieve_array_subset::<Vec<f32>>(&center_subset)
                 .expect("Error reading zarr data")[0];
             let center_c = array_c
-                .retrieve_array_subset_elements::<f32>(&center_subset)
+                .retrieve_array_subset::<Vec<f32>>(&center_subset)
                 .expect("Error reading zarr data")[0];
 
             let center_cost: f32 =
@@ -502,23 +491,20 @@ mod tests {
             let results = same_option_neighbors(&neighborhoods, point.option, Some(center_cost));
 
             for (ArrayIndex { i, j, .. }, val) in results {
-                let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    i..(i + 1),
-                    j..(j + 1),
-                ]);
+                let subset =
+                    zarrs::array::ArraySubset::new_with_ranges(&[0..1, i..(i + 1), j..(j + 1)]);
                 let subset_elements_a: Vec<f32> = array_a
-                    .retrieve_array_subset_elements(&subset)
+                    .retrieve_array_subset(&subset)
                     .expect("Error reading zarr data");
                 assert_eq!(subset_elements_a.len(), 1);
 
                 let subset_elements_b: Vec<f32> = array_b
-                    .retrieve_array_subset_elements(&subset)
+                    .retrieve_array_subset(&subset)
                     .expect("Error reading zarr data");
                 assert_eq!(subset_elements_b.len(), 1);
 
                 let subset_elements_c: Vec<f32> = array_c
-                    .retrieve_array_subset_elements(&subset)
+                    .retrieve_array_subset(&subset)
                     .expect("Error reading zarr data");
                 assert_eq!(subset_elements_c.len(), 1);
 
@@ -739,9 +725,9 @@ mod tests {
         let c_array = zarrs::array::Array::open(dataset.source.clone(), "/C").unwrap();
 
         let mut expected: Vec<(ArrayIndex, f32)> = vec![];
-        let center_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..1, 1..2, 1..2]);
+        let center_subset = zarrs::array::ArraySubset::new_with_ranges(&[0..1, 1..2, 1..2]);
         let center_a: f32 = a_array
-            .retrieve_array_subset_elements(&center_subset)
+            .retrieve_array_subset::<Vec<f32>>(&center_subset)
             .unwrap()[0];
 
         for ir in 0..3u64 {
@@ -749,14 +735,11 @@ mod tests {
                 if ir == 1 && jr == 1 {
                     continue; // skip center
                 }
-                let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    ir..(ir + 1),
-                    jr..(jr + 1),
-                ]);
-                let a_n: f32 = a_array.retrieve_array_subset_elements(&subset).unwrap()[0];
-                let b_n: f32 = b_array.retrieve_array_subset_elements(&subset).unwrap()[0];
-                let c_n: f32 = c_array.retrieve_array_subset_elements(&subset).unwrap()[0];
+                let subset =
+                    zarrs::array::ArraySubset::new_with_ranges(&[0..1, ir..(ir + 1), jr..(jr + 1)]);
+                let a_n: f32 = a_array.retrieve_array_subset::<Vec<f32>>(&subset).unwrap()[0];
+                let b_n: f32 = b_array.retrieve_array_subset::<Vec<f32>>(&subset).unwrap()[0];
+                let c_n: f32 = c_array.retrieve_array_subset::<Vec<f32>>(&subset).unwrap()[0];
 
                 let mut averaged = 0.5_f32 * (a_n + center_a);
                 if ir != 1 && jr != 1 {

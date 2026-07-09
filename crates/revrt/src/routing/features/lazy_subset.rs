@@ -26,8 +26,8 @@ use std::sync::Arc;
 use ndarray::{ArrayD, IxDyn, SliceInfoElem};
 use tokio::sync::RwLock;
 use tracing::{error, trace};
-use zarrs::array::{Array, DataType, ElementOwned};
-use zarrs::array_subset::ArraySubset;
+use zarrs::array::data_type;
+use zarrs::array::{Array, ArraySubset, ElementOwned};
 use zarrs::storage::{AsyncReadableListableStorage, AsyncReadableListableStorageTraits};
 
 use crate::error::{Error, Result};
@@ -256,7 +256,7 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
         macro_rules! read_and_convert {
             ($native:ty) => {{
                 let native_data = array
-                    .async_retrieve_array_subset_ndarray::<$native>(subset)
+                    .async_retrieve_array_subset::<ndarray::ArrayD<$native>>(subset)
                     .await
                     .map_err(|err| {
                         Error::IO(std::io::Error::other(format!(
@@ -268,19 +268,28 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
             }};
         }
 
-        match array.data_type() {
-            DataType::Float32 => read_and_convert!(f32),
-            DataType::Float64 => read_and_convert!(f64),
-            DataType::Int16 => read_and_convert!(i16),
-            DataType::Int32 => read_and_convert!(i32),
-            DataType::Int64 => read_and_convert!(i64),
-            DataType::UInt8 => read_and_convert!(u8),
-            DataType::UInt16 => read_and_convert!(u16),
-            DataType::UInt32 => read_and_convert!(u32),
-            other => Err(Error::UnsupportedDataType(
-                format!("{:?}", other),
+        let dtype = array.data_type();
+        if dtype == &data_type::float32() {
+            read_and_convert!(f32)
+        } else if dtype == &data_type::float64() {
+            read_and_convert!(f64)
+        } else if dtype == &data_type::int16() {
+            read_and_convert!(i16)
+        } else if dtype == &data_type::int32() {
+            read_and_convert!(i32)
+        } else if dtype == &data_type::int64() {
+            read_and_convert!(i64)
+        } else if dtype == &data_type::uint8() {
+            read_and_convert!(u8)
+        } else if dtype == &data_type::uint16() {
+            read_and_convert!(u16)
+        } else if dtype == &data_type::uint32() {
+            read_and_convert!(u32)
+        } else {
+            Err(Error::UnsupportedDataType(
+                format!("{:?}", dtype),
                 varname.to_string(),
-            )),
+            ))
         }
     }
 

@@ -479,7 +479,7 @@ mod test {
     use crate::dataset::{make_lazy_subset_for_tests, samples};
     use ndarray::ArrayD;
     use std::sync::Arc;
-    use zarrs::array_subset::ArraySubset;
+    use zarrs::array::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
     use zarrs::storage::ReadableListableStorage;
 

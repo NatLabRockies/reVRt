@@ -7,8 +7,8 @@ use ndarray::Array2;
 use object_store::local::LocalFileSystem;
 use rand::RngExt;
 use tempfile::TempDir;
-use zarrs::array::{ArrayBuilder, DataType, FillValue};
-use zarrs::array_subset::ArraySubset;
+use zarrs::array::data_type;
+use zarrs::array::{ArrayBuilder, ArraySubset, DataType, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
 use zarrs::storage::{AsyncReadableListableStorage, ReadableWritableListableStorage};
@@ -63,16 +63,16 @@ pub(crate) enum FeatureDataType {
 impl FeatureDataType {
     fn zarrs_dtype(self) -> DataType {
         match self {
-            Self::Float32 => DataType::Float32,
-            Self::Float64 => DataType::Float64,
-            Self::Int8 => DataType::Int8,
-            Self::Int16 => DataType::Int16,
-            Self::Int32 => DataType::Int32,
-            Self::Int64 => DataType::Int64,
-            Self::UInt8 => DataType::UInt8,
-            Self::UInt16 => DataType::UInt16,
-            Self::UInt32 => DataType::UInt32,
-            Self::UInt64 => DataType::UInt64,
+            Self::Float32 => data_type::float32(),
+            Self::Float64 => data_type::float64(),
+            Self::Int8 => data_type::int8(),
+            Self::Int16 => data_type::int16(),
+            Self::Int32 => data_type::int32(),
+            Self::Int64 => data_type::int64(),
+            Self::UInt8 => data_type::uint8(),
+            Self::UInt16 => data_type::uint16(),
+            Self::UInt32 => data_type::uint32(),
+            Self::UInt64 => data_type::uint64(),
         }
     }
 
@@ -285,7 +285,7 @@ impl FeaturesTestBuilder {
             ($T:ty) => {{
                 let data: Array2<$T> =
                     Array2::from_shape_vec(shape, flat.into_iter().map(|v| v as $T).collect())?;
-                array.store_chunks_ndarray(&subset, data)?;
+                array.store_chunks(&subset, &data)?;
             }};
         }
 
@@ -491,8 +491,8 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/seq").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..3]);
-        let vals: Vec<f32> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..3]);
+        let vals: Vec<f32> = array.retrieve_array_subset(&subset).unwrap();
         // Sequential starts at 1
         let expected: Vec<f32> = (1..=6).map(|x| x as f32).collect();
         assert_eq!(vals, expected);
@@ -509,8 +509,8 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/idx").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..3, 0..3]);
-        let vals: Vec<f32> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..3, 0..3]);
+        let vals: Vec<f32> = array.retrieve_array_subset(&subset).unwrap();
 
         for i in 0..3u64 {
             for j in 0..3u64 {
@@ -578,7 +578,7 @@ mod tests {
             .await
             .unwrap();
         let chunk: Vec<f32> = array
-            .async_retrieve_chunk_elements::<f32>(&[0, 0])
+            .async_retrieve_chunk::<Vec<f32>>(&[0, 0])
             .await
             .unwrap();
         assert!(chunk.iter().all(|&v| v == 42.0));
@@ -603,7 +603,7 @@ mod tests {
             .await
             .unwrap();
         let chunk: Vec<f32> = array
-            .async_retrieve_chunk_elements::<f32>(&[0, 0])
+            .async_retrieve_chunk::<Vec<f32>>(&[0, 0])
             .await
             .unwrap();
         assert!(!chunk.is_empty());
@@ -624,7 +624,7 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/elev").unwrap();
-        assert!(matches!(array.data_type(), zarrs::array::DataType::Float64));
+        assert_eq!(array.data_type(), &data_type::float64());
     }
 
     #[test]
@@ -638,7 +638,7 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/band").unwrap();
-        assert!(matches!(array.data_type(), zarrs::array::DataType::Int32));
+        assert_eq!(array.data_type(), &data_type::int32());
     }
 
     #[test]
@@ -652,7 +652,7 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/mask").unwrap();
-        assert!(matches!(array.data_type(), zarrs::array::DataType::UInt8));
+        assert_eq!(array.data_type(), &data_type::uint8());
     }
 
     #[test]
@@ -666,8 +666,8 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/temp").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]);
-        let vals: Vec<f64> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..2]);
+        let vals: Vec<f64> = array.retrieve_array_subset(&subset).unwrap();
         for v in vals {
             let diff = (v - 1.62_f64).abs();
             // The fill value is specified as f32 (1.62f32 ≈ 1.6200001e0),
@@ -687,8 +687,8 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/idx").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..3]);
-        let vals: Vec<i16> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..3]);
+        let vals: Vec<i16> = array.retrieve_array_subset(&subset).unwrap();
         let expected: Vec<i16> = (1..=6).collect();
         assert_eq!(vals, expected);
     }
@@ -704,8 +704,8 @@ mod tests {
 
         let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
         let array = zarrs::array::Array::open(sync_store, "/cls").unwrap();
-        let subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[0..2, 0..2]);
-        let vals: Vec<u32> = array.retrieve_array_subset_elements(&subset).unwrap();
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..2]);
+        let vals: Vec<u32> = array.retrieve_array_subset(&subset).unwrap();
         assert!(vals.iter().all(|&v| v == 255));
     }
 
@@ -726,17 +726,8 @@ mod tests {
         let lc_array = zarrs::array::Array::open(sync_store.clone(), "/land_cover").unwrap();
         let elev_array = zarrs::array::Array::open(sync_store.clone(), "/elevation").unwrap();
 
-        assert!(matches!(
-            cost_array.data_type(),
-            zarrs::array::DataType::Float32
-        ));
-        assert!(matches!(
-            lc_array.data_type(),
-            zarrs::array::DataType::UInt8
-        ));
-        assert!(matches!(
-            elev_array.data_type(),
-            zarrs::array::DataType::Int16
-        ));
+        assert_eq!(cost_array.data_type(), &data_type::float32());
+        assert_eq!(lc_array.data_type(), &data_type::uint8());
+        assert_eq!(elev_array.data_type(), &data_type::int16());
     }
 }

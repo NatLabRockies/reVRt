@@ -110,11 +110,8 @@ impl DerivedDataWriter {
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/cost").unwrap();
         let subset = variable.chunk_subset(&[cb, ci, cj]).unwrap();
-        let chunk_subset = zarrs::array_subset::ArraySubset::new_with_ranges(&[
-            cb..(cb + 1),
-            ci..(ci + 1),
-            cj..(cj + 1),
-        ]);
+        let chunk_subset =
+            zarrs::array::ArraySubset::new_with_ranges(&[cb..(cb + 1), ci..(ci + 1), cj..(cj + 1)]);
         let mut data = LazySubset::<f32>::new(self.source.clone(), subset.clone());
 
         if self.has_invariant_costs {
@@ -153,7 +150,7 @@ impl DerivedDataWriter {
         ci: u64,
         cj: u64,
         features: &mut LazySubset<f32>,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
+        chunk_subset: &zarrs::array::ArraySubset,
         is_invariant: bool,
     ) {
         let output;
@@ -181,7 +178,7 @@ impl DerivedDataWriter {
         let chunk_indices: Vec<u64> = vec![cb, ci, cj];
         trace!("Storing chunk at {:?}", chunk_indices);
         trace!("Target chunk subset: {:?}", chunk_subset);
-        cost.store_chunks_ndarray(chunk_subset, output).unwrap();
+        cost.store_chunks(chunk_subset, &output).unwrap();
     }
 
     /// Compute and store the per-option driver multiplier for a chunk.
@@ -193,7 +190,7 @@ impl DerivedDataWriter {
         &self,
         cb: u64,
         features: &mut LazySubset<f32>,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
+        chunk_subset: &zarrs::array::ArraySubset,
     ) {
         trace!("Calculating driver multiplier for chunk band {}", cb);
 
@@ -223,7 +220,7 @@ impl DerivedDataWriter {
             zarrs::array::Array::open(self.swap.clone(), "/driver_multiplier").unwrap();
         driver_multiplier.store_metadata().unwrap();
         driver_multiplier
-            .store_chunks_ndarray(chunk_subset, output)
+            .store_chunks(chunk_subset, &output)
             .unwrap();
     }
 
@@ -241,8 +238,8 @@ impl DerivedDataWriter {
     fn calculate_chunk_hard_barrier_mask(
         &self,
         features: &mut LazySubset<f32>,
-        subset: &zarrs::array_subset::ArraySubset,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
+        chunk_subset: &zarrs::array::ArraySubset,
     ) {
         trace!("Calculating hard barrier mask for subset {:?}", subset);
 
@@ -267,7 +264,7 @@ impl DerivedDataWriter {
 
         let variable = zarrs::array::Array::open(self.swap.clone(), "/hard_barrier_mask").unwrap();
         variable.store_metadata().unwrap();
-        variable.store_chunks_ndarray(chunk_subset, output).unwrap();
+        variable.store_chunks(chunk_subset, &output).unwrap();
     }
 
     /// Compute and store cumulative soft barrier masks for every retry state.
@@ -285,8 +282,8 @@ impl DerivedDataWriter {
     fn calculate_chunk_cumulative_soft_barrier_masks(
         &self,
         features: &mut LazySubset<f32>,
-        subset: &zarrs::array_subset::ArraySubset,
-        chunk_subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
+        chunk_subset: &zarrs::array::ArraySubset,
     ) {
         trace!(
             "Calculating cumulative soft barrier masks for subset {:?}",
@@ -316,7 +313,7 @@ impl DerivedDataWriter {
             }
 
             target.store_metadata().unwrap();
-            target.store_chunks_ndarray(chunk_subset, output).unwrap();
+            target.store_chunks(chunk_subset, &output).unwrap();
         }
     }
 }
@@ -341,7 +338,7 @@ impl DerivedDataMaterializer for DerivedDataWriter {
     fn ensure_derived_data_for_subset(
         &self,
         array: &zarrs::array::Array<dyn zarrs::storage::ReadableStorageTraits>,
-        subset: &zarrs::array_subset::ArraySubset,
+        subset: &zarrs::array::ArraySubset,
     ) {
         let _profiling_scope =
             crate::profiling::scope("dataset::DerivedDataWriter::ensure_derived_data_for_subset");
@@ -402,7 +399,7 @@ impl DerivedDataMaterializer for DerivedDataWriter {
 /// # Returns
 /// A boolean array with the same dimensionality as `subset`, initialized to
 /// `false` in every cell.
-fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD<bool> {
+fn empty_bool_mask(subset: &zarrs::array::ArraySubset) -> ndarray::ArrayD<bool> {
     ndarray::ArrayD::<bool>::from_elem(
         ndarray::IxDyn(
             &subset
@@ -432,7 +429,7 @@ fn empty_bool_mask(subset: &zarrs::array_subset::ArraySubset) -> ndarray::ArrayD
 fn combine_barrier_layers_for_subset(
     barrier_layers: &[BarrierLayer],
     features: &mut LazySubset<f32>,
-    subset: &zarrs::array_subset::ArraySubset,
+    subset: &zarrs::array::ArraySubset,
 ) -> Option<ndarray::ArrayD<bool>> {
     if barrier_layers.is_empty() {
         return None;
@@ -459,7 +456,7 @@ mod tests {
     use ndarray::{ArrayD, IxDyn};
     use tempfile::TempDir;
     use zarrs::array::Array;
-    use zarrs::array_subset::ArraySubset;
+    use zarrs::array::ArraySubset;
     use zarrs::filesystem::FilesystemStore;
     use zarrs::storage::ReadableListableStorage;
 
@@ -521,7 +518,7 @@ mod tests {
     ) -> Vec<T> {
         zarrs::array::Array::open(store.clone(), path)
             .unwrap()
-            .retrieve_array_subset_elements(subset)
+            .retrieve_array_subset(subset)
             .unwrap()
     }
 
@@ -720,11 +717,11 @@ mod tests {
         let subset = ArraySubset::new_with_ranges(&[0..1, 0..3, 0..3]);
         let cost_values: Vec<f32> = Array::open(swap.clone(), "/cost")
             .expect("could not open derived cost array")
-            .retrieve_array_subset_elements(&subset)
+            .retrieve_array_subset(&subset)
             .expect("could not read derived costs");
         let hard_barrier_mask: Vec<bool> = Array::open(swap, "/hard_barrier_mask")
             .expect("could not open hard barrier mask")
-            .retrieve_array_subset_elements(&subset)
+            .retrieve_array_subset(&subset)
             .expect("could not read hard barrier mask");
 
         assert_eq!(
@@ -970,11 +967,11 @@ mod tests {
 
         let cost_band_0: Vec<f32> = Array::open(swap.clone(), "/cost")
             .expect("could not open derived cost array")
-            .retrieve_array_subset_elements(&first_option_subset)
+            .retrieve_array_subset(&first_option_subset)
             .expect("could not read first option cost array");
         let cost_band_1: Vec<f32> = Array::open(swap, "/cost")
             .expect("could not open derived cost array")
-            .retrieve_array_subset_elements(&second_option_subset)
+            .retrieve_array_subset(&second_option_subset)
             .expect("could not read second option cost array");
 
         assert_eq!(cost_band_0, vec![1.0; 4]);

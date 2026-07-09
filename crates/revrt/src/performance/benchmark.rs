@@ -52,7 +52,7 @@ fn features(ni: u64, nj: u64, ci: u64, cj: u64, ftype: FeaturesType) -> std::pat
         let array = zarrs::array::ArrayBuilder::new(
             vec![1, ni, nj], // array shape
             vec![1, ci, cj], // regular chunk shape
-            zarrs::array::DataType::Float32,
+            zarrs::array::data_type::float32(),
             zarrs::array::FillValue::from(zarrs::array::ZARR_NAN_F32),
         )
         // .bytes_to_bytes_codecs(vec![]) // uncompressed
@@ -81,13 +81,9 @@ fn features(ni: u64, nj: u64, ci: u64, cj: u64, ftype: FeaturesType) -> std::pat
                 .unwrap();
 
         array
-            .store_chunks_ndarray(
-                &zarrs::array_subset::ArraySubset::new_with_ranges(&[
-                    0..1,
-                    0..(ni / ci),
-                    0..(nj / cj),
-                ]),
-                data,
+            .store_chunks(
+                &zarrs::array::ArraySubset::new_with_ranges(&[0..1, 0..(ni / ci), 0..(nj / cj)]),
+                &data,
             )
             .unwrap();
     }

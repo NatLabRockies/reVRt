@@ -11,6 +11,7 @@ use ndarray::Array3;
 use pprof::ProfilerGuardBuilder;
 use revrt::{ArrayIndex, profiling, resolve_parallel_with_routing_options};
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
+use zarrs::array::data_type;
 use zarrs::array::{ArrayBuilder, DataType, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
@@ -314,7 +315,7 @@ fn create_uniform_cost_dataset(
     let array = ArrayBuilder::new(
         vec![1, rows, cols],
         vec![1, chunk_size, chunk_size],
-        DataType::Float32,
+        data_type::float32(),
         FillValue::from(zarrs::array::ZARR_NAN_F32),
     )
     .dimension_names(["band", "y", "x"].into())
@@ -325,7 +326,7 @@ fn create_uniform_cost_dataset(
     let values = vec![cost_value; usize::try_from(rows * cols)?];
     let data = Array3::from_shape_vec((1, rows as usize, cols as usize), values)?;
     let subset_start = [0, 0, 0];
-    array.store_array_subset_ndarray(&subset_start, data)?;
+    array.store_array_subset_ndarray(&subset_start, &data)?;
 
     Ok(())
 }
