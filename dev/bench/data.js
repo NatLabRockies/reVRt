@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783517563669,
+  "lastUpdate": 1783558442646,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12599,6 +12599,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 290980118,
             "range": "± 45533527",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c4ba0948334b2558d054b97f12a0c25b7ff2eec7",
+          "message": "Updating dependency to Zarrs-0.23.X (#308)\n\n* cfg: Bump zarrs and ndarray\n\n* refact: New ArraySubset path\n\n* refact: New data_type syntax\n\n* refact: Conforming with FeatureDataType\n\n* refact: Borrow ndarrays for store_*_ndarray APIs\n\n* refact: Build ChunkShape via NonZeroU64\n\n* chore: Drop unused DataType imports\n\n* style:\n\n* refact: Migrate off deprecated retrieve_*/store_chunks_ndarray APIs\n\n* style:\n\n* chore: Compare DataType by reference to match test style",
+          "timestamp": "2026-07-08T18:37:41-06:00",
+          "tree_id": "555105da0f335e712f87cf9cb56a6e808489f555",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/c4ba0948334b2558d054b97f12a0c25b7ff2eec7"
+        },
+        "date": 1783558440435,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 50874522,
+            "range": "± 972219",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 75482956,
+            "range": "± 899398",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 64941177,
+            "range": "± 1135902",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 93342395,
+            "range": "± 1345446",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 448013019,
+            "range": "± 13645816",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 144915431,
+            "range": "± 1029777",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147341503,
+            "range": "± 1016159",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 155978316,
+            "range": "± 1139458",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 183439619,
+            "range": "± 956877",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 288411081,
+            "range": "± 4936458",
             "unit": "ns/iter"
           }
         ]
