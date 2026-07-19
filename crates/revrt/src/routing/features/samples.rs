@@ -247,9 +247,7 @@ impl FeaturesTestBuilder {
     /// Returns an error if `shape` and `chunks` have different lengths,
     /// if any dimension or chunk size is zero, or if any downstream
     /// Zarr or filesystem call fails.
-    pub(crate) fn build(
-        self,
-    ) -> Result<(TempDir, AsyncReadableListableStorage)> {
+    pub(crate) fn build(self) -> Result<(TempDir, AsyncReadableListableStorage)> {
         if self.shape.len() != self.chunks.len() {
             return Err(Error::Undefined(format!(
                 "shape rank {} does not match chunks rank {}",
@@ -300,9 +298,7 @@ impl FeaturesTestBuilder {
         store: &ReadableWritableListableStorage,
         config: &LayerConfig,
     ) -> Result<()> {
-        let dim_names: Vec<String> = (0..self.shape.len())
-            .map(|i| format!("dim_{i}"))
-            .collect();
+        let dim_names: Vec<String> = (0..self.shape.len()).map(|i| format!("dim_{i}")).collect();
 
         let array = ArrayBuilder::new(
             self.shape.clone(),
@@ -461,9 +457,7 @@ pub(crate) fn preset_large() -> FeaturesTestBuilder {
 ///
 /// Useful when the actual feature values are irrelevant to the test.
 #[allow(dead_code)]
-pub(crate) fn single_ones_layer(
-    name: &str,
-) -> Result<(TempDir, AsyncReadableListableStorage)> {
+pub(crate) fn single_ones_layer(name: &str) -> Result<(TempDir, AsyncReadableListableStorage)> {
     FeaturesTestBuilder::new()
         .layer(LayerConfig::ones(name))
         .build()
@@ -602,7 +596,9 @@ mod tests {
         let (tmp, _storage) = FeaturesTestBuilder::new()
             .dimensions(&[3, 3])
             .chunks(&[3, 3])
-            .layer(LayerConfig::custom("idx", |idx| (idx[0] * 10 + idx[1]) as f32))
+            .layer(LayerConfig::custom("idx", |idx| {
+                (idx[0] * 10 + idx[1]) as f32
+            }))
             .build()
             .unwrap();
 

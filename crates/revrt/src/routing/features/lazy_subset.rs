@@ -561,10 +561,7 @@ mod tests {
             for j in 0..3usize {
                 for k in 0..4usize {
                     let expected = (i * 3 * 4 + j * 4 + k + 1) as f32;
-                    assert_eq!(
-                        data[[i, j, k]], expected,
-                        "in-bounds cell [{i},{j},{k}]"
-                    );
+                    assert_eq!(data[[i, j, k]], expected, "in-bounds cell [{i},{j},{k}]");
                 }
             }
         }
