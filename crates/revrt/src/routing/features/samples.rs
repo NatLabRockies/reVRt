@@ -243,7 +243,8 @@ impl FeaturesTestBuilder {
     /// # Errors
     ///
     /// Returns an error if `shape` and `chunks` have different lengths,
-    /// or if any downstream Zarr or filesystem call fails.
+    /// if any dimension or chunk size is zero, or if any downstream
+    /// Zarr or filesystem call fails.
     pub(crate) fn build(
         self,
     ) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
@@ -254,6 +255,12 @@ impl FeaturesTestBuilder {
                 self.chunks.len(),
             )
             .into());
+        }
+        if self.shape.iter().any(|&d| d == 0) {
+            return Err(format!("shape contains a zero dimension: {:?}", self.shape).into());
+        }
+        if self.chunks.iter().any(|&c| c == 0) {
+            return Err(format!("chunks contains a zero dimension: {:?}", self.chunks).into());
         }
 
         let tmp = TempDir::new()?;
@@ -573,6 +580,39 @@ mod tests {
                 "bad",
                 FillStrategy::Values(vec![1.0, 2.0]),
             )) // needs 4
+            .build();
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn builder_rank_mismatch_errors() {
+        let result = FeaturesTestBuilder::new()
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2, 1])
+            .layer(LayerConfig::ones("A"))
+            .build();
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn builder_zero_dimension_errors() {
+        let result = FeaturesTestBuilder::new()
+            .dimensions(&[4, 0])
+            .chunks(&[2, 2])
+            .layer(LayerConfig::ones("A"))
+            .build();
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn builder_zero_chunk_errors() {
+        let result = FeaturesTestBuilder::new()
+            .dimensions(&[4, 4])
+            .chunks(&[2, 0])
+            .layer(LayerConfig::ones("A"))
             .build();
 
         assert!(result.is_err());
