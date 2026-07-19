@@ -403,8 +403,8 @@ mod tests {
     #[tokio::test]
     async fn get_returns_correct_shape_and_values() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("A", 3.0))
             .build()
             .unwrap();
@@ -421,8 +421,8 @@ mod tests {
     #[tokio::test]
     async fn get_same_variable_twice_is_identical() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
@@ -439,8 +439,8 @@ mod tests {
     #[tokio::test]
     async fn get_missing_variable_returns_error() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::ones("A"))
             .build()
             .unwrap();
@@ -456,8 +456,8 @@ mod tests {
     #[tokio::test]
     async fn get_pads_out_of_bounds_with_nan_f32() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("A", 7.0))
             .build()
             .unwrap();
@@ -502,8 +502,8 @@ mod tests {
         use super::super::samples::FeatureDataType;
 
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("elev", 1.5).with_dtype(FeatureDataType::Float64))
             .build()
             .unwrap();
@@ -521,8 +521,8 @@ mod tests {
     #[tokio::test]
     async fn fully_outside_returns_all_nan() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::ones("A"))
             .build()
             .unwrap();
@@ -540,8 +540,8 @@ mod tests {
     #[tokio::test]
     async fn concurrent_get_different_variables() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("A", 1.0))
             .layer(LayerConfig::constant("B", 2.0))
             .build()
@@ -560,8 +560,8 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn parallel_loads_match() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
@@ -594,8 +594,8 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn shared_instance_across_tasks() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
@@ -629,8 +629,8 @@ mod tests {
         use super::super::samples::FeatureDataType;
 
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(2, 3)
-            .chunks(2, 3)
+            .dimensions(&[2, 3])
+            .chunks(&[2, 3])
             .layer(LayerConfig::sequential("from_f32"))
             .layer(LayerConfig::sequential("from_f64").with_dtype(FeatureDataType::Float64))
             .layer(LayerConfig::sequential("from_i16").with_dtype(FeatureDataType::Int16))
