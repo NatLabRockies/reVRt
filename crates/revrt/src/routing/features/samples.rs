@@ -16,6 +16,8 @@ use zarrs::group::GroupBuilder;
 use zarrs::storage::{AsyncReadableListableStorage, ReadableWritableListableStorage};
 use zarrs_object_store::AsyncObjectStore;
 
+use crate::error::{Error, Result};
+
 // -----------------------------------------------------------------------
 // Fill strategy
 // -----------------------------------------------------------------------
@@ -247,26 +249,32 @@ impl FeaturesTestBuilder {
     /// Zarr or filesystem call fails.
     pub(crate) fn build(
         self,
-    ) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
+    ) -> Result<(TempDir, AsyncReadableListableStorage)> {
         if self.shape.len() != self.chunks.len() {
-            return Err(format!(
+            return Err(Error::Undefined(format!(
                 "shape rank {} does not match chunks rank {}",
                 self.shape.len(),
                 self.chunks.len(),
-            )
-            .into());
+            )));
         }
         if self.shape.contains(&0) {
-            return Err(format!("shape contains a zero dimension: {:?}", self.shape).into());
+            return Err(Error::Undefined(format!(
+                "shape contains a zero dimension: {:?}",
+                self.shape
+            )));
         }
         if self.chunks.contains(&0) {
-            return Err(format!("chunks contains a zero dimension: {:?}", self.chunks).into());
+            return Err(Error::Undefined(format!(
+                "chunks contains a zero dimension: {:?}",
+                self.chunks
+            )));
         }
 
         let tmp = TempDir::new()?;
 
-        let sync_store: ReadableWritableListableStorage =
-            Arc::new(FilesystemStore::new(tmp.path())?);
+        let sync_store: ReadableWritableListableStorage = Arc::new(
+            FilesystemStore::new(tmp.path()).map_err(|e| Error::Undefined(e.to_string()))?,
+        );
 
         GroupBuilder::new()
             .build(sync_store.clone(), "/")?
@@ -291,7 +299,7 @@ impl FeaturesTestBuilder {
         &self,
         store: &ReadableWritableListableStorage,
         config: &LayerConfig,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<()> {
         let dim_names: Vec<String> = (0..self.shape.len())
             .map(|i| format!("dim_{i}"))
             .collect();
@@ -312,11 +320,13 @@ impl FeaturesTestBuilder {
             .shape
             .iter()
             .map(|&d| {
-                usize::try_from(d).map_err(|_| -> Box<dyn std::error::Error> {
-                    format!("dimension {d} does not fit in usize on this target").into()
+                usize::try_from(d).map_err(|_| {
+                    Error::Undefined(format!(
+                        "dimension {d} does not fit in usize on this target"
+                    ))
                 })
             })
-            .collect::<Result<_, _>>()?;
+            .collect::<Result<_>>()?;
         let chunk_ranges: Vec<std::ops::Range<u64>> = self
             .shape
             .iter()
@@ -330,7 +340,8 @@ impl FeaturesTestBuilder {
                 let data: ArrayD<$T> = ArrayD::from_shape_vec(
                     IxDyn(&shape_usize),
                     flat.into_iter().map(|v| v as $T).collect(),
-                )?;
+                )
+                .map_err(|e| Error::Undefined(e.to_string()))?;
                 array.store_chunks(&subset, &data)?;
             }};
         }
@@ -356,14 +367,19 @@ impl FeaturesTestBuilder {
     /// Values are emitted in row-major (C) order over `self.shape`.
     /// All fill strategies produce `f32` values.  The caller is
     /// responsible for casting to the target element type before writing.
-    fn generate_flat(&self, fill: &FillStrategy) -> Result<Vec<f32>, Box<dyn std::error::Error>> {
+    fn generate_flat(&self, fill: &FillStrategy) -> Result<Vec<f32>> {
         let size_u64: u64 = self.shape.iter().try_fold(1u64, |acc, &d| {
-            acc.checked_mul(d).ok_or_else(|| -> Box<dyn std::error::Error> {
-                format!("shape product overflows u64 (shape={:?})", self.shape).into()
+            acc.checked_mul(d).ok_or_else(|| {
+                Error::Undefined(format!(
+                    "shape product overflows u64 (shape={:?})",
+                    self.shape
+                ))
             })
         })?;
-        let size: usize = usize::try_from(size_u64).map_err(|_| -> Box<dyn std::error::Error> {
-            format!("shape product {size_u64} does not fit in usize on this target").into()
+        let size: usize = usize::try_from(size_u64).map_err(|_| {
+            Error::Undefined(format!(
+                "shape product {size_u64} does not fit in usize on this target"
+            ))
         })?;
 
         let flat = match fill {
@@ -396,12 +412,11 @@ impl FeaturesTestBuilder {
 
             FillStrategy::Values(vals) => {
                 if vals.len() != size {
-                    return Err(format!(
+                    return Err(Error::Undefined(format!(
                         "Values length {} does not match array size {}",
                         vals.len(),
                         size
-                    )
-                    .into());
+                    )));
                 }
                 vals.clone()
             }
@@ -448,7 +463,7 @@ pub(crate) fn preset_large() -> FeaturesTestBuilder {
 #[allow(dead_code)]
 pub(crate) fn single_ones_layer(
     name: &str,
-) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
+) -> Result<(TempDir, AsyncReadableListableStorage)> {
     FeaturesTestBuilder::new()
         .layer(LayerConfig::ones(name))
         .build()
@@ -461,7 +476,7 @@ pub(crate) fn single_ones_layer(
 pub(crate) fn multi_variable_sequential(
     shape: &[u64],
     chunks: &[u64],
-) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
+) -> Result<(TempDir, AsyncReadableListableStorage)> {
     FeaturesTestBuilder::new()
         .dimensions(shape)
         .chunks(chunks)
@@ -478,7 +493,7 @@ pub(crate) fn multi_variable_sequential(
 pub(crate) fn multi_variable_random(
     shape: &[u64],
     chunks: &[u64],
-) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
+) -> Result<(TempDir, AsyncReadableListableStorage)> {
     FeaturesTestBuilder::new()
         .dimensions(shape)
         .chunks(chunks)
