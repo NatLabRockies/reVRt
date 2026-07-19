@@ -256,10 +256,10 @@ impl FeaturesTestBuilder {
             )
             .into());
         }
-        if self.shape.iter().any(|&d| d == 0) {
+        if self.shape.contains(&0) {
             return Err(format!("shape contains a zero dimension: {:?}", self.shape).into());
         }
-        if self.chunks.iter().any(|&c| c == 0) {
+        if self.chunks.contains(&0) {
             return Err(format!("chunks contains a zero dimension: {:?}", self.chunks).into());
         }
 
@@ -308,7 +308,15 @@ impl FeaturesTestBuilder {
         array.store_metadata()?;
 
         let flat = self.generate_flat(&config.fill)?;
-        let shape_usize: Vec<usize> = self.shape.iter().map(|&d| d as usize).collect();
+        let shape_usize: Vec<usize> = self
+            .shape
+            .iter()
+            .map(|&d| {
+                usize::try_from(d).map_err(|_| -> Box<dyn std::error::Error> {
+                    format!("dimension {d} does not fit in usize on this target").into()
+                })
+            })
+            .collect::<Result<_, _>>()?;
         let chunk_ranges: Vec<std::ops::Range<u64>> = self
             .shape
             .iter()
@@ -349,7 +357,14 @@ impl FeaturesTestBuilder {
     /// All fill strategies produce `f32` values.  The caller is
     /// responsible for casting to the target element type before writing.
     fn generate_flat(&self, fill: &FillStrategy) -> Result<Vec<f32>, Box<dyn std::error::Error>> {
-        let size: usize = self.shape.iter().product::<u64>() as usize;
+        let size_u64: u64 = self.shape.iter().try_fold(1u64, |acc, &d| {
+            acc.checked_mul(d).ok_or_else(|| -> Box<dyn std::error::Error> {
+                format!("shape product overflows u64 (shape={:?})", self.shape).into()
+            })
+        })?;
+        let size: usize = usize::try_from(size_u64).map_err(|_| -> Box<dyn std::error::Error> {
+            format!("shape product {size_u64} does not fit in usize on this target").into()
+        })?;
 
         let flat = match fill {
             FillStrategy::Constant(v) => vec![*v; size],
