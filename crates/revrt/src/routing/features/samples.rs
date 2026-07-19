@@ -545,6 +545,28 @@ mod tests {
         assert_eq!(vals, expected);
     }
 
+    /// 3-D sanity check: confirms that `generate_flat` walks a 3-D shape
+    /// in row-major (C) order and that `write_layer` correctly stores
+    /// across multiple chunks in three dimensions.
+    #[test]
+    fn builder_3d_sequential_values() {
+        let (tmp, _storage) = FeaturesTestBuilder::new()
+            .dimensions(&[2, 3, 4])
+            .chunks(&[1, 3, 2])
+            .layer(LayerConfig::sequential("seq"))
+            .build()
+            .unwrap();
+
+        let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let array = zarrs::array::Array::open(sync_store, "/seq").unwrap();
+        assert_eq!(array.shape(), &[2, 3, 4]);
+
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..3, 0..4]);
+        let vals: Vec<f32> = array.retrieve_array_subset(&subset).unwrap();
+        let expected: Vec<f32> = (1..=24).map(|x| x as f32).collect();
+        assert_eq!(vals, expected);
+    }
+
     #[test]
     fn builder_custom_fill() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
