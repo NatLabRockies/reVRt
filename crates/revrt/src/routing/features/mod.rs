@@ -123,8 +123,8 @@ mod test {
     #[tokio::test]
     async fn lazy_subset_returns_correct_data() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(8, 8)
-            .chunks(4, 4)
+            .dimensions(&[8, 8])
+            .chunks(&[4, 4])
             .layer(LayerConfig::constant("A", 5.0))
             .layer(LayerConfig::sequential("B"))
             .build()
@@ -152,8 +152,8 @@ mod test {
     #[tokio::test]
     async fn lazy_subset_pads_out_of_bounds() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::ones("A"))
             .build()
             .unwrap();
@@ -181,8 +181,8 @@ mod test {
         use zarrs::array::ArraySubset;
 
         let (_tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("A", 5.0))
             .layer(LayerConfig::sequential("B"))
             .build()

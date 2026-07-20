@@ -1,9 +1,11 @@
 //! Samples to support tests that require Features
 //!
-//! All arrays are 2-D with shape `[ni, nj]` and dimension names `["y", "x"]`.
+//! Arrays are N-D with a caller-supplied `shape` and matching `chunks`
+//! (both `&[u64]`). Dimension names default to `["dim_0", "dim_1", …]`
+//! but are not otherwise inspected by the runtime.
 use std::sync::Arc;
 
-use ndarray::Array2;
+use ndarray::{ArrayD, IxDyn};
 use object_store::local::LocalFileSystem;
 use rand::RngExt;
 use tempfile::TempDir;
@@ -14,6 +16,8 @@ use zarrs::group::GroupBuilder;
 use zarrs::storage::{AsyncReadableListableStorage, ReadableWritableListableStorage};
 use zarrs_object_store::AsyncObjectStore;
 
+use crate::error::{Error, Result};
+
 // -----------------------------------------------------------------------
 // Fill strategy
 // -----------------------------------------------------------------------
@@ -23,13 +27,16 @@ use zarrs_object_store::AsyncObjectStore;
 pub(crate) enum FillStrategy {
     /// Every cell gets the same value.
     Constant(f32),
-    /// Cells are numbered `1, 2, …, ni*nj` in row-major order.
+    /// Cells are numbered `1, 2, …, shape.iter().product()` in
+    /// row-major (C) order.
     Sequential,
     /// Each cell receives an independent uniform random draw from `[min, max]`.
     Random(f32, f32),
-    /// Values are derived from `(row, col)` via a user-supplied function.
-    Custom(fn(u64, u64) -> f32),
-    /// Use an explicit flat vector (must have length `ni * nj`).
+    /// Values are derived from an N-D index via a user-supplied
+    /// function. The slice length equals `shape.len()`.
+    Custom(fn(&[u64]) -> f32),
+    /// Use an explicit flat vector (must have length equal to
+    /// `shape.iter().product()`).
     Values(Vec<f32>),
 }
 
@@ -153,8 +160,9 @@ impl LayerConfig {
         Self::new(name, FillStrategy::Random(min, max))
     }
 
-    /// Layer whose values are computed cell-by-cell with `f(row, col)`.
-    pub(crate) fn custom(name: impl Into<String>, f: fn(u64, u64) -> f32) -> Self {
+    /// Layer whose values are computed cell-by-cell with `f(idx)`,
+    /// where `idx` is the N-D grid index (length equal to `shape.len()`).
+    pub(crate) fn custom(name: impl Into<String>, f: fn(&[u64]) -> f32) -> Self {
         Self::new(name, FillStrategy::Custom(f))
     }
 }
@@ -166,26 +174,25 @@ impl LayerConfig {
 /// Builds an in-memory-backed (temp-dir) Zarr store suitable for use with
 /// [`Features`](super::Features).
 ///
-/// Each layer is stored as a 2-D array with shape `[ni, nj]` and chunk
-/// shape `[ci, cj]`, with dimension names `["y", "x"]`.  The element
-/// type defaults to `Float32` but can be overridden per layer via
-/// [`LayerConfig::with_dtype`].
+/// Each layer is stored as an N-D array with a caller-supplied `shape`
+/// and matching `chunks` (both `&[u64]`). Both must have the same
+/// length; the rank is `shape.len()`. Dimension names default to
+/// `["dim_0", …, "dim_{N-1}"]`. The element type defaults to `Float32`
+/// but can be overridden per layer via [`LayerConfig::with_dtype`].
 ///
 /// # Example
 /// ```rust
 /// let (tmp, storage) = FeaturesTestBuilder::new()
-///     .dimensions(8, 8)
-///     .chunks(4, 4)
+///     .dimensions(&[8, 8])
+///     .chunks(&[4, 4])
 ///     .layer(LayerConfig::ones("elevation"))
 ///     .layer(LayerConfig::sequential("land_cover"))
 ///     .build()
 ///     .unwrap();
 /// ```
 pub(crate) struct FeaturesTestBuilder {
-    ni: u64,
-    nj: u64,
-    ci: u64,
-    cj: u64,
+    shape: Vec<u64>,
+    chunks: Vec<u64>,
     layers: Vec<LayerConfig>,
 }
 
@@ -196,28 +203,31 @@ impl Default for FeaturesTestBuilder {
 }
 
 impl FeaturesTestBuilder {
-    /// Create a new builder with default dimensions `8×8` and chunk size `4×4`.
+    /// Create a new builder with default 2-D shape `[8, 8]` and chunks `[4, 4]`.
     pub(crate) fn new() -> Self {
         Self {
-            ni: 8,
-            nj: 8,
-            ci: 4,
-            cj: 4,
+            shape: vec![8, 8],
+            chunks: vec![4, 4],
             layers: Vec::new(),
         }
     }
 
-    /// Set array dimensions (rows, columns).
-    pub(crate) fn dimensions(mut self, ni: u64, nj: u64) -> Self {
-        self.ni = ni;
-        self.nj = nj;
+    /// Set the N-D array shape.
+    ///
+    /// The length of `shape` determines the rank of every layer
+    /// produced by this builder and must match the length passed to
+    /// [`chunks`](Self::chunks).
+    pub(crate) fn dimensions(mut self, shape: &[u64]) -> Self {
+        self.shape = shape.to_vec();
         self
     }
 
-    /// Set chunk dimensions (rows, columns).
-    pub(crate) fn chunks(mut self, ci: u64, cj: u64) -> Self {
-        self.ci = ci;
-        self.cj = cj;
+    /// Set the N-D chunk shape.
+    ///
+    /// Must have the same length as the value passed to
+    /// [`dimensions`](Self::dimensions).
+    pub(crate) fn chunks(mut self, chunks: &[u64]) -> Self {
+        self.chunks = chunks.to_vec();
         self
     }
 
@@ -231,13 +241,38 @@ impl FeaturesTestBuilder {
     ///
     /// Returns the [`TempDir`] (keeping it alive keeps the files on disk)
     /// and an [`AsyncReadableListableStorage`] pointing at it.
-    pub(crate) fn build(
-        self,
-    ) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `shape` and `chunks` have different lengths,
+    /// if any dimension or chunk size is zero, or if any downstream
+    /// Zarr or filesystem call fails.
+    pub(crate) fn build(self) -> Result<(TempDir, AsyncReadableListableStorage)> {
+        if self.shape.len() != self.chunks.len() {
+            return Err(Error::Undefined(format!(
+                "shape rank {} does not match chunks rank {}",
+                self.shape.len(),
+                self.chunks.len(),
+            )));
+        }
+        if self.shape.contains(&0) {
+            return Err(Error::Undefined(format!(
+                "shape contains a zero dimension: {:?}",
+                self.shape
+            )));
+        }
+        if self.chunks.contains(&0) {
+            return Err(Error::Undefined(format!(
+                "chunks contains a zero dimension: {:?}",
+                self.chunks
+            )));
+        }
+
         let tmp = TempDir::new()?;
 
-        let sync_store: ReadableWritableListableStorage =
-            Arc::new(FilesystemStore::new(tmp.path())?);
+        let sync_store: ReadableWritableListableStorage = Arc::new(
+            FilesystemStore::new(tmp.path()).map_err(|e| Error::Undefined(e.to_string()))?,
+        );
 
         GroupBuilder::new()
             .build(sync_store.clone(), "/")?
@@ -262,29 +297,47 @@ impl FeaturesTestBuilder {
         &self,
         store: &ReadableWritableListableStorage,
         config: &LayerConfig,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<()> {
+        let dim_names: Vec<String> = (0..self.shape.len()).map(|i| format!("dim_{i}")).collect();
+
         let array = ArrayBuilder::new(
-            vec![self.ni, self.nj],
-            vec![self.ci, self.cj],
+            self.shape.clone(),
+            self.chunks.clone(),
             config.dtype.zarrs_dtype(),
             config.dtype.fill_value(),
         )
-        .dimension_names(["y", "x"].into())
+        .dimension_names(Some(dim_names))
         .build(store.clone(), &format!("/{}", config.name))?;
 
         array.store_metadata()?;
 
         let flat = self.generate_flat(&config.fill)?;
-        let shape = (self.ni as usize, self.nj as usize);
-        let subset = ArraySubset::new_with_ranges(&[
-            0..self.ni.div_ceil(self.ci),
-            0..self.nj.div_ceil(self.cj),
-        ]);
+        let shape_usize: Vec<usize> = self
+            .shape
+            .iter()
+            .map(|&d| {
+                usize::try_from(d).map_err(|_| {
+                    Error::Undefined(format!(
+                        "dimension {d} does not fit in usize on this target"
+                    ))
+                })
+            })
+            .collect::<Result<_>>()?;
+        let chunk_ranges: Vec<std::ops::Range<u64>> = self
+            .shape
+            .iter()
+            .zip(&self.chunks)
+            .map(|(&s, &c)| 0..s.div_ceil(c))
+            .collect();
+        let subset = ArraySubset::new_with_ranges(&chunk_ranges);
 
         macro_rules! store_as {
             ($T:ty) => {{
-                let data: Array2<$T> =
-                    Array2::from_shape_vec(shape, flat.into_iter().map(|v| v as $T).collect())?;
+                let data: ArrayD<$T> = ArrayD::from_shape_vec(
+                    IxDyn(&shape_usize),
+                    flat.into_iter().map(|v| v as $T).collect(),
+                )
+                .map_err(|e| Error::Undefined(e.to_string()))?;
                 array.store_chunks(&subset, &data)?;
             }};
         }
@@ -307,10 +360,23 @@ impl FeaturesTestBuilder {
 
     /// Generate the flat `f32` values described by `fill`.
     ///
+    /// Values are emitted in row-major (C) order over `self.shape`.
     /// All fill strategies produce `f32` values.  The caller is
     /// responsible for casting to the target element type before writing.
-    fn generate_flat(&self, fill: &FillStrategy) -> Result<Vec<f32>, Box<dyn std::error::Error>> {
-        let size = (self.ni * self.nj) as usize;
+    fn generate_flat(&self, fill: &FillStrategy) -> Result<Vec<f32>> {
+        let size_u64: u64 = self.shape.iter().try_fold(1u64, |acc, &d| {
+            acc.checked_mul(d).ok_or_else(|| {
+                Error::Undefined(format!(
+                    "shape product overflows u64 (shape={:?})",
+                    self.shape
+                ))
+            })
+        })?;
+        let size: usize = usize::try_from(size_u64).map_err(|_| {
+            Error::Undefined(format!(
+                "shape product {size_u64} does not fit in usize on this target"
+            ))
+        })?;
 
         let flat = match fill {
             FillStrategy::Constant(v) => vec![*v; size],
@@ -324,9 +390,17 @@ impl FeaturesTestBuilder {
 
             FillStrategy::Custom(f) => {
                 let mut values = Vec::with_capacity(size);
-                for i in 0..self.ni {
-                    for j in 0..self.nj {
-                        values.push(f(i, j));
+                let ndim = self.shape.len();
+                let mut idx = vec![0u64; ndim];
+                for _ in 0..size {
+                    values.push(f(&idx));
+                    // Row-major increment: last dim varies fastest.
+                    for d in (0..ndim).rev() {
+                        idx[d] += 1;
+                        if idx[d] < self.shape[d] {
+                            break;
+                        }
+                        idx[d] = 0;
                     }
                 }
                 values
@@ -334,12 +408,11 @@ impl FeaturesTestBuilder {
 
             FillStrategy::Values(vals) => {
                 if vals.len() != size {
-                    return Err(format!(
+                    return Err(Error::Undefined(format!(
                         "Values length {} does not match array size {}",
                         vals.len(),
                         size
-                    )
-                    .into());
+                    )));
                 }
                 vals.clone()
             }
@@ -355,21 +428,25 @@ impl FeaturesTestBuilder {
 
 /// Preset: small 4×4 grid (2×2 chunks). Good for quick unit tests.
 pub(crate) fn preset_small() -> FeaturesTestBuilder {
-    FeaturesTestBuilder::new().dimensions(4, 4).chunks(2, 2)
+    FeaturesTestBuilder::new()
+        .dimensions(&[4, 4])
+        .chunks(&[2, 2])
 }
 
 /// Preset: medium 16×16 grid (4×4 chunks). Good for integration tests.
 #[allow(dead_code)]
 pub(crate) fn preset_medium() -> FeaturesTestBuilder {
-    FeaturesTestBuilder::new().dimensions(16, 16).chunks(4, 4)
+    FeaturesTestBuilder::new()
+        .dimensions(&[16, 16])
+        .chunks(&[4, 4])
 }
 
 /// Preset: large 128×128 grid (32×32 chunks). Good for performance tests.
 #[allow(dead_code)]
 pub(crate) fn preset_large() -> FeaturesTestBuilder {
     FeaturesTestBuilder::new()
-        .dimensions(128, 128)
-        .chunks(32, 32)
+        .dimensions(&[128, 128])
+        .chunks(&[32, 32])
 }
 
 // -----------------------------------------------------------------------
@@ -380,9 +457,7 @@ pub(crate) fn preset_large() -> FeaturesTestBuilder {
 ///
 /// Useful when the actual feature values are irrelevant to the test.
 #[allow(dead_code)]
-pub(crate) fn single_ones_layer(
-    name: &str,
-) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
+pub(crate) fn single_ones_layer(name: &str) -> Result<(TempDir, AsyncReadableListableStorage)> {
     FeaturesTestBuilder::new()
         .layer(LayerConfig::ones(name))
         .build()
@@ -393,14 +468,12 @@ pub(crate) fn single_ones_layer(
 /// Mirrors the spirit of `multi_variable_random` from the dataset samples,
 /// but uses predictable deterministic values.
 pub(crate) fn multi_variable_sequential(
-    ni: u64,
-    nj: u64,
-    ci: u64,
-    cj: u64,
-) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
+    shape: &[u64],
+    chunks: &[u64],
+) -> Result<(TempDir, AsyncReadableListableStorage)> {
     FeaturesTestBuilder::new()
-        .dimensions(ni, nj)
-        .chunks(ci, cj)
+        .dimensions(shape)
+        .chunks(chunks)
         .layer(LayerConfig::sequential("A"))
         .layer(LayerConfig::sequential("B"))
         .layer(LayerConfig::sequential("C"))
@@ -412,14 +485,12 @@ pub(crate) fn multi_variable_sequential(
 /// Each call produces a different dataset. Prefer
 /// [`multi_variable_sequential`] when reproducibility matters.
 pub(crate) fn multi_variable_random(
-    ni: u64,
-    nj: u64,
-    ci: u64,
-    cj: u64,
-) -> Result<(TempDir, AsyncReadableListableStorage), Box<dyn std::error::Error>> {
+    shape: &[u64],
+    chunks: &[u64],
+) -> Result<(TempDir, AsyncReadableListableStorage)> {
     FeaturesTestBuilder::new()
-        .dimensions(ni, nj)
-        .chunks(ci, cj)
+        .dimensions(shape)
+        .chunks(chunks)
         .layer(LayerConfig::random("A", 0.0, 1.0))
         .layer(LayerConfig::random("B", 0.0, 1.0))
         .layer(LayerConfig::random("C", 0.0, 1.0))
@@ -437,8 +508,8 @@ mod tests {
     #[test]
     fn builder_creates_store() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::ones("test"))
             .build()
             .unwrap();
@@ -449,8 +520,8 @@ mod tests {
     #[test]
     fn builder_multiple_layers_exist_on_disk() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(8, 8)
-            .chunks(4, 4)
+            .dimensions(&[8, 8])
+            .chunks(&[4, 4])
             .layer(LayerConfig::ones("A"))
             .layer(LayerConfig::sequential("B"))
             .layer(LayerConfig::constant("C", 5.0))
@@ -469,8 +540,8 @@ mod tests {
     #[test]
     fn builder_array_shape_is_2d() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 6)
-            .chunks(2, 3)
+            .dimensions(&[4, 6])
+            .chunks(&[2, 3])
             .layer(LayerConfig::ones("elevation"))
             .build()
             .unwrap();
@@ -483,8 +554,8 @@ mod tests {
     #[test]
     fn builder_sequential_values() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(2, 3)
-            .chunks(2, 3)
+            .dimensions(&[2, 3])
+            .chunks(&[2, 3])
             .layer(LayerConfig::sequential("seq"))
             .build()
             .unwrap();
@@ -498,12 +569,36 @@ mod tests {
         assert_eq!(vals, expected);
     }
 
+    /// 3-D sanity check: confirms that `generate_flat` walks a 3-D shape
+    /// in row-major (C) order and that `write_layer` correctly stores
+    /// across multiple chunks in three dimensions.
+    #[test]
+    fn builder_3d_sequential_values() {
+        let (tmp, _storage) = FeaturesTestBuilder::new()
+            .dimensions(&[2, 3, 4])
+            .chunks(&[1, 3, 2])
+            .layer(LayerConfig::sequential("seq"))
+            .build()
+            .unwrap();
+
+        let sync_store = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let array = zarrs::array::Array::open(sync_store, "/seq").unwrap();
+        assert_eq!(array.shape(), &[2, 3, 4]);
+
+        let subset = zarrs::array::ArraySubset::new_with_ranges(&[0..2, 0..3, 0..4]);
+        let vals: Vec<f32> = array.retrieve_array_subset(&subset).unwrap();
+        let expected: Vec<f32> = (1..=24).map(|x| x as f32).collect();
+        assert_eq!(vals, expected);
+    }
+
     #[test]
     fn builder_custom_fill() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(3, 3)
-            .chunks(3, 3)
-            .layer(LayerConfig::custom("idx", |i, j| (i * 10 + j) as f32))
+            .dimensions(&[3, 3])
+            .chunks(&[3, 3])
+            .layer(LayerConfig::custom("idx", |idx| {
+                (idx[0] * 10 + idx[1]) as f32
+            }))
             .build()
             .unwrap();
 
@@ -527,12 +622,45 @@ mod tests {
     #[test]
     fn builder_values_wrong_length_errors() {
         let result = FeaturesTestBuilder::new()
-            .dimensions(2, 2)
-            .chunks(2, 2)
+            .dimensions(&[2, 2])
+            .chunks(&[2, 2])
             .layer(LayerConfig::new(
                 "bad",
                 FillStrategy::Values(vec![1.0, 2.0]),
             )) // needs 4
+            .build();
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn builder_rank_mismatch_errors() {
+        let result = FeaturesTestBuilder::new()
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2, 1])
+            .layer(LayerConfig::ones("A"))
+            .build();
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn builder_zero_dimension_errors() {
+        let result = FeaturesTestBuilder::new()
+            .dimensions(&[4, 0])
+            .chunks(&[2, 2])
+            .layer(LayerConfig::ones("A"))
+            .build();
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn builder_zero_chunk_errors() {
+        let result = FeaturesTestBuilder::new()
+            .dimensions(&[4, 4])
+            .chunks(&[2, 0])
+            .layer(LayerConfig::ones("A"))
             .build();
 
         assert!(result.is_err());
@@ -553,8 +681,8 @@ mod tests {
     #[tokio::test]
     async fn async_storage_opens_array() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("temperature", 273.15))
             .build()
             .unwrap();
@@ -568,8 +696,8 @@ mod tests {
     #[tokio::test]
     async fn async_storage_retrieves_correct_values() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("elev", 42.0))
             .build()
             .unwrap();
@@ -586,7 +714,7 @@ mod tests {
 
     #[tokio::test]
     async fn multi_variable_sequential_has_three_layers() {
-        let (_tmp, storage) = multi_variable_sequential(4, 4, 2, 2).unwrap();
+        let (_tmp, storage) = multi_variable_sequential(&[4, 4], &[2, 2]).unwrap();
 
         for name in ["A", "B", "C"] {
             let result =
@@ -597,7 +725,7 @@ mod tests {
 
     #[tokio::test]
     async fn multi_variable_random_layers_are_non_empty() {
-        let (_tmp, storage) = multi_variable_random(4, 4, 2, 2).unwrap();
+        let (_tmp, storage) = multi_variable_random(&[4, 4], &[2, 2]).unwrap();
 
         let array = zarrs::array::Array::async_open(storage, "/A")
             .await
@@ -616,8 +744,8 @@ mod tests {
     #[test]
     fn layer_dtype_float64_has_correct_zarr_type() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::ones("elev").with_dtype(FeatureDataType::Float64))
             .build()
             .unwrap();
@@ -630,8 +758,8 @@ mod tests {
     #[test]
     fn layer_dtype_int32_has_correct_zarr_type() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::sequential("band").with_dtype(FeatureDataType::Int32))
             .build()
             .unwrap();
@@ -644,8 +772,8 @@ mod tests {
     #[test]
     fn layer_dtype_uint8_has_correct_zarr_type() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("mask", 1.0).with_dtype(FeatureDataType::UInt8))
             .build()
             .unwrap();
@@ -658,8 +786,8 @@ mod tests {
     #[test]
     fn layer_dtype_float64_stores_correct_values() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(2, 2)
-            .chunks(2, 2)
+            .dimensions(&[2, 2])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("temp", 1.62).with_dtype(FeatureDataType::Float64))
             .build()
             .unwrap();
@@ -679,8 +807,8 @@ mod tests {
     #[test]
     fn layer_dtype_int16_stores_correct_values() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(2, 3)
-            .chunks(2, 3)
+            .dimensions(&[2, 3])
+            .chunks(&[2, 3])
             .layer(LayerConfig::sequential("idx").with_dtype(FeatureDataType::Int16))
             .build()
             .unwrap();
@@ -696,8 +824,8 @@ mod tests {
     #[test]
     fn layer_dtype_uint32_stores_correct_values() {
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(2, 2)
-            .chunks(2, 2)
+            .dimensions(&[2, 2])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("cls", 255.0).with_dtype(FeatureDataType::UInt32))
             .build()
             .unwrap();
@@ -713,8 +841,8 @@ mod tests {
     fn mixed_dtypes_in_same_store() {
         // A realistic scenario: float cost layer + integer classification layer.
         let (tmp, _storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::random("cost", 0.0, 100.0)) // Float32 (default)
             .layer(LayerConfig::constant("land_cover", 3.0).with_dtype(FeatureDataType::UInt8))
             .layer(LayerConfig::sequential("elevation").with_dtype(FeatureDataType::Int16))

@@ -403,8 +403,8 @@ mod tests {
     #[tokio::test]
     async fn get_returns_correct_shape_and_values() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("A", 3.0))
             .build()
             .unwrap();
@@ -421,8 +421,8 @@ mod tests {
     #[tokio::test]
     async fn get_same_variable_twice_is_identical() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
@@ -439,8 +439,8 @@ mod tests {
     #[tokio::test]
     async fn get_missing_variable_returns_error() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::ones("A"))
             .build()
             .unwrap();
@@ -456,8 +456,8 @@ mod tests {
     #[tokio::test]
     async fn get_pads_out_of_bounds_with_nan_f32() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("A", 7.0))
             .build()
             .unwrap();
@@ -502,8 +502,8 @@ mod tests {
         use super::super::samples::FeatureDataType;
 
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("elev", 1.5).with_dtype(FeatureDataType::Float64))
             .build()
             .unwrap();
@@ -521,8 +521,8 @@ mod tests {
     #[tokio::test]
     async fn fully_outside_returns_all_nan() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::ones("A"))
             .build()
             .unwrap();
@@ -536,12 +536,71 @@ mod tests {
         assert!(data.iter().all(|v| v.is_nan()));
     }
 
+    /// 3-D end-to-end sanity check: loads a partially out-of-bounds
+    /// subset from a 3-D source and verifies both the in-bounds values
+    /// (sequential, row-major) and the NaN-padded out-of-bounds region.
+    /// Exercises the N-dim clip/pad logic in `load_variable`.
+    #[tokio::test]
+    async fn get_3d_pads_out_of_bounds_with_nan() {
+        let (_tmp, storage) = FeaturesTestBuilder::new()
+            .dimensions(&[2, 3, 4])
+            .chunks(&[1, 3, 2])
+            .layer(LayerConfig::sequential("seq"))
+            .build()
+            .unwrap();
+
+        // Request a 3×4×5 region from a 2×3×4 source: pads on every axis.
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![3, 4, 5]).unwrap();
+        let lazy = AsyncLazySubset::<f32>::new(Arc::clone(&storage), subset);
+
+        let data = lazy.get("seq").await.unwrap();
+        assert_eq!(data.shape(), &[3, 4, 5]);
+
+        // In-bounds cells match row-major sequential 1..=24.
+        for i in 0..2usize {
+            for j in 0..3usize {
+                for k in 0..4usize {
+                    let expected = (i * 3 * 4 + j * 4 + k + 1) as f32;
+                    assert_eq!(data[[i, j, k]], expected, "in-bounds cell [{i},{j},{k}]");
+                }
+            }
+        }
+
+        // Out-of-bounds on the fastest axis (k = 4).
+        for i in 0..2usize {
+            for j in 0..3usize {
+                assert!(
+                    data[[i, j, 4]].is_nan(),
+                    "out-of-bounds cell [{i},{j},4] should be NaN"
+                );
+            }
+        }
+        // Out-of-bounds on the middle axis (j = 3).
+        for i in 0..2usize {
+            for k in 0..5usize {
+                assert!(
+                    data[[i, 3, k]].is_nan(),
+                    "out-of-bounds cell [{i},3,{k}] should be NaN"
+                );
+            }
+        }
+        // Out-of-bounds on the slowest axis (i = 2).
+        for j in 0..4usize {
+            for k in 0..5usize {
+                assert!(
+                    data[[2, j, k]].is_nan(),
+                    "out-of-bounds cell [2,{j},{k}] should be NaN"
+                );
+            }
+        }
+    }
+
     /// Two concurrent tasks sharing a source both get correct results.
     #[tokio::test]
     async fn concurrent_get_different_variables() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::constant("A", 1.0))
             .layer(LayerConfig::constant("B", 2.0))
             .build()
@@ -560,8 +619,8 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn parallel_loads_match() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
@@ -594,8 +653,8 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn shared_instance_across_tasks() {
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(4, 4)
-            .chunks(2, 2)
+            .dimensions(&[4, 4])
+            .chunks(&[2, 2])
             .layer(LayerConfig::sequential("A"))
             .build()
             .unwrap();
@@ -629,8 +688,8 @@ mod tests {
         use super::super::samples::FeatureDataType;
 
         let (_tmp, storage) = FeaturesTestBuilder::new()
-            .dimensions(2, 3)
-            .chunks(2, 3)
+            .dimensions(&[2, 3])
+            .chunks(&[2, 3])
             .layer(LayerConfig::sequential("from_f32"))
             .layer(LayerConfig::sequential("from_f64").with_dtype(FeatureDataType::Float64))
             .layer(LayerConfig::sequential("from_i16").with_dtype(FeatureDataType::Int16))
