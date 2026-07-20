@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783558442646,
+  "lastUpdate": 1784568178841,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12683,6 +12683,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 288411081,
             "range": "± 4936458",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8bdcf9ab16d664d9c6a18d4162077c1416f3376c",
+          "message": "Updating ruff syntax to ignore (#312)\n\n* cfg: Bump ruff floor to 0.15.22\n\n* cfg: Migrate `# noqa` to `# ruff:ignore` (RUF105)\n\n* cfg: `ruff --fix` (use rule names in `ruff:ignore`)\n\n* chore: Sync Cargo.lock with crate version bump",
+          "timestamp": "2026-07-20T11:10:08-06:00",
+          "tree_id": "dd0f7710b00294c32dc972e4d7fce27649fa666d",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/8bdcf9ab16d664d9c6a18d4162077c1416f3376c"
+        },
+        "date": 1784568177835,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 45061510,
+            "range": "± 412017",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 53947487,
+            "range": "± 418121",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 61614080,
+            "range": "± 743697",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 88511848,
+            "range": "± 815334",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 432666963,
+            "range": "± 10047407",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 155072800,
+            "range": "± 2670454",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 158681103,
+            "range": "± 928361",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 165696899,
+            "range": "± 1324975",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 191108476,
+            "range": "± 1114137",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 286434092,
+            "range": "± 1711406",
             "unit": "ns/iter"
           }
         ]
