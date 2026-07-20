@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 
 import pandas as pd
-import rioxarray  # ruff:ignore[F401]
+import rioxarray  # ruff:ignore[unused-import]
 import geopandas as gpd
 import xarray as xr
 
@@ -184,7 +184,7 @@ class RouteToDefinitionConverter(ABC):
                     ),
                     axis=1,
                 )
-                routes = routes[mask]  # ruff:ignore[PLW2901]
+                routes = routes[mask]  # ruff:ignore[redefined-loop-name]
 
             if routes.empty:
                 continue

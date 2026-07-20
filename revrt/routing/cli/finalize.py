@@ -167,7 +167,7 @@ class RouteToFeatureMapper:
 class RoutePostProcessor:
     """Class to finalize routing outputs"""
 
-    def __init__(  # ruff:ignore[PLR0913, PLR0917]
+    def __init__(  # ruff:ignore[too-many-arguments, too-many-positional-arguments]
         self,
         collect_pattern,
         project_dir,
@@ -292,7 +292,7 @@ class RoutePostProcessor:
             self.project_dir,
         )
 
-        files_to_collect = list(glob.glob(str(collect_pattern)))  # noqa
+        files_to_collect = list(glob.glob(str(collect_pattern)))  # ruff:ignore[glob]
         if not files_to_collect:
             msg = f"No files found using collect pattern: {collect_pattern}"
             raise revrtFileNotFoundError(msg)

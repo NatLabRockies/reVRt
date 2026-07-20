@@ -1,4 +1,4 @@
-# ruff: file-ignore[N801, F401]
+# ruff: file-ignore[invalid-class-name, unused-import]
 """Custom Exceptions and Errors for revrt"""
 
 import logging

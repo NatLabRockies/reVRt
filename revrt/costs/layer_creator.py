@@ -263,7 +263,7 @@ class LayerCreator(BaseLayerCreator):
                 fi_layers[fname] = config
                 continue
 
-            fname = str(fname).strip()  # ruff:ignore[PLW2901]
+            fname = str(fname).strip()  # ruff:ignore[redefined-loop-name]
             logger.debug("Processing '%s' with config: %s", fname, config)
             if Path(fname).suffix.lower() in TIFF_EXTENSIONS:
                 temp = self._process_raster_layer(

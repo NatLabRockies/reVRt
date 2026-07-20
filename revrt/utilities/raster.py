@@ -19,7 +19,7 @@ DEFAULT_RASTERIZE_TILE_SIZE = 2048
 """int: Default tile size to use for rasterization"""
 
 
-def rasterize_shape_file(  # ruff:ignore[PLR0913, PLR0917]
+def rasterize_shape_file(  # ruff:ignore[too-many-arguments, too-many-positional-arguments]
     fname,
     width,
     height,
@@ -102,7 +102,7 @@ def rasterize_shape_file(  # ruff:ignore[PLR0913, PLR0917]
         )
 
 
-def rasterize(  # ruff:ignore[PLR0913, PLR0917]
+def rasterize(  # ruff:ignore[too-many-arguments, too-many-positional-arguments]
     gdf,
     width,
     height,

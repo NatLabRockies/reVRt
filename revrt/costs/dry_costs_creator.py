@@ -45,7 +45,7 @@ WATER_MULTIPLIER = 10.0
 class DryCostsCreator(BaseLayerCreator):
     """Class to create and save dry transmission cost layers"""
 
-    def build(  # ruff:ignore[PLR0913, PLR0917]
+    def build(  # ruff:ignore[too-many-arguments, too-many-positional-arguments]
         self,
         iso_region_tiff,
         nlcd_tiff,

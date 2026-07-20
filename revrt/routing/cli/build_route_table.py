@@ -23,7 +23,7 @@ from revrt.warn import revrtWarning
 logger = logging.getLogger(__name__)
 
 
-def point_to_feature_route_table(  # ruff:ignore[PLR0913, PLR0917]
+def point_to_feature_route_table(  # ruff:ignore[too-many-arguments, too-many-positional-arguments]
     cost_fpath,
     features_fpath,
     out_dir,
