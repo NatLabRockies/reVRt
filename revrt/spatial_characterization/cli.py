@@ -397,7 +397,7 @@ def _preprocess_stats_config(
         ("_row_width_ranges", row_width_ranges),
     ):
         if isinstance(user_input, str):
-            user_input = load_config(user_input)  # noqa: PLW2901
+            user_input = load_config(user_input)  # ruff:ignore[PLW2901]
 
         config[key] = user_input
 

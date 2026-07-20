@@ -45,7 +45,7 @@ WATER_MULTIPLIER = 10.0
 class DryCostsCreator(BaseLayerCreator):
     """Class to create and save dry transmission cost layers"""
 
-    def build(  # noqa: PLR0913, PLR0917
+    def build(  # ruff:ignore[PLR0913, PLR0917]
         self,
         iso_region_tiff,
         nlcd_tiff,

@@ -143,7 +143,7 @@ class Stat(StrEnum):
     PIXEL_COUNT = auto()
     """Compute count for each pixel value in zone"""
 
-    def __new__(cls, value):  # noqa: PLR0912, C901
+    def __new__(cls, value):  # ruff:ignore[PLR0912, C901]
         """Create new enum member"""
 
         obj = str.__new__(cls, value)
@@ -484,7 +484,7 @@ class ComputableStats:
 def _get_percentile(stat):
     """Get the percentile value from user string input"""
     q = float(stat.replace(_PCT_PREFIX, ""))
-    if not (0 <= q <= 100):  # noqa: PLR2004
+    if not (0 <= q <= 100):  # ruff:ignore[PLR2004]
         msg = f"Percentiles must be between 0 and 100 (inclusive). Got: {q}"
         raise revrtValueError(msg)
     return q

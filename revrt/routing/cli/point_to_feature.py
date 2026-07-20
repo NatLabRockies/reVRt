@@ -182,7 +182,7 @@ class PointToFeatureRouteDefinitionConverter(RouteToDefinitionConverter):
         return rows, cols
 
 
-def compute_lcp_routes(  # noqa: PLR0913, PLR0917
+def compute_lcp_routes(  # ruff:ignore[PLR0913, PLR0917]
     cost_fpath,
     out_dir,
     job_name,

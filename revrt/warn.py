@@ -1,4 +1,4 @@
-# ruff: noqa: N801
+# ruff: file-ignore[N801]
 """Custom Warning for reVRt"""
 
 import logging

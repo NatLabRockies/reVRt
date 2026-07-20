@@ -167,7 +167,7 @@ class RouteToFeatureMapper:
 class RoutePostProcessor:
     """Class to finalize routing outputs"""
 
-    def __init__(  # noqa: PLR0913, PLR0917
+    def __init__(  # ruff:ignore[PLR0913, PLR0917]
         self,
         collect_pattern,
         project_dir,

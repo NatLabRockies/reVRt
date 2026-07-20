@@ -261,7 +261,7 @@ class _RouteDefinitionFormatter:
             return {}
 
         sample_definition = self._route_definitions[0]
-        if len(sample_definition) == 2:  # noqa: PLR2004
+        if len(sample_definition) == 2:  # ruff:ignore[PLR2004]
             self._route_definitions = _add_route_ids(self._route_definitions)
 
         routes_to_compute = {}

@@ -10,7 +10,7 @@ import contextlib
 from pathlib import Path
 
 import xarray as xr
-import rioxarray  # noqa: F401
+import rioxarray  # ruff:ignore[F401]
 from slugify import slugify
 
 from revrt.exceptions import revrtFileExistsError
