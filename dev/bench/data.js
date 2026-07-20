@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784568178841,
+  "lastUpdate": 1784577396053,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12767,6 +12767,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 286434092,
             "range": "± 1711406",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fa7dad1b70e9b8a699f3d6a73e17b7c16af95814",
+          "message": "Generalize Features to N-dim (#311)\n\n* refact: generalize FeaturesTestBuilder to N-dim\n\nReplace the 2D-only (ni, nj, ci, cj) API of FeaturesTestBuilder with\nslice-based shape/chunks that store as Vec<u64>, so the test scaffolding\nmatches the already-N-dim runtime in Features / AsyncLazySubset.\n\n- Fields: (ni, nj, ci, cj) -> shape: Vec<u64>, chunks: Vec<u64>.\n- .dimensions(u64, u64) / .chunks(u64, u64) -> .dimensions(&[u64]) /\n  .chunks(&[u64]).\n- write_layer: Array2<T> -> ArrayD<T> via IxDyn; dimension names\n  generated as [\"dim_0\", ..., \"dim_{N-1}\"]; chunk-count subset built\n  per-dim.\n- generate_flat: N-D row-major iteration with a carry-style index\n  increment.\n- FillStrategy::Custom(fn(u64, u64) -> f32) -> fn(&[u64]) -> f32.\n- LayerConfig::custom updated accordingly.\n- build() now validates shape.len() == chunks.len().\n- Presets and multi_variable_{sequential,random} helpers updated to\n  slice-based signatures.\n- All internal tests and the test call sites in features/mod.rs and\n  lazy_subset.rs migrated to the new API.\n\nNo production callers use FeaturesTestBuilder; behavior of the runtime\npaths in Features / AsyncLazySubset is unchanged.\n\n* test: reject zero-sized dims/chunks in builder\n\nFeaturesTestBuilder::build() previously only validated rank match\nbetween shape and chunks. A zero-valued dimension or chunk would fail\nlater with a confusing panic (div_ceil(0)) or opaque Zarr error.\n\nAdd explicit boundary checks on shape and chunks in build() and cover\nthem with unit tests, alongside a new test for the pre-existing rank\nmismatch path.\n\nAddresses one of the Copilot review suggestions on #311.\n\n* test: add 3-D coverage for builder and lazy subset\n\nThe runtime paths in Features / AsyncLazySubset and the newly N-dim\nFeaturesTestBuilder were only exercised by 2-D tests. Add explicit 3-D\ncoverage:\n\n- builder_3d_sequential_values: shape [2, 3, 4], chunks [1, 3, 2]\n  proves generate_flat walks a 3-D shape in row-major (C) order and\n  that write_layer stores across multiple chunks in three dimensions.\n- get_3d_pads_out_of_bounds_with_nan: requests a 3x4x5 subset from a\n  2x3x4 source, verifying both the in-bounds sequential values and the\n  NaN padding on the slowest, middle, and fastest axes. Exercises the\n  N-dim clip/pad logic in load_variable end-to-end.\n\nAddresses one of the Copilot review suggestions on #311.\n\n* refactor(routing::features): use checked u64->usize conversions in builder\n\nReplace lossy `as usize` casts in FeaturesTestBuilder with explicit\nchecked conversions that surface actionable error messages instead of\nsilently truncating (32-bit targets) or panicking on debug overflow:\n\n- write_layer: shape.iter().map(|&d| d as usize) -> usize::try_from\n  with a descriptive error per dimension.\n- generate_flat: shape.iter().product::<u64>() as usize -> a\n  try_fold(checked_mul) followed by usize::try_from, each with a\n  descriptive error.\n\nAlso apply clippy::manual_contains: use Vec::contains(&0) instead of\niter().any(|&x| x == 0) in the zero-dim / zero-chunk validation\nadded in dbbf29f.\n\nAddresses the remaining Copilot review suggestions on #311.\n\n* refactor: use crate Error::Undefined in samples.rs\n\nReplace the ad-hoc Box<dyn std::error::Error> return type in\nFeaturesTestBuilder and its helpers with the crate-wide Result / Error\ntypes. Aligns samples.rs with the rest of the routing::features module\n(mod.rs, lazy_subset.rs) which already imports crate::error::{Error,\nResult}.\n\n- All Result<T, Box<dyn Error>> -> crate::Result<T>.\n- All format!(...).into() constructions -> Error::Undefined(format!()).\n- Wrap FilesystemStore::new (FilesystemStoreCreateError) and\n  ArrayD::from_shape_vec (ndarray::ShapeError) with map_err ->\n  Error::Undefined, since Error has no From impl for these test-only\n  dependencies.\n\nNo behavior change; 36 tests still pass and clippy -D warnings is\nclean.\n\n* style:\n\n* cfg: Bump core library to 0.1.5",
+          "timestamp": "2026-07-20T13:41:40-06:00",
+          "tree_id": "150e6ecac0b5545875a416f3869ba54a765b6067",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/fa7dad1b70e9b8a699f3d6a73e17b7c16af95814"
+        },
+        "date": 1784577395057,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 48815217,
+            "range": "± 1225399",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 61105830,
+            "range": "± 988910",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 64337219,
+            "range": "± 1457446",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 91650270,
+            "range": "± 2018655",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 444613471,
+            "range": "± 14957356",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 146615382,
+            "range": "± 786614",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 148868476,
+            "range": "± 1052338",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 157854693,
+            "range": "± 1226869",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 185381591,
+            "range": "± 3008174",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 284722563,
+            "range": "± 7518216",
             "unit": "ns/iter"
           }
         ]
