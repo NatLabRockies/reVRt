@@ -95,7 +95,7 @@ def build_masks(
     )
 
 
-def build_routing_layer_file(  # noqa: PLR0917, PLR0913
+def build_routing_layer_file(  # ruff:ignore[too-many-positional-arguments, too-many-arguments]
     routing_file,
     template_file=None,
     input_layer_dir=".",

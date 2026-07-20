@@ -10,7 +10,7 @@ import contextlib
 from pathlib import Path
 
 import xarray as xr
-import rioxarray  # noqa: F401
+import rioxarray  # ruff:ignore[unused-import]
 from slugify import slugify
 
 from revrt.exceptions import revrtFileExistsError
@@ -70,7 +70,7 @@ def routing_layer_mover(
     with tfc as temp_zarr_file_str:
         logger.debug("Setting swap file location to %r", temp_zarr_file_str)
         temp_zarr_file = Path(temp_zarr_file_str)
-        yield temp_zarr_file  # noqa
+        yield temp_zarr_file  # ruff:ignore[fallible-context-manager]
 
         if not save:
             return

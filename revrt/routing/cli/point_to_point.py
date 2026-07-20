@@ -51,7 +51,7 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
             *self._route_value_signature(row),
         )
 
-    def _convert_to_route_definitions(self, routes):  # noqa:PLR6301
+    def _convert_to_route_definitions(self, routes):  # ruff:ignore[no-self-use]
         """Convert route DataFrame to route definitions format"""
         start_point_cols = ["start_row", "start_col"]
         end_point_cols = ["end_row", "end_col"]
@@ -92,7 +92,7 @@ class PointToPointRouteDefinitionConverter(RouteToDefinitionConverter):
         return route_definitions, route_attrs
 
 
-def compute_lcp_routes(  # noqa: PLR0913, PLR0917
+def compute_lcp_routes(  # ruff:ignore[too-many-arguments, too-many-positional-arguments]
     cost_fpath,
     route_table_fpath,
     out_dir,

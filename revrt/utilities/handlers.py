@@ -60,7 +60,7 @@ class IncrementalWriter:
         self.out_fp = Path(out_fp)
         self._columns = None
 
-    def preprocess_chunk(self, chunk):  # noqa
+    def preprocess_chunk(self, chunk):  # ruff:ignore[no-self-use]
         """Preprocess chunk before saving
 
         By default this method just passes the data through (underlying
@@ -815,7 +815,7 @@ def num_feats_in_gpkg(filename):
 
         geom_table = f"rtree_{geom_table_suffix}"
 
-        q = f"SELECT COUNT(distinct id) FROM {geom_table};"  # noqa
+        q = f"SELECT COUNT(distinct id) FROM {geom_table};"  # ruff:ignore[hardcoded-sql-expression]
         cursor.execute(q)
         return cursor.fetchall()[0][0]
 

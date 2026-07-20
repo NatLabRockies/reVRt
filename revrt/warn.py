@@ -1,4 +1,4 @@
-# ruff: noqa: N801
+# ruff: file-ignore[invalid-class-name]
 """Custom Warning for reVRt"""
 
 import logging
