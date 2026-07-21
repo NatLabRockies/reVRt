@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784577396053,
+  "lastUpdate": 1784672442683,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12851,6 +12851,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 284722563,
             "range": "± 7518216",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c7b0af1409dcfb7aa2dbfb8a067fdbad04ae3c08",
+          "message": "ci: Bump the github-actions group with 6 updates (#313)\n\nBumps the github-actions group with 6 updates:\n\n| Package | From | To |\n| --- | --- | --- |\n| [actions/checkout](https://github.com/actions/checkout) | `7.0.0` | `7.0.1` |\n| [actions/setup-python](https://github.com/actions/setup-python) | `6.3.0` | `7.0.0` |\n| [github/codeql-action/init](https://github.com/github/codeql-action) | `4.37.0` | `4.37.1` |\n| [github/codeql-action/analyze](https://github.com/github/codeql-action) | `4.37.0` | `4.37.1` |\n| [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) | `1.14.0` | `1.14.1` |\n| [release-drafter/release-drafter](https://github.com/release-drafter/release-drafter) | `7.5.1` | `7.6.0` |\n\n\nUpdates `actions/checkout` from 7.0.0 to 7.0.1\n- [Release notes](https://github.com/actions/checkout/releases)\n- [Changelog](https://github.com/actions/checkout/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/actions/checkout/compare/9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0...3d3c42e5aac5ba805825da76410c181273ba90b1)\n\nUpdates `actions/setup-python` from 6.3.0 to 7.0.0\n- [Release notes](https://github.com/actions/setup-python/releases)\n- [Commits](https://github.com/actions/setup-python/compare/ece7cb06caefa5fff74198d8649806c4678c61a1...5fda3b95a4ea91299a34e894583c3862153e4b97)\n\nUpdates `github/codeql-action/init` from 4.37.0 to 4.37.1\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/99df26d4f13ea111d4ec1a7dddef6063f76b97e9...7188fc363630916deb702c7fdcf4e481b751f97a)\n\nUpdates `github/codeql-action/analyze` from 4.37.0 to 4.37.1\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/99df26d4f13ea111d4ec1a7dddef6063f76b97e9...7188fc363630916deb702c7fdcf4e481b751f97a)\n\nUpdates `pypa/gh-action-pypi-publish` from 1.14.0 to 1.14.1\n- [Release notes](https://github.com/pypa/gh-action-pypi-publish/releases)\n- [Commits](https://github.com/pypa/gh-action-pypi-publish/compare/cef221092ed1bacb1cc03d23a2d87d1d172e277b...ba38be9e461d3875417946c167d0b5f3d385a247)\n\nUpdates `release-drafter/release-drafter` from 7.5.1 to 7.6.0\n- [Release notes](https://github.com/release-drafter/release-drafter/releases)\n- [Commits](https://github.com/release-drafter/release-drafter/compare/4d75298e00d9e34c483e5ff8c68d0ea1c1940c1e...eada3c96a64734dd381cfbda23511034e328ddb0)\n\n---\nupdated-dependencies:\n- dependency-name: actions/checkout\n  dependency-version: 7.0.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: actions/setup-python\n  dependency-version: 7.0.0\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/init\n  dependency-version: 4.37.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/analyze\n  dependency-version: 4.37.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: pypa/gh-action-pypi-publish\n  dependency-version: 1.14.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: release-drafter/release-drafter\n  dependency-version: 7.6.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-07-21T15:53:38-06:00",
+          "tree_id": "5deb165bf1506f7977060efcc65aa5cfcc419c51",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/c7b0af1409dcfb7aa2dbfb8a067fdbad04ae3c08"
+        },
+        "date": 1784672441494,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 45441665,
+            "range": "± 348413",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 50948370,
+            "range": "± 457553",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 61509340,
+            "range": "± 738745",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 88948259,
+            "range": "± 884932",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 435414706,
+            "range": "± 8822218",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 157844430,
+            "range": "± 1910058",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 159416637,
+            "range": "± 501003",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 167356385,
+            "range": "± 1277854",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 192935389,
+            "range": "± 2446109",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 288101476,
+            "range": "± 6346994",
             "unit": "ns/iter"
           }
         ]
