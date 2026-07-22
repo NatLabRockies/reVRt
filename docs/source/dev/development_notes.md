@@ -146,6 +146,6 @@ This project is commited to deliver:
 
 - Conda-forge
   - pixi add -f dev rattler-build
-  - rattler-build generate-recipe pypi NREL-reVRt -w
+  - rattler-build generate-recipe pypi NLR-reVRt -w
   - Follow the instructions, starting with a fork, of <https://github.com/conda-forge/staged-recipes>
   - As a reference, here is my PR <https://github.com/conda-forge/staged-recipes/pull/34270>
