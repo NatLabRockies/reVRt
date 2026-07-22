@@ -1,6 +1,5 @@
 # Path optimization with custom cost function
 
-
 ## Inbox (ideas to be organized)
 
 Ideally this section should be empty, so whenever there is a chance, this
@@ -14,6 +13,7 @@ points should be organized and moved to the appropriate section.
   - Profile with: export RUSTFLAGS="-C target-cpu=native"
   - Supported names: rustc --print target-cpus
   - Profile with `Cargo.toml`:
+
     ```
     [profile.release]
     debug = "line-tables-only"
@@ -23,12 +23,14 @@ points should be organized and moved to the appropriate section.
   - Using dhat:
     - cargo run --release -p revrt-cli --features dhat-heap -- -vv -d ../transmission_costs.zarr --cost-function='{"cost_layers": [{"layer_name": "fmv_dollar_per_acre"}, {"layer_name": "swca_natural_resources_risk_2"}]}' --start 20012,40000 --end 20012,40100 --cache-size=250000
       Which gives this:
+
       ```
       dhat: Total:     730,183,928 bytes in 5,192,541 blocks
       dhat: At t-gmax: 80,245,023 bytes in 428 blocks
       dhat: At t-end:  158,992 bytes in 268 blocks
       dhat: The data has been saved to dhat-heap.json, and is viewable with dhat/dh_view.html
       ```
+
   - Somes results:
     - distance: t-gmax (Total)
     - 0: 2.7MB
@@ -78,9 +80,10 @@ points should be organized and moved to the appropriate section.
   - Goal can be multiple targets. Return the best solution for each target
     and return the best of the best. Maybe return in order of best cost.
 
-## Contract of service:
+## Contract of service
 
 This project is commited to deliver:
+
 - Find the best path. Local or partial optimal is not enough.
 - Able to scan routes on national scale with resolution O[10m].
 - Be at least as fast as the former application.
@@ -89,7 +92,7 @@ This project is commited to deliver:
 - Be able to use it as an analysis tool without requiring advanced knowledge on Python or Rust.
 - Provide a smooth transition such that users from former application should require at most 1hr to adapt to this new solution.
 
-## Priorities:
+## Priorities
 
 1. Correctness. Give a correct answer at any cost.
    Simplifications:
