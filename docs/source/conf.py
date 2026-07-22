@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 
 project = "reVRt"
 copyright = "2026, Alliance for Energy Innovation, LLC"
-author = "NLR: Guilherme Pimenta Castelao, Paul Pinchuk"
+author = "NLR: Paul Pinchuk, Guilherme Pimenta Castelao"
 
 pkg = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 pkg = os.path.dirname(pkg)

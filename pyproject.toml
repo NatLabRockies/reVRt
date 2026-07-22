@@ -8,12 +8,12 @@ version = "0.9.1"
 description = "National Laboratory of the Rockies' (NLR's) Transmission for reV tool"
 readme = "README.rst"
 authors = [
-  {name = "Guilherme Castelão", email = "gpimenta@nlr.gov"},
-  {name = "Paul Pinchuk", email = "ppinchuk@nlr.gov"},
+  { name = "Paul Pinchuk", email = "ppinchuk@nlr.gov" },
+  { name = "Guilherme Castelão", email = "gpimenta@nlr.gov" },
 ]
 maintainers = [
-  {name = "Guilherme Castelão", email = "gpimenta@nlr.gov"},
-  {name = "Paul Pinchuk", email = "ppinchuk@nlr.gov"},
+  { name = "Paul Pinchuk", email = "ppinchuk@nlr.gov" },
+  { name = "Guilherme Castelão", email = "gpimenta@nlr.gov" },
 ]
 license = {text = "BSD-3-Clause"}
 keywords = ["NLR", "routing", "transmission", "reVRt", "reV", "reVX"]
