@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784672442683,
+  "lastUpdate": 1784768007797,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -12935,6 +12935,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 288101476,
             "range": "± 6346994",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9997aa52556e7f21f16449628a533a90eaafd45b",
+          "message": "Supporting submission to conda-forge (#314)\n\n* cfg: Adding rattler-build as dependency of dev env\n\n* Fixing authors\n\n* style:\n\n* doc: Some dev notes on submitting to conda-forge\n\n* cfg: Updating pixi.lock\n\n* typo:",
+          "timestamp": "2026-07-22T18:39:15-06:00",
+          "tree_id": "711f0f85f6f9f0ce78c85aa9a59260d80e822fa6",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/9997aa52556e7f21f16449628a533a90eaafd45b"
+        },
+        "date": 1784768006071,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 36496102,
+            "range": "± 1086092",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 25063021,
+            "range": "± 356086",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 53164951,
+            "range": "± 923921",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 76315955,
+            "range": "± 1543720",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 306024618,
+            "range": "± 11732489",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 87172104,
+            "range": "± 376411",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 89235504,
+            "range": "± 371810",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 96127033,
+            "range": "± 635333",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 115575234,
+            "range": "± 1427091",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 190246388,
+            "range": "± 3706692",
             "unit": "ns/iter"
           }
         ]
