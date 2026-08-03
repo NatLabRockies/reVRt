@@ -554,7 +554,7 @@ def _validate_bin_range(bins):
     """Check for correctness in bin range"""
     for input_bin in bins:
         if input_bin.min > input_bin.max:
-            msg = f"Min is greater than max for bin config {input_bin}."
+            msg = f"Min is greater than max for bin config: {input_bin}."
             raise revrtAttributeError(msg)
 
         if input_bin.min == float("-inf") and input_bin.max == float("inf"):
@@ -572,16 +572,19 @@ def _validate_bin_continuity(bins):
     for i, input_bin in enumerate(sorted_bins):
         if input_bin.min < last_max:
             last_bin = sorted_bins[i - 1] if i > 0 else "-infinity"
-            msg = f"Overlapping bins detected between bin {last_bin} and {bin}"
+            msg = (
+                "Overlapping bins detected between "
+                f"{last_bin!r} and {input_bin!r}"
+            )
             warn(msg, revrtWarning)
 
         if input_bin.min > last_max:
             last_bin = sorted_bins[i - 1] if i > 0 else "-infinity"
-            msg = f"Gap detected between bin {last_bin} and {input_bin}"
+            msg = f"Gap detected between {last_bin!r} and {input_bin!r}"
             warn(msg, revrtWarning)
 
         if i + 1 == len(sorted_bins) and input_bin.max < float("inf"):
-            msg = f"Gap detected between bin {input_bin} and infinity"
+            msg = f"Gap detected between {input_bin!r} and 'infinity'"
             warn(msg, revrtWarning)
 
         last_max = input_bin.max

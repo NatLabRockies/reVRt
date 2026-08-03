@@ -552,6 +552,31 @@ def test_bin_config_sanity_checking(builder_instance, tiff_layers_for_testing):
         builder_instance._process_raster_layer(layer_fn, good_config)
 
 
+def test_bin_config_overlap_warning_names_current_bin(
+    builder_instance, tiff_layers_for_testing
+):
+    """Test overlap warning identifies the bins involved"""
+    __, layers = tiff_layers_for_testing
+    layer_fn = next(iter(layers))
+    first_bin = RangeConfig(min=0, max=5, value=1)
+    second_bin = RangeConfig(min=4, max=10, value=2)
+    config = LayerBuildConfig(extent="all", bins=[first_bin, second_bin])
+
+    with pytest.warns(revrtWarning) as warnings:
+        builder_instance._process_raster_layer(layer_fn, config)
+
+    overlap_warning = next(
+        warning
+        for warning in warnings
+        if "Overlapping bins detected" in str(warning.message)
+    )
+    assert str(overlap_warning.message) == (
+        "Overlapping bins detected between "
+        "RangeConfig(min=0.0, max=5.0, value=1.0) and "
+        "RangeConfig(min=4.0, max=10.0, value=2.0)"
+    )
+
+
 def test_bin_config_warns_full_range(
     builder_instance, tiff_layers_for_testing
 ):
