@@ -76,9 +76,11 @@ class RoutingCostLayer(BaseModel, extra="forbid"):
     value for each routing option, either from shared columns or from
     `voltage_<option>` / `polarity_<option>` columns, and the
     transmission config must provide each combination in
-    ``voltage_polarity_mult``. For example, a valid
+    ``voltage_polarity_mult``. A scalar polarity value applies to every
+    routing option. To define values per routing option, use a mapping
+    of routing-option names to values. For example, a valid
     "voltage_polarity_mult" dictionary in the transmission config might
-    be ``{"138": {"ac": 1.15, "dc": 2}}``.
+    be ``{"138": {"ac": {"overhead": 1.15, "underground": 2}}}``.
 
     .. IMPORTANT::
       The configured multiplier is assumed to be in million dollars per
@@ -125,9 +127,11 @@ class RoutingFrictionLayer(BaseModel, extra="forbid"):
     value for each routing option, either from shared columns or from
     `voltage_<option>` / `polarity_<option>` columns, and the
     transmission config must provide each combination in
-    ``voltage_polarity_mult``. For example, a valid
+    ``voltage_polarity_mult``. A scalar polarity value applies to every
+    routing option. To define values per routing option, use a mapping
+    of routing-option names to values. For example, a valid
     "voltage_polarity_mult" dictionary in the transmission config might
-    be ``{"138": {"ac": 1.15, "dc": 2}}``.
+    be ``{"138": {"ac": {"overhead": 1.15, "underground": 2}}}``.
 
     .. IMPORTANT::
       The configured multiplier is assumed to be in million dollars per
