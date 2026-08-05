@@ -496,6 +496,69 @@ def test_update_multipliers_applies_shared_polarity_value_to_all_options():
         ] == pytest.approx(2.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
 
 
+def test_update_multipliers_applies_per_option_row_values():
+    """Option-map ROW values should scale cost and friction layers"""
+
+    routing_options = {
+        "overhead": {
+            "cost_layers": [
+                {
+                    "layer_name": "overhead_cost",
+                    "multiplier_scalar": 2,
+                    "apply_row_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "multiplier_layer": "overhead_friction",
+                    "multiplier_scalar": 3,
+                    "apply_row_mult": True,
+                }
+            ],
+        },
+        "underground": {
+            "cost_layers": [
+                {
+                    "layer_name": "underground_cost",
+                    "multiplier_scalar": 4,
+                    "apply_row_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "multiplier_layer": "underground_friction",
+                    "multiplier_scalar": 5,
+                    "apply_row_mult": True,
+                }
+            ],
+        },
+    }
+    transmission_config = {
+        "row_width": {"500": {"overhead": 1.5, "underground": 2}}
+    }
+
+    updated = RoutingOptions(routing_options).update_from(
+        transmission_config=transmission_config,
+        pv_by_option={
+            option: {"polarity": "ac", "voltage": 500}
+            for option in routing_options
+        },
+    )
+
+    assert updated["overhead"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(3)
+    assert updated["overhead"]["friction_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(4.5)
+    assert updated["underground"]["cost_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(8)
+    assert updated["underground"]["friction_layers"][0][
+        "multiplier_scalar"
+    ] == pytest.approx(10)
+
+
 def test_update_multipliers_applies_per_option_polarity_values():
     """Option maps should apply their values to cost and friction layers"""
 
@@ -963,7 +1026,7 @@ def test_get_row_multiplier_missing_config():
             r"in transmission config"
         ),
     ):
-        _get_row_multiplier({}, "138")
+        _get_row_multiplier({}, "138", "overhead")
 
 
 def test_get_row_multiplier_unknown_voltage():
@@ -978,7 +1041,54 @@ def test_get_row_multiplier_unknown_voltage():
             r"Available voltages: \['230'\]"
         ),
     ):
-        _get_row_multiplier(config, "138")
+        _get_row_multiplier(config, "138", "overhead")
+
+
+@pytest.mark.parametrize("routing_option", ["overhead", "underground"])
+def test_get_row_multiplier_shared_value_applies_to_every_option(
+    routing_option,
+):
+    """A scalar ROW value should apply to every routing option"""
+
+    config = {"row_width": {"138": 1.2}}
+
+    assert _get_row_multiplier(config, "138", routing_option) == pytest.approx(
+        1.2
+    )
+
+
+def test_get_row_multiplier_allows_mixed_shared_and_option_values():
+    """ROW configuration should allow scalar and option-map voltages"""
+
+    config = {
+        "row_width": {
+            "138": 1.2,
+            "500": {"overhead": 1.5, "underground": 2},
+        }
+    }
+
+    assert _get_row_multiplier(config, "138", "overhead") == pytest.approx(1.2)
+    assert _get_row_multiplier(config, "138", "underground") == pytest.approx(
+        1.2
+    )
+    assert _get_row_multiplier(config, "500", "overhead") == pytest.approx(1.5)
+    assert _get_row_multiplier(config, "500", "underground") == 2
+
+
+def test_get_row_multiplier_unknown_option():
+    """ROW option maps should require a multiplier for applied options"""
+
+    config = {"row_width": {"500": {"overhead": 1.5}}}
+
+    with pytest.raises(
+        revrtKeyError,
+        match=(
+            r"`apply_row_mult` was set to `True`, but routing option "
+            r"'underground' not found for voltage '500'. Available "
+            r"routing options: \['overhead'\]"
+        ),
+    ):
+        _get_row_multiplier(config, "500", "underground")
 
 
 def test_get_polarity_multiplier_missing_config():

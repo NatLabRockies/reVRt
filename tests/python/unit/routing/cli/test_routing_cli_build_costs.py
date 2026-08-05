@@ -275,11 +275,8 @@ def test_build_final_routing_layers_applies_per_option_pv_values(
     """build_final_routing_layers should apply per-option pv values"""
 
     transmission_config = {
-        "row_width": {"138": 1.5, "230": 2.0},
-        "voltage_polarity_mult": {
-            "138": {"ac": 0.5},
-            "230": {"dc": 0.75},
-        },
+        "row_width": {"138": {"overhead": 1.5, "underground": 2}},
+        "voltage_polarity_mult": {"138": {"ac": 0.5, "dc": 0.75}},
     }
     config = {
         "cost_fpath": str(sample_layered_data),
@@ -315,13 +312,12 @@ def test_build_final_routing_layers_applies_per_option_pv_values(
         lcp_config_fp=config_fp,
         output_dir=output_dir,
         polarity={"overhead": "ac", "underground": "dc"},
-        voltage={"overhead": 138, "underground": 230},
+        voltage={"overhead": 138, "underground": 138},
     )
 
     expected_paths = {
         output_dir / "multi_option_outputs_overhead_agg_costs.tif",
-        output_dir
-        / "multi_option_outputs_overhead_final_routing_layer.tif",
+        output_dir / "multi_option_outputs_overhead_final_routing_layer.tif",
         output_dir / "multi_option_outputs_underground_agg_costs.tif",
         output_dir
         / "multi_option_outputs_underground_final_routing_layer.tif",
@@ -338,13 +334,11 @@ def test_build_final_routing_layers_applies_per_option_pv_values(
     expected_by_option = {
         "overhead": (
             layer_one * 1.5
-            + layer_two
-            * (0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+            + layer_two * (0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
         ).to_numpy(),
         "underground": (
             layer_three * 2.0
-            + layer_two
-            * (0.75 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+            + layer_two * (0.75 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
         ).to_numpy(),
     }
 

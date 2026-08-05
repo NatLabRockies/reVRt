@@ -64,9 +64,12 @@ class RoutingCostLayer(BaseModel, extra="forbid"):
 
     The routing table input should resolve a voltage value for each
     routing option, either from the shared `voltage` column or from
-    `voltage_<option>` column. Every resolved voltage value must be
-    given in the "row_width" dictionary in the transmission config,
-    otherwise an error will be thrown.
+    `voltage_<option>` column. The ``row_width`` dictionary may specify
+    one multiplier for every option at a voltage, such as
+    ``{"138": 1.15}``, or values by routing option, such as
+    ``{"500": {"overhead": 1.15, "underground": 2}}``. Every
+    resolved voltage must be listed. For an option mapping, every
+    routing option using this multiplier must be listed.
     """
 
     apply_polarity_mult: bool = False
@@ -115,9 +118,12 @@ class RoutingFrictionLayer(BaseModel, extra="forbid"):
 
     The routing table input should resolve a voltage value for each
     routing option, either from the shared `voltage` column or from
-    `voltage_<option>` column. Every resolved voltage value must be
-    given in the "row_width" dictionary in the transmission config,
-    otherwise an error will be thrown.
+    `voltage_<option>` column. The ``row_width`` dictionary may specify
+    one multiplier for every option at a voltage, such as
+    ``{"138": 1.15}``, or values by routing option, such as
+    ``{"500": {"overhead": 1.15, "underground": 2}}``. Every
+    resolved voltage must be listed. For an option mapping, every
+    routing option using this multiplier must be listed.
     """
 
     apply_polarity_mult: bool = False
