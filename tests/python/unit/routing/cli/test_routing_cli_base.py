@@ -6,11 +6,18 @@ import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+from pydantic import ValidationError
 from shapely.geometry import LineString
 from rasterio.transform import from_origin
 
 from revrt.exceptions import revrtConfigurationError, revrtKeyError
-from revrt.models.routing import validate_routing_options
+from revrt.models.routing import (
+    RoutingCostLayer,
+    RoutingFrictionLayer,
+    RoutingOptionConfig,
+    TrackedLayer,
+    validate_routing_options,
+)
 from revrt.routing.cli.base import (
     update_multipliers,
     RoutingOptions,
@@ -552,7 +559,61 @@ def test_validate_routing_options_preserves_supported_schema():
         }
     }
 
-    assert validate_routing_options(routing_options) == routing_options
+    assert validate_routing_options(routing_options) == {
+        "overhead": {
+            "cost_layers": [
+                {
+                    "layer_name": "layer_1",
+                    "apply_row_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "multiplier_layer": ["layer_2"],
+                    "multiplier_scalar": 0.5,
+                }
+            ],
+            "barrier_layers": [
+                {
+                    "layer_name": "layer_3",
+                    "where": "==1",
+                }
+            ],
+            "cost_multiplier_layer": ["layer_4"],
+        }
+    }
+
+
+def test_multiplier_layers_accept_scalar_and_iterable_inputs():
+    """Multiplier layer fields accept strings and finite iterables"""
+
+    assert RoutingCostLayer(
+        layer_name="cost", multiplier_layer="multiplier"
+    ).multiplier_layer == ["multiplier"]
+    assert RoutingFrictionLayer(
+        multiplier_layer=("first", "second")
+    ).multiplier_layer == ["first", "second"]
+    assert TrackedLayer(
+        layer_name="tracked",
+        agg_method="mean",
+        multiplier_layer=(name for name in ("first", "second")),
+    ).multiplier_layer == ["first", "second"]
+    assert RoutingOptionConfig(
+        cost_multiplier_layer=("first", "second")
+    ).cost_multiplier_layer == ["first", "second"]
+    assert (
+        RoutingCostLayer(
+            layer_name="cost", multiplier_layer=[]
+        ).multiplier_layer
+        == []
+    )
+
+
+def test_multiplier_layers_reject_non_string_items():
+    """Multiplier layer iterables must only contain layer names"""
+
+    with pytest.raises(ValidationError):
+        RoutingCostLayer(layer_name="cost", multiplier_layer=["layer", 1])
 
 
 def test_validate_routing_options_normalizes_legacy_shapes():
@@ -805,7 +866,7 @@ def test_create_routing_layer_tmp_dir_handles_getpass_failure(
     )
     monkeypatch.setattr(
         "revrt.routing.cli.utilities.Path.home",
-        classmethod(lambda _cls: Path("/tmp/fallback-user")),  # noqa: S108
+        classmethod(lambda _cls: Path("/tmp/fallback-user")),  # ruff:ignore[hardcoded-temp-file]
     )
     monkeypatch.setattr(
         "revrt.routing.cli.utilities.tempfile.gettempdir",
