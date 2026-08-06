@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785802117684,
+  "lastUpdate": 1785975164839,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13271,6 +13271,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 187831412,
             "range": "± 1387582",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "13f3363b6dde01a0b08b860488a9f3a0fa777ff6",
+          "message": "Voltage/polarity/ROW mult can be option-based (#318)\n\n* polarity multiplier now allows specifying routing option\n\n* ROW mult can now be routing-option-based",
+          "timestamp": "2026-08-05T18:00:22-06:00",
+          "tree_id": "c0864e458244f771e941bcc2b06874ca3879ca80",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/13f3363b6dde01a0b08b860488a9f3a0fa777ff6"
+        },
+        "date": 1785975163869,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 49216990,
+            "range": "± 830280",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 65280393,
+            "range": "± 955206",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 64691804,
+            "range": "± 962032",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 92344373,
+            "range": "± 1642820",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 447752055,
+            "range": "± 11239232",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 145289458,
+            "range": "± 2230168",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 148046640,
+            "range": "± 1267815",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 156745444,
+            "range": "± 1032121",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 183922747,
+            "range": "± 1419167",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 289669292,
+            "range": "± 4746059",
             "unit": "ns/iter"
           }
         ]
