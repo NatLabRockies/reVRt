@@ -8,7 +8,7 @@ use tracing::trace;
 use crate::cost::CostFunction;
 use crate::cost::components::{
     BarrierLayer, BarrierOperator, CostLayer, DriverRuleSet, DriverZoneRule, FrictionLayer,
-    TransitionCostTable,
+    MultiplierLayers, TransitionCostTable,
 };
 use crate::error::Result;
 
@@ -48,7 +48,7 @@ pub(super) struct RoutingOptionDefinition {
     #[serde(default)]
     cost_layers: Vec<CostLayer>,
     #[serde(default)]
-    cost_multiplier_layer: Option<String>,
+    cost_multiplier_layer: Option<MultiplierLayers>,
     #[serde(default)]
     friction_layers: Vec<FrictionLayerInput>,
     #[serde(default)]
@@ -58,7 +58,7 @@ pub(super) struct RoutingOptionDefinition {
 #[derive(Clone, Debug, Default)]
 pub(super) struct RoutingOptionLayerSet {
     pub(super) cost_layers: Vec<CostLayer>,
-    pub(super) cost_multiplier_layer: Option<String>,
+    pub(super) cost_multiplier_layer: Option<MultiplierLayers>,
     pub(super) friction_layers: Vec<FrictionLayer>,
     pub(super) barrier_layers: Vec<BarrierLayer>,
 }
@@ -68,7 +68,7 @@ struct FrictionLayerInput {
     #[serde(default)]
     layer_name: Option<String>,
     #[serde(default)]
-    multiplier_layer: Option<String>,
+    multiplier_layer: Option<MultiplierLayers>,
     #[serde(default)]
     multiplier_scalar: Option<f32>,
 }
@@ -279,14 +279,17 @@ impl TransitionCostsConfig {
 
 impl FrictionLayerInput {
     fn into_layer(self, option: u32) -> Result<FrictionLayer> {
-        let multiplier_layer = self.layer_name.or(self.multiplier_layer).ok_or_else(|| {
-            crate::error::Error::Undefined(
-                "friction layer requires layer_name or multiplier_layer".to_string(),
-            )
-        })?;
+        let multiplier_layers = self
+            .multiplier_layer
+            .or_else(|| self.layer_name.map(|layer_name| vec![layer_name]))
+            .ok_or_else(|| {
+                crate::error::Error::Undefined(
+                    "friction layer requires layer_name or multiplier_layer".to_string(),
+                )
+            })?;
 
         Ok(FrictionLayer::new(
-            multiplier_layer,
+            multiplier_layers,
             self.multiplier_scalar,
             option,
         ))
