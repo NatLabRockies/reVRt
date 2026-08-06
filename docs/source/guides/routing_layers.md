@@ -41,7 +41,7 @@ account for inflation). There are several more options you can include
 for a single layer; they are all documented
 [here](https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=cost_layerslist).
 
-``"multiplier_layer"`` also accepts an array of layer names. All listed
+``"multiplier_layer"`` also accepts a list of layer names. All listed
 layers are multiplied into the cost term:
 
 ```json5
@@ -79,7 +79,7 @@ the total sum of the values in this layer along the output route.
 
 ``"cost_multiplier_layer"`` applies after the option's cost layers are
 summed, including invariant and non-reported layers. It accepts the same
-string-or-array syntax as ``"multiplier_layer"``:
+string-or-list syntax as ``"multiplier_layer"``:
 
 ```json5
 {
