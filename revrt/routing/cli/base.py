@@ -265,12 +265,14 @@ class RoutingOptions:
                 option_config.get("cost_layers", []),
                 option_polarity,
                 option_voltage,
+                option_name,
                 transmission_config or {},
             )
             option_config["friction_layers"] = update_multipliers(
                 option_config.get("friction_layers", []),
                 option_polarity,
                 option_voltage,
+                option_name,
                 transmission_config or {},
             )
             option_config["barrier_layers"] = deepcopy(
@@ -424,7 +426,9 @@ def _validate_route_value_columns(points, routing_options):
     return points
 
 
-def update_multipliers(layers, polarity, voltage, transmission_config):
+def update_multipliers(
+    layers, polarity, voltage, routing_option, transmission_config
+):
     """[NOT PUBLIC API] Update layer multipliers based on user input"""
     output_layers = deepcopy(layers)
     unknowns = {None, "None", "unknown"}
@@ -433,14 +437,16 @@ def update_multipliers(layers, polarity, voltage, transmission_config):
 
     for layer in output_layers:
         if layer.pop("apply_row_mult", False):
-            row_multiplier = _get_row_multiplier(transmission_config, voltage)
+            row_multiplier = _get_row_multiplier(
+                transmission_config, voltage, routing_option
+            )
             layer["multiplier_scalar"] = (
                 layer.get("multiplier_scalar", 1) * row_multiplier
             )
 
         if layer.pop("apply_polarity_mult", False):
             polarity_multiplier = _get_polarity_multiplier(
-                transmission_config, voltage, polarity
+                transmission_config, voltage, polarity, routing_option
             )
             layer["multiplier_scalar"] = (
                 layer.get("multiplier_scalar", 1)
@@ -451,8 +457,8 @@ def update_multipliers(layers, polarity, voltage, transmission_config):
     return output_layers
 
 
-def _get_row_multiplier(transmission_config, voltage):
-    """Get right-of-way width multiplier for a given voltage"""
+def _get_row_multiplier(transmission_config, voltage, routing_option):
+    """Get right-of-way width multiplier for a voltage and option"""
     try:
         row_widths = transmission_config["row_width"]
     except KeyError as e:
@@ -473,10 +479,23 @@ def _get_row_multiplier(transmission_config, voltage):
         )
         raise revrtKeyError(msg) from e
 
+    if isinstance(row_multiplier, dict):
+        try:
+            row_multiplier = row_multiplier[routing_option]
+        except KeyError as e:
+            msg = (
+                "`apply_row_mult` was set to `True`, but routing option "
+                f"'{routing_option}' not found for voltage '{voltage}'. "
+                f"Available routing options: {list(row_multiplier)}"
+            )
+            raise revrtKeyError(msg) from e
+
     return row_multiplier
 
 
-def _get_polarity_multiplier(transmission_config, voltage, polarity):
+def _get_polarity_multiplier(
+    transmission_config, voltage, polarity, routing_option
+):
     """Get multiplier for a given voltage and polarity"""
     try:
         polarity_config = transmission_config["voltage_polarity_mult"]
@@ -506,6 +525,18 @@ def _get_polarity_multiplier(transmission_config, voltage, polarity):
             f"{list(polarity_voltages)}"
         )
         raise revrtKeyError(msg) from e
+
+    if isinstance(polarity_multiplier, dict):
+        try:
+            polarity_multiplier = polarity_multiplier[routing_option]
+        except KeyError as e:
+            msg = (
+                "`apply_polarity_mult` was set to `True`, but routing "
+                f"option '{routing_option}' not found for voltage "
+                f"'{voltage}' and polarity '{polarity}'. Available routing "
+                f"options: {list(polarity_multiplier)}"
+            )
+            raise revrtKeyError(msg) from e
 
     return polarity_multiplier
 
