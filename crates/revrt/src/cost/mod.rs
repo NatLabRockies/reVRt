@@ -7,7 +7,8 @@ use std::convert::TryFrom;
 use tracing::{debug, trace};
 
 use crate::cost::components::{
-    BarrierLayer, BarrierOperator, CostLayer, DriverRuleSet, FrictionLayer, TransitionCostTable,
+    BarrierLayer, BarrierOperator, CostLayer, DriverRuleSet, FrictionLayer, MultiplierLayers,
+    TransitionCostTable,
 };
 use crate::cost::inputs::CostFunctionInput;
 use crate::dataset::LazySubset;
@@ -32,7 +33,7 @@ const HIGH_FRICTION_INVALID_COST: f32 = 1e10;
 /// layers that are summed together (per grid point) to give the total cost.
 pub(crate) struct CostFunction {
     cost_layers: Vec<CostLayer>,
-    option_cost_multiplier_layers: Vec<Option<String>>,
+    option_cost_multiplier_layers: Vec<Option<MultiplierLayers>>,
     friction_layers: Option<Vec<FrictionLayer>>,
     barrier_layers: Option<Vec<BarrierLayer>>,
     pub(crate) routing_options: Vec<String>,
@@ -46,7 +47,7 @@ impl CostFunction {
     #[allow(clippy::too_many_arguments)]
     fn from_input_parts(
         cost_layers: Vec<CostLayer>,
-        option_cost_multiplier_layers: Vec<Option<String>>,
+        option_cost_multiplier_layers: Vec<Option<MultiplierLayers>>,
         friction_layers: Vec<FrictionLayer>,
         barrier_layers: Vec<BarrierLayer>,
         routing_options: Vec<String>,
@@ -85,7 +86,7 @@ impl CostFunction {
     ///         {
     ///           "layer_name": "A",
     ///           "multiplier_scalar": 2,
-    ///           "multiplier_layer": "B"
+    ///           "multiplier_layer": ["B"]
     ///         }
     ///       ],
     ///       "barrier_layers": [
@@ -231,15 +232,19 @@ impl CostFunction {
         final_cost_layer: &mut CostArray,
         features: &mut LazySubset<f32>,
     ) {
-        for (option, multiplier_layer_name) in self.option_cost_multiplier_layers.iter().enumerate()
-        {
-            let Some(multiplier_layer_name) = multiplier_layer_name else {
+        for (option, multiplier_layers) in self.option_cost_multiplier_layers.iter().enumerate() {
+            let Some(multiplier_layers) = multiplier_layers else {
                 continue;
             };
 
-            let multiplier =
-                build_option_cost_multiplier_layer(multiplier_layer_name, option as u32, features);
-            *final_cost_layer *= &multiplier;
+            for multiplier_layer_name in multiplier_layers {
+                let multiplier = build_option_cost_multiplier_layer(
+                    multiplier_layer_name,
+                    option as u32,
+                    features,
+                );
+                *final_cost_layer *= &multiplier;
+            }
         }
     }
 }
@@ -273,18 +278,18 @@ fn build_single_cost_layer(layer: &CostLayer, features: &mut LazySubset<f32>) ->
         // trace!( "Cost for chunk ({}, {}) in layer {}: {}", ci, cj, layer_name, cost);
     }
 
-    if let Some(multiplier_layer) = &layer.multiplier_layer {
-        trace!(
-            "Layer {} has multiplier layer {}",
-            layer_name, multiplier_layer
-        );
-        let multiplier_value = features
-            .get(multiplier_layer)
-            .expect("Multiplier layer not found in features");
+    if let Some(multiplier_layers) = &layer.multiplier_layer {
+        for multiplier_layer_name in multiplier_layers {
+            trace!(
+                "Layer {} has multiplier layer {}",
+                layer_name, multiplier_layer_name
+            );
+            let multiplier_value = features
+                .get(multiplier_layer_name)
+                .expect("Multiplier layer not found in features");
 
-        // Apply the multiplier layer to the value
-        cost = cost * multiplier_value;
-        // trace!( "Cost for chunk ({}, {}) in layer {}: {}", ci, cj, layer_name, cost);
+            cost = cost * multiplier_value;
+        }
     }
 
     cost.mapv_inplace(|v| if v > 0.0_f32 { v } else { 0.0_f32 });
@@ -295,11 +300,23 @@ fn build_single_cost_layer(layer: &CostLayer, features: &mut LazySubset<f32>) ->
 fn build_single_friction_layer(layer: &FrictionLayer, features: &mut LazySubset<f32>) -> CostArray {
     trace!("Building friction layer: {:?}", layer);
 
-    let multiplier_layer_name = &layer.multiplier_layer;
+    if layer.multiplier_layers.is_empty() {
+        return empty_cost_array(features);
+    }
 
+    let mut multiplier_layer_names = layer.multiplier_layers.iter();
+    let first_multiplier_layer_name = multiplier_layer_names
+        .next()
+        .expect("Non-empty multiplier layers must have a first layer");
     let mut friction = features
-        .get(multiplier_layer_name)
+        .get(first_multiplier_layer_name)
         .expect("Multiplier layer not found in features");
+    for multiplier_layer_name in multiplier_layer_names {
+        let multiplier = features
+            .get(multiplier_layer_name)
+            .expect("Multiplier layer not found in features");
+        friction = friction * multiplier;
+    }
 
     if let Some(multiplier_scalar) = layer.multiplier_scalar {
         trace!("\t- Layer has multiplier scalar {}", multiplier_scalar);
@@ -418,9 +435,9 @@ pub(crate) mod sample {
                         {"layer_name": "A"},
                         {"layer_name": "B", "multiplier_scalar": 100},
                         {"layer_name": "A",
-                            "multiplier_layer": "B"},
+                            "multiplier_layer": ["B"]},
                         {"layer_name": "C", "multiplier_scalar": 2,
-                            "multiplier_layer": "A"},
+                            "multiplier_layer": ["A"]},
                         {"layer_name": "C", "multiplier_scalar": 100,
                             "is_invariant": true}
                     ]
@@ -446,14 +463,14 @@ mod test_builder {
         let layer = CostLayerBuilder::default()
             .layer_name("A".to_string())
             .multiplier_scalar(2.0)
-            .multiplier_layer("B")
+            .multiplier_layer(vec!["B".to_string()])
             .is_invariant(false)
             .build()
             .unwrap();
 
         assert_eq!(layer.layer_name, "A".to_string());
         assert_eq!(layer.multiplier_scalar, Some(2.0));
-        assert_eq!(layer.multiplier_layer, Some("B".to_string()));
+        assert_eq!(layer.multiplier_layer, Some(vec!["B".to_string()]));
         assert_eq!(layer.is_invariant, Some(false));
         assert_eq!(layer.option, 0);
     }
@@ -512,11 +529,17 @@ mod test {
         assert_eq!(cost.cost_layers[1].is_invariant, None);
         assert_eq!(cost.cost_layers[1].option, 0);
         assert_eq!(cost.cost_layers[2].layer_name, "A".to_string());
-        assert_eq!(cost.cost_layers[2].multiplier_layer, Some("B".to_string()));
+        assert_eq!(
+            cost.cost_layers[2].multiplier_layer,
+            Some(vec!["B".to_string()])
+        );
         assert_eq!(cost.cost_layers[2].is_invariant, None);
         assert_eq!(cost.cost_layers[2].option, 0);
         assert_eq!(cost.cost_layers[3].layer_name, "C".to_string());
-        assert_eq!(cost.cost_layers[3].multiplier_layer, Some("A".to_string()));
+        assert_eq!(
+            cost.cost_layers[3].multiplier_layer,
+            Some(vec!["A".to_string()])
+        );
         assert_eq!(cost.cost_layers[3].multiplier_scalar, Some(2.0));
         assert_eq!(cost.cost_layers[3].is_invariant, None);
         assert_eq!(cost.cost_layers[3].option, 0);
@@ -568,7 +591,7 @@ mod test {
                 "default": {
                     "cost_layers": [],
                     "friction_layers": [
-                        {"multiplier_layer": "B", "multiplier_scalar": -3.0}
+                        {"multiplier_layer": ["B"], "multiplier_scalar": -3.0}
                     ]
                 }
             }
@@ -599,7 +622,7 @@ mod test {
                         {"layer_name": "A"}
                     ],
                     "friction_layers": [
-                        {"multiplier_layer": "B", "multiplier_scalar": -3.0}
+                        {"multiplier_layer": ["B"], "multiplier_scalar": -3.0}
                     ]
                 }
             }
@@ -631,6 +654,76 @@ mod test {
                 let diff = (*r - truth).abs();
                 assert!(diff < 1e-6, "mismatch {} vs {} (diff={})", r, truth, diff);
             });
+    }
+
+    #[test]
+    fn multiplier_layer_arrays_are_multiplied() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("cost", 2.0))
+            .layer(samples::LayerConfig::constant("first", 3.0))
+            .layer(samples::LayerConfig::constant("second", 5.0))
+            .layer(samples::LayerConfig::constant("option", 7.0))
+            .build()
+            .expect("Failed to create multiplier array zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{
+                            "layer_name": "cost",
+                            "multiplier_layer": ["first", "second"]
+                        }],
+                        "friction_layers": [{
+                            "multiplier_layer": ["first", "second"],
+                            "multiplier_scalar": 0.1
+                        }],
+                        "cost_multiplier_layer": ["option"]
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let result = cost_fn.compute(&mut features, false);
+
+        assert_eq!(result, ArrayD::from_elem(IxDyn(&[1, 2, 2]), 525.0));
+    }
+
+    #[test]
+    fn empty_multiplier_layer_arrays_are_noops() {
+        let tmp = samples::ZarrTestBuilder::new()
+            .dimensions(1, 2, 2)
+            .chunks(1, 2, 2)
+            .layer(samples::LayerConfig::constant("cost", 2.0))
+            .build()
+            .expect("Failed to create empty multiplier array zarr");
+        let store: ReadableListableStorage = Arc::new(FilesystemStore::new(tmp.path()).unwrap());
+        let subset = ArraySubset::new_with_start_shape(vec![0, 0, 0], vec![1, 2, 2]).unwrap();
+        let mut features = make_lazy_subset_for_tests(store, subset);
+        let cost_fn = CostFunction::from_json(
+            r#"{
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [{
+                            "layer_name": "cost",
+                            "multiplier_layer": []
+                        }],
+                        "friction_layers": [{"multiplier_layer": []}],
+                        "cost_multiplier_layer": []
+                    }
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let result = cost_fn.compute(&mut features, false);
+
+        assert_eq!(result, ArrayD::from_elem(IxDyn(&[1, 2, 2]), 2.0));
     }
 
     #[test]
@@ -737,14 +830,14 @@ mod test {
                             {"layer_name": "overhead_cost"},
                             {"layer_name": "overhead_li", "is_invariant": true}
                         ],
-                        "cost_multiplier_layer": "overhead_multiplier"
+                        "cost_multiplier_layer": ["overhead_multiplier"]
                     },
                     "underground": {
                         "cost_layers": [
                             {"layer_name": "underground_cost"},
                             {"layer_name": "underground_li", "is_invariant": true}
                         ],
-                        "cost_multiplier_layer": "underground_multiplier"
+                        "cost_multiplier_layer": ["underground_multiplier"]
                     }
                 }
             }"#,
@@ -754,8 +847,8 @@ mod test {
         assert_eq!(
             cost_fn.option_cost_multiplier_layers,
             vec![
-                Some("overhead_multiplier".to_string()),
-                Some("underground_multiplier".to_string()),
+                Some(vec!["overhead_multiplier".to_string()]),
+                Some(vec!["underground_multiplier".to_string()]),
             ]
         );
 
@@ -804,7 +897,7 @@ mod test {
                 "routing_options": {
                     "default": {
                         "cost_layers": [{"layer_name": "cost"}],
-                        "cost_multiplier_layer": "multiplier"
+                        "cost_multiplier_layer": ["multiplier"]
                     }
                 }
             }"#,
@@ -868,8 +961,8 @@ mod test {
 
         assert_eq!(cost_fn.routing_options, ["overhead"]);
         assert_eq!(
-            cost_fn.friction_layers.as_ref().unwrap()[0].multiplier_layer,
-            "wet_friction"
+            cost_fn.friction_layers.as_ref().unwrap()[0].multiplier_layers,
+            vec!["wet_friction".to_string()]
         );
         assert_eq!(
             cost_fn.hard_barrier_layers()[0].barrier_operator as u8,
@@ -893,5 +986,40 @@ mod test {
         .unwrap_err();
 
         assert!(matches!(error, crate::error::Error::Undefined(_)));
+    }
+
+    #[test]
+    fn scalar_multiplier_layer_inputs_are_rejected() {
+        for json in [
+            r#"{
+                "routing_options": {
+                    "default": {
+                        "cost_layers": [
+                            {"layer_name": "cost", "multiplier_layer": "multiplier"}
+                        ]
+                    }
+                }
+            }"#,
+            r#"{
+                "routing_options": {
+                    "default": {
+                        "friction_layers": [
+                            {"multiplier_layer": "multiplier"}
+                        ]
+                    }
+                }
+            }"#,
+            r#"{
+                "routing_options": {
+                    "default": {
+                        "cost_multiplier_layer": "multiplier"
+                    }
+                }
+            }"#,
+        ] {
+            let error = CostFunction::from_json(json).unwrap_err();
+
+            assert!(matches!(error, crate::error::Error::Undefined(_)));
+        }
     }
 }
