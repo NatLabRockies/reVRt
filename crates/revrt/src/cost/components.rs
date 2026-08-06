@@ -119,6 +119,8 @@ pub(super) enum BarrierOperator {
     Equal,
 }
 
+pub(super) type MultiplierLayers = Vec<String>;
+
 #[derive(Builder, Clone, Debug, serde::Deserialize)]
 /// A cost layer
 ///
