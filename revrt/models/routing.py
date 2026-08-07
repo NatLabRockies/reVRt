@@ -1,6 +1,7 @@
 """Pydantic models for routing inputs"""
 
 from typing import Literal
+from functools import partial
 
 from pydantic import (
     BaseModel,
@@ -13,7 +14,10 @@ from pydantic import (
 
 from revrt.exceptions import revrtConfigurationError
 from revrt.models.cost_layers import BarrierLayer
-from revrt.utilities.parsing import parse_comparison_values
+from revrt.utilities.parsing import (
+    parse_comparison_values,
+    normalize_str_list_input,
+)
 
 
 type DriverOptionRules = dict[str, float | Literal["excluded"]]
@@ -24,6 +28,9 @@ multipliers to apply while routing in that option or the keyword
 ``"excluded"``, which means the option is not allowed at all in
 the zone.
 """
+
+type MultiplierLayerInput = list[str] | None
+"""One or more layer names used as spatial multipliers"""
 
 
 class RoutingCostLayer(BaseModel, extra="forbid"):
@@ -40,8 +47,16 @@ class RoutingCostLayer(BaseModel, extra="forbid"):
     layer_name: str
     """Name of layer in layered file containing cost data"""
 
-    multiplier_layer: str | None = None
-    """Optional layer of spatial multipliers applied before summation"""
+    multiplier_layer: MultiplierLayerInput = None
+    """Optional spatial multiplier layer(s) applied before summation
+
+    A string or iterable is accepted and normalized to a list.
+    All supplied layers are multiplied together.
+    """
+
+    _normalize_multiplier_layer = field_validator(
+        "multiplier_layer", mode="before"
+    )(partial(normalize_str_list_input, name="multiplier_layer"))
 
     multiplier_scalar: float = 1
     """Optional scalar multiplier applied before summation"""
@@ -104,8 +119,16 @@ class RoutingFrictionLayer(BaseModel, extra="forbid"):
     ignored.**
     """
 
-    multiplier_layer: str | None = None
-    """Layer of spatial multipliers applied to the aggregated costs"""
+    multiplier_layer: MultiplierLayerInput = None
+    """Spatial multiplier layer(s) applied to the aggregated costs
+
+    A string or iterable is accepted and normalized to a list.
+    All supplied layers are multiplied together.
+    """
+
+    _normalize_multiplier_layer = field_validator(
+        "multiplier_layer", mode="before"
+    )(partial(normalize_str_list_input, name="multiplier_layer"))
 
     multiplier_scalar: float = 1
     """Scalar multiplier applied before friction is aggregated"""
@@ -202,8 +225,16 @@ class TrackedLayer(BaseModel, extra="forbid"):
     etc.
     """
 
-    multiplier_layer: str | None = None
-    """Optional layer of multipliers to apply before aggregation"""
+    multiplier_layer: MultiplierLayerInput = None
+    """Optional spatial multiplier layer(s) applied before aggregation
+
+    A string or iterable is accepted and normalized to a list.
+    All supplied layers are multiplied together.
+    """
+
+    _normalize_multiplier_layer = field_validator(
+        "multiplier_layer", mode="before"
+    )(partial(normalize_str_list_input, name="multiplier_layer"))
 
     multiplier_scalar: float = 1
     """Optional scalar multiplier applied before aggregation"""
@@ -279,8 +310,16 @@ class RoutingOptionConfig(BaseModel, extra="forbid"):
     route can be found. This behavior can be configured.
     """
 
-    cost_multiplier_layer: str | None = None
-    """Optional option-level layer multiplied onto final costs"""
+    cost_multiplier_layer: MultiplierLayerInput = None
+    """Optional option-level multiplier layer(s) applied to final costs
+
+    A string or iterable is accepted and normalized to a list.
+    All supplied layers are multiplied together.
+    """
+
+    _normalize_cost_multiplier_layer = field_validator(
+        "cost_multiplier_layer", mode="before"
+    )(partial(normalize_str_list_input, name="cost_multiplier_layer"))
 
     cost_multiplier_scalar: float = 1
     """Optional option-level scalar multiplied onto final costs"""
@@ -568,6 +607,7 @@ __all__ = [
     "DriverConfig",
     "DriverOptionRules",
     "DriverZoneConfig",
+    "MultiplierLayerInput",
     "RoutingBarrierLayer",
     "RoutingCostLayer",
     "RoutingFrictionLayer",

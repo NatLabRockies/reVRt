@@ -41,6 +41,18 @@ account for inflation). There are several more options you can include
 for a single layer; they are all documented
 [here](https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=cost_layerslist).
 
+``"multiplier_layer"`` also accepts a list of layer names. All listed
+layers are multiplied into the cost term:
+
+```json5
+{
+    "layer_name": "my_cost_layer",
+    "multiplier_layer": ["regional_adjustment", "wetland_mask"]
+}
+```
+
+An empty list has no effect.
+
 For maximum flexibility, you can specify multiple such layers that all
 aggregate to form the final routing cost layer:
 
@@ -62,6 +74,22 @@ aggregate to form the final routing cost layer:
 Each cost layer is built independently, and they are all summed at the
 end to create the cost routing layer. Output routes strive to minimize
 the total sum of the values in this layer along the output route.
+
+### Option-level cost multipliers
+
+``"cost_multiplier_layer"`` applies after the option's cost layers are
+summed, including invariant and non-reported layers. It accepts the same
+string-or-list syntax as ``"multiplier_layer"``:
+
+```json5
+{
+    "cost_layers": [{"layer_name": "my_cost_layer"}],
+    "cost_multiplier_layer": ["regional_adjustment", "permitting_mask"]
+}
+```
+
+All listed option-level multiplier layers are multiplied together. An
+empty list is an identity operation.
 
 ### Invalid costs
 One of the restrictions of the routing algorithm is that all costs must
@@ -131,6 +159,12 @@ layer (see the section above). As before, there are several more options
 you can include for a single friction layer; they are all documented
 [here](https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=friction_layerslist).
 
+``"multiplier_layer"`` may be a string or an list. For a list, the
+friction term is the product of its layers and ``"multiplier_scalar"``.
+For example, ``["wetland_mask", "county_adjustment"]`` produces
+``wetland_mask * county_adjustment * multiplier_scalar``. An empty list
+adds zero friction.
+
 For maximum flexibility, you can specify multiple friction layers that all
 aggregate to form the final friction layer:
 
@@ -173,7 +207,7 @@ method:
 "tracked_layers": [
         {
                 "layer_name": "land_use_score",
-                "multiplier_layer": "county_adjustment",
+                "multiplier_layer": ["county_adjustment", "scenario_factor"],
                 "multiplier_scalar": 1.1,
                 "agg_method": "mean"
         },
@@ -193,8 +227,9 @@ Each tracked layer definition must contain:
 
 Tracked layers may also contain:
 
-- ``"multiplier_layer"``: A spatial multiplier layer applied before
-    aggregation.
+- ``"multiplier_layer"``: A spatial multiplier layer or list of layers
+    applied before aggregation. Every listed layer is multiplied into the
+    tracked values; an empty list has no effect.
 - ``"multiplier_scalar"``: A scalar multiplier applied before
     aggregation.
 

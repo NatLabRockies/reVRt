@@ -689,7 +689,7 @@ mod tests {
                         {"layer_name": "C", "is_invariant": true}
                     ],
                     "friction_layers": [
-                        {"multiplier_layer": "B", "multiplier_scalar": 0.5}
+                        {"multiplier_layer": ["B"], "multiplier_scalar": 0.5}
                     ]
                 }
             }

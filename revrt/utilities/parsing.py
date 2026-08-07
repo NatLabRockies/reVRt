@@ -1,8 +1,9 @@
 """reVrt parsing utilities"""
 
 import re
+from collections.abc import Iterable
 
-from revrt.exceptions import revrtConfigurationError
+from revrt.exceptions import revrtConfigurationError, revrtTypeError
 
 
 _COMPARISON_VALUE_PATTERN = re.compile(
@@ -17,6 +18,39 @@ _OPERATOR_MAP = {
     "<=": "le",
     "==": "eq",
 }
+
+
+def normalize_str_list_input(value, name):
+    """Normalize a string-or-list input to a list of strings
+
+    Parameters
+    ----------
+    value : str or iterable
+        Input value (e.g., a string or a list of strings) to normalize.
+    name : str
+        Name of the input value (used for error messages).
+
+    Returns
+    -------
+    list or None
+        A list of strings, or None if the input value is None.
+
+    Raises
+    ------
+    revrtTypeError
+        If the input value is not a string or an iterable of strings.
+    """
+    if value is None:
+        return value
+
+    if isinstance(value, str):
+        return [value]
+
+    if not isinstance(value, Iterable):
+        msg = f"{name} must be a string or an iterable of strings"
+        raise revrtTypeError(msg)
+
+    return list(value)
 
 
 def parse_comparison_values(comparison_values):

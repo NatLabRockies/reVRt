@@ -21,7 +21,10 @@ from revrt.models.routing import (
     validate_transition_cost_configs,
 )
 from revrt.routing.utilities import compute_lens
-from revrt.utilities.parsing import parse_comparison_values
+from revrt.utilities.parsing import (
+    parse_comparison_values,
+    normalize_str_list_input,
+)
 from revrt.exceptions import revrtKeyError
 from revrt.warn import revrtWarning, revrtDeprecationWarning
 
@@ -263,8 +266,10 @@ class RoutingLayerManager:
         option_li_cost *= mult
         option_untracked_cost *= mult
 
-        multiplier_layer_name = config.get("cost_multiplier_layer")
-        if multiplier_layer_name:
+        multiplier_layer_names = normalize_str_list_input(
+            config.get("cost_multiplier_layer"), name="cost_multiplier_layer"
+        )
+        for multiplier_layer_name in multiplier_layer_names or ():
             multiplier = self._extract_layer(multiplier_layer_name)
             option_cost *= multiplier
             option_li_cost *= multiplier
@@ -283,11 +288,18 @@ class RoutingLayerManager:
     ):
         frictions = da.zeros(self.full_shape, dtype=np.float32)
         for layer_info in config.get("friction_layers", []):
-            layer_name = layer_info.get("multiplier_layer")
-            friction_layer = self._extract_and_scale_friction_layer(
-                layer_name, layer_info
+            multiplier_layer_names = normalize_str_list_input(
+                layer_info.get("multiplier_layer"),
+                name="friction multiplier_layer",
             )
-            if layer_info.get("include_in_report", False):
+            friction_layer = self._extract_and_scale_friction_layer(
+                multiplier_layer_names, layer_info
+            )
+            if (
+                layer_info.get("include_in_report", False)
+                and multiplier_layer_names
+            ):
+                layer_name = "_".join(multiplier_layer_names or ())
                 self.tracked_layers.append(
                     CharacterizedLayer(
                         f"{layer_name}_{option}", friction_layer, option=option
@@ -322,23 +334,32 @@ class RoutingLayerManager:
         """Extract layer based on name and scale according to input"""
         cost = self._extract_layer(layer_info["layer_name"])
 
-        multiplier_layer_name = layer_info.get("multiplier_layer")
-        if multiplier_layer_name:
+        multiplier_layer_names = normalize_str_list_input(
+            layer_info.get("multiplier_layer"), name="multiplier_layer"
+        )
+        for multiplier_layer_name in multiplier_layer_names or ():
             cost *= self._extract_layer(multiplier_layer_name)
 
         cost *= layer_info.get("multiplier_scalar", 1)
         return cost
 
-    def _extract_and_scale_friction_layer(self, mask_layer_name, layer_info):
+    def _extract_and_scale_friction_layer(
+        self, multiplier_layer_names, layer_info
+    ):
         """Extract layer based on name and scale according to input"""
-        if not mask_layer_name:
+        if multiplier_layer_names is None:
             msg = (
                 "Friction layers must specify a 'mask' or "
                 "'multiplier_layer' key!"
             )
             raise revrtKeyError(msg)
 
-        cost = self._extract_layer(mask_layer_name)
+        if not multiplier_layer_names:
+            return self._empty_cost_layer_data_array()
+
+        cost = self._extract_layer(multiplier_layer_names[0])
+        for multiplier_layer_name in multiplier_layer_names[1:]:
+            cost *= self._extract_layer(multiplier_layer_name)
         cost *= layer_info.get("multiplier_scalar", 1)
         return cost
 

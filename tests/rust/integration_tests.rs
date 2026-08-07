@@ -48,7 +48,7 @@ fn basic_routing_in_data_with_friction(algorithm: &str) {
                 "default": {
                     "cost_layers": [{"layer_name": "tie_line_costs_102MW"}],
                     "friction_layers": [
-                        {"multiplier_layer": "transmission_barrier", "multiplier_scalar": 100}
+                        {"multiplier_layer": ["transmission_barrier"], "multiplier_scalar": 100}
                     ]
                 }
             }

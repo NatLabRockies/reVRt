@@ -140,7 +140,7 @@ def sample_layered_data(tmp_path_factory):
                 [-1, -1, -1, -1, -1, -1, -1, -1],
                 [-1, -1, -1, -1, -1, -1, -1, -1],
                 [-1, -1, -1, -1, -1, -1, -1, -1],
-                [ 8, -1, -1, -1, -1,  4, -1, -1],  # noqa: E201, E241
+                [ 8, -1, -1, -1, -1,  4, -1, -1],  # ruff:ignore[whitespace-after-open-bracket, multiple-spaces-after-comma]
                 [-1, -1, -1, -1, -1, -1, -1, -1],
                 [-1, -1, -1, -1, -1, -1, -1, -1],
             ]
@@ -254,12 +254,11 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
     assert payload["routing_options"]["overhead"]["cost_layers"] == [
         {"layer_name": "layer_1", "multiplier_scalar": 2}
     ]
-    assert (
-        payload["routing_options"]["overhead"]["cost_multiplier_layer"]
-        == "layer_6"
-    )
+    assert payload["routing_options"]["overhead"]["cost_multiplier_layer"] == [
+        "layer_6"
+    ]
     assert payload["routing_options"]["overhead"]["friction_layers"] == [
-        {"multiplier_layer": "layer_4", "multiplier_scalar": 1.1}
+        {"multiplier_layer": ["layer_4"], "multiplier_scalar": 1.1}
     ]
     assert payload["routing_options"]["overhead"]["barrier_layers"] == [
         {
@@ -680,6 +679,77 @@ def test_cost_multiplier_layer_and_scalar_applied(sample_layered_data):
         )
 
         assert cost_val == pytest.approx(expected)
+    finally:
+        routing_layers.close()
+
+
+def test_multiple_multiplier_layers_are_multiplied(sample_layered_data):
+    """Multiple multiplier layers compose by multiplication"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_layer": ["layer_2", "layer_3"],
+                    }
+                ],
+                "friction_layers": [
+                    {
+                        "multiplier_layer": ["layer_2", "layer_3"],
+                        "multiplier_scalar": 0.5,
+                        "include_in_report": True,
+                    }
+                ],
+                "cost_multiplier_layer": ["layer_2", "layer_3"],
+            }
+        },
+        tracked_layers=[
+            {
+                "layer_name": "layer_1",
+                "multiplier_layer": ["layer_2", "layer_3"],
+                "agg_method": "mean",
+            }
+        ],
+    )
+
+    assert json.loads(scenario.cost_function_json)["routing_options"][
+        "default"
+    ]["cost_multiplier_layer"] == ["layer_2", "layer_3"]
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        row = 1
+        col = 1
+        cost_value = (
+            routing_layers.costs["default"].isel(y=row, x=col).compute().item()
+        )
+        final_value = (
+            routing_layers.final_routing_layers["default"]
+            .isel(y=row, x=col)
+            .compute()
+            .item()
+        )
+        tracked_value = (
+            next(
+                layer.layer
+                for layer in routing_layers.tracked_layers
+                if layer.name == "layer_1_default"
+                and layer.agg_method == "mean"
+            )
+            .isel(y=row, x=col)
+            .compute()
+            .item()
+        )
+
+        assert cost_value == pytest.approx(4)
+        assert final_value == pytest.approx(8)
+        assert tracked_value == pytest.approx(2)
+        assert "layer_2_layer_3_default" in {
+            layer.name for layer in routing_layers.tracked_layers
+        }
     finally:
         routing_layers.close()
 
@@ -1170,7 +1240,7 @@ def test_friction_layer_with_multiplier_layer_only(sample_layered_data):
         )
     )
     friction_payload = layers_for_rust[-1]
-    assert friction_payload["multiplier_layer"] == "layer_4"
+    assert friction_payload["multiplier_layer"] == ["layer_4"]
     assert "mask" not in friction_payload
 
 

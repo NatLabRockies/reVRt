@@ -119,14 +119,16 @@ pub(super) enum BarrierOperator {
     Equal,
 }
 
+pub(super) type MultiplierLayers = Vec<String>;
+
 #[derive(Builder, Clone, Debug, serde::Deserialize)]
 /// A cost layer
 ///
 /// Each cost layer is a raster dataset, i.e. a regular grid, composed by
 /// operating on input features. Following the original `revX` structure,
 /// the possible compositions are limited to combinations of the relation
-/// `weight * layer_name * multiplier_layer`, where the `weight` and the
-/// `multiplier_layer` are optional. Each layer can also be marked as invariant,
+/// `weight * layer_name * product(multiplier_layers)`, where the `weight` and
+/// the `multiplier_layers` are optional. Each layer can also be marked as invariant,
 /// meaning that its value does not get scaled by the distance traveled
 /// through the cell. Instead, the value of the layer is added once, right
 /// when the path enters the cell.
@@ -135,7 +137,7 @@ pub(super) struct CostLayer {
     #[builder(setter(strip_option), default)]
     pub(super) multiplier_scalar: Option<f32>,
     #[builder(setter(strip_option, into), default)]
-    pub(super) multiplier_layer: Option<String>,
+    pub(super) multiplier_layer: Option<MultiplierLayers>,
     #[builder(setter(strip_option), default)]
     pub(super) is_invariant: Option<bool>,
     #[builder(default, setter(skip))]
@@ -157,15 +159,16 @@ impl CostLayer {
 /// represents multipliers that should be applied to the cost routing
 /// layer. These multipliers affect the output route but will not be
 /// reported in the output cost. Each friction layer is defined by a
-/// `multiplier_layer` and an optional `multiplier_scalar`. The friction
-/// value at each cell is computed as `multiplier_layer * multiplier_scalar`.
+/// one or more `multiplier_layer` inputs and an optional `multiplier_scalar`.
+/// The friction value at each cell is computed as
+/// `product(multiplier_layers) * multiplier_scalar`.
 /// If the `multiplier_scalar` is not provided, it defaults to 1.0.
 /// Friction layers are summed together to produce the final friction
 /// layer that is applied to the cost layer. A clamp is applied to the
 /// final friction layer to ensure that no values are below -1.0, which
 /// would lead to negative routing costs.
 pub(super) struct FrictionLayer {
-    pub(super) multiplier_layer: String,
+    pub(super) multiplier_layers: MultiplierLayers,
     #[builder(setter(strip_option), default)]
     pub(super) multiplier_scalar: Option<f32>,
     #[serde(skip)]
@@ -174,12 +177,12 @@ pub(super) struct FrictionLayer {
 
 impl FrictionLayer {
     pub(super) fn new(
-        multiplier_layer: String,
+        multiplier_layers: MultiplierLayers,
         multiplier_scalar: Option<f32>,
         option: u32,
     ) -> Self {
         Self {
-            multiplier_layer,
+            multiplier_layers,
             multiplier_scalar,
             option,
         }
@@ -216,14 +219,14 @@ mod test {
         let layer = CostLayerBuilder::default()
             .layer_name("A".to_string())
             .multiplier_scalar(2.0)
-            .multiplier_layer("B")
+            .multiplier_layer(vec!["B".to_string()])
             .is_invariant(false)
             .build()
             .unwrap();
 
         assert_eq!(layer.layer_name, "A".to_string());
         assert_eq!(layer.multiplier_scalar, Some(2.0));
-        assert_eq!(layer.multiplier_layer, Some("B".to_string()));
+        assert_eq!(layer.multiplier_layer, Some(vec!["B".to_string()]));
         assert_eq!(layer.is_invariant, Some(false));
         assert_eq!(layer.option, 0);
     }
