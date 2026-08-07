@@ -1,5 +1,6 @@
 """reVRt base routing CLI unit tests"""
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -35,6 +36,7 @@ from revrt.routing.cli.utilities import (
 from revrt.routing.cli.point_to_point import (
     PointToPointRouteDefinitionConverter,
 )
+from revrt.routing.base import RoutingScenario
 from revrt.routing.utilities import map_to_costs
 from revrt.utilities import LayeredFile
 
@@ -627,6 +629,148 @@ def test_update_multipliers_applies_per_option_polarity_values():
     assert updated["underground"]["friction_layers"][0][
         "multiplier_scalar"
     ] == pytest.approx(60 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+
+
+def test_update_multipliers_expands_spatial_polarity_values():
+    """Spatial polarity values should expand cost and friction layers"""
+
+    routing_options = {
+        "underground": {
+            "cost_layers": [
+                {
+                    "layer_name": "underground_cost",
+                    "multiplier_layer": "existing_mask",
+                    "multiplier_scalar": 2,
+                    "apply_row_mult": True,
+                    "apply_polarity_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "multiplier_layer": "friction_mask",
+                    "apply_polarity_mult": True,
+                }
+            ],
+        }
+    }
+    transmission_config = {
+        "row_width": {"500": {"underground": 1.5}},
+        "voltage_polarity_mult": {
+            "500": {
+                "dc": {
+                    "underground": {
+                        "rural_mask": 50,
+                        "urban_mask": 60,
+                    }
+                }
+            }
+        },
+    }
+
+    updated = RoutingOptions(routing_options).update_from(
+        transmission_config=transmission_config,
+        pv_by_option={"underground": {"polarity": "dc", "voltage": 500}},
+    )
+
+    costs = updated["underground"]["cost_layers"]
+    frictions = updated["underground"]["friction_layers"]
+    assert [layer["multiplier_layer"] for layer in costs] == [
+        ["existing_mask", "rural_mask"],
+        ["existing_mask", "urban_mask"],
+    ]
+    assert [layer["multiplier_scalar"] for layer in costs] == [
+        pytest.approx(2 * 1.5 * 50 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL),
+        pytest.approx(2 * 1.5 * 60 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL),
+    ]
+    assert [layer["multiplier_layer"] for layer in frictions] == [
+        ["friction_mask", "rural_mask"],
+        ["friction_mask", "urban_mask"],
+    ]
+    assert [layer["multiplier_scalar"] for layer in frictions] == [
+        pytest.approx(50 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL),
+        pytest.approx(60 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL),
+    ]
+    assert "apply_polarity_mult" not in costs[0]
+    assert "apply_row_mult" not in costs[0]
+    assert routing_options["underground"]["cost_layers"][0] == {
+        "layer_name": "underground_cost",
+        "multiplier_layer": "existing_mask",
+        "multiplier_scalar": 2,
+        "apply_row_mult": True,
+        "apply_polarity_mult": True,
+    }
+
+
+def test_spatial_polarity_terms_serialize_with_existing_rust_schema():
+    """Spatial polarity expansion should produce standard cost layers"""
+
+    updated_options = RoutingOptions(
+        {
+            "underground": {
+                "cost_layers": [
+                    {
+                        "layer_name": "underground_cost",
+                        "apply_polarity_mult": True,
+                    }
+                ]
+            }
+        }
+    ).update_from(
+        transmission_config={
+            "voltage_polarity_mult": {
+                "500": {
+                    "dc": {"underground": {"rural_mask": 50, "urban_mask": 60}}
+                }
+            }
+        },
+        pv_by_option={"underground": {"polarity": "dc", "voltage": 500}},
+    )
+
+    payload = json.loads(
+        RoutingScenario(
+            cost_fpath=None,
+            routing_options=updated_options,
+        ).cost_function_json
+    )
+
+    assert payload["routing_options"]["underground"]["cost_layers"] == [
+        {
+            "layer_name": "underground_cost",
+            "multiplier_layer": ["rural_mask"],
+            "multiplier_scalar": pytest.approx(
+                50 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            ),
+        },
+        {
+            "layer_name": "underground_cost",
+            "multiplier_layer": ["urban_mask"],
+            "multiplier_scalar": pytest.approx(
+                60 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            ),
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    ("spatial_multiplier", "message"),
+    [
+        ({}, "must not be empty"),
+        ({"rural_mask": np.nan}, "must be a finite number"),
+    ],
+)
+def test_get_polarity_multiplier_rejects_invalid_spatial_values(
+    spatial_multiplier, message
+):
+    """Spatial polarity maps should require finite layer values"""
+
+    config = {
+        "voltage_polarity_mult": {
+            "500": {"dc": {"underground": spatial_multiplier}}
+        }
+    }
+
+    with pytest.raises(revrtConfigurationError, match=message):
+        _get_polarity_multiplier(config, "500", "dc", "underground")
 
 
 def test_update_multipliers_allows_mixed_shared_and_option_values():

@@ -238,6 +238,7 @@ class RoutingLayerManager:
         option_cost = self._empty_cost_layer_data_array()
         option_li_cost = self._empty_cost_layer_data_array()
         option_untracked_cost = self._empty_cost_layer_data_array()
+        reported_costs = {}
         for layer_info in config.get("cost_layers", []):
             cost = self._extract_and_scale_layer(layer_info)
             cost.values = da.where(cost > 0, cost, 0)
@@ -251,15 +252,20 @@ class RoutingLayerManager:
                 option_untracked_cost += cost
 
             if layer_info.get("include_in_report", True):
-                layer_name = f"{layer_info['layer_name']}_{option}"
-                self.tracked_layers.append(
-                    CharacterizedLayer(
-                        layer_name,
-                        cost,
-                        option=option,
-                        is_length_invariant=is_li,
-                    )
+                report_key = (layer_info["layer_name"], is_li)
+                reported_costs[report_key] = (
+                    reported_costs.get(report_key, 0) + cost
                 )
+
+        for (layer_name, is_li), cost in reported_costs.items():
+            self.tracked_layers.append(
+                CharacterizedLayer(
+                    f"{layer_name}_{option}",
+                    cost,
+                    option=option,
+                    is_length_invariant=is_li,
+                )
+            )
 
         mult = config.get("cost_multiplier_scalar", 1) or 1
         option_cost *= mult

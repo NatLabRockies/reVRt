@@ -2,7 +2,8 @@
 
 import logging
 import contextlib
-from math import ceil
+from math import ceil, isfinite
+from numbers import Real
 from pathlib import Path
 from copy import deepcopy
 from abc import ABC, abstractmethod
@@ -18,7 +19,8 @@ from revrt.routing.cli.utilities import routing_layer_mover
 from revrt.routing.base import RoutingScenario
 from revrt.routing.processing import BatchRouteProcessor
 from revrt.utilities.monitoring import log_runtime
-from revrt.exceptions import revrtKeyError
+from revrt.utilities.parsing import normalize_str_list_input
+from revrt.exceptions import revrtConfigurationError, revrtKeyError
 
 
 logger = logging.getLogger(__name__)
@@ -430,30 +432,83 @@ def update_multipliers(
     layers, polarity, voltage, routing_option, transmission_config
 ):
     """[NOT PUBLIC API] Update layer multipliers based on user input"""
-    output_layers = deepcopy(layers)
     unknowns = {None, "None", "unknown"}
     polarity = "unknown" if polarity in unknowns else str(polarity)
     voltage = "unknown" if voltage in unknowns else str(int(voltage))
 
-    for layer in output_layers:
-        if layer.pop("apply_row_mult", False):
-            row_multiplier = _get_row_multiplier(
-                transmission_config, voltage, routing_option
+    output_layers = []
+    for layer in deepcopy(layers):
+        output_layers.extend(
+            _parsed_multiplier_layers(
+                layer, polarity, voltage, routing_option, transmission_config
             )
-            layer["multiplier_scalar"] = (
-                layer.get("multiplier_scalar", 1) * row_multiplier
-            )
+        )
 
-        if layer.pop("apply_polarity_mult", False):
-            polarity_multiplier = _get_polarity_multiplier(
-                transmission_config, voltage, polarity, routing_option
-            )
-            layer["multiplier_scalar"] = (
-                layer.get("multiplier_scalar", 1)
-                * polarity_multiplier
-                * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
-            )
+    return output_layers
 
+
+def _parsed_multiplier_layers(
+    layer, polarity, voltage, routing_option, transmission_config
+):
+    """Convert layer into one or more layers with updated multipliers"""
+    layer = _apply_row_mult_to_layer(
+        layer, voltage, routing_option, transmission_config
+    )
+    return _apply_polarity_mult_to_layer(
+        layer, polarity, voltage, routing_option, transmission_config
+    )
+
+
+def _apply_row_mult_to_layer(
+    layer, voltage, routing_option, transmission_config
+):
+    """Apply right-of-way width multiplier to a layer if requested"""
+    if layer.pop("apply_row_mult", False):
+        row_multiplier = _get_row_multiplier(
+            transmission_config, voltage, routing_option
+        )
+        layer["multiplier_scalar"] = (
+            layer.get("multiplier_scalar", 1) * row_multiplier
+        )
+
+    return layer
+
+
+def _apply_polarity_mult_to_layer(
+    layer, polarity, voltage, routing_option, transmission_config
+):
+    """Apply polarity multiplier to a layer if requested"""
+    if not layer.pop("apply_polarity_mult", False):
+        return [layer]
+
+    polarity_multiplier = _get_polarity_multiplier(
+        transmission_config, voltage, polarity, routing_option
+    )
+    if not isinstance(polarity_multiplier, dict):
+        layer["multiplier_scalar"] = (
+            layer.get("multiplier_scalar", 1)
+            * polarity_multiplier
+            * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+        )
+        return [layer]
+
+    output_layers = []
+    multiplier_layers = normalize_str_list_input(
+        layer.get("multiplier_layer"),
+        name="multiplier_layer",
+    )
+    for multiplier_layer, multiplier_scalar in polarity_multiplier.items():
+        output_layer = deepcopy(layer)
+        output_layer["multiplier_layer"] = [
+            *(multiplier_layers or ()),
+            multiplier_layer,
+        ]
+        output_layer["multiplier_scalar"] = (
+            output_layer.get("multiplier_scalar", 1)
+            * multiplier_scalar
+            * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+        )
+        output_layers.append(output_layer)
     return output_layers
 
 
@@ -538,7 +593,66 @@ def _get_polarity_multiplier(
             )
             raise revrtKeyError(msg) from e
 
-    return polarity_multiplier
+    return _validate_polarity_multiplier(
+        polarity_multiplier,
+        voltage=voltage,
+        polarity=polarity,
+        routing_option=routing_option,
+    )
+
+
+def _validate_polarity_multiplier(
+    multiplier, voltage, polarity, routing_option
+):
+    """Validate a scalar or spatial polarity multiplier"""
+    context = (
+        f"voltage {voltage!r}, polarity {polarity!r}, and routing option "
+        f"{routing_option!r}"
+    )
+    if not isinstance(multiplier, dict):
+        if _is_finite_number(multiplier):
+            return float(multiplier)
+
+        msg = (
+            "`apply_polarity_mult` multiplier for "
+            f"{context} must be a finite number or a mapping of spatial "
+            "layer names to finite numbers"
+        )
+        raise revrtConfigurationError(msg)
+
+    if not multiplier:
+        msg = (
+            "`apply_polarity_mult` spatial multiplier mapping for "
+            f"{context} must not be empty"
+        )
+        raise revrtConfigurationError(msg)
+
+    validated_multiplier = {}
+    for layer_name, value in multiplier.items():
+        if not isinstance(layer_name, str) or not layer_name.strip():
+            msg = (
+                "`apply_polarity_mult` spatial multiplier mapping for "
+                f"{context} must use non-empty layer names"
+            )
+            raise revrtConfigurationError(msg)
+        if not _is_finite_number(value):
+            msg = (
+                "`apply_polarity_mult` spatial multiplier for layer "
+                f"{layer_name!r} in {context} must be a finite number"
+            )
+            raise revrtConfigurationError(msg)
+        validated_multiplier[layer_name] = float(value)
+
+    return validated_multiplier
+
+
+def _is_finite_number(value):
+    """bool: Whether a multiplier value is a finite numeric scalar"""
+    return (
+        isinstance(value, Real)
+        and not isinstance(value, bool)
+        and isfinite(value)
+    )
 
 
 def _format_pv_by_option(pv_by_option):

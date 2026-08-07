@@ -96,9 +96,13 @@ class RoutingCostLayer(BaseModel, extra="forbid"):
     transmission config must provide each combination in
     ``voltage_polarity_mult``. A scalar polarity value applies to every
     routing option. To define values per routing option, use a mapping
-    of routing-option names to values. For example, a valid
-    "voltage_polarity_mult" dictionary in the transmission config might
-    be ``{"138": {"ac": {"overhead": 1.15, "underground": 2}}}``.
+    of routing-option names to scalar values. A routing-option value may
+    instead map spatial layer names to scalar values. In that case, each
+    layer is expanded into one cost term per spatial layer. For example,
+    ``{"500": {"dc": {"underground": {"rural": 50,
+    "urban": 60}}}}`` produces terms weighted by ``50 * rural`` and
+    ``60 * urban``. Existing ``multiplier_layer`` inputs apply to each
+    generated term.
 
     .. IMPORTANT::
       The configured multiplier is assumed to be in million dollars per
@@ -158,9 +162,13 @@ class RoutingFrictionLayer(BaseModel, extra="forbid"):
     transmission config must provide each combination in
     ``voltage_polarity_mult``. A scalar polarity value applies to every
     routing option. To define values per routing option, use a mapping
-    of routing-option names to values. For example, a valid
-    "voltage_polarity_mult" dictionary in the transmission config might
-    be ``{"138": {"ac": {"overhead": 1.15, "underground": 2}}}``.
+    of routing-option names to scalar values. A routing-option value may
+    instead map spatial layer names to scalar values. In that case, each
+    layer is expanded into one friction term per spatial layer. For
+    example, ``{"500": {"dc": {"underground": {"rural": 50,
+    "urban": 60}}}}`` produces terms weighted by ``50 * rural`` and
+    ``60 * urban``. Existing ``multiplier_layer`` inputs apply to each
+    generated term.
 
     .. IMPORTANT::
       The configured multiplier is assumed to be in million dollars per

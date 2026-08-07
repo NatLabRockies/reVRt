@@ -683,6 +683,45 @@ def test_cost_multiplier_layer_and_scalar_applied(sample_layered_data):
         routing_layers.close()
 
 
+def test_cost_layer_reporting_combines_same_source_terms(sample_layered_data):
+    """Cost terms sharing a source layer should have one report layer"""
+
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_layer": "layer_4",
+                        "multiplier_scalar": 2,
+                    },
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_layer": "layer_5",
+                        "multiplier_scalar": 3,
+                    },
+                ]
+            }
+        },
+    )
+
+    routing_layers = RoutingLayerManager(scenario).build()
+    try:
+        report_layers = [
+            layer
+            for layer in routing_layers.tracked_layers
+            if layer.name == "layer_1_default"
+        ]
+
+        assert len(report_layers) == 1
+        assert report_layers[0].layer.isel(y=1, x=3).compute().item() == (
+            pytest.approx(10)
+        )
+    finally:
+        routing_layers.close()
+
+
 def test_multiple_multiplier_layers_are_multiplied(sample_layered_data):
     """Multiple multiplier layers compose by multiplication"""
 

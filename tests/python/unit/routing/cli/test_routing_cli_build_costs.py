@@ -359,6 +359,90 @@ def test_build_final_routing_layers_applies_per_option_pv_values(
         assert np.allclose(final_layer, expected_vals)
 
 
+def test_build_final_routing_layers_applies_spatial_polarity_values(
+    sample_layered_data, tmp_path
+):
+    """build_final_routing_layers should sum spatial polarity terms"""
+
+    with xr.open_dataset(
+        sample_layered_data, consolidated=False, engine="zarr"
+    ) as ds:
+        base_cost = ds["layer_1"].astype(np.float32).load()
+
+    rural_mask = xr.zeros_like(base_cost)
+    rural_mask.values[:, :, 3] = 1
+    urban_mask = xr.zeros_like(base_cost)
+    urban_mask.values[:, 1:, 3] = 1
+    layer_file = LayeredFile(sample_layered_data)
+    for layer_name, layer in {
+        "rural_mask": rural_mask,
+        "urban_mask": urban_mask,
+    }.items():
+        layer_fp = tmp_path / f"{layer_name}.tif"
+        layer.rio.to_raster(layer_fp, driver="GTiff")
+        layer_file.write_geotiff_to_file(layer_fp, layer_name, overwrite=True)
+
+    config = {
+        "cost_fpath": str(sample_layered_data),
+        "routing_options": {
+            "underground": {
+                "cost_layers": [
+                    {"layer_name": "layer_1", "apply_polarity_mult": True}
+                ]
+            }
+        },
+        "transmission_config": {
+            "voltage_polarity_mult": {
+                "500": {
+                    "dc": {"underground": {"rural_mask": 50, "urban_mask": 60}}
+                }
+            }
+        },
+        "invalid_costs_block_routing": True,
+    }
+    config_fp = tmp_path / "spatial_polarity_lcp_config.json"
+    config_fp.write_text(json.dumps(config))
+    output_dir = tmp_path / "spatial_polarity_outputs"
+
+    build_final_routing_layers(
+        lcp_config_fp=config_fp,
+        output_dir=output_dir,
+        polarity={"underground": "dc"},
+        voltage={"underground": 500},
+    )
+
+    with xr.open_dataset(
+        sample_layered_data, consolidated=False, engine="zarr"
+    ) as ds:
+        base_cost = ds["layer_1"].isel(band=0).astype(np.float32).load()
+        rural_mask = ds["rural_mask"].isel(band=0).astype(np.float32).load()
+        urban_mask = ds["urban_mask"].isel(band=0).astype(np.float32).load()
+
+    expected_costs = (
+        base_cost
+        * (50 * rural_mask + 60 * urban_mask)
+        * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+    ).to_numpy()
+    expected_final = np.where(expected_costs > 0, expected_costs, -1)
+
+    with rasterio.open(
+        output_dir / "spatial_polarity_outputs_underground_agg_costs.tif"
+    ) as src:
+        aggregate_costs = src.read(1)
+    with rasterio.open(
+        output_dir
+        / "spatial_polarity_outputs_underground_final_routing_layer.tif"
+    ) as src:
+        final_costs = src.read(1)
+
+    assert np.allclose(aggregate_costs, expected_costs)
+    assert np.allclose(final_costs, expected_final)
+    assert expected_costs[0, 0] == 0
+    assert expected_costs[1, 3] == pytest.approx(
+        2 * 110 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+    )
+
+
 def test_build_final_routing_layers_writes_to_supplied_output_directory(
     sample_layered_data, tmp_path
 ):
