@@ -463,15 +463,13 @@ def _apply_row_mult_to_layer(
     layer, voltage, routing_option, transmission_config
 ):
     """Apply right-of-way width multiplier to a layer if requested"""
-    if layer.pop("apply_row_mult", False):
-        row_multiplier = _get_row_multiplier(
-            transmission_config, voltage, routing_option
-        )
-        layer["multiplier_scalar"] = (
-            layer.get("multiplier_scalar", 1) * row_multiplier
-        )
+    if not layer.pop("apply_row_mult", False):
+        return [layer]
 
-    return layer
+    row_multiplier = _get_row_multiplier(
+        transmission_config, voltage, routing_option
+    )
+    return _apply_multiplier_to_layer(layer, row_multiplier)
 
 
 def _apply_polarity_mult_to_layer(
@@ -484,11 +482,18 @@ def _apply_polarity_mult_to_layer(
     polarity_multiplier = _get_polarity_multiplier(
         transmission_config, voltage, polarity, routing_option
     )
-    if not isinstance(polarity_multiplier, dict):
+    return _apply_multiplier_to_layer(
+        layer,
+        polarity_multiplier,
+        conversion=_MILLION_USD_PER_MILE_TO_USD_PER_PIXEL,
+    )
+
+
+def _apply_multiplier_to_layer(layer, multiplier, conversion=1):
+    """Expand one layer for a scalar or spatial multiplier"""
+    if not isinstance(multiplier, dict):
         layer["multiplier_scalar"] = (
-            layer.get("multiplier_scalar", 1)
-            * polarity_multiplier
-            * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            layer.get("multiplier_scalar", 1) * multiplier * conversion
         )
         return [layer]
 
@@ -497,7 +502,7 @@ def _apply_polarity_mult_to_layer(
         layer.get("multiplier_layer"),
         name="multiplier_layer",
     )
-    for multiplier_layer, multiplier_scalar in polarity_multiplier.items():
+    for multiplier_layer, multiplier_scalar in multiplier.items():
         output_layer = deepcopy(layer)
         output_layer["multiplier_layer"] = [
             *(multiplier_layers or ()),
@@ -506,7 +511,7 @@ def _apply_polarity_mult_to_layer(
         output_layer["multiplier_scalar"] = (
             output_layer.get("multiplier_scalar", 1)
             * multiplier_scalar
-            * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            * conversion
         )
         output_layers.append(output_layer)
     return output_layers
