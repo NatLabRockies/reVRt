@@ -430,12 +430,12 @@ def update_multipliers(
     layers, polarity, voltage, routing_option, transmission_config
 ):
     """[NOT PUBLIC API] Update layer multipliers based on user input"""
-    output_layers = deepcopy(layers)
+    output_layers = []
     unknowns = {None, "None", "unknown"}
     polarity = "unknown" if polarity in unknowns else str(polarity)
     voltage = "unknown" if voltage in unknowns else str(int(voltage))
 
-    for layer in output_layers:
+    for layer in deepcopy(layers):
         if layer.pop("apply_row_mult", False):
             row_multiplier = _get_row_multiplier(
                 transmission_config, voltage, routing_option
@@ -453,6 +453,8 @@ def update_multipliers(
                 * polarity_multiplier
                 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
             )
+
+        output_layers.append(layer)
 
     return output_layers
 
