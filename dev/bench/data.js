@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786137810693,
+  "lastUpdate": 1786142557181,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13523,6 +13523,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 418227595,
             "range": "± 284482269",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "da000b1d57eed0b238d8fda3986f0c12cc4cec2c",
+          "message": "Allow ROW mults to be spatial (#321)\n\n* Update to `_validate_multiplier`\n\n* Generalize `_apply_multiplier_to_layer`\n\n* Allow row multiplier to be spatial now too\n\n* Update docs\n\n* Add tests",
+          "timestamp": "2026-08-07T16:29:58-06:00",
+          "tree_id": "0eefa52bc80b81f279ea6893151d26dd92580978",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/da000b1d57eed0b238d8fda3986f0c12cc4cec2c"
+        },
+        "date": 1786142555151,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 49579813,
+            "range": "± 789609",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 68533851,
+            "range": "± 990684",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 64098067,
+            "range": "± 1066227",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 91657031,
+            "range": "± 1341982",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 445558600,
+            "range": "± 11007748",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 145703345,
+            "range": "± 2183224",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 148050339,
+            "range": "± 1190877",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 156878094,
+            "range": "± 2405993",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 183403394,
+            "range": "± 1898756",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 285912453,
+            "range": "± 2693662",
             "unit": "ns/iter"
           }
         ]
