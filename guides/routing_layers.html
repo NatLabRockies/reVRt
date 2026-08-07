@@ -447,6 +447,15 @@ scalar that would adjust the costs (for example, a value of <code class="docutil
 account for inflation). There are several more options you can include
 for a single layer; they are all documented
 <a class="reference external" href="https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=cost_layerslist">here</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code> also accepts a list of layer names. All listed
+layers are multiplied into the cost term:</p>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_cost_layer&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;regional_adjustment&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;wetland_mask&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>An empty list has no effect.</p>
 <p>For maximum flexibility, you can specify multiple such layers that all
 aggregate to form the final routing cost layer:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;cost_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -466,6 +475,20 @@ aggregate to form the final routing cost layer:</p>
 <p>Each cost layer is built independently, and they are all summed at the
 end to create the cost routing layer. Output routes strive to minimize
 the total sum of the values in this layer along the output route.</p>
+</section>
+<section id="option-level-cost-multipliers">
+<h3>Option-level cost multipliers<a class="headerlink" href="#option-level-cost-multipliers" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;cost_multiplier_layer&quot;</span></code> applies after the option’s cost layers are
+summed, including invariant and non-reported layers. It accepts the same
+string-or-list syntax as <code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code>:</p>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nv">&quot;cost_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_cost_layer&quot;</span><span class="p">}],</span>
+<span class="w">    </span><span class="nv">&quot;cost_multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;regional_adjustment&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;permitting_mask&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>All listed option-level multiplier layers are multiplied together. An
+empty list is an identity operation.</p>
 </section>
 <section id="invalid-costs">
 <h3>Invalid costs<a class="headerlink" href="#invalid-costs" title="Link to this heading">#</a></h3>
@@ -528,6 +551,11 @@ the friction layer itself is being multiplied onto the final cost routing
 layer (see the section above). As before, there are several more options
 you can include for a single friction layer; they are all documented
 <a class="reference external" href="https://natlabrockies.github.io/reVRt/_cli/reVRt.html#revrt-route-points:~:text=friction_layerslist">here</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code> may be a string or an list. For a list, the
+friction term is the product of its layers and <code class="docutils literal notranslate"><span class="pre">&quot;multiplier_scalar&quot;</span></code>.
+For example, <code class="docutils literal notranslate"><span class="pre">[&quot;wetland_mask&quot;,</span> <span class="pre">&quot;county_adjustment&quot;]</span></code> produces
+<code class="docutils literal notranslate"><span class="pre">wetland_mask</span> <span class="pre">*</span> <span class="pre">county_adjustment</span> <span class="pre">*</span> <span class="pre">multiplier_scalar</span></code>. An empty list
+adds zero friction.</p>
 <p>For maximum flexibility, you can specify multiple friction layers that all
 aggregate to form the final friction layer:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;friction_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -569,7 +597,7 @@ method:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;tracked_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">                </span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;land_use_score&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;county_adjustment&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;county_adjustment&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;scenario_factor&quot;</span><span class="p">],</span>
 <span class="w">                </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.1</span><span class="p">,</span>
 <span class="w">                </span><span class="nv">&quot;agg_method&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;mean&quot;</span>
 <span class="w">        </span><span class="p">},</span>
@@ -589,8 +617,9 @@ sampled values, such as <code class="docutils literal notranslate"><span class="
 </ul>
 <p>Tracked layers may also contain:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code>: A spatial multiplier layer applied before
-aggregation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code>: A spatial multiplier layer or list of layers
+applied before aggregation. Every listed layer is multiplied into the
+tracked values; an empty list has no effect.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;multiplier_scalar&quot;</span></code>: A scalar multiplier applied before
 aggregation.</p></li>
 </ul>
@@ -732,6 +761,7 @@ as a barrier.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost-layers">Cost Layers</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-cost-layers">Building cost layers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#option-level-cost-multipliers">Option-level cost multipliers</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#invalid-costs">Invalid costs</a></li>
 </ul>
 </li>

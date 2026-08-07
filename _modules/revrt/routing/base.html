@@ -845,7 +845,10 @@ window.runMermaid = runMermaid;</script>
     <span class="n">validate_transition_cost_configs</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_lens</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_comparison_values</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">parse_comparison_values</span><span class="p">,</span>
+    <span class="n">normalize_str_list_input</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtKeyError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.warn</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtWarning</span><span class="p">,</span> <span class="n">revrtDeprecationWarning</span>
 
@@ -1101,8 +1104,10 @@ window.runMermaid = runMermaid;</script>
         <span class="n">option_li_cost</span> <span class="o">*=</span> <span class="n">mult</span>
         <span class="n">option_untracked_cost</span> <span class="o">*=</span> <span class="n">mult</span>
 
-        <span class="n">multiplier_layer_name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">multiplier_layer_name</span><span class="p">:</span>
+        <span class="n">multiplier_layer_names</span> <span class="o">=</span> <span class="n">normalize_str_list_input</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cost_multiplier_layer&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">multiplier_layer_name</span> <span class="ow">in</span> <span class="n">multiplier_layer_names</span> <span class="ow">or</span> <span class="p">():</span>
             <span class="n">multiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_name</span><span class="p">)</span>
             <span class="n">option_cost</span> <span class="o">*=</span> <span class="n">multiplier</span>
             <span class="n">option_li_cost</span> <span class="o">*=</span> <span class="n">multiplier</span>
@@ -1121,11 +1126,18 @@ window.runMermaid = runMermaid;</script>
     <span class="p">):</span>
         <span class="n">frictions</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">full_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">layer_info</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-            <span class="n">layer_name</span> <span class="o">=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">)</span>
-            <span class="n">friction_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_and_scale_friction_layer</span><span class="p">(</span>
-                <span class="n">layer_name</span><span class="p">,</span> <span class="n">layer_info</span>
+            <span class="n">multiplier_layer_names</span> <span class="o">=</span> <span class="n">normalize_str_list_input</span><span class="p">(</span>
+                <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">),</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;friction multiplier_layer&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include_in_report&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">friction_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_and_scale_friction_layer</span><span class="p">(</span>
+                <span class="n">multiplier_layer_names</span><span class="p">,</span> <span class="n">layer_info</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include_in_report&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">multiplier_layer_names</span>
+            <span class="p">):</span>
+                <span class="n">layer_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">multiplier_layer_names</span> <span class="ow">or</span> <span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">CharacterizedLayer</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">friction_layer</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span>
@@ -1160,23 +1172,32 @@ window.runMermaid = runMermaid;</script>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract layer based on name and scale according to input&quot;&quot;&quot;</span>
         <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">layer_info</span><span class="p">[</span><span class="s2">&quot;layer_name&quot;</span><span class="p">])</span>
 
-        <span class="n">multiplier_layer_name</span> <span class="o">=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">multiplier_layer_name</span><span class="p">:</span>
+        <span class="n">multiplier_layer_names</span> <span class="o">=</span> <span class="n">normalize_str_list_input</span><span class="p">(</span>
+            <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">multiplier_layer_name</span> <span class="ow">in</span> <span class="n">multiplier_layer_names</span> <span class="ow">or</span> <span class="p">():</span>
             <span class="n">cost</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_name</span><span class="p">)</span>
 
         <span class="n">cost</span> <span class="o">*=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cost</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_and_scale_friction_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_layer_name</span><span class="p">,</span> <span class="n">layer_info</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_and_scale_friction_layer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">multiplier_layer_names</span><span class="p">,</span> <span class="n">layer_info</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract layer based on name and scale according to input&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">mask_layer_name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">multiplier_layer_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="s2">&quot;Friction layers must specify a &#39;mask&#39; or &quot;</span>
                 <span class="s2">&quot;&#39;multiplier_layer&#39; key!&quot;</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">mask_layer_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">multiplier_layer_names</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
+
+        <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">multiplier_layer_name</span> <span class="ow">in</span> <span class="n">multiplier_layer_names</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">cost</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_name</span><span class="p">)</span>
         <span class="n">cost</span> <span class="o">*=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cost</span>
 

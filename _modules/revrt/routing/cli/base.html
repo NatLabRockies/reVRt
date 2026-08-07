@@ -833,7 +833,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span>  <span class="c1"># ruff:ignore[unused-import]</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
@@ -1019,7 +1019,7 @@ window.runMermaid = runMermaid;</script>
                     <span class="p">),</span>
                     <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>  <span class="c1"># noqa: PLW2901</span>
+                <span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>  <span class="c1"># ruff:ignore[redefined-loop-name]</span>
 
             <span class="k">if</span> <span class="n">routes</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -1108,12 +1108,14 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">,</span> <span class="p">[]),</span>
                 <span class="n">option_polarity</span><span class="p">,</span>
                 <span class="n">option_voltage</span><span class="p">,</span>
+                <span class="n">option_name</span><span class="p">,</span>
                 <span class="n">transmission_config</span> <span class="ow">or</span> <span class="p">{},</span>
             <span class="p">)</span>
             <span class="n">option_config</span><span class="p">[</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
                 <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">,</span> <span class="p">[]),</span>
                 <span class="n">option_polarity</span><span class="p">,</span>
                 <span class="n">option_voltage</span><span class="p">,</span>
+                <span class="n">option_name</span><span class="p">,</span>
                 <span class="n">transmission_config</span> <span class="ow">or</span> <span class="p">{},</span>
             <span class="p">)</span>
             <span class="n">option_config</span><span class="p">[</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span>
@@ -1269,7 +1271,9 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">points</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">update_multipliers</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_multipliers</span><span class="p">(</span>
+    <span class="n">layers</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">,</span> <span class="n">transmission_config</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Update layer multipliers based on user input&quot;&quot;&quot;</span>
     <span class="n">output_layers</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
     <span class="n">unknowns</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">}</span>
@@ -1278,14 +1282,16 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">output_layers</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;apply_row_mult&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-            <span class="n">row_multiplier</span> <span class="o">=</span> <span class="n">_get_row_multiplier</span><span class="p">(</span><span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">)</span>
+            <span class="n">row_multiplier</span> <span class="o">=</span> <span class="n">_get_row_multiplier</span><span class="p">(</span>
+                <span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span>
+            <span class="p">)</span>
             <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">row_multiplier</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;apply_polarity_mult&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="n">polarity_multiplier</span> <span class="o">=</span> <span class="n">_get_polarity_multiplier</span><span class="p">(</span>
-                <span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">polarity</span>
+                <span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">routing_option</span>
             <span class="p">)</span>
             <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -1296,8 +1302,8 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">output_layers</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_row_multiplier</span><span class="p">(</span><span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get right-of-way width multiplier for a given voltage&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_row_multiplier</span><span class="p">(</span><span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get right-of-way width multiplier for a voltage and option&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">row_widths</span> <span class="o">=</span> <span class="n">transmission_config</span><span class="p">[</span><span class="s2">&quot;row_width&quot;</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1318,10 +1324,23 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row_multiplier</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">row_multiplier</span> <span class="o">=</span> <span class="n">row_multiplier</span><span class="p">[</span><span class="n">routing_option</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;`apply_row_mult` was set to `True`, but routing option &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">routing_option</span><span class="si">}</span><span class="s2">&#39; not found for voltage &#39;</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Available routing options: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">row_multiplier</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
     <span class="k">return</span> <span class="n">row_multiplier</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_polarity_multiplier</span><span class="p">(</span><span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">polarity</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_polarity_multiplier</span><span class="p">(</span>
+    <span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">routing_option</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get multiplier for a given voltage and polarity&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">polarity_config</span> <span class="o">=</span> <span class="n">transmission_config</span><span class="p">[</span><span class="s2">&quot;voltage_polarity_mult&quot;</span><span class="p">]</span>
@@ -1351,6 +1370,18 @@ window.runMermaid = runMermaid;</script>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">polarity_voltages</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">polarity_multiplier</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">polarity_multiplier</span> <span class="o">=</span> <span class="n">polarity_multiplier</span><span class="p">[</span><span class="n">routing_option</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;`apply_polarity_mult` was set to `True`, but routing &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;option &#39;</span><span class="si">{</span><span class="n">routing_option</span><span class="si">}</span><span class="s2">&#39; not found for voltage &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">&#39; and polarity &#39;</span><span class="si">{</span><span class="n">polarity</span><span class="si">}</span><span class="s2">&#39;. Available routing &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;options: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">polarity_multiplier</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
     <span class="k">return</span> <span class="n">polarity_multiplier</span>
 

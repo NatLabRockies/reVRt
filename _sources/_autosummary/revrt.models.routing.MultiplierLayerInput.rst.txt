@@ -1,0 +1,6 @@
+revrt.models.routing.MultiplierLayerInput
+=========================================
+
+.. currentmodule:: revrt.models.routing
+
+.. autotype:: MultiplierLayerInput

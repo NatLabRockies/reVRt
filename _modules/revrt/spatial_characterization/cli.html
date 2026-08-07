@@ -1224,7 +1224,7 @@ window.runMermaid = runMermaid;</script>
         <span class="p">(</span><span class="s2">&quot;_row_width_ranges&quot;</span><span class="p">,</span> <span class="n">row_width_ranges</span><span class="p">),</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">user_input</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>  <span class="c1"># noqa: PLW2901</span>
+            <span class="n">user_input</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>  <span class="c1"># ruff:ignore[redefined-loop-name]</span>
 
         <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_input</span>
 

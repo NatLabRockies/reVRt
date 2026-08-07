@@ -443,6 +443,7 @@
 </details></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html">revrt.models.routing.MultiplierLayerInput</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
@@ -577,6 +578,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.utilities.parsing.html">revrt.utilities.parsing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="revrt.utilities.parsing.normalize_str_list_input.html">revrt.utilities.parsing.normalize_str_list_input</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.utilities.parsing.parse_comparison_values.html">revrt.utilities.parsing.parse_comparison_values</a></li>
 </ul>
 </details></li>
@@ -665,7 +667,7 @@
 <h1>revrt.models.routing.RoutingFrictionLayer<a class="headerlink" href="#revrt-models-routing-routingfrictionlayer" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.models.routing.RoutingFrictionLayer">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RoutingFrictionLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplier_layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplier_scalar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_in_report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_row_mult</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_polarity_mult</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/models/routing.html#RoutingFrictionLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.models.routing.RoutingFrictionLayer" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RoutingFrictionLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplier_layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html#revrt.models.routing.MultiplierLayerInput" title="revrt.models.routing.MultiplierLayerInput"><span class="pre">MultiplierLayerInput</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplier_scalar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_in_report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_row_mult</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_polarity_mult</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/models/routing.html#RoutingFrictionLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.models.routing.RoutingFrictionLayer" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Config for one friction layer in a routing option</p>
 <p>Friction layers are aggregated separately and then multiplied onto
@@ -688,7 +690,7 @@ validated to form a valid model.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.models.routing.RoutingFrictionLayer.multiplier_layer" title="revrt.models.routing.RoutingFrictionLayer.multiplier_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiplier_layer</span></code></a></p></td>
-<td><p>Layer of spatial multipliers applied to the aggregated costs</p></td>
+<td><p>Spatial multiplier layer(s) applied to the aggregated costs</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#revrt.models.routing.RoutingFrictionLayer.multiplier_scalar" title="revrt.models.routing.RoutingFrictionLayer.multiplier_scalar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multiplier_scalar</span></code></a></p></td>
 <td><p>Scalar multiplier applied before friction is aggregated</p></td>
@@ -707,8 +709,10 @@ validated to form a valid model.</p>
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="revrt.models.routing.RoutingFrictionLayer.multiplier_layer">
-<span class="sig-name descname"><span class="pre">multiplier_layer</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#revrt.models.routing.RoutingFrictionLayer.multiplier_layer" title="Link to this definition">#</a></dt>
-<dd><p>Layer of spatial multipliers applied to the aggregated costs</p>
+<span class="sig-name descname"><span class="pre">multiplier_layer</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html#revrt.models.routing.MultiplierLayerInput" title="revrt.models.routing.MultiplierLayerInput"><span class="pre">MultiplierLayerInput</span></a></span><a class="headerlink" href="#revrt.models.routing.RoutingFrictionLayer.multiplier_layer" title="Link to this definition">#</a></dt>
+<dd><p>Spatial multiplier layer(s) applied to the aggregated costs</p>
+<p>A string or iterable is accepted and normalized to a list.
+All supplied layers are multiplied together.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -729,9 +733,12 @@ validated to form a valid model.</p>
 <dd><p>Apply the transmission <code class="docutils literal notranslate"><span class="pre">row_width</span></code> multiplier when <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 <p>The routing table input should resolve a voltage value for each
 routing option, either from the shared <cite>voltage</cite> column or from
-<cite>voltage_&lt;option&gt;</cite> column. Every resolved voltage value must be
-given in the “row_width” dictionary in the transmission config,
-otherwise an error will be thrown.</p>
+<cite>voltage_&lt;option&gt;</cite> column. The <code class="docutils literal notranslate"><span class="pre">row_width</span></code> dictionary may specify
+one multiplier for every option at a voltage, such as
+<code class="docutils literal notranslate"><span class="pre">{&quot;138&quot;:</span> <span class="pre">1.15}</span></code>, or values by routing option, such as
+<code class="docutils literal notranslate"><span class="pre">{&quot;500&quot;:</span> <span class="pre">{&quot;overhead&quot;:</span> <span class="pre">1.15,</span> <span class="pre">&quot;underground&quot;:</span> <span class="pre">2}}</span></code>. Every
+resolved voltage must be listed. For an option mapping, every
+routing option using this multiplier must be listed.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -742,9 +749,11 @@ otherwise an error will be thrown.</p>
 value for each routing option, either from shared columns or from
 <cite>voltage_&lt;option&gt;</cite> / <cite>polarity_&lt;option&gt;</cite> columns, and the
 transmission config must provide each combination in
-<code class="docutils literal notranslate"><span class="pre">voltage_polarity_mult</span></code>. For example, a valid
+<code class="docutils literal notranslate"><span class="pre">voltage_polarity_mult</span></code>. A scalar polarity value applies to every
+routing option. To define values per routing option, use a mapping
+of routing-option names to values. For example, a valid
 “voltage_polarity_mult” dictionary in the transmission config might
-be <code class="docutils literal notranslate"><span class="pre">{&quot;138&quot;:</span> <span class="pre">{&quot;ac&quot;:</span> <span class="pre">1.15,</span> <span class="pre">&quot;dc&quot;:</span> <span class="pre">2}}</span></code>.</p>
+be <code class="docutils literal notranslate"><span class="pre">{&quot;138&quot;:</span> <span class="pre">{&quot;ac&quot;:</span> <span class="pre">{&quot;overhead&quot;:</span> <span class="pre">1.15,</span> <span class="pre">&quot;underground&quot;:</span> <span class="pre">2}}}</span></code>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The configured multiplier is assumed to be in million dollars per

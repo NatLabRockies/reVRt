@@ -1,0 +1,6 @@
+revrt.utilities.parsing.normalize\_str\_list\_input
+===================================================
+
+.. currentmodule:: revrt.utilities.parsing
+
+.. autofunction:: normalize_str_list_input

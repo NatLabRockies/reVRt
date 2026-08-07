@@ -834,7 +834,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">rioxarray</span>  <span class="c1"># ruff:ignore[unused-import]</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">slugify</span><span class="w"> </span><span class="kn">import</span> <span class="n">slugify</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtFileExistsError</span>
@@ -896,7 +896,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">with</span> <span class="n">tfc</span> <span class="k">as</span> <span class="n">temp_zarr_file_str</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Setting swap file location to </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">temp_zarr_file_str</span><span class="p">)</span>
         <span class="n">temp_zarr_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temp_zarr_file_str</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="n">temp_zarr_file</span>  <span class="c1"># noqa</span>
+        <span class="k">yield</span> <span class="n">temp_zarr_file</span>  <span class="c1"># ruff:ignore[fallible-context-manager]</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">save</span><span class="p">:</span>
             <span class="k">return</span>

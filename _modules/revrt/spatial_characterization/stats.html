@@ -969,7 +969,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">PIXEL_COUNT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute count for each pixel value in zone&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>  <span class="c1"># noqa: PLR0912, C901</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>  <span class="c1"># ruff:ignore[too-many-branches, complex-structure]</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create new enum member&quot;&quot;&quot;</span>
 
         <span class="n">obj</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
@@ -1332,7 +1332,7 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_percentile</span><span class="p">(</span><span class="n">stat</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the percentile value from user string input&quot;&quot;&quot;</span>
     <span class="n">q</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">_PCT_PREFIX</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">q</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">):</span>  <span class="c1"># noqa: PLR2004</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">q</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">):</span>  <span class="c1"># ruff:ignore[magic-value-comparison]</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Percentiles must be between 0 and 100 (inclusive). Got: </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">q</span>

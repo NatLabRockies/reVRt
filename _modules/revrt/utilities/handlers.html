@@ -888,7 +888,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="IncrementalWriter.preprocess_chunk">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.handlers.IncrementalWriter.html#revrt.utilities.handlers.IncrementalWriter.preprocess_chunk">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>  <span class="c1"># noqa</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>  <span class="c1"># ruff:ignore[no-self-use]</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocess chunk before saving</span>
 
 <span class="sd">        By default this method just passes the data through (underlying</span>
@@ -1686,7 +1686,7 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">geom_table</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;rtree_</span><span class="si">{</span><span class="n">geom_table_suffix</span><span class="si">}</span><span class="s2">&quot;</span>
 
-        <span class="n">q</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT COUNT(distinct id) FROM </span><span class="si">{</span><span class="n">geom_table</span><span class="si">}</span><span class="s2">;&quot;</span>  <span class="c1"># noqa</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT COUNT(distinct id) FROM </span><span class="si">{</span><span class="n">geom_table</span><span class="si">}</span><span class="s2">;&quot;</span>  <span class="c1"># ruff:ignore[hardcoded-sql-expression]</span>
         <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
 

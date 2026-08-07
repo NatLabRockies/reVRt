@@ -11,6 +11,7 @@ revrt.models.routing
       :toctree:
    
       DriverOptionRules
+      MultiplierLayerInput
       RoutingOptionsMap
    
    

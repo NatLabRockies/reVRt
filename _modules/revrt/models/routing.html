@@ -825,6 +825,7 @@ window.runMermaid = runMermaid;</script>
 <span></span><span class="sd">&quot;&quot;&quot;Pydantic models for routing inputs&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaseModel</span><span class="p">,</span>
@@ -837,7 +838,10 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtConfigurationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.models.cost_layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BarrierLayer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_comparison_values</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">parse_comparison_values</span><span class="p">,</span>
+    <span class="n">normalize_str_list_input</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="nb">type</span> <span class="n">DriverOptionRules</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;excluded&quot;</span><span class="p">]]</span>
@@ -848,6 +852,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">``&quot;excluded&quot;``, which means the option is not allowed at all in</span>
 <span class="sd">the zone.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="nb">type</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="sd">&quot;&quot;&quot;One or more layer names used as spatial multipliers&quot;&quot;&quot;</span>
 
 
 <div class="viewcode-block" id="RoutingCostLayer">
@@ -866,8 +873,16 @@ window.runMermaid = runMermaid;</script>
     <span class="n">layer_name</span><span class="p">:</span> <span class="nb">str</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of layer in layered file containing cost data&quot;&quot;&quot;</span>
 
-    <span class="n">multiplier_layer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional layer of spatial multipliers applied before summation&quot;&quot;&quot;</span>
+    <span class="n">multiplier_layer</span><span class="p">:</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional spatial multiplier layer(s) applied before summation</span>
+
+<span class="sd">    A string or iterable is accepted and normalized to a list.</span>
+<span class="sd">    All supplied layers are multiplied together.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_normalize_multiplier_layer</span> <span class="o">=</span> <span class="n">field_validator</span><span class="p">(</span>
+        <span class="s2">&quot;multiplier_layer&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span>
+    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">))</span>
 
     <span class="n">multiplier_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional scalar multiplier applied before summation&quot;&quot;&quot;</span>
@@ -890,9 +905,12 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    The routing table input should resolve a voltage value for each</span>
 <span class="sd">    routing option, either from the shared `voltage` column or from</span>
-<span class="sd">    `voltage_&lt;option&gt;` column. Every resolved voltage value must be</span>
-<span class="sd">    given in the &quot;row_width&quot; dictionary in the transmission config,</span>
-<span class="sd">    otherwise an error will be thrown.</span>
+<span class="sd">    `voltage_&lt;option&gt;` column. The ``row_width`` dictionary may specify</span>
+<span class="sd">    one multiplier for every option at a voltage, such as</span>
+<span class="sd">    ``{&quot;138&quot;: 1.15}``, or values by routing option, such as</span>
+<span class="sd">    ``{&quot;500&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}``. Every</span>
+<span class="sd">    resolved voltage must be listed. For an option mapping, every</span>
+<span class="sd">    routing option using this multiplier must be listed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">apply_polarity_mult</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -902,9 +920,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    value for each routing option, either from shared columns or from</span>
 <span class="sd">    `voltage_&lt;option&gt;` / `polarity_&lt;option&gt;` columns, and the</span>
 <span class="sd">    transmission config must provide each combination in</span>
-<span class="sd">    ``voltage_polarity_mult``. For example, a valid</span>
+<span class="sd">    ``voltage_polarity_mult``. A scalar polarity value applies to every</span>
+<span class="sd">    routing option. To define values per routing option, use a mapping</span>
+<span class="sd">    of routing-option names to values. For example, a valid</span>
 <span class="sd">    &quot;voltage_polarity_mult&quot; dictionary in the transmission config might</span>
-<span class="sd">    be ``{&quot;138&quot;: {&quot;ac&quot;: 1.15, &quot;dc&quot;: 2}}``.</span>
+<span class="sd">    be ``{&quot;138&quot;: {&quot;ac&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}}``.</span>
 
 <span class="sd">    .. IMPORTANT::</span>
 <span class="sd">      The configured multiplier is assumed to be in million dollars per</span>
@@ -928,8 +948,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    ignored.**</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">multiplier_layer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Layer of spatial multipliers applied to the aggregated costs&quot;&quot;&quot;</span>
+    <span class="n">multiplier_layer</span><span class="p">:</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Spatial multiplier layer(s) applied to the aggregated costs</span>
+
+<span class="sd">    A string or iterable is accepted and normalized to a list.</span>
+<span class="sd">    All supplied layers are multiplied together.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_normalize_multiplier_layer</span> <span class="o">=</span> <span class="n">field_validator</span><span class="p">(</span>
+        <span class="s2">&quot;multiplier_layer&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span>
+    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">))</span>
 
     <span class="n">multiplier_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Scalar multiplier applied before friction is aggregated&quot;&quot;&quot;</span>
@@ -942,9 +970,12 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    The routing table input should resolve a voltage value for each</span>
 <span class="sd">    routing option, either from the shared `voltage` column or from</span>
-<span class="sd">    `voltage_&lt;option&gt;` column. Every resolved voltage value must be</span>
-<span class="sd">    given in the &quot;row_width&quot; dictionary in the transmission config,</span>
-<span class="sd">    otherwise an error will be thrown.</span>
+<span class="sd">    `voltage_&lt;option&gt;` column. The ``row_width`` dictionary may specify</span>
+<span class="sd">    one multiplier for every option at a voltage, such as</span>
+<span class="sd">    ``{&quot;138&quot;: 1.15}``, or values by routing option, such as</span>
+<span class="sd">    ``{&quot;500&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}``. Every</span>
+<span class="sd">    resolved voltage must be listed. For an option mapping, every</span>
+<span class="sd">    routing option using this multiplier must be listed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">apply_polarity_mult</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -954,9 +985,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    value for each routing option, either from shared columns or from</span>
 <span class="sd">    `voltage_&lt;option&gt;` / `polarity_&lt;option&gt;` columns, and the</span>
 <span class="sd">    transmission config must provide each combination in</span>
-<span class="sd">    ``voltage_polarity_mult``. For example, a valid</span>
+<span class="sd">    ``voltage_polarity_mult``. A scalar polarity value applies to every</span>
+<span class="sd">    routing option. To define values per routing option, use a mapping</span>
+<span class="sd">    of routing-option names to values. For example, a valid</span>
 <span class="sd">    &quot;voltage_polarity_mult&quot; dictionary in the transmission config might</span>
-<span class="sd">    be ``{&quot;138&quot;: {&quot;ac&quot;: 1.15, &quot;dc&quot;: 2}}``.</span>
+<span class="sd">    be ``{&quot;138&quot;: {&quot;ac&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}}``.</span>
 
 <span class="sd">    .. IMPORTANT::</span>
 <span class="sd">      The configured multiplier is assumed to be in million dollars per</span>
@@ -1027,8 +1060,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    etc.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">multiplier_layer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional layer of multipliers to apply before aggregation&quot;&quot;&quot;</span>
+    <span class="n">multiplier_layer</span><span class="p">:</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional spatial multiplier layer(s) applied before aggregation</span>
+
+<span class="sd">    A string or iterable is accepted and normalized to a list.</span>
+<span class="sd">    All supplied layers are multiplied together.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_normalize_multiplier_layer</span> <span class="o">=</span> <span class="n">field_validator</span><span class="p">(</span>
+        <span class="s2">&quot;multiplier_layer&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span>
+    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">))</span>
 
     <span class="n">multiplier_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional scalar multiplier applied before aggregation&quot;&quot;&quot;</span></div>
@@ -1107,8 +1148,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    route can be found. This behavior can be configured.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">cost_multiplier_layer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional option-level layer multiplied onto final costs&quot;&quot;&quot;</span>
+    <span class="n">cost_multiplier_layer</span><span class="p">:</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional option-level multiplier layer(s) applied to final costs</span>
+
+<span class="sd">    A string or iterable is accepted and normalized to a list.</span>
+<span class="sd">    All supplied layers are multiplied together.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_normalize_cost_multiplier_layer</span> <span class="o">=</span> <span class="n">field_validator</span><span class="p">(</span>
+        <span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span>
+    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">))</span>
 
     <span class="n">cost_multiplier_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional option-level scalar multiplied onto final costs&quot;&quot;&quot;</span>
@@ -1409,6 +1458,7 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">&quot;DriverConfig&quot;</span><span class="p">,</span>
     <span class="s2">&quot;DriverOptionRules&quot;</span><span class="p">,</span>
     <span class="s2">&quot;DriverZoneConfig&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;MultiplierLayerInput&quot;</span><span class="p">,</span>
     <span class="s2">&quot;RoutingBarrierLayer&quot;</span><span class="p">,</span>
     <span class="s2">&quot;RoutingCostLayer&quot;</span><span class="p">,</span>
     <span class="s2">&quot;RoutingFrictionLayer&quot;</span><span class="p">,</span>

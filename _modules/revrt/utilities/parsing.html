@@ -825,8 +825,9 @@ window.runMermaid = runMermaid;</script>
 <span></span><span class="sd">&quot;&quot;&quot;reVrt parsing utilities&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtConfigurationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtConfigurationError</span><span class="p">,</span> <span class="n">revrtTypeError</span>
 
 
 <span class="n">_COMPARISON_VALUE_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
@@ -841,6 +842,42 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">&quot;&lt;=&quot;</span><span class="p">:</span> <span class="s2">&quot;le&quot;</span><span class="p">,</span>
     <span class="s2">&quot;==&quot;</span><span class="p">:</span> <span class="s2">&quot;eq&quot;</span><span class="p">,</span>
 <span class="p">}</span>
+
+
+<div class="viewcode-block" id="normalize_str_list_input">
+<a class="viewcode-back" href="../../../_autosummary/revrt.utilities.parsing.normalize_str_list_input.html#revrt.utilities.parsing.normalize_str_list_input">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_str_list_input</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize a string-or-list input to a list of strings</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value : str or iterable</span>
+<span class="sd">        Input value (e.g., a string or a list of strings) to normalize.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the input value (used for error messages).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list or None</span>
+<span class="sd">        A list of strings, or None if the input value is None.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    revrtTypeError</span>
+<span class="sd">        If the input value is not a string or an iterable of strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a string or an iterable of strings&quot;</span>
+        <span class="k">raise</span> <span class="n">revrtTypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="parse_comparison_values">

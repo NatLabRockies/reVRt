@@ -14,6 +14,7 @@ revrt.utilities.parsing
    .. autosummary::
       :toctree:
    
+      normalize_str_list_input
       parse_comparison_values
    
    
