@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.models.routing.RoutingFrictionLayer &#8212; reVRt 0.9.1 documentation</title>
+    <title>revrt.models.routing.RoutingFrictionLayer &#8212; reVRt 0.12.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="prev" title="revrt.models.routing.RoutingCostLayer" href="revrt.models.routing.RoutingCostLayer.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.9.1" />
+  <meta name="docsearch:version" content="0.12.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.9.1 documentation</p>
+    <p class="title logo__title">reVRt 0.12.0 documentation</p>
   
 </a></div>
     
@@ -736,7 +736,11 @@ routing option, either from the shared <cite>voltage</cite> column or from
 <cite>voltage_&lt;option&gt;</cite> column. The <code class="docutils literal notranslate"><span class="pre">row_width</span></code> dictionary may specify
 one multiplier for every option at a voltage, such as
 <code class="docutils literal notranslate"><span class="pre">{&quot;138&quot;:</span> <span class="pre">1.15}</span></code>, or values by routing option, such as
-<code class="docutils literal notranslate"><span class="pre">{&quot;500&quot;:</span> <span class="pre">{&quot;overhead&quot;:</span> <span class="pre">1.15,</span> <span class="pre">&quot;underground&quot;:</span> <span class="pre">2}}</span></code>. Every
+<code class="docutils literal notranslate"><span class="pre">{&quot;500&quot;:</span> <span class="pre">{&quot;overhead&quot;:</span> <span class="pre">1.15,</span> <span class="pre">&quot;underground&quot;:</span> <span class="pre">2}}</span></code>. An
+option value may instead map spatial layer names to scalar values.
+For example, <code class="docutils literal notranslate"><span class="pre">{&quot;500&quot;:</span> <span class="pre">{&quot;underground&quot;:</span> <span class="pre">{&quot;rural&quot;:</span> <span class="pre">2,</span> <span class="pre">&quot;urban&quot;:</span> <span class="pre">20}}}</span></code>
+produces one friction term per spatial layer. Existing
+<code class="docutils literal notranslate"><span class="pre">multiplier_layer</span></code> inputs apply to every generated term. Every
 resolved voltage must be listed. For an option mapping, every
 routing option using this multiplier must be listed.</p>
 </dd></dl>
@@ -751,9 +755,13 @@ value for each routing option, either from shared columns or from
 transmission config must provide each combination in
 <code class="docutils literal notranslate"><span class="pre">voltage_polarity_mult</span></code>. A scalar polarity value applies to every
 routing option. To define values per routing option, use a mapping
-of routing-option names to values. For example, a valid
-“voltage_polarity_mult” dictionary in the transmission config might
-be <code class="docutils literal notranslate"><span class="pre">{&quot;138&quot;:</span> <span class="pre">{&quot;ac&quot;:</span> <span class="pre">{&quot;overhead&quot;:</span> <span class="pre">1.15,</span> <span class="pre">&quot;underground&quot;:</span> <span class="pre">2}}}</span></code>.</p>
+of routing-option names to scalar values. A routing-option value may
+instead map spatial layer names to scalar values. In that case, each
+layer is expanded into one friction term per spatial layer. For
+example,
+<code class="docutils literal notranslate"><span class="pre">{&quot;500&quot;:</span> <span class="pre">{&quot;dc&quot;:</span> <span class="pre">{&quot;underground&quot;:</span> <span class="pre">{&quot;rural&quot;:</span> <span class="pre">50,</span> <span class="pre">&quot;urban&quot;:</span> <span class="pre">60}}}}</span></code>
+produces terms weighted by <code class="docutils literal notranslate"><span class="pre">50</span> <span class="pre">*</span> <span class="pre">rural</span></code> and <code class="docutils literal notranslate"><span class="pre">60</span> <span class="pre">*</span> <span class="pre">urban</span></code>.
+Existing <code class="docutils literal notranslate"><span class="pre">multiplier_layer</span></code> inputs apply to each generated term.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>The configured multiplier is assumed to be in million dollars per

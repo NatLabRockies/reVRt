@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Routing Layer Concept Model &#8212; reVRt 0.9.1 documentation</title>
+    <title>Routing Layer Concept Model &#8212; reVRt 0.12.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Guides and Examples" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.9.1" />
+  <meta name="docsearch:version" content="0.12.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.9.1 documentation</p>
+    <p class="title logo__title">reVRt 0.12.0 documentation</p>
   
 </a></div>
     
@@ -709,6 +709,69 @@ barrier, it will be dropped as well.</p>
 layers to try to find a route, but will always keep the <code class="docutils literal notranslate"><span class="pre">important_barrier</span></code> layer
 as a barrier.</p>
 </section>
+<section id="spatial-row-and-voltage-polarity-multipliers">
+<h3>Spatial ROW and voltage/polarity multipliers<a class="headerlink" href="#spatial-row-and-voltage-polarity-multipliers" title="Link to this heading">#</a></h3>
+<p>Cost and friction layers with <code class="docutils literal notranslate"><span class="pre">&quot;apply_row_mult&quot;:</span> <span class="pre">true</span></code> can use
+spatial ROW multipliers. The value must be nested below the selected
+routing option:</p>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;row_width&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nv">&quot;500&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nv">&quot;underground&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nv">&quot;rural_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">            </span><span class="nv">&quot;urban_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">20</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For an underground 500-kV line, a cost term <code class="docutils literal notranslate"><span class="pre">C</span></code> becomes
+<code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">*</span> <span class="pre">(2</span> <span class="pre">*</span> <span class="pre">rural_mask</span> <span class="pre">+</span> <span class="pre">20</span> <span class="pre">*</span> <span class="pre">urban_mask)</span></code>. The original shared scalar
+and per-option scalar forms remain supported. Spatial maps are only
+accepted as the value of a routing option; a voltage-level mapping is
+always interpreted as a routing-option mapping.</p>
+<p>Cost and friction layers with <code class="docutils literal notranslate"><span class="pre">&quot;apply_polarity_mult&quot;:</span> <span class="pre">true</span></code> can use
+spatial voltage/polarity multipliers. In addition to the existing shared
+scalar and per-option scalar forms, the selected routing option may map
+spatial layer names to scalar values:</p>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;voltage_polarity_mult&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nv">&quot;500&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nv">&quot;dc&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nv">&quot;underground&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nv">&quot;rural_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">50</span><span class="p">,</span>
+<span class="w">                </span><span class="nv">&quot;urban_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">60</span><span class="p">,</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For an underground 500-kV DC line, a cost term <code class="docutils literal notranslate"><span class="pre">C</span></code> becomes
+<code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">*</span> <span class="pre">(50</span> <span class="pre">*</span> <span class="pre">rural_mask</span> <span class="pre">+</span> <span class="pre">60</span> <span class="pre">*</span> <span class="pre">urban_mask)</span></code> after the configured values
+are converted from million dollars per mile to dollars per pixel. Any
+existing <code class="docutils literal notranslate"><span class="pre">&quot;multiplier_scalar&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code> values are
+also applied to each generated term. The map must be nested below a
+routing-option name, which keeps it distinct from the existing per-option
+scalar form.</p>
+<p>Boolean masks are a common use case. Masks are evaluated algebraically:
+overlapping masks add both terms, while cells outside every listed mask
+receive zero contribution from the expanded source layer. <code class="docutils literal notranslate"><span class="pre">reVRt</span></code> does
+not validate that masks are mutually exclusive or cover the full domain.
+Generated cost terms are combined into the source layer’s existing route
+report column. The same expansion is available for friction layers.</p>
+<p>When both flags are enabled, reVRt expands the product of the ROW and
+voltage/polarity sums. If each map contains two layers, four terms are
+generated. For ROW values <code class="docutils literal notranslate"><span class="pre">r_i</span></code> and layers <code class="docutils literal notranslate"><span class="pre">R_i</span></code>, and polarity values
+<code class="docutils literal notranslate"><span class="pre">p_j</span></code> and layers <code class="docutils literal notranslate"><span class="pre">P_j</span></code>, the source term is:</p>
+<p><code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">*</span> <span class="pre">(sum(r_i</span> <span class="pre">*</span> <span class="pre">R_i)</span> <span class="pre">*</span> <span class="pre">sum(p_j</span> <span class="pre">*</span> <span class="pre">P_j))</span></code></p>
+<p>The voltage/polarity coefficient continues to be converted from million
+dollars per mile to dollars per pixel; ROW coefficients are not converted.
+Existing <code class="docutils literal notranslate"><span class="pre">&quot;multiplier_scalar&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code> values apply
+to every generated term. The expansion is strict: if both maps use the
+same layer name, that name remains twice in that term and therefore acts
+as <code class="docutils literal notranslate"><span class="pre">layer</span> <span class="pre">*</span> <span class="pre">layer</span></code>. No masks are required to be mutually exclusive or
+exhaustive: overlaps add their applicable terms, while cells outside all
+listed masks receive zero contribution from the expanded source layer.</p>
+</section>
 </section>
 </section>
 
@@ -778,6 +841,7 @@ as a barrier.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#barrier-layers">Barrier Layers</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-barrier-layers">Building barrier layers</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#soft-barriers">Soft Barriers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spatial-row-and-voltage-polarity-multipliers">Spatial ROW and voltage/polarity multipliers</a></li>
 </ul>
 </li>
 </ul>

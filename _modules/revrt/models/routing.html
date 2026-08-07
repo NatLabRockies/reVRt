@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.models.routing &#8212; reVRt 0.9.1 documentation</title>
+    <title>revrt.models.routing &#8212; reVRt 0.12.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.9.1" />
+  <meta name="docsearch:version" content="0.12.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.9.1 documentation</p>
+    <p class="title logo__title">reVRt 0.12.0 documentation</p>
   
 </a></div>
     
@@ -908,7 +908,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    `voltage_&lt;option&gt;` column. The ``row_width`` dictionary may specify</span>
 <span class="sd">    one multiplier for every option at a voltage, such as</span>
 <span class="sd">    ``{&quot;138&quot;: 1.15}``, or values by routing option, such as</span>
-<span class="sd">    ``{&quot;500&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}``. Every</span>
+<span class="sd">    ``{&quot;500&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}``. An</span>
+<span class="sd">    option value may instead map spatial layer names to scalar values.</span>
+<span class="sd">    For example, ``{&quot;500&quot;: {&quot;underground&quot;: {&quot;rural&quot;: 2, &quot;urban&quot;: 20}}}``</span>
+<span class="sd">    produces one cost term per spatial layer. Existing</span>
+<span class="sd">    ``multiplier_layer`` inputs apply to every generated term. Every</span>
 <span class="sd">    resolved voltage must be listed. For an option mapping, every</span>
 <span class="sd">    routing option using this multiplier must be listed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -922,9 +926,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    transmission config must provide each combination in</span>
 <span class="sd">    ``voltage_polarity_mult``. A scalar polarity value applies to every</span>
 <span class="sd">    routing option. To define values per routing option, use a mapping</span>
-<span class="sd">    of routing-option names to values. For example, a valid</span>
-<span class="sd">    &quot;voltage_polarity_mult&quot; dictionary in the transmission config might</span>
-<span class="sd">    be ``{&quot;138&quot;: {&quot;ac&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}}``.</span>
+<span class="sd">    of routing-option names to scalar values. A routing-option value may</span>
+<span class="sd">    instead map spatial layer names to scalar values. In that case, each</span>
+<span class="sd">    layer is expanded into one cost term per spatial layer. For example,</span>
+<span class="sd">    ``{&quot;500&quot;: {&quot;dc&quot;: {&quot;underground&quot;: {&quot;rural&quot;: 50, &quot;urban&quot;: 60}}}}``</span>
+<span class="sd">    produces terms weighted by ``50 * rural`` and ``60 * urban``.</span>
+<span class="sd">    Existing ``multiplier_layer`` inputs apply to each generated term.</span>
 
 <span class="sd">    .. IMPORTANT::</span>
 <span class="sd">      The configured multiplier is assumed to be in million dollars per</span>
@@ -973,7 +980,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    `voltage_&lt;option&gt;` column. The ``row_width`` dictionary may specify</span>
 <span class="sd">    one multiplier for every option at a voltage, such as</span>
 <span class="sd">    ``{&quot;138&quot;: 1.15}``, or values by routing option, such as</span>
-<span class="sd">    ``{&quot;500&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}``. Every</span>
+<span class="sd">    ``{&quot;500&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}``. An</span>
+<span class="sd">    option value may instead map spatial layer names to scalar values.</span>
+<span class="sd">    For example, ``{&quot;500&quot;: {&quot;underground&quot;: {&quot;rural&quot;: 2, &quot;urban&quot;: 20}}}``</span>
+<span class="sd">    produces one friction term per spatial layer. Existing</span>
+<span class="sd">    ``multiplier_layer`` inputs apply to every generated term. Every</span>
 <span class="sd">    resolved voltage must be listed. For an option mapping, every</span>
 <span class="sd">    routing option using this multiplier must be listed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -987,9 +998,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    transmission config must provide each combination in</span>
 <span class="sd">    ``voltage_polarity_mult``. A scalar polarity value applies to every</span>
 <span class="sd">    routing option. To define values per routing option, use a mapping</span>
-<span class="sd">    of routing-option names to values. For example, a valid</span>
-<span class="sd">    &quot;voltage_polarity_mult&quot; dictionary in the transmission config might</span>
-<span class="sd">    be ``{&quot;138&quot;: {&quot;ac&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}}``.</span>
+<span class="sd">    of routing-option names to scalar values. A routing-option value may</span>
+<span class="sd">    instead map spatial layer names to scalar values. In that case, each</span>
+<span class="sd">    layer is expanded into one friction term per spatial layer. For</span>
+<span class="sd">    example,</span>
+<span class="sd">    ``{&quot;500&quot;: {&quot;dc&quot;: {&quot;underground&quot;: {&quot;rural&quot;: 50, &quot;urban&quot;: 60}}}}``</span>
+<span class="sd">    produces terms weighted by ``50 * rural`` and ``60 * urban``.</span>
+<span class="sd">    Existing ``multiplier_layer`` inputs apply to each generated term.</span>
 
 <span class="sd">    .. IMPORTANT::</span>
 <span class="sd">      The configured multiplier is assumed to be in million dollars per</span>

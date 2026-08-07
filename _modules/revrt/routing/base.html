@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.routing.base &#8212; reVRt 0.9.1 documentation</title>
+    <title>revrt.routing.base &#8212; reVRt 0.12.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=9dc39874"></script>
+    <script src="../../../_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.9.1" />
+  <meta name="docsearch:version" content="0.12.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -553,7 +553,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.9.1 documentation</p>
+    <p class="title logo__title">reVRt 0.12.0 documentation</p>
   
 </a></div>
     
@@ -1076,6 +1076,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">option_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
         <span class="n">option_li_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
         <span class="n">option_untracked_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
+        <span class="n">reported_costs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">layer_info</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_and_scale_layer</span><span class="p">(</span><span class="n">layer_info</span><span class="p">)</span>
             <span class="n">cost</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cost</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cost</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -1089,15 +1090,20 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">option_untracked_cost</span> <span class="o">+=</span> <span class="n">cost</span>
 
             <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include_in_report&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-                <span class="n">layer_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_info</span><span class="p">[</span><span class="s1">&#39;layer_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">CharacterizedLayer</span><span class="p">(</span>
-                        <span class="n">layer_name</span><span class="p">,</span>
-                        <span class="n">cost</span><span class="p">,</span>
-                        <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span>
-                        <span class="n">is_length_invariant</span><span class="o">=</span><span class="n">is_li</span><span class="p">,</span>
-                    <span class="p">)</span>
+                <span class="n">report_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">layer_info</span><span class="p">[</span><span class="s2">&quot;layer_name&quot;</span><span class="p">],</span> <span class="n">is_li</span><span class="p">)</span>
+                <span class="n">reported_costs</span><span class="p">[</span><span class="n">report_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">reported_costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">report_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">cost</span>
                 <span class="p">)</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="n">is_li</span><span class="p">),</span> <span class="n">cost</span> <span class="ow">in</span> <span class="n">reported_costs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">CharacterizedLayer</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">cost</span><span class="p">,</span>
+                    <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span>
+                    <span class="n">is_length_invariant</span><span class="o">=</span><span class="n">is_li</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="n">mult</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span>
         <span class="n">option_cost</span> <span class="o">*=</span> <span class="n">mult</span>
