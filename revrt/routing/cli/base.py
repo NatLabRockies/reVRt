@@ -451,12 +451,21 @@ def _parsed_multiplier_layers(
     layer, polarity, voltage, routing_option, transmission_config
 ):
     """Convert layer into one or more layers with updated multipliers"""
-    layer = _apply_row_mult_to_layer(
+    row_layers = _apply_row_mult_to_layer(
         layer, voltage, routing_option, transmission_config
     )
-    return _apply_polarity_mult_to_layer(
-        layer, polarity, voltage, routing_option, transmission_config
-    )
+    output_layers = []
+    for row_layer in row_layers:
+        output_layers.extend(
+            _apply_polarity_mult_to_layer(
+                row_layer,
+                polarity,
+                voltage,
+                routing_option,
+                transmission_config,
+            )
+        )
+    return output_layers
 
 
 def _apply_row_mult_to_layer(
