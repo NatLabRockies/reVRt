@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785975164839,
+  "lastUpdate": 1786124101453,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13355,6 +13355,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 289669292,
             "range": "± 4746059",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f311ee41e6f0c6c2ddad476a06b2df8529f1399f",
+          "message": "Allow multiple layers to be specified for `\"multiplier_layer\"` (#319)\n\n* Add new type to hold multiple layer names\n\n* Use new type\n\n* Implement logic for multiple multiplier layers\n\n* Fix input\n\n* Update docs\n\n* Minor updates\n\n* Add `normalize_str_list_input`\n\n* Normalize multiplier layer input from user\n\n* Allow multiple layers to be specified\n\n* Bump",
+          "timestamp": "2026-08-07T11:17:04-06:00",
+          "tree_id": "57dd908b878b9a097252caa2797239411a685f8f",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/f311ee41e6f0c6c2ddad476a06b2df8529f1399f"
+        },
+        "date": 1786124099007,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 37882449,
+            "range": "± 15014760",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 37795593,
+            "range": "± 10158319",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 48245213,
+            "range": "± 27584795",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 68245897,
+            "range": "± 15080654",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 342053950,
+            "range": "± 41377537",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 122878757,
+            "range": "± 612381",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 124950319,
+            "range": "± 2300787",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 131213810,
+            "range": "± 21127257",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 152709181,
+            "range": "± 38287942",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 235022979,
+            "range": "± 71036488",
             "unit": "ns/iter"
           }
         ]
