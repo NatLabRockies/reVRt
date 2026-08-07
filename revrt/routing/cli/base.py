@@ -538,7 +538,66 @@ def _get_polarity_multiplier(
             )
             raise revrtKeyError(msg) from e
 
-    return polarity_multiplier
+    return _validate_polarity_multiplier(
+        polarity_multiplier,
+        voltage=voltage,
+        polarity=polarity,
+        routing_option=routing_option,
+    )
+
+
+def _validate_polarity_multiplier(
+    multiplier, voltage, polarity, routing_option
+):
+    """Validate a scalar or spatial polarity multiplier"""
+    context = (
+        f"voltage {voltage!r}, polarity {polarity!r}, and routing option "
+        f"{routing_option!r}"
+    )
+    if not isinstance(multiplier, dict):
+        if _is_finite_number(multiplier):
+            return float(multiplier)
+
+        msg = (
+            "`apply_polarity_mult` multiplier for "
+            f"{context} must be a finite number or a mapping of spatial "
+            "layer names to finite numbers"
+        )
+        raise revrtConfigurationError(msg)
+
+    if not multiplier:
+        msg = (
+            "`apply_polarity_mult` spatial multiplier mapping for "
+            f"{context} must not be empty"
+        )
+        raise revrtConfigurationError(msg)
+
+    validated_multiplier = {}
+    for layer_name, value in multiplier.items():
+        if not isinstance(layer_name, str) or not layer_name.strip():
+            msg = (
+                "`apply_polarity_mult` spatial multiplier mapping for "
+                f"{context} must use non-empty layer names"
+            )
+            raise revrtConfigurationError(msg)
+        if not _is_finite_number(value):
+            msg = (
+                "`apply_polarity_mult` spatial multiplier for layer "
+                f"{layer_name!r} in {context} must be a finite number"
+            )
+            raise revrtConfigurationError(msg)
+        validated_multiplier[layer_name] = float(value)
+
+    return validated_multiplier
+
+
+def _is_finite_number(value):
+    """bool: Whether a multiplier value is a finite numeric scalar"""
+    return (
+        isinstance(value, Real)
+        and not isinstance(value, bool)
+        and isfinite(value)
+    )
 
 
 def _format_pv_by_option(pv_by_option):
