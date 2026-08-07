@@ -327,3 +327,40 @@ You can also specify that a barrier should never be dropped by leaving out the
 With this configuration, ``reVRt`` will drop the ``slope`` and ``barrier_bool_mask``
 layers to try to find a route, but will always keep the ``important_barrier`` layer
 as a barrier.
+
+
+### Spatial voltage/polarity multipliers
+
+Cost and friction layers with ``"apply_polarity_mult": true`` can use
+spatial voltage/polarity multipliers. In addition to the existing shared
+scalar and per-option scalar forms, the selected routing option may map
+spatial layer names to scalar values:
+
+```json5
+"voltage_polarity_mult": {
+    "500": {
+        "dc": {
+            "underground": {
+                "rural_mask": 50,
+                "urban_mask": 60,
+            },
+        },
+    },
+}
+```
+
+For an underground 500-kV DC line, a cost term ``C`` becomes
+``C * (50 * rural_mask + 60 * urban_mask)`` after the configured values
+are converted from million dollars per mile to dollars per pixel. Any
+existing ``"multiplier_scalar"`` and ``"multiplier_layer"`` values are
+also applied to each generated term. The map must be nested below a
+routing-option name, which keeps it distinct from the existing per-option
+scalar form.
+
+Boolean masks are a common use case. Masks are evaluated algebraically:
+overlapping masks add both terms, while cells outside every listed mask
+receive zero contribution from the expanded source layer. ``reVRt`` does
+not validate that masks are mutually exclusive or cover the full domain.
+Generated cost terms are combined into the source layer's existing route
+report column. The same expansion is available for friction layers.
+
