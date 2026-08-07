@@ -329,7 +329,28 @@ layers to try to find a route, but will always keep the ``important_barrier`` la
 as a barrier.
 
 
-### Spatial voltage/polarity multipliers
+### Spatial ROW and voltage/polarity multipliers
+
+Cost and friction layers with ``"apply_row_mult": true`` can use
+spatial ROW multipliers. The value must be nested below the selected
+routing option:
+
+```json5
+"row_width": {
+    "500": {
+        "underground": {
+            "rural_mask": 2,
+            "urban_mask": 20,
+        },
+    },
+}
+```
+
+For an underground 500-kV line, a cost term ``C`` becomes
+``C * (2 * rural_mask + 20 * urban_mask)``. The original shared scalar
+and per-option scalar forms remain supported. Spatial maps are only
+accepted as the value of a routing option; a voltage-level mapping is
+always interpreted as a routing-option mapping.
 
 Cost and friction layers with ``"apply_polarity_mult": true`` can use
 spatial voltage/polarity multipliers. In addition to the existing shared
@@ -363,4 +384,20 @@ receive zero contribution from the expanded source layer. ``reVRt`` does
 not validate that masks are mutually exclusive or cover the full domain.
 Generated cost terms are combined into the source layer's existing route
 report column. The same expansion is available for friction layers.
+
+When both flags are enabled, reVRt expands the product of the ROW and
+voltage/polarity sums. If each map contains two layers, four terms are
+generated. For ROW values ``r_i`` and layers ``R_i``, and polarity values
+``p_j`` and layers ``P_j``, the source term is:
+
+``C * (sum(r_i * R_i) * sum(p_j * P_j))``
+
+The voltage/polarity coefficient continues to be converted from million
+dollars per mile to dollars per pixel; ROW coefficients are not converted.
+Existing ``"multiplier_scalar"`` and ``"multiplier_layer"`` values apply
+to every generated term. The expansion is strict: if both maps use the
+same layer name, that name remains twice in that term and therefore acts
+as ``layer * layer``. No masks are required to be mutually exclusive or
+exhaustive: overlaps add their applicable terms, while cells outside all
+listed masks receive zero contribution from the expanded source layer.
 

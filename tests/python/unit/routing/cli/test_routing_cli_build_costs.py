@@ -2,6 +2,7 @@
 
 import os
 import json
+import shutil
 import platform
 from pathlib import Path
 
@@ -440,6 +441,105 @@ def test_build_final_routing_layers_applies_spatial_polarity_values(
     assert expected_costs[0, 0] == 0
     assert expected_costs[1, 3] == pytest.approx(
         2 * 110 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+    )
+
+
+def test_build_final_routing_layers_combines_spatial_multipliers(
+    sample_layered_data, tmp_path
+):
+    """Spatial ROW and polarity maps should multiply as a product of sums"""
+
+    cost_fpath = tmp_path / "combined_spatial_multipliers.zarr"
+    shutil.copytree(sample_layered_data, cost_fpath)
+    with xr.open_dataset(cost_fpath, consolidated=False, engine="zarr") as ds:
+        base_cost = ds["layer_1"].astype(np.float32).load()
+
+    row_rural = xr.zeros_like(base_cost)
+    row_rural.values[:, :, :4] = 1
+    row_urban = xr.zeros_like(base_cost)
+    row_urban.values[:, :, 3:] = 1
+    polarity_rural = xr.zeros_like(base_cost)
+    polarity_rural.values[:, :4, :] = 1
+    polarity_urban = xr.zeros_like(base_cost)
+    polarity_urban.values[:, 3:, :] = 1
+    layer_file = LayeredFile(cost_fpath)
+    spatial_layers = {
+        "row_rural": row_rural,
+        "row_urban": row_urban,
+        "polarity_rural": polarity_rural,
+        "polarity_urban": polarity_urban,
+    }
+    for layer_name, layer in spatial_layers.items():
+        layer_fp = tmp_path / f"{layer_name}.tif"
+        layer.rio.to_raster(layer_fp, driver="GTiff")
+        layer_file.write_geotiff_to_file(layer_fp, layer_name, overwrite=True)
+
+    config = {
+        "cost_fpath": str(cost_fpath),
+        "routing_options": {
+            "underground": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "apply_row_mult": True,
+                        "apply_polarity_mult": True,
+                    }
+                ]
+            }
+        },
+        "transmission_config": {
+            "row_width": {
+                "500": {"underground": {"row_rural": 2, "row_urban": 20}}
+            },
+            "voltage_polarity_mult": {
+                "500": {
+                    "dc": {
+                        "underground": {
+                            "polarity_rural": 50,
+                            "polarity_urban": 60,
+                        }
+                    }
+                }
+            },
+        },
+        "invalid_costs_block_routing": True,
+    }
+    config_fp = tmp_path / "combined_spatial_lcp_config.json"
+    config_fp.write_text(json.dumps(config))
+    output_dir = tmp_path / "combined_spatial_outputs"
+
+    build_final_routing_layers(
+        lcp_config_fp=config_fp,
+        output_dir=output_dir,
+        polarity={"underground": "dc"},
+        voltage={"underground": 500},
+    )
+
+    expected_costs = (
+        base_cost.isel(band=0)
+        * (2 * row_rural.isel(band=0) + 20 * row_urban.isel(band=0))
+        * (50 * polarity_rural.isel(band=0) + 60 * polarity_urban.isel(band=0))
+        * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+    ).to_numpy()
+    expected_final = np.where(expected_costs > 0, expected_costs, -1)
+
+    with rasterio.open(
+        output_dir / "combined_spatial_outputs_underground_agg_costs.tif"
+    ) as src:
+        aggregate_costs = src.read(1)
+    with rasterio.open(
+        output_dir
+        / "combined_spatial_outputs_underground_final_routing_layer.tif"
+    ) as src:
+        final_costs = src.read(1)
+
+    assert np.allclose(aggregate_costs, expected_costs)
+    assert np.allclose(final_costs, expected_final)
+    assert expected_costs[3, 3] == pytest.approx(
+        base_cost.isel(band=0).values[3, 3]
+        * (2 + 20)
+        * (50 + 60)
+        * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
     )
 
 

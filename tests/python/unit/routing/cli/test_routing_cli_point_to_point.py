@@ -23,6 +23,7 @@ from revrt.routing.cli.point_to_point import (
     compute_lcp_routes,
     PointToPointRouteDefinitionConverter,
 )
+from revrt.routing.cli.base import _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
 
 
 @pytest.fixture(scope="module")
@@ -242,6 +243,115 @@ def test_compute_lcp_routes_generates_csv(sample_layered_data, tmp_path):
     assert np.all(merged["length_km"] > 0)
     assert np.allclose(
         merged["cost"], merged["optimized_objective"], rtol=1e-5
+    )
+
+
+def test_compute_lcp_routes_expands_combined_spatial_multipliers(
+    sample_layered_data, tmp_path
+):
+    """Spatial multiplier configs should match equivalent explicit layers"""
+
+    cost_fpath = tmp_path / "combined_spatial_multipliers.zarr"
+    shutil.copytree(sample_layered_data, cost_fpath)
+    with xr.open_dataset(cost_fpath, consolidated=False, engine="zarr") as ds:
+        base_cost = ds["layer_1"].astype(np.float32).load()
+
+    row_rural = xr.zeros_like(base_cost)
+    row_rural.data[:, :, :4] = 1
+    row_urban = xr.zeros_like(base_cost)
+    row_urban.data[:, :, 3:] = 1
+    polarity_rural = xr.zeros_like(base_cost)
+    polarity_rural.data[:, :4, :] = 1
+    polarity_urban = xr.zeros_like(base_cost)
+    polarity_urban.data[:, 3:, :] = 1
+    layer_file = LayeredFile(cost_fpath)
+    spatial_layers = {
+        "row_rural": row_rural,
+        "row_urban": row_urban,
+        "polarity_rural": polarity_rural,
+        "polarity_urban": polarity_urban,
+    }
+    for layer_name, layer in spatial_layers.items():
+        layer_fp = tmp_path / f"{layer_name}.tif"
+        layer.rio.to_raster(layer_fp, driver="GTiff")
+        layer_file.write_geotiff_to_file(layer_fp, layer_name, overwrite=True)
+
+    routes = _build_route_table(
+        cost_fpath,
+        rows_cols=[((1, 1), (5, 6))],
+    )
+    route_table_fp = tmp_path / "route_table.csv"
+    routes.to_csv(route_table_fp, index=False)
+    conversion = _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+    row_values = {"row_rural": 2, "row_urban": 20}
+    polarity_values = {"polarity_rural": 1e-5, "polarity_urban": 2e-5}
+
+    spatial_result_fp = compute_lcp_routes(
+        cost_fpath=cost_fpath,
+        route_table_fpath=route_table_fp,
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "apply_row_mult": True,
+                        "apply_polarity_mult": True,
+                    }
+                ]
+            }
+        },
+        out_dir=tmp_path / "spatial_output",
+        job_name="spatial",
+        transmission_config={
+            "row_width": {"138": {"default": row_values}},
+            "voltage_polarity_mult": {
+                "138": {"ac": {"default": polarity_values}}
+            },
+        },
+        save_paths=True,
+        _split_params=(0, 1),
+    )
+    explicit_result_fp = compute_lcp_routes(
+        cost_fpath=cost_fpath,
+        route_table_fpath=route_table_fp,
+        routing_options={
+            "default": {
+                "cost_layers": [
+                    {
+                        "layer_name": "layer_1",
+                        "multiplier_layer": [row_layer, polarity_layer],
+                        "multiplier_scalar": (
+                            row_scalar * polarity_scalar * conversion
+                        ),
+                    }
+                    for row_layer, row_scalar in row_values.items()
+                    for polarity_layer, polarity_scalar in (
+                        polarity_values.items()
+                    )
+                ]
+            }
+        },
+        out_dir=tmp_path / "explicit_output",
+        job_name="explicit",
+        save_paths=True,
+        _split_params=(0, 1),
+    )
+
+    spatial_result = gpd.read_file(spatial_result_fp)
+    explicit_result = gpd.read_file(explicit_result_fp)
+    assert len(spatial_result) == len(explicit_result) == 1
+    for column in (
+        "cost",
+        "optimized_objective",
+        "length_km",
+        "layer_1_default_cost",
+    ):
+        assert spatial_result.iloc[0][column] == pytest.approx(
+            explicit_result.iloc[0][column]
+        )
+    assert spatial_result.iloc[0].geometry.equals_exact(
+        explicit_result.iloc[0].geometry,
+        tolerance=0,
     )
 
 

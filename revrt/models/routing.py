@@ -82,7 +82,11 @@ class RoutingCostLayer(BaseModel, extra="forbid"):
     `voltage_<option>` column. The ``row_width`` dictionary may specify
     one multiplier for every option at a voltage, such as
     ``{"138": 1.15}``, or values by routing option, such as
-    ``{"500": {"overhead": 1.15, "underground": 2}}``. Every
+    ``{"500": {"overhead": 1.15, "underground": 2}}``. An
+    option value may instead map spatial layer names to scalar values.
+    For example, ``{"500": {"underground": {"rural": 2, "urban": 20}}}``
+    produces one cost term per spatial layer. Existing
+    ``multiplier_layer`` inputs apply to every generated term. Every
     resolved voltage must be listed. For an option mapping, every
     routing option using this multiplier must be listed.
     """
@@ -99,10 +103,9 @@ class RoutingCostLayer(BaseModel, extra="forbid"):
     of routing-option names to scalar values. A routing-option value may
     instead map spatial layer names to scalar values. In that case, each
     layer is expanded into one cost term per spatial layer. For example,
-    ``{"500": {"dc": {"underground": {"rural": 50,
-    "urban": 60}}}}`` produces terms weighted by ``50 * rural`` and
-    ``60 * urban``. Existing ``multiplier_layer`` inputs apply to each
-    generated term.
+    ``{"500": {"dc": {"underground": {"rural": 50, "urban": 60}}}}``
+    produces terms weighted by ``50 * rural`` and ``60 * urban``.
+    Existing ``multiplier_layer`` inputs apply to each generated term.
 
     .. IMPORTANT::
       The configured multiplier is assumed to be in million dollars per
@@ -148,7 +151,11 @@ class RoutingFrictionLayer(BaseModel, extra="forbid"):
     `voltage_<option>` column. The ``row_width`` dictionary may specify
     one multiplier for every option at a voltage, such as
     ``{"138": 1.15}``, or values by routing option, such as
-    ``{"500": {"overhead": 1.15, "underground": 2}}``. Every
+    ``{"500": {"overhead": 1.15, "underground": 2}}``. An
+    option value may instead map spatial layer names to scalar values.
+    For example, ``{"500": {"underground": {"rural": 2, "urban": 20}}}``
+    produces one friction term per spatial layer. Existing
+    ``multiplier_layer`` inputs apply to every generated term. Every
     resolved voltage must be listed. For an option mapping, every
     routing option using this multiplier must be listed.
     """
@@ -165,10 +172,10 @@ class RoutingFrictionLayer(BaseModel, extra="forbid"):
     of routing-option names to scalar values. A routing-option value may
     instead map spatial layer names to scalar values. In that case, each
     layer is expanded into one friction term per spatial layer. For
-    example, ``{"500": {"dc": {"underground": {"rural": 50,
-    "urban": 60}}}}`` produces terms weighted by ``50 * rural`` and
-    ``60 * urban``. Existing ``multiplier_layer`` inputs apply to each
-    generated term.
+    example,
+    ``{"500": {"dc": {"underground": {"rural": 50, "urban": 60}}}}``
+    produces terms weighted by ``50 * rural`` and ``60 * urban``.
+    Existing ``multiplier_layer`` inputs apply to each generated term.
 
     .. IMPORTANT::
       The configured multiplier is assumed to be in million dollars per
