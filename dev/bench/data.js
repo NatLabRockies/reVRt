@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786124101453,
+  "lastUpdate": 1786137810693,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13439,6 +13439,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 235022979,
             "range": "± 71036488",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "760980cbef41b508b327324df40aaeaf23e6407d",
+          "message": "Spatial voltage mult (#320)\n\n* Update layer tracking\n\n* Update docstrings\n\n* Add documentation\n\n* Add `_validate_polarity_multiplier`\n\n* Track output layers starting form nothing\n\n* Implement logic for spatial multipliers\n\n* Add tests\n\n* Update version",
+          "timestamp": "2026-08-07T15:10:46-06:00",
+          "tree_id": "ab3c918e936873753fe3f18f318ff533bfed0e3d",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/760980cbef41b508b327324df40aaeaf23e6407d"
+        },
+        "date": 1786137808897,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 62096925,
+            "range": "± 28749263",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 87656390,
+            "range": "± 62649967",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 62585165,
+            "range": "± 37566291",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 117326904,
+            "range": "± 66488021",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 556837491,
+            "range": "± 298117544",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 124423854,
+            "range": "± 26655069",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 139326593,
+            "range": "± 36068409",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 161467519,
+            "range": "± 56191469",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 190529814,
+            "range": "± 60859292",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 418227595,
+            "range": "± 284482269",
             "unit": "ns/iter"
           }
         ]
