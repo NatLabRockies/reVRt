@@ -701,6 +701,152 @@ def test_update_multipliers_expands_spatial_polarity_values():
     }
 
 
+def test_update_multipliers_expands_spatial_row_values():
+    """Spatial ROW values should expand cost and friction layers"""
+
+    routing_options = {
+        "underground": {
+            "cost_layers": [
+                {
+                    "layer_name": "underground_cost",
+                    "multiplier_layer": "existing_mask",
+                    "multiplier_scalar": 2,
+                    "apply_row_mult": True,
+                }
+            ],
+            "friction_layers": [
+                {
+                    "multiplier_layer": "friction_mask",
+                    "apply_row_mult": True,
+                }
+            ],
+        }
+    }
+    transmission_config = {
+        "row_width": {
+            "500": {
+                "underground": {
+                    "rural_mask": 2,
+                    "urban_mask": 20,
+                }
+            }
+        }
+    }
+
+    updated = RoutingOptions(routing_options).update_from(
+        transmission_config=transmission_config,
+        pv_by_option={"underground": {"polarity": "dc", "voltage": 500}},
+    )
+
+    costs = updated["underground"]["cost_layers"]
+    frictions = updated["underground"]["friction_layers"]
+    assert [layer["multiplier_layer"] for layer in costs] == [
+        ["existing_mask", "rural_mask"],
+        ["existing_mask", "urban_mask"],
+    ]
+    assert [layer["multiplier_scalar"] for layer in costs] == [
+        pytest.approx(4),
+        pytest.approx(40),
+    ]
+    assert [layer["multiplier_layer"] for layer in frictions] == [
+        ["friction_mask", "rural_mask"],
+        ["friction_mask", "urban_mask"],
+    ]
+    assert [layer["multiplier_scalar"] for layer in frictions] == [
+        pytest.approx(2),
+        pytest.approx(20),
+    ]
+    assert "apply_row_mult" not in costs[0]
+    assert routing_options["underground"]["cost_layers"][0]["apply_row_mult"]
+
+
+def test_update_multipliers_combines_spatial_row_and_polarity_values():
+    """Spatial ROW and polarity values should form a Cartesian product"""
+
+    layers = [
+        {
+            "layer_name": "underground_cost",
+            "multiplier_layer": "existing_mask",
+            "multiplier_scalar": 3,
+            "apply_row_mult": True,
+            "apply_polarity_mult": True,
+        }
+    ]
+    transmission_config = {
+        "row_width": {
+            "500": {"underground": {"rural_row": 2, "urban_row": 20}}
+        },
+        "voltage_polarity_mult": {
+            "500": {
+                "dc": {
+                    "underground": {
+                        "rural_polarity": 50,
+                        "urban_polarity": 60,
+                    }
+                }
+            }
+        },
+    }
+
+    updated = update_multipliers(
+        layers,
+        polarity="dc",
+        voltage=500,
+        routing_option="underground",
+        transmission_config=transmission_config,
+    )
+
+    assert [layer["multiplier_layer"] for layer in updated] == [
+        ["existing_mask", "rural_row", "rural_polarity"],
+        ["existing_mask", "rural_row", "urban_polarity"],
+        ["existing_mask", "urban_row", "rural_polarity"],
+        ["existing_mask", "urban_row", "urban_polarity"],
+    ]
+    assert [layer["multiplier_scalar"] for layer in updated] == [
+        pytest.approx(3 * 2 * 50 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL),
+        pytest.approx(3 * 2 * 60 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL),
+        pytest.approx(3 * 20 * 50 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL),
+        pytest.approx(3 * 20 * 60 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL),
+    ]
+    assert all("apply_row_mult" not in layer for layer in updated)
+    assert all("apply_polarity_mult" not in layer for layer in updated)
+    assert layers[0]["apply_row_mult"]
+    assert layers[0]["apply_polarity_mult"]
+
+
+def test_spatial_multiplier_cartesian_product_keeps_repeated_layer_names():
+    """Shared spatial layer names should remain repeated in output terms"""
+
+    updated = update_multipliers(
+        [
+            {
+                "layer_name": "cost",
+                "apply_row_mult": True,
+                "apply_polarity_mult": True,
+            }
+        ],
+        polarity="dc",
+        voltage=500,
+        routing_option="underground",
+        transmission_config={
+            "row_width": {"500": {"underground": {"mask": 2}}},
+            "voltage_polarity_mult": {
+                "500": {"dc": {"underground": {"mask": 3}}}
+            },
+        },
+    )
+
+    assert updated == [
+        {
+            "layer_name": "cost",
+            "multiplier_layer": ["mask", "mask"],
+            "multiplier_scalar": pytest.approx(
+                6 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            ),
+        }
+    ]
+
+
 def test_spatial_polarity_terms_serialize_with_existing_rust_schema():
     """Spatial polarity expansion should produce standard cost layers"""
 
@@ -751,6 +897,79 @@ def test_spatial_polarity_terms_serialize_with_existing_rust_schema():
     ]
 
 
+def test_spatial_row_and_polarity_terms_serialize_with_rust_schema():
+    """Combined spatial terms should use the existing Rust layer schema"""
+
+    updated_options = RoutingOptions(
+        {
+            "underground": {
+                "cost_layers": [
+                    {
+                        "layer_name": "underground_cost",
+                        "apply_row_mult": True,
+                        "apply_polarity_mult": True,
+                    }
+                ]
+            }
+        }
+    ).update_from(
+        transmission_config={
+            "row_width": {
+                "500": {"underground": {"rural_row": 2, "urban_row": 20}}
+            },
+            "voltage_polarity_mult": {
+                "500": {
+                    "dc": {
+                        "underground": {
+                            "rural_polarity": 50,
+                            "urban_polarity": 60,
+                        }
+                    }
+                }
+            },
+        },
+        pv_by_option={"underground": {"polarity": "dc", "voltage": 500}},
+    )
+
+    payload = json.loads(
+        RoutingScenario(
+            cost_fpath=None,
+            routing_options=updated_options,
+        ).cost_function_json
+    )
+
+    assert payload["routing_options"]["underground"]["cost_layers"] == [
+        {
+            "layer_name": "underground_cost",
+            "multiplier_layer": ["rural_row", "rural_polarity"],
+            "multiplier_scalar": pytest.approx(
+                2 * 50 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            ),
+        },
+        {
+            "layer_name": "underground_cost",
+            "multiplier_layer": ["rural_row", "urban_polarity"],
+            "multiplier_scalar": pytest.approx(
+                2 * 60 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            ),
+        },
+        {
+            "layer_name": "underground_cost",
+            "multiplier_layer": ["urban_row", "rural_polarity"],
+            "multiplier_scalar": pytest.approx(
+                20 * 50 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            ),
+        },
+        {
+            "layer_name": "underground_cost",
+            "multiplier_layer": ["urban_row", "urban_polarity"],
+            "multiplier_scalar": pytest.approx(
+                20 * 60 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL
+            ),
+        },
+    ]
+
+
 @pytest.mark.parametrize(
     ("spatial_multiplier", "message"),
     [
@@ -771,6 +990,26 @@ def test_get_polarity_multiplier_rejects_invalid_spatial_values(
 
     with pytest.raises(revrtConfigurationError, match=message):
         _get_polarity_multiplier(config, "500", "dc", "underground")
+
+
+@pytest.mark.parametrize(
+    ("spatial_multiplier", "message"),
+    [
+        ({}, "must not be empty"),
+        ({"rural_mask": np.nan}, "must be a finite number"),
+        ({"": 2}, "must use non-empty layer names"),
+        ({"rural_mask": True}, "must be a finite number"),
+    ],
+)
+def test_get_row_multiplier_rejects_invalid_spatial_values(
+    spatial_multiplier, message
+):
+    """Spatial ROW maps should require valid spatial multiplier values"""
+
+    config = {"row_width": {"500": {"underground": spatial_multiplier}}}
+
+    with pytest.raises(revrtConfigurationError, match=message):
+        _get_row_multiplier(config, "500", "underground")
 
 
 def test_update_multipliers_allows_mixed_shared_and_option_values():
