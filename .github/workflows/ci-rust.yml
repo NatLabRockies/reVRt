@@ -70,7 +70,7 @@ jobs:
             profile: minimal
 
       - name: Run cargo check on MSRV
-        run: cargo check --workspace --locked --all-features
+        run: cargo check --workspace --locked --all-features --all-targets
 
   lints:
     # Only run tests if code looks OK
