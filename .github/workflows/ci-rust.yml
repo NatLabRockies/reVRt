@@ -40,6 +40,38 @@ jobs:
         run: |
           pixi run -e dev cargo check --workspace --locked
 
+  msrv:
+    # Verify the declared minimum supported Rust version still builds
+    needs: check
+    name: Rust MSRV
+    runs-on: ubuntu-latest
+    env:
+      # Keep in sync with workspace.package.rust-version in Cargo.toml.
+      # The guard step below fails if these two ever drift apart.
+      MSRV: 1.91.0
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Confirm MSRV matches Cargo.toml
+        run: |
+          declared="$(grep -m1 '^rust-version' Cargo.toml | sed -E 's/.*"(.*)".*/\1/')"
+          if [ "$declared" != "$MSRV" ]; then
+            echo "MSRV mismatch: Cargo.toml declares '$declared' but this workflow pins '$MSRV'." >&2
+            echo "Update the MSRV env var in .github/workflows/ci-rust.yml to match." >&2
+            exit 1
+          fi
+          echo "MSRV confirmed: $MSRV"
+
+      - uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1.0.6
+        with:
+            toolchain: ${{ env.MSRV }}
+            override: true
+            profile: minimal
+
+      - name: Run cargo check on MSRV
+        run: cargo check --workspace --locked --all-features
+
   lints:
     # Only run tests if code looks OK
     needs: check
