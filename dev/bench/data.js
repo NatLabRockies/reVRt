@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786142557181,
+  "lastUpdate": 1786721875837,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13607,6 +13607,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 285912453,
             "range": "± 2693662",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ecb2395d7ab2238cbfa343a588c79111b633cacf",
+          "message": "ci: Bump the github-actions group with 5 updates (#322)\n\nBumps the github-actions group with 5 updates:\n\n| Package | From | To |\n| --- | --- | --- |\n| [prefix-dev/setup-pixi](https://github.com/prefix-dev/setup-pixi) | `0.10.0` | `0.10.1` |\n| [Swatinem/rust-cache](https://github.com/swatinem/rust-cache) | `2.9.1` | `2.9.2` |\n| [github/codeql-action/init](https://github.com/github/codeql-action) | `4.37.4` | `4.37.6` |\n| [github/codeql-action/analyze](https://github.com/github/codeql-action) | `4.37.4` | `4.37.6` |\n| [actions/attest-build-provenance](https://github.com/actions/attest-build-provenance) | `4.1.1` | `4.2.2` |\n\n\nUpdates `prefix-dev/setup-pixi` from 0.10.0 to 0.10.1\n- [Release notes](https://github.com/prefix-dev/setup-pixi/releases)\n- [Commits](https://github.com/prefix-dev/setup-pixi/compare/a09b6247153796b190642a2b53fac4241043cf6f...f00437f565399d418b0acc85936d12c1fb668347)\n\nUpdates `Swatinem/rust-cache` from 2.9.1 to 2.9.2\n- [Release notes](https://github.com/swatinem/rust-cache/releases)\n- [Changelog](https://github.com/Swatinem/rust-cache/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/swatinem/rust-cache/compare/c19371144df3bb44fab255c43d04cbc2ab54d1c4...6323deb102c322ba6fcbdcafc7e3dddab59af2b6)\n\nUpdates `github/codeql-action/init` from 4.37.4 to 4.37.6\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/f205ea1c3313d32999d8d6a48b4f6530d4437b38...5595ccaf912efad79be6eef63a5619ff05969be3)\n\nUpdates `github/codeql-action/analyze` from 4.37.4 to 4.37.6\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/f205ea1c3313d32999d8d6a48b4f6530d4437b38...5595ccaf912efad79be6eef63a5619ff05969be3)\n\nUpdates `actions/attest-build-provenance` from 4.1.1 to 4.2.2\n- [Release notes](https://github.com/actions/attest-build-provenance/releases)\n- [Changelog](https://github.com/actions/attest-build-provenance/blob/main/RELEASE.md)\n- [Commits](https://github.com/actions/attest-build-provenance/compare/0f67c3f4856b2e3261c31976d6725780e5e4c373...4d101475d8b20a2381f78447822ac1eab6504dd8)\n\n---\nupdated-dependencies:\n- dependency-name: prefix-dev/setup-pixi\n  dependency-version: 0.10.1\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: Swatinem/rust-cache\n  dependency-version: 2.9.2\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/init\n  dependency-version: 4.37.6\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/analyze\n  dependency-version: 4.37.6\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: actions/attest-build-provenance\n  dependency-version: 4.2.2\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-08-14T09:26:52-06:00",
+          "tree_id": "0fa3c5d25b501d463a53749d9c1048023cbbf74f",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/ecb2395d7ab2238cbfa343a588c79111b633cacf"
+        },
+        "date": 1786721874484,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 49938515,
+            "range": "± 972552",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 70517538,
+            "range": "± 1178448",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 64217249,
+            "range": "± 1185372",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 91312536,
+            "range": "± 1465039",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 445156290,
+            "range": "± 16228135",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 145789065,
+            "range": "± 730040",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147984071,
+            "range": "± 672109",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 156313101,
+            "range": "± 577563",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 184087744,
+            "range": "± 1797976",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 287744049,
+            "range": "± 3556360",
             "unit": "ns/iter"
           }
         ]
