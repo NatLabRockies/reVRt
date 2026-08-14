@@ -12,7 +12,7 @@ use pprof::ProfilerGuardBuilder;
 use revrt::{ArrayIndex, profiling, resolve_parallel_with_routing_options};
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
 use zarrs::array::data_type;
-use zarrs::array::{ArrayBuilder, DataType, FillValue};
+use zarrs::array::{ArrayBuilder, FillValue};
 use zarrs::filesystem::FilesystemStore;
 use zarrs::group::GroupBuilder;
 use zarrs::storage::ReadableWritableListableStorage;
