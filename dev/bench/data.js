@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786721875837,
+  "lastUpdate": 1786801889598,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13691,6 +13691,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 287744049,
             "range": "± 3556360",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4b00a0aa5f18fa04336f095dc2c9b4901a05f0b4",
+          "message": "Verifying Rust MSRV (#323)\n\n* cfg: Verifying Rust MSRV\n\n* doc: Adding description for revrt-cli\n\n* cfg: Explicit doctest\n\n* cfg: Ordinary dependencies update\n\n* cfg: Aligning pyo3 with pyo3-build-config versions\n\n* cfg: Adding --all-targets to cargo check\n\n* clean: With cargo check --fix\n\n* doc: Better description for revrt-cli\n\n* cfg: Bump zarrs_object_store to 0.6\n\n* cfg: Bump zarrs_object_store to 0.7.0\n\n* refact: Replacing deprecated store_array_subset_ndarray\n\n* cfg: Bump patch version\n\nTo reflect the dependency on zarrs_object_store and object_store.\n\n* cfg: Updating cargo.lock",
+          "timestamp": "2026-08-15T07:39:54-06:00",
+          "tree_id": "8c3e2b5d8250fe408f32005c03ccb72789432f1b",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/4b00a0aa5f18fa04336f095dc2c9b4901a05f0b4"
+        },
+        "date": 1786801887255,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 39585201,
+            "range": "± 6809510",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 32177774,
+            "range": "± 1567586",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 54612330,
+            "range": "± 1360681",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 82290592,
+            "range": "± 2617427",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 318529266,
+            "range": "± 136408934",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 82275544,
+            "range": "± 3552073",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 84425311,
+            "range": "± 3297219",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 92101403,
+            "range": "± 1181768",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 113541282,
+            "range": "± 2227852",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 191478027,
+            "range": "± 4955269",
             "unit": "ns/iter"
           }
         ]
