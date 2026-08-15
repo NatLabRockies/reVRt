@@ -1,5 +1,6 @@
 [package]
 name = "revrt-cli"
+description = "A command-line interface for (reVRt) optimizing electrical transmission infrastructure."
 version = "0.0.6"
 authors.workspace = true
 edition.workspace = true
