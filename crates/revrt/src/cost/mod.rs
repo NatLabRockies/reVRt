@@ -1,3 +1,4 @@
+mod barrier;
 pub(crate) mod components;
 mod inputs;
 
