@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1786801889598,
+  "lastUpdate": 1787006272113,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13775,6 +13775,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 191478027,
             "range": "± 4955269",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "93b747d4a1296808649b55ec20d3998a37cb0c3d",
+          "message": "ci: Bump the github-actions group with 2 updates (#325)\n\nBumps the github-actions group with 2 updates: [github/codeql-action/init](https://github.com/github/codeql-action) and [github/codeql-action/analyze](https://github.com/github/codeql-action).\n\n\nUpdates `github/codeql-action/init` from 4.37.6 to 4.37.7\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/5595ccaf912efad79be6eef63a5619ff05969be3...ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd)\n\nUpdates `github/codeql-action/analyze` from 4.37.6 to 4.37.7\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/5595ccaf912efad79be6eef63a5619ff05969be3...ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd)\n\n---\nupdated-dependencies:\n- dependency-name: github/codeql-action/init\n  dependency-version: 4.37.7\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/analyze\n  dependency-version: 4.37.7\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-08-17T16:23:43-06:00",
+          "tree_id": "9e8e443a25d1f007816e3efa0e710c51046c0513",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/93b747d4a1296808649b55ec20d3998a37cb0c3d"
+        },
+        "date": 1787006270214,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 50376071,
+            "range": "± 486406",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 46671756,
+            "range": "± 695185",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 64944489,
+            "range": "± 775341",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 92351369,
+            "range": "± 1874319",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 448344070,
+            "range": "± 10630443",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 144444520,
+            "range": "± 1118942",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 146321066,
+            "range": "± 1154435",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 155726302,
+            "range": "± 1175352",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 183474082,
+            "range": "± 1465161",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 286597360,
+            "range": "± 2210897",
             "unit": "ns/iter"
           }
         ]
