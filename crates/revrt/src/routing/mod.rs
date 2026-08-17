@@ -2,7 +2,7 @@
 
 mod algorithm;
 mod astar;
-mod features;
+pub(crate) mod features;
 mod long_range;
 mod scenario;
 
