@@ -452,31 +452,8 @@ class LayerCreator(BaseLayerCreator):
         fi = da.zeros(self.shape, dtype=self._dtype, chunks=self.chunks)
 
         for fname, config in fi_layers.items():
-            if Path(fname).suffix.lower() not in TIFF_EXTENSIONS:
-                msg = (
-                    f"Forced inclusion file {fname!r} does not end with .tif."
-                    " GeoTIFFs are the only format allowed for forced "
-                    "inclusions."
-                )
-                raise revrtValueError(msg)
-
-            global_value_given = config.global_value is not None
-            map_given = config.map is not None
-            range_given = config.bins is not None
-            rasterize_given = config.rasterize is not None
-            bad_input_given = (
-                global_value_given
-                or map_given
-                or range_given
-                or rasterize_given
-            )
-            if bad_input_given:
-                msg = (
-                    "`global_value`, `map`, `bins`, and `rasterize` are "
-                    "not allowed if `forced_inclusion` is True, but one "
-                    f"was found in config: {fname!r}: {config}"
-                )
-                raise revrtValueError(msg)
+            _validate_fi_file_extension(fname)
+            _validate_fi_config_input(config, fname)
 
             # Past guard clauses, process FI
             if config.extent != ALL:
@@ -550,6 +527,35 @@ def _check_tiff_layer_config(config, fname):
         raise revrtValueError(msg)
 
 
+def _validate_fi_file_extension(fname):
+    """Validate that the forced inclusion file has correct extension"""
+    if Path(fname).suffix.lower() not in TIFF_EXTENSIONS:
+        msg = (
+            f"Forced inclusion file {fname!r} does not end with .tif."
+            " GeoTIFFs are the only format allowed for forced "
+            "inclusions."
+        )
+        raise revrtValueError(msg)
+
+
+def _validate_fi_config_input(config, fname):
+    """Validate that the forced inclusion config is correct"""
+    global_value_given = config.global_value is not None
+    map_given = config.map is not None
+    range_given = config.bins is not None
+    rasterize_given = config.rasterize is not None
+    bad_input_given = (
+        global_value_given or map_given or range_given or rasterize_given
+    )
+    if bad_input_given:
+        msg = (
+            "`global_value`, `map`, `bins`, and `rasterize` are "
+            "not allowed if `forced_inclusion` is True, but one "
+            f"was found in config: {fname!r}: {config}"
+        )
+        raise revrtValueError(msg)
+
+
 def _validate_bin_range(bins):
     """Check for correctness in bin range"""
     for input_bin in bins:
@@ -570,24 +576,36 @@ def _validate_bin_continuity(bins):
     sorted_bins = sorted(bins, key=lambda x: x.min)
     last_max = float("-inf")
     for i, input_bin in enumerate(sorted_bins):
-        if input_bin.min < last_max:
-            last_bin = sorted_bins[i - 1] if i > 0 else "-infinity"
-            msg = (
-                "Overlapping bins detected between "
-                f"{last_bin!r} and {input_bin!r}"
-            )
-            warn(msg, revrtWarning)
+        last_bin = sorted_bins[i - 1] if i > 0 else "-infinity"
 
-        if input_bin.min > last_max:
-            last_bin = sorted_bins[i - 1] if i > 0 else "-infinity"
-            msg = f"Gap detected between {last_bin!r} and {input_bin!r}"
-            warn(msg, revrtWarning)
-
-        if i + 1 == len(sorted_bins) and input_bin.max < float("inf"):
-            msg = f"Gap detected between {input_bin!r} and 'infinity'"
-            warn(msg, revrtWarning)
+        _warn_about_overlapping_bins(input_bin, last_bin, last_max)
+        _warn_about_gap_in_bins(input_bin, last_bin, last_max)
+        _warn_about_unbounded_bins(i, sorted_bins, input_bin)
 
         last_max = input_bin.max
+
+
+def _warn_about_overlapping_bins(input_bin, last_bin, last_max):
+    """Warn about overlapping bins"""
+    if input_bin.min < last_max:
+        msg = (
+            f"Overlapping bins detected between {last_bin!r} and {input_bin!r}"
+        )
+        warn(msg, revrtWarning)
+
+
+def _warn_about_gap_in_bins(input_bin, last_bin, last_max):
+    """Warn about gaps in bin continuity"""
+    if input_bin.min > last_max:
+        msg = f"Gap detected between {last_bin!r} and {input_bin!r}"
+        warn(msg, revrtWarning)
+
+
+def _warn_about_unbounded_bins(i, sorted_bins, input_bin):
+    """Warn if the last bin is not unbounded"""
+    if i + 1 == len(sorted_bins) and input_bin.max < float("inf"):
+        msg = f"Gap detected between {input_bin!r} and 'infinity'"
+        warn(msg, revrtWarning)
 
 
 def _vector_raster_dtype(burn_value, default_dtype):

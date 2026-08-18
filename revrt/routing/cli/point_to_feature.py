@@ -516,34 +516,44 @@ def _handle_non_pipeline_input(config):
     )
 
     if rt_is_sequence or f_is_sequence:
-        if not (rt_is_sequence and f_is_sequence):
-            msg = (
-                "`route_table_fpath` and `features_fpath` must both "
-                "be sequences or both be strings."
-            )
-            raise revrtConfigurationError(msg)
-
-        if len(rt_fp) != len(f_fp):
-            msg = (
-                "`route_table_fpath` and `features_fpath` sequences "
-                "must be the same length."
-            )
-            raise revrtConfigurationError(msg)
-
+        _validate_rt_fp_sequence_input(
+            rt_fp, f_fp, rt_is_sequence, f_is_sequence
+        )
         config["route_table_fpath"] = [strip_path(p) for p in rt_fp]
         config["features_fpath"] = [strip_path(p) for p in f_fp]
         return config
 
+    _validate_rt_fp_str_input(rt_fp, f_fp)
+    config["route_table_fpath"] = [strip_path(rt_fp)]
+    config["features_fpath"] = [strip_path(f_fp)]
+    return config
+
+
+def _validate_rt_fp_sequence_input(rt_fp, f_fp, rt_is_sequence, f_is_sequence):
+    """Validate that input sequences are correctly formatted"""
+    if not (rt_is_sequence and f_is_sequence):
+        msg = (
+            "`route_table_fpath` and `features_fpath` must both "
+            "be sequences or both be strings."
+        )
+        raise revrtConfigurationError(msg)
+
+    if len(rt_fp) != len(f_fp):
+        msg = (
+            "`route_table_fpath` and `features_fpath` sequences "
+            "must be the same length."
+        )
+        raise revrtConfigurationError(msg)
+
+
+def _validate_rt_fp_str_input(rt_fp, f_fp):
+    """Validate that both inputs are str"""
     if not isinstance(rt_fp, str) or not isinstance(f_fp, str):
         msg = (
             "`route_table_fpath` and `features_fpath` must both be "
             "sequences or both be strings."
         )
         raise revrtConfigurationError(msg)
-
-    config["route_table_fpath"] = [strip_path(rt_fp)]
-    config["features_fpath"] = [strip_path(f_fp)]
-    return config
 
 
 route_features_command = CLICommandFromFunction(

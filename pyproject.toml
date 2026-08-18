@@ -53,6 +53,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "complexipy>=7.0.1,<8",
   "contextily>=1.7.0,<2",
   "datashader>=0.19.0,<0.20",
   "geoviews>=1.15.1,<2",
@@ -294,6 +295,9 @@ rust-src = ">=1.96.1,<1.97"
 maturin = ">=1.13.1,<2"
 rattler-build = ">=0.69.1,<0.70"
 
+[tool.pixi.feature.dev.pypi-dependencies]
+complexipy = ">=7.0.1,<8"
+
 [tool.pixi.feature.test.dependencies]
 hypothesis = ">=6.152.1,<7"
 pytest = ">=9.0.0,<9.1"
@@ -382,3 +386,12 @@ omit = [
 [tool.pytest.ini_options]
 addopts = "--disable-warnings"
 testpaths = ["tests/python/unit", "tests/python/integration"]
+
+
+[tool.complexipy]
+paths = ["revrt"]
+max-complexity-allowed = 10
+exclude = ["tests/**"]
+failed = true
+sort = "desc"
+check-script = true

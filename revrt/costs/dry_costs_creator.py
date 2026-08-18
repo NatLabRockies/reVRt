@@ -319,6 +319,40 @@ class DryCostsCreator(BaseLayerCreator):
         default_multipliers=None,
     ):
         """Create costs multiplier raster"""
+        multipliers, regions_mask = self._process_iso_multipliers(
+            iso_multipliers,
+            iso_lookup,
+            iso_layer,
+            land_use_layer,
+            slope_layer,
+            land_use_classes,
+        )
+        if default_multipliers is not None:
+            multipliers = self._process_default_region(
+                multipliers,
+                regions_mask,
+                default_multipliers,
+                land_use_layer,
+                slope_layer,
+                land_use_classes,
+            )
+
+        # Set water multiplier last so we don't get super high
+        # multipliers at water body boundaries next to steep slopes
+        return da.where(
+            land_use_layer == WATER_NLCD_CODE, WATER_MULTIPLIER, multipliers
+        )
+
+    def _process_iso_multipliers(
+        self,
+        iso_multipliers,
+        iso_lookup,
+        iso_layer,
+        land_use_layer,
+        slope_layer,
+        land_use_classes,
+    ):
+        """Create ISO multipliers"""
         multipliers = da.ones(
             self.shape, dtype=self._dtype, chunks=self.chunks
         )
@@ -357,43 +391,42 @@ class DryCostsCreator(BaseLayerCreator):
                 multipliers = da.where(
                     mask, multipliers * slope_multipliers, multipliers
                 )
+        return multipliers, regions_mask
 
-        # Calculate multipliers for regions not defined in `config`
+    def _process_default_region(
+        self,
+        multipliers,
+        regions_mask,
+        default_multipliers,
+        land_use_layer,
+        slope_layer,
+        land_use_classes,
+    ):
+        """Calculate multipliers for regions not defined in `config`"""
         logger.debug("Processing default region")
-        if default_multipliers is not None:
-            default_mask = ~regions_mask
+        default_mask = ~regions_mask
 
-            if "land_use" in default_multipliers:
-                region_land_use = da.where(
-                    default_mask, land_use_layer, da.nan
-                )
-                lum_dict = default_multipliers["land_use"]
-                lum = compute_land_use_multipliers(
-                    region_land_use,
-                    lum_dict,
-                    land_use_classes,
-                    chunks=self.chunks,
-                )
-                multipliers = da.where(
-                    default_mask, multipliers * lum, multipliers
-                )
+        if "land_use" in default_multipliers:
+            region_land_use = da.where(default_mask, land_use_layer, da.nan)
+            lum_dict = default_multipliers["land_use"]
+            lum = compute_land_use_multipliers(
+                region_land_use, lum_dict, land_use_classes, chunks=self.chunks
+            )
+            multipliers = da.where(
+                default_mask, multipliers * lum, multipliers
+            )
 
-            if "slope" in default_multipliers:
-                region_slope = da.where(default_mask, slope_layer, da.nan)
-                slope_multipliers = compute_slope_multipliers(
-                    region_slope,
-                    chunks=self.chunks,
-                    config=default_multipliers["slope"],
-                )
-                multipliers = da.where(
-                    default_mask, multipliers * slope_multipliers, multipliers
-                )
-
-        # Set water multiplier last so we don't get super high
-        # multipliers at water body boundaries next to steep slopes
-        return da.where(
-            land_use_layer == WATER_NLCD_CODE, WATER_MULTIPLIER, multipliers
-        )
+        if "slope" in default_multipliers:
+            region_slope = da.where(default_mask, slope_layer, da.nan)
+            slope_multipliers = compute_slope_multipliers(
+                region_slope,
+                chunks=self.chunks,
+                config=default_multipliers["slope"],
+            )
+            multipliers = da.where(
+                default_mask, multipliers * slope_multipliers, multipliers
+            )
+        return multipliers
 
     def _compute_base_line_costs(
         self, capacity, base_line_costs, iso_layer, iso_lookup
