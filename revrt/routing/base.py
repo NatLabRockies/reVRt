@@ -235,6 +235,22 @@ class RoutingLayerManager:
 
     def _build_cost_layer_from_option(self, option, config):
         """Build a single routing option's cost layer"""
+        cost_layers = self._build_cost_layers_single_option(config, option)
+        scaled_layers = self._scale_single_option_cost_layers(
+            config, *cost_layers
+        )
+        option_cost, option_li_cost, option_untracked_cost = scaled_layers
+
+        self.costs[option] = option_cost
+        self.li_costs[option] = option_li_cost
+        self._build_final_routing_layer_from_option(
+            option,
+            config,
+            option_cost + option_li_cost + option_untracked_cost,
+        )
+
+    def _build_cost_layers_single_option(self, config, option):
+        """Build cost layers for a single routing option"""
         option_cost = self._empty_cost_layer_data_array()
         option_li_cost = self._empty_cost_layer_data_array()
         option_untracked_cost = self._empty_cost_layer_data_array()
@@ -243,14 +259,10 @@ class RoutingLayerManager:
             cost = self._extract_and_scale_layer(layer_info)
             cost.values = da.where(cost > 0, cost, 0)
             is_li = layer_info.get("is_invariant", False)
-            if layer_info.get("include_in_final_cost", True):
-                if is_li:
-                    option_li_cost += cost
-                else:
-                    option_cost += cost
-            else:
-                option_untracked_cost += cost
-
+            base_cost_layer = _select_base_cost_layer(
+                layer_info, option_li_cost, option_cost, option_untracked_cost
+            )
+            base_cost_layer += cost
             if layer_info.get("include_in_report", True):
                 report_key = (layer_info["layer_name"], is_li)
                 reported_costs[report_key] = (
@@ -267,6 +279,12 @@ class RoutingLayerManager:
                 )
             )
 
+        return option_cost, option_li_cost, option_untracked_cost
+
+    def _scale_single_option_cost_layers(
+        self, config, option_cost, option_li_cost, option_untracked_cost
+    ):
+        """Scale the cost layers for a single routing option"""
         mult = config.get("cost_multiplier_scalar", 1) or 1
         option_cost *= mult
         option_li_cost *= mult
@@ -281,13 +299,7 @@ class RoutingLayerManager:
             option_li_cost *= multiplier
             option_untracked_cost *= multiplier
 
-        self.costs[option] = option_cost
-        self.li_costs[option] = option_li_cost
-        self._build_final_routing_layer_from_option(
-            option,
-            config,
-            option_cost + option_li_cost + option_untracked_cost,
-        )
+        return option_cost, option_li_cost, option_untracked_cost
 
     def _build_final_routing_layer_from_option(
         self, option, config, option_layer
@@ -828,3 +840,14 @@ def _driver_zones_for_rust(zones):
             out_zone["mask_operator"] = mask_operator
             out_zone["mask_threshold"] = mask_threshold
         yield out_zone
+
+
+def _select_base_cost_layer(
+    layer_info, option_li_cost, option_cost, option_untracked_cost
+):
+    """Select the appropriate base cost layer based on config"""
+    if layer_info.get("include_in_final_cost", True):
+        if layer_info.get("is_invariant", False):
+            return option_li_cost
+        return option_cost
+    return option_untracked_cost
