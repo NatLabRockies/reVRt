@@ -320,16 +320,7 @@ def ss_from_conn(
         raise revrtValueError(msg)
 
     logger.info("Processing connection info in batches of %d", batch_size)
-    if connections_fpath.endswith(".csv"):
-        chunk_iter = pd.read_csv(connections_fpath, chunksize=batch_size)
-    elif connections_fpath.endswith(".gpkg"):
-        chunk_iter = chunked_read_gpkg(connections_fpath, batch_size)
-    else:
-        msg = (
-            "Unknown file ending for features file (must be "
-            f"'.csv' or '.gpkg'): {connections_fpath}"
-        )
-        raise revrtValueError(msg)
+    chunk_iter = _load_chunked_data(connections_fpath, batch_size)
 
     logger.info("Filtering out NaN's in connection info...")
     cols = ["poi_gid", "poi_lat", "poi_lon"]
@@ -361,6 +352,21 @@ def ss_from_conn(
         writer.save(substations)
 
     logger.info("Substation extraction complete; output at %s", out_fpath)
+
+
+def _load_chunked_data(connections_fpath, batch_size):
+    """Load data in chunks from CSV or GeoPackage files"""
+    if connections_fpath.endswith(".csv"):
+        return pd.read_csv(connections_fpath, chunksize=batch_size)
+
+    if connections_fpath.endswith(".gpkg"):
+        return chunked_read_gpkg(connections_fpath, batch_size)
+
+    msg = (
+        "Unknown file ending for features file (must be "
+        f"'.csv' or '.gpkg'): {connections_fpath}"
+    )
+    raise revrtValueError(msg)
 
 
 def _deduplicate_records_across_batches(subset, cols, seen_keys):
