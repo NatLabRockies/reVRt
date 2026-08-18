@@ -406,24 +406,23 @@ def _validate_route_points(points, routing_options):
 def _validate_route_value_columns(points, routing_options):
     """Ensure explicit per-option route-value columns are present"""
     for option in routing_options:
-        polarity_col = f"{_POLARITY}_{option}"
-        voltage_col = f"{_VOLTAGE}_{option}"
+        points = _handle_maybe_missing_column(points, option, _POLARITY)
+        points = _handle_maybe_missing_column(points, option, _VOLTAGE)
 
-        if polarity_col not in points.columns:
-            if _POLARITY in points.columns:
-                points[polarity_col] = points[_POLARITY].fillna("unknown")
-            else:
-                points[polarity_col] = "unknown"
-        else:
-            points[polarity_col] = points[polarity_col].fillna("unknown")
+    return points
 
-        if voltage_col not in points.columns:
-            if _VOLTAGE in points.columns:
-                points[voltage_col] = points[_VOLTAGE].fillna("unknown")
-            else:
-                points[voltage_col] = "unknown"
+
+def _handle_maybe_missing_column(points, option, base_col):
+    """Handle potentially missing per-option column"""
+    polarity_col = f"{base_col}_{option}"
+
+    if polarity_col not in points.columns:
+        if base_col in points.columns:
+            points[polarity_col] = points[base_col].fillna("unknown")
         else:
-            points[voltage_col] = points[voltage_col].fillna("unknown")
+            points[polarity_col] = "unknown"
+    else:
+        points[polarity_col] = points[polarity_col].fillna("unknown")
 
     return points
 
