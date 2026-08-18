@@ -452,31 +452,8 @@ class LayerCreator(BaseLayerCreator):
         fi = da.zeros(self.shape, dtype=self._dtype, chunks=self.chunks)
 
         for fname, config in fi_layers.items():
-            if Path(fname).suffix.lower() not in TIFF_EXTENSIONS:
-                msg = (
-                    f"Forced inclusion file {fname!r} does not end with .tif."
-                    " GeoTIFFs are the only format allowed for forced "
-                    "inclusions."
-                )
-                raise revrtValueError(msg)
-
-            global_value_given = config.global_value is not None
-            map_given = config.map is not None
-            range_given = config.bins is not None
-            rasterize_given = config.rasterize is not None
-            bad_input_given = (
-                global_value_given
-                or map_given
-                or range_given
-                or rasterize_given
-            )
-            if bad_input_given:
-                msg = (
-                    "`global_value`, `map`, `bins`, and `rasterize` are "
-                    "not allowed if `forced_inclusion` is True, but one "
-                    f"was found in config: {fname!r}: {config}"
-                )
-                raise revrtValueError(msg)
+            _validate_fi_file_extension(fname)
+            _validate_fi_config_input(config, fname)
 
             # Past guard clauses, process FI
             if config.extent != ALL:
@@ -546,6 +523,35 @@ def _check_tiff_layer_config(config, fname):
             "Either 'global_value', 'map', 'bins', and "
             "'pass_through' must be specified for a raster, "
             f"but none were found in {fname!r} config: {config}"
+        )
+        raise revrtValueError(msg)
+
+
+def _validate_fi_file_extension(fname):
+    """Validate that the forced inclusion file has correct extension"""
+    if Path(fname).suffix.lower() not in TIFF_EXTENSIONS:
+        msg = (
+            f"Forced inclusion file {fname!r} does not end with .tif."
+            " GeoTIFFs are the only format allowed for forced "
+            "inclusions."
+        )
+        raise revrtValueError(msg)
+
+
+def _validate_fi_config_input(config, fname):
+    """Validate that the forced inclusion config is correct"""
+    global_value_given = config.global_value is not None
+    map_given = config.map is not None
+    range_given = config.bins is not None
+    rasterize_given = config.rasterize is not None
+    bad_input_given = (
+        global_value_given or map_given or range_given or rasterize_given
+    )
+    if bad_input_given:
+        msg = (
+            "`global_value`, `map`, `bins`, and `rasterize` are "
+            "not allowed if `forced_inclusion` is True, but one "
+            f"was found in config: {fname!r}: {config}"
         )
         raise revrtValueError(msg)
 
