@@ -194,6 +194,11 @@ class Stat(StrEnum):
 
         return obj
 
+    @classmethod
+    def allowed(cls):
+        """Return a set of allowed stat names"""
+        return {*cls}
+
 
 class FractionalStat(StrEnum):
     """Enum of fractional pixel statistics"""
@@ -206,6 +211,11 @@ class FractionalStat(StrEnum):
 
     VALUE_MULTIPLIED_BY_FRACTIONAL_AREA = auto()
     """Compute fractional pixel * area for each pixel value in zone"""
+
+    @classmethod
+    def allowed(cls):
+        """Return a set of allowed stat names"""
+        return {*cls}
 
 
 class ComputableStats:
@@ -456,29 +466,55 @@ class ComputableStats:
 
             stats = stats.split()
 
-        allowed_base_stats = {*Stat}
-        allowed_fractional_stats = {*FractionalStat}
-        base_stats = []
-        percentiles = {}
-        fractional_stats = []
+        return cls(*_StatBuckets().apply(stats))
+
+
+class _StatBuckets:
+    """Helper stat parsing class"""
+
+    def __init__(self):
+        self.base_stats = []
+        self.percentiles = {}
+        self.fractional_stats = []
+        self._valid_stats = {str(s) for s in Stat}
+        self._valid_stats |= {str(s) for s in FractionalStat}
+
+    def apply(self, stats):
+        """Apply the stat bucketing to the input stats list
+
+        Parameters
+        ----------
+        stats : list of str
+            The list of statistics to be parsed and bucketed.
+
+        Returns
+        -------
+        tuple
+            A tuple containing three elements:
+            - base_stats: list of Stat
+            - percentiles: dict
+            - fractional_stats: list of FractionalStat
+        """
         for stat in stats:
-            stat_name = stat.casefold()
-            if stat_name.startswith(_PCT_PREFIX):
-                percentiles[stat_name] = _get_percentile(stat_name)
-            elif stat_name in allowed_fractional_stats:
-                fractional_stats.append(stat_name)
-            elif stat_name in allowed_base_stats:
-                base_stats.append(Stat(stat_name))
-            else:
-                valid_stats = {str(s) for s in Stat}
-                valid_stats |= {str(s) for s in FractionalStat}
+            self._bucket_stat(stat)
+
+        return self.base_stats, self.percentiles, self.fractional_stats
+
+    def _bucket_stat(self, stat):
+        """Place given stat into appropriate tracker"""
+        match stat_name := stat.casefold():
+            case _ if stat_name.startswith(_PCT_PREFIX):
+                self.percentiles[stat_name] = _get_percentile(stat_name)
+            case _ if stat_name in FractionalStat.allowed():
+                self.fractional_stats.append(stat_name)
+            case _ if stat_name in Stat.allowed():
+                self.base_stats.append(Stat(stat_name))
+            case _:
                 msg = (
                     f"Stat {stat!r} not valid; must be one of:\n"
-                    f"{valid_stats!r}"
+                    f"{self._valid_stats!r}"
                 )
                 raise revrtValueError(msg)
-
-        return cls(base_stats, percentiles, fractional_stats)
 
 
 def _get_percentile(stat):
