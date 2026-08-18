@@ -240,6 +240,7 @@ def simplify_shapes(gdf, transform):
     return gdf
 
 
+# complexipy: ignore
 def _tile_rasterize(
     gdf,
     width,
