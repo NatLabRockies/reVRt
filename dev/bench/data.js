@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787006272113,
+  "lastUpdate": 1787089856507,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13859,6 +13859,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 286597360,
             "range": "± 2210897",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d5f5075cbdeb65a478b4c7ef11ffeeb3341610f2",
+          "message": "Add complexipy (#326)\n\n* Add dep\n\n* Update lockfile\n\n* Update workflow\n\n* Fix incorrect directory\n\n* Refactor\n\n* Split out warnings\n\n* Refactor\n\n* Refactor\n\n* Refactor\n\n* Refactor\n\n* Add directive\n\n* Refactor\n\n* Refactor\n\n* Minor refactor\n\n* Add ignore directive",
+          "timestamp": "2026-08-18T15:37:59-06:00",
+          "tree_id": "afcd959265ad0219f95ba44101f638071e88ca9d",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/d5f5075cbdeb65a478b4c7ef11ffeeb3341610f2"
+        },
+        "date": 1787089854675,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 46920308,
+            "range": "± 2717621",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 59114473,
+            "range": "± 1721042",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 62705863,
+            "range": "± 1245083",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 89472402,
+            "range": "± 2022071",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 442637119,
+            "range": "± 16380423",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 155012071,
+            "range": "± 2671922",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 156718699,
+            "range": "± 2627850",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 164449739,
+            "range": "± 783309",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 190191678,
+            "range": "± 2396058",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 289775568,
+            "range": "± 4262359",
             "unit": "ns/iter"
           }
         ]
