@@ -31,7 +31,7 @@ jobs:
         with:
           version: "latest"
           args: "format --check"
-          src: "./liramr"
+          src: "./revrt"
       - name: Check Python Code Complexity (Complexipy)
         uses: rohaquinlop/complexipy-action@e2b05bcc06d899a24e2b6bb8b1354ac42800a95e # v7.0.1
         with:
