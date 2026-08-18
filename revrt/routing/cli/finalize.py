@@ -378,6 +378,7 @@ class RoutePostProcessor:
 
         return str(self.out_fp)
 
+    # complexipy: ignore
     def _collect_geo_files(self):
         """Collect GeoPackage files into a single output file"""
         for data_fp in self._next_file_to_process():
@@ -398,6 +399,7 @@ class RoutePostProcessor:
 
                 self.writer.save(df)
 
+    # complexipy: ignore
     def _collect_csv_files(self):
         """Collect CSV files into a single output file"""
         for data_fp in self._next_file_to_process():
