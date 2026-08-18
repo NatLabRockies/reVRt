@@ -570,24 +570,36 @@ def _validate_bin_continuity(bins):
     sorted_bins = sorted(bins, key=lambda x: x.min)
     last_max = float("-inf")
     for i, input_bin in enumerate(sorted_bins):
-        if input_bin.min < last_max:
-            last_bin = sorted_bins[i - 1] if i > 0 else "-infinity"
-            msg = (
-                "Overlapping bins detected between "
-                f"{last_bin!r} and {input_bin!r}"
-            )
-            warn(msg, revrtWarning)
+        last_bin = sorted_bins[i - 1] if i > 0 else "-infinity"
 
-        if input_bin.min > last_max:
-            last_bin = sorted_bins[i - 1] if i > 0 else "-infinity"
-            msg = f"Gap detected between {last_bin!r} and {input_bin!r}"
-            warn(msg, revrtWarning)
-
-        if i + 1 == len(sorted_bins) and input_bin.max < float("inf"):
-            msg = f"Gap detected between {input_bin!r} and 'infinity'"
-            warn(msg, revrtWarning)
+        _warn_about_overlapping_bins(input_bin, last_bin, last_max)
+        _warn_about_gap_in_bins(input_bin, last_bin, last_max)
+        _warn_about_unbounded_bins(i, sorted_bins, input_bin)
 
         last_max = input_bin.max
+
+
+def _warn_about_overlapping_bins(input_bin, last_bin, last_max):
+    """Warn about overlapping bins"""
+    if input_bin.min < last_max:
+        msg = (
+            f"Overlapping bins detected between {last_bin!r} and {input_bin!r}"
+        )
+        warn(msg, revrtWarning)
+
+
+def _warn_about_gap_in_bins(input_bin, last_bin, last_max):
+    """Warn about gaps in bin continuity"""
+    if input_bin.min > last_max:
+        msg = f"Gap detected between {last_bin!r} and {input_bin!r}"
+        warn(msg, revrtWarning)
+
+
+def _warn_about_unbounded_bins(i, sorted_bins, input_bin):
+    """Warn if the last bin is not unbounded"""
+    if i + 1 == len(sorted_bins) and input_bin.max < float("inf"):
+        msg = f"Gap detected between {input_bin!r} and 'infinity'"
+        warn(msg, revrtWarning)
 
 
 def _vector_raster_dtype(burn_value, default_dtype):
