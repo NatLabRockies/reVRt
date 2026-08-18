@@ -71,18 +71,7 @@ def build_final_routing_layers(
     )
 
     routing_options = config["routing_options"]
-    if polarity is not None and isinstance(polarity, str):
-        polarity = dict.fromkeys(routing_options, polarity)
-    if voltage is not None and isinstance(voltage, (int, float, str)):
-        voltage = dict.fromkeys(routing_options, str(voltage))
-
-    pv_by_option = {
-        option: {
-            "polarity": polarity.get(option) if polarity else None,
-            "voltage": voltage.get(option) if voltage else None,
-        }
-        for option in routing_options
-    }
+    pv_by_option = _parse_pv_by_option(polarity, voltage, routing_options)
 
     routing_options = RoutingOptions(routing_options).update_from(
         pv_by_option=pv_by_option,
@@ -119,6 +108,22 @@ def build_final_routing_layers(
         out_frl.append(str(final_out_fp))
 
     return out_ol + out_frl
+
+
+def _parse_pv_by_option(polarity, voltage, routing_options):
+    """Parse polarity and voltage inputs into a dictionary"""
+    if polarity is not None and isinstance(polarity, str):
+        polarity = dict.fromkeys(routing_options, polarity)
+    if voltage is not None and isinstance(voltage, (int, float, str)):
+        voltage = dict.fromkeys(routing_options, str(voltage))
+
+    return {
+        option: {
+            "polarity": polarity.get(option) if polarity else None,
+            "voltage": voltage.get(option) if voltage else None,
+        }
+        for option in routing_options
+    }
 
 
 def _preprocess_build_final_routing_layers(
