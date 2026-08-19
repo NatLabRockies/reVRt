@@ -32,6 +32,9 @@ the zone.
 type MultiplierLayerInput = list[str] | None
 """One or more layer names used as spatial multipliers"""
 
+type TransitionCostValue = float | dict[str, float | dict[str, float]]
+"""A scalar transition cost or a voltage/polarity-dependent cost"""
+
 
 class RoutingCostLayer(BaseModel, extra="forbid"):
     """Config for one cost layer in a routing option
