@@ -3,6 +3,7 @@
 import json
 import time
 import logging
+from numbers import Number
 from pathlib import Path
 from warnings import warn
 from functools import cached_property
@@ -20,7 +21,6 @@ from shapely.geometry.linestring import LineString
 
 from revrt import RouteFinder, simplify_using_slopes
 from revrt.routing.base import RoutingLayerManager, RouteMetrics
-from revrt.routing.utilities import compute_lens
 from revrt.utilities.handlers import IncrementalWriter
 from revrt.utilities.monitoring import log_runtime
 from revrt.exceptions import (
@@ -33,6 +33,13 @@ from revrt.warn import revrtWarning
 
 logger = logging.getLogger(__name__)
 _ROUTE_SOLUTION_LEN = 3
+_ROUTING_OPTION_OUTPUT_SKIP_KEYS = {
+    "cost",
+    "length_km",
+    "optimized_objective",
+    "total_transition_costs",
+    "geometry",
+}
 
 
 class BatchRouteProcessor:
@@ -97,21 +104,6 @@ class BatchRouteProcessor:
             self.__rd, self.routing_layers, self.routing_scenario
         ).route_definitions
 
-    @cached_property
-    def _routing_option_file_skip_keys(self):
-        """set: Keys to skip when writing routing option files"""
-        full_route_metric_keys = {
-            "cost",
-            "length_km",
-            "optimized_objective",
-            "total_transition_costs",
-        }
-        for option in self.routing_scenario.routing_option_names:
-            full_route_metric_keys.update(
-                {f"{option}_cost", f"{option}_length_km"}
-            )
-        return full_route_metric_keys
-
     def process(self, out_fp, save_paths=False, routing_layer_out_fp=None):
         """Compute all routes and save to disk
 
@@ -150,7 +142,7 @@ class BatchRouteProcessor:
             save_paths,
             self.routing_layers.cost_crs,
             self.routing_layers.transform,
-            self._routing_option_file_skip_keys,
+            self.routing_scenario.routing_option_names,
         )
 
         for indices, optimized_objective, attrs in self._route_results(rl):
@@ -403,11 +395,15 @@ class _RouteDefinitionFormatter:
 class _RouteResultWriter:
     """Class to manage output of route results"""
 
-    def __init__(self, out_fp, save_paths, cost_crs, transform, skip_keys):
+    def __init__(
+        self, out_fp, save_paths, cost_crs, transform, routing_options
+    ):
         out_fp = _validate_out_fp(out_fp, save_paths)
         self._save_paths = save_paths
         self._transform = transform
-        self._skip_keys = skip_keys
+        self._routing_options = tuple(
+            sorted(routing_options, key=len, reverse=True)
+        )
         self._writer = _IncrementalRouteWriter(out_fp, crs=cost_crs)
         self._option_writer = _IncrementalRouteWriter(
             _routing_options_output_fp(out_fp), crs=cost_crs
@@ -440,21 +436,20 @@ class _RouteResultWriter:
 
     def _build_option_results(self, segments_by_option, route_result):
         """list: Output records for each routing option traversed"""
-        cell_size = abs(self._transform.a)
         base_result = {
             key: value
             for key, value in route_result.items()
-            if key not in {"geometry", *self._skip_keys}
+            if key not in _ROUTING_OPTION_OUTPUT_SKIP_KEYS
+            and self._option_key(key) is None
         }
+        option_output_defaults = self._option_output_defaults(route_result)
         results = []
         for option, segments in segments_by_option.items():
-            length_km = sum(
-                compute_lens(segment, cell_size)[1] for segment in segments
-            )
             option_result = {
                 **base_result,
                 "routing_option": option,
-                "length_km": length_km,
+                **option_output_defaults,
+                **self._option_values(route_result, option),
             }
             if self._save_paths:
                 geometry = self._option_geometry(segments)
@@ -465,6 +460,48 @@ class _RouteResultWriter:
             results.append(option_result)
 
         return results
+
+    def _option_output_defaults(self, route_result):
+        """dict: Typed null values for normalized option fields"""
+        defaults = {}
+        for key, value in route_result.items():
+            option_key = self._option_key(key)
+            if option_key is None or option_key[1] in defaults:
+                continue
+            defaults[option_key[1]] = (
+                np.nan if isinstance(value, Number) else None
+            )
+
+        return defaults
+
+    def _option_key(self, key):
+        """str or None: Normalize an option-specific output key"""
+        for option in self._routing_options:
+            if key == f"{option}_cost":
+                return option, "cost"
+            if key == f"{option}_length_km":
+                return option, "length_km"
+
+            option_suffix = f"_{option}"
+            if key.endswith(option_suffix):
+                return option, key.removesuffix(option_suffix)
+
+            option_marker = f"_{option}_"
+            if option_marker in key:
+                prefix, suffix = key.rsplit(option_marker, maxsplit=1)
+                return option, f"{prefix}_{suffix}"
+
+        return None
+
+    def _option_values(self, route_result, option):
+        """dict: Values from a route result that apply to one option"""
+        return {
+            normalized_key: value
+            for key, value in route_result.items()
+            if (option_key := self._option_key(key)) is not None
+            and option_key[0] == option
+            for normalized_key in [option_key[1]]
+        }
 
     def _option_geometry(self, segments):
         """shapely geometry or None: Combined geometry for one option"""

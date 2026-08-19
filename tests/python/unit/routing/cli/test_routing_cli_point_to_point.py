@@ -524,6 +524,19 @@ def test_compute_lcp_routes_with_routing_options_writes_companion_gpkg(
     assert not full_routes.empty
     assert not split_routes.empty
     assert set(split_routes["routing_option"]) <= {"overhead", "underground"}
+    assert {"cost", "length_km"} <= set(split_routes.columns)
+    assert not {
+        "overhead_cost",
+        "overhead_length_km",
+        "underground_cost",
+        "underground_length_km",
+    } & set(split_routes.columns)
+    full_route = full_routes.iloc[0]
+    for __, split_route in split_routes.iterrows():
+        option = split_route["routing_option"]
+        assert split_route["cost"] == pytest.approx(
+            full_route[f"{option}_cost"]
+        )
 
 
 def test_compute_lcp_routes_returns_none_on_empty_indices(
