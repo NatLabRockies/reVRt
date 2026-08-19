@@ -484,11 +484,13 @@ class TransitionCostRule(BaseModel, extra="forbid"):
     transition cost applies.
     """
 
-    cost: float
+    cost: TransitionCostValue
     """The transition cost
 
     This is the transition cost (in $) applied when a route switches
-    between the specified options.
+    between the specified options. It may be a scalar, a mapping from
+    voltage to scalar cost, or a mapping from voltage and polarity to
+    scalar cost.
     """
 
 
@@ -499,8 +501,12 @@ class TransitionCostsConfig(BaseModel, extra="forbid"):
     ignored.**
     """
 
-    default: float = 0
-    """Fallback cost applied when no pairwise rule is configured"""
+    default: TransitionCostValue = 0
+    """Fallback cost applied when no pairwise rule is configured
+
+    This may be a scalar, a mapping from voltage to scalar cost, or a
+    mapping from voltage and polarity to scalar cost.
+    """
 
     pairwise: list[TransitionCostRule] = Field(default_factory=list)
     """Explicit transition costs between routing options"""
