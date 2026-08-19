@@ -18,7 +18,6 @@ from revrt.models.cost_layers import BarrierLayer
 from revrt.models.routing import (
     validate_driver_configs,
     validate_routing_options,
-    validate_transition_cost_configs,
 )
 from revrt.routing.utilities import compute_lens
 from revrt.utilities.parsing import (
@@ -93,9 +92,7 @@ class RoutingScenario:
         self.cost_fpath = cost_fpath
         self.routing_options = validate_routing_options(routing_options)
         self.drivers = validate_driver_configs(drivers, self.routing_options)
-        self.transition_costs = validate_transition_cost_configs(
-            transition_costs, self.routing_options
-        )
+        self.transition_costs = transition_costs
         self.tracked_layers = tracked_layers or []
         self.invalid_costs_block_routing = invalid_costs_block_routing
         self.algorithm = algorithm
