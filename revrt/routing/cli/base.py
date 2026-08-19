@@ -14,7 +14,11 @@ import rioxarray  # ruff:ignore[unused-import]
 import geopandas as gpd
 import xarray as xr
 
-from revrt.models.routing import validate_routing_options
+from revrt.models.routing import (
+    validate_driver_configs,
+    validate_routing_options,
+    validate_transition_cost_input,
+)
 from revrt.routing.cli.utilities import routing_layer_mover
 from revrt.routing.base import RoutingScenario
 from revrt.routing.processing import BatchRouteProcessor
@@ -64,11 +68,12 @@ class RouteToDefinitionConverter(ABC):
         route_points : pandas.DataFrame
             DataFrame defining the points to be routed. This DataFrame
             should contain route definitions to be transformed and
-            passed down to the Rust routing algorithm. Route values for
-            polarity and voltage must be provided either as one shared
-            `polarity` / `voltage` pair that applies to every routing
-            option, or as a full per-option set of
-            `polarity_<option>` / `voltage_<option>` columns.
+            passed down to the Rust routing algorithm. Provide route
+            values for polarity and voltage when cost multipliers or
+            transition costs depend on them. Values may be supplied as
+            one shared ``polarity`` / ``voltage`` pair or as a full
+            per-option set of ``polarity_<option>`` /
+            ``voltage_<option>`` columns.
         out_fp : path-like
             Path to output file where computed routes will be saved.
             This file will be checked for existing routes to avoid
@@ -82,15 +87,27 @@ class RouteToDefinitionConverter(ABC):
             path to JSON/JSON5 file containing this dictionary. See the
             description of
             :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`
-            for more details.
+            for more details. By default, ``None``.
+        drivers : dict, optional
+            Optional driver-rule configuration keyed by routing option.
+            By default, ``None``.
+        transition_costs : dict, optional
+            Optional transition-cost configuration between routing
+            options. A voltage/polarity-dependent cost requires matching
+            values for every affected routing option.
+            By default, ``None``.
         """
         self.cost_fpath = cost_fpath
         self.out_fp = Path(out_fp)
         self.transmission_config = transmission_config
-        self.drivers = drivers
-        self.transition_costs = transition_costs
         self._input_route_points = route_points
         self._routing_options = RoutingOptions(routing_options)
+        self.drivers = validate_driver_configs(
+            drivers, self._routing_options.routing_options
+        )
+        self.transition_costs = validate_transition_cost_input(
+            transition_costs, self._routing_options.routing_options
+        )
 
     @cached_property
     def route_points(self):
@@ -169,10 +186,18 @@ class RouteToDefinitionConverter(ABC):
                 pv_by_option=pv_by_option,
                 transmission_config=self.transmission_config,
             )
+            transition_costs = _resolve_transition_costs(
+                self.transition_costs, pv_by_option
+            )
             route_definitions, route_attrs = (
                 self._convert_to_route_definitions(routes)
             )
-            yield route_options, route_definitions, route_attrs
+            yield (
+                route_options,
+                transition_costs,
+                route_definitions,
+                route_attrs,
+            )
 
     @property
     def _paths_to_compute(self):
@@ -330,12 +355,17 @@ def _run_all_lcp_batches(
     """Run LCP routing for all batches of routes and save results"""
     out_fp = Path(out_fp)
     save_paths = out_fp.suffix.lower() == ".gpkg"
-    for route_options, route_definitions, route_attrs in routes_to_compute:
+    for (
+        route_options,
+        transition_costs,
+        route_definitions,
+        route_attrs,
+    ) in routes_to_compute:
         scenario = RoutingScenario(
             cost_fpath=cost_fpath,
             routing_options=route_options,
             drivers=routes_to_compute.drivers,
-            transition_costs=routes_to_compute.transition_costs,
+            transition_costs=transition_costs,
             tracked_layers=tracked_layers,
             invalid_costs_block_routing=invalid_costs_block_routing,
             algorithm=algorithm,
@@ -425,6 +455,110 @@ def _handle_maybe_missing_column(points, option, base_col):
         points[polarity_col] = points[polarity_col].fillna("unknown")
 
     return points
+
+
+def _resolve_transition_costs(transition_costs, pv_by_option):
+    """Resolve transition-cost mappings from route values"""
+    if transition_costs is None:
+        return None
+
+    resolved = {}
+    if "default" in transition_costs:
+        resolved["default"] = _resolve_transition_cost_value(
+            transition_costs["default"],
+            pv_by_option,
+            list(pv_by_option),
+            context="transition_costs.default",
+        )
+
+    if "pairwise" in transition_costs:
+        resolved["pairwise"] = []
+        for rule in transition_costs["pairwise"]:
+            options = rule["between"]
+            resolved["pairwise"].append(
+                {
+                    "between": options,
+                    "cost": _resolve_transition_cost_value(
+                        rule["cost"],
+                        pv_by_option,
+                        options,
+                        context=(
+                            "transition_costs.pairwise cost between "
+                            f"{options[0]!r} and {options[1]!r}"
+                        ),
+                    ),
+                }
+            )
+
+    return resolved
+
+
+def _resolve_transition_cost_value(value, pv_by_option, options, context):
+    """Resolve one scalar or voltage/polarity transition-cost value"""
+    if not isinstance(value, dict):
+        return value
+
+    option_values = {
+        option: _normalized_transition_values(pv_by_option[option], option)
+        for option in options
+    }
+    unique_values = set(option_values.values())
+    if len(unique_values) != 1:
+        received = ", ".join(
+            f"{option}(polarity={polarity!r}, voltage={voltage!r})"
+            for option, (voltage, polarity) in option_values.items()
+        )
+        msg = (
+            f"{context} requires matching voltage and polarity across "
+            f"routing options. Received: {received}"
+        )
+        raise revrtConfigurationError(msg)
+
+    voltage, polarity = next(iter(unique_values))
+    try:
+        resolved = value[voltage]
+    except KeyError as error:
+        msg = (
+            f"{context} has no cost for voltage {voltage!r}. Available "
+            f"voltages: {list(value)}"
+        )
+        raise revrtKeyError(msg) from error
+
+    if not isinstance(resolved, dict):
+        return resolved
+
+    try:
+        return resolved[polarity]
+    except KeyError as error:
+        msg = (
+            f"{context} has no cost for voltage {voltage!r} and polarity "
+            f"{polarity!r}. Available polarities: {list(resolved)}"
+        )
+        raise revrtKeyError(msg) from error
+
+
+def _normalized_transition_values(values, option):
+    """tuple[str, str]: Normalized values for one routing option"""
+    polarity = values.get(_POLARITY)
+    voltage = values.get(_VOLTAGE)
+    unknowns = {None, "None", "unknown"}
+    if polarity in unknowns or voltage in unknowns:
+        msg = (
+            "voltage/polarity-dependent transition costs require known "
+            f"values for routing option {option!r}"
+        )
+        raise revrtConfigurationError(msg)
+
+    try:
+        voltage = str(int(voltage))
+    except (TypeError, ValueError, OverflowError) as error:
+        msg = (
+            "voltage/polarity-dependent transition costs require an integer "
+            f"voltage for routing option {option!r}, received {voltage!r}"
+        )
+        raise revrtConfigurationError(msg) from error
+
+    return voltage, str(polarity)
 
 
 def update_multipliers(

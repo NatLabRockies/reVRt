@@ -384,7 +384,7 @@ def test_parallel_zonal_stats_with_client(sc_dir, zonal_polygon_fp):
     )
     truth_stats = list(truth_stats)
 
-    with Client() as client:
+    with Client(scheduler_kwargs={"dashboard": False}) as client:
         client.get_task_stream()
         test_stats = zs.from_files(
             zonal_polygon_fp, sc_dir / "layer_a.tif", parallel=True

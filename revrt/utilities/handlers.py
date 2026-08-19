@@ -992,7 +992,7 @@ def _compute_lat_lon(ny, nx, src_crs, transform, chunk_x=2048, chunk_y=2048):
         _proj_to_lon_lat,
         x_mesh_transformed,
         y_mesh_transformed,
-        src_crs.to_string(),
+        src_crs.to_wkt(),
         dtype="float32",
         new_axis=(0,),  # we add a new leading axis of length 2
         chunks=((2,), *x_mesh_transformed.chunks),  # chunk sizes for [2, y, x]

@@ -15,11 +15,6 @@ from shapely.geometry.linestring import LineString
 
 from revrt import simplify_using_slopes
 from revrt.models.cost_layers import BarrierLayer
-from revrt.models.routing import (
-    validate_driver_configs,
-    validate_routing_options,
-    validate_transition_cost_configs,
-)
 from revrt.routing.utilities import compute_lens
 from revrt.utilities.parsing import (
     parse_comparison_values,
@@ -62,11 +57,8 @@ class RoutingScenario:
             :class:`~revrt.models.routing.TrackedLayer` for the
             canonical schema.
         routing_options : dict
-            Mapping of routing-option names to dictionaries containing
-            cost, friction, and barrier definitions. See
-            :class:`~revrt.models.routing.RoutingOptionConfig` for the
-            canonical schema that is serialized for the Rust routing
-            core.
+            Validated mapping of routing-option names to dictionaries
+            containing cost, friction, and barrier definitions.
         drivers : dict, optional
             Optional driver-rule configuration keyed by routing option.
             See :class:`~revrt.models.routing.DriverConfig` and
@@ -91,11 +83,9 @@ class RoutingScenario:
             By default, ``"bidirectional_long_range_dijkstra"``.
         """
         self.cost_fpath = cost_fpath
-        self.routing_options = validate_routing_options(routing_options)
-        self.drivers = validate_driver_configs(drivers, self.routing_options)
-        self.transition_costs = validate_transition_cost_configs(
-            transition_costs, self.routing_options
-        )
+        self.routing_options = routing_options
+        self.drivers = drivers
+        self.transition_costs = transition_costs
         self.tracked_layers = tracked_layers or []
         self.invalid_costs_block_routing = invalid_costs_block_routing
         self.algorithm = algorithm

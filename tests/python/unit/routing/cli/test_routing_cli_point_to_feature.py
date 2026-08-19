@@ -6,7 +6,7 @@ import platform
 from pathlib import Path
 
 import pytest
-import rioxarray  # noqa: F401
+import rioxarray  # ruff:ignore[unused-import]
 import xarray as xr
 import pandas as pd
 import geopandas as gpd
@@ -187,7 +187,7 @@ def test_converter_maps_lat_lon_and_iterates(point_feature_dataset):
 
     batches = list(converter)
     assert len(batches) == 1
-    __, route_definitions, route_attrs = batches[0]
+    *__, route_definitions, route_attrs = batches[0]
     assert len(route_definitions) == 1
 
     route_id, start_points, end_points = route_definitions[0]
@@ -457,11 +457,12 @@ def test_compute_lcp_routes_saves_routing_layer(point_feature_dataset):
 def test_pipeline_inputs_are_split_and_aligned_by_shared_tag(monkeypatch):
     """Pipeline inputs should align CSVs and GPKGs by shared tag"""
 
+    # ruff:ignore[hardcoded-temp-file]
     files = [
-        "/tmp/route_table_j0.csv",  # noqa
-        "/tmp/mapped_features_j0.gpkg",  # noqa
-        "/tmp/route_table_j10.csv",  # noqa
-        "/tmp/mapped_features_j10.gpkg",  # noqa
+        "/tmp/route_table_j0.csv",
+        "/tmp/mapped_features_j0.gpkg",
+        "/tmp/route_table_j10.csv",
+        "/tmp/mapped_features_j10.gpkg",
     ]
 
     monkeypatch.setattr(
@@ -476,17 +477,19 @@ def test_pipeline_inputs_are_split_and_aligned_by_shared_tag(monkeypatch):
 
     result = _handle_route_table_and_features_input(
         config,
-        "/tmp/project",  # noqa
+        "/tmp/project",  # ruff:ignore[hardcoded-temp-file]
         "route-features",
     )
 
+    # ruff:ignore[hardcoded-temp-file]
     assert result["route_table_fpath"] == [
-        "/tmp/route_table_j0.csv",  # noqa
-        "/tmp/route_table_j10.csv",  # noqa
+        "/tmp/route_table_j0.csv",
+        "/tmp/route_table_j10.csv",
     ]
+    # ruff:ignore[hardcoded-temp-file]
     assert result["features_fpath"] == [
-        "/tmp/mapped_features_j0.gpkg",  # noqa
-        "/tmp/mapped_features_j10.gpkg",  # noqa
+        "/tmp/mapped_features_j0.gpkg",
+        "/tmp/mapped_features_j10.gpkg",
     ]
 
 
@@ -500,12 +503,17 @@ def test_prep_config_normalizes_non_pipeline_paths():
         "out_dir": "  /tmp/output_dir  ",
     }
 
-    result = _prep_config(config, 1, "/tmp/project", "route-features")  # noqa
+    # ruff:ignore[hardcoded-temp-file]
+    result = _prep_config(config, 1, "/tmp/project", "route-features")
 
-    assert result["cost_fpath"] == "/tmp/cost_layers.zarr"  # noqa
-    assert result["route_table_fpath"] == ["/tmp/routes.csv"]  # noqa
-    assert result["features_fpath"] == ["/tmp/features.gpkg"]  # noqa
-    assert result["out_dir"] == "/tmp/output_dir"  # noqa
+    # ruff:ignore[hardcoded-temp-file]
+    assert result["cost_fpath"] == "/tmp/cost_layers.zarr"
+    # ruff:ignore[hardcoded-temp-file]
+    assert result["route_table_fpath"] == ["/tmp/routes.csv"]
+    # ruff:ignore[hardcoded-temp-file]
+    assert result["features_fpath"] == ["/tmp/features.gpkg"]
+    # ruff:ignore[hardcoded-temp-file]
+    assert result["out_dir"] == "/tmp/output_dir"
     assert result["_split_params"] == [(0, 1)]
 
 
@@ -520,35 +528,39 @@ def test_prep_config_normalizes_non_pipeline_sequences():
         ],
     }
 
-    result = _prep_config(config, 1, "/tmp/project", "route-features")  # noqa
+    # ruff:ignore[hardcoded-temp-file]
+    result = _prep_config(config, 1, "/tmp/project", "route-features")
 
+    # ruff:ignore[hardcoded-temp-file]
     assert result["route_table_fpath"] == [
-        "/tmp/routes_a.csv",  # noqa
-        "/tmp/routes_b.csv",  # noqa
+        "/tmp/routes_a.csv",
+        "/tmp/routes_b.csv",
     ]
+    # ruff:ignore[hardcoded-temp-file]
     assert result["features_fpath"] == [
-        "/tmp/features_a.gpkg",  # noqa
-        "/tmp/features_b.gpkg",  # noqa
+        "/tmp/features_a.gpkg",
+        "/tmp/features_b.gpkg",
     ]
 
 
+# ruff:ignore[hardcoded-temp-file]
 @pytest.mark.parametrize(
     ("config", "match"),
     [
         (
             {
-                "route_table_fpath": ["/tmp/routes.csv"],  # noqa
-                "features_fpath": "/tmp/features.gpkg",  # noqa
+                "route_table_fpath": ["/tmp/routes.csv"],
+                "features_fpath": "/tmp/features.gpkg",
             },
             "must both be sequences or both be strings",
         ),
         (
             {
                 "route_table_fpath": [
-                    "/tmp/routes_a.csv",  # noqa
-                    "/tmp/routes_b.csv",  # noqa
+                    "/tmp/routes_a.csv",
+                    "/tmp/routes_b.csv",
                 ],
-                "features_fpath": ["/tmp/features_a.gpkg"],  # noqa
+                "features_fpath": ["/tmp/features_a.gpkg"],
             },
             "must be the same length",
         ),
@@ -560,7 +572,7 @@ def test_non_pipeline_inputs_require_matching_shapes(config, match):
     with pytest.raises(revrtConfigurationError, match=match):
         _handle_route_table_and_features_input(
             config,
-            "/tmp/project",  # noqa
+            "/tmp/project",  # ruff:ignore[hardcoded-temp-file]
             "route-features",
         )
 
@@ -570,7 +582,7 @@ def test_pipeline_inputs_require_both_pipeline_sentinels():
 
     config = {
         "route_table_fpath": "PIPELINE",
-        "features_fpath": "/tmp/features.gpkg",  # noqa
+        "features_fpath": "/tmp/features.gpkg",  # ruff:ignore[hardcoded-temp-file]
     }
 
     with pytest.raises(
@@ -579,29 +591,30 @@ def test_pipeline_inputs_require_both_pipeline_sentinels():
     ):
         _handle_route_table_and_features_input(
             config,
-            "/tmp/project",  # noqa
+            "/tmp/project",  # ruff:ignore[hardcoded-temp-file]
             "route-features",
         )
 
 
+# ruff:ignore[hardcoded-temp-file]
 @pytest.mark.parametrize(
     ("files", "match"),
     [
         (
             [
-                "/tmp/route_table_j0.csv",  # noqa
-                "/tmp/route_table_j1.csv",  # noqa
-                "/tmp/mapped_features_j0.gpkg",  # noqa
-                "/tmp/mapped_features_j9.gpkg",  # noqa
+                "/tmp/route_table_j0.csv",
+                "/tmp/route_table_j1.csv",
+                "/tmp/mapped_features_j0.gpkg",
+                "/tmp/mapped_features_j9.gpkg",
             ],
             "Could not align pipeline route-table CSV outputs",
         ),
         (
             [
-                "/tmp/route_table.csv",  # noqa
-                "/tmp/route_table_j1.csv",  # noqa
-                "/tmp/mapped_features_j0.gpkg",  # noqa
-                "/tmp/mapped_features_j1.gpkg",  # noqa
+                "/tmp/route_table.csv",
+                "/tmp/route_table_j1.csv",
+                "/tmp/mapped_features_j0.gpkg",
+                "/tmp/mapped_features_j1.gpkg",
             ],
             "ambiguously tagged",
         ),
@@ -623,7 +636,7 @@ def test_pipeline_inputs_validate_previous_outputs(monkeypatch, files, match):
     with pytest.raises(revrtConfigurationError, match=match):
         _handle_route_table_and_features_input(
             config,
-            "/tmp/project",  # noqa
+            "/tmp/project",  # ruff:ignore[hardcoded-temp-file]
             "route-features",
         )
 

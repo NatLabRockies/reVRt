@@ -246,6 +246,53 @@ def test_compute_lcp_routes_generates_csv(sample_layered_data, tmp_path):
     )
 
 
+def test_compute_lcp_routes_resolves_transition_costs_by_route(
+    sample_layered_data, tmp_path
+):
+    """Route batches should use voltage/polarity transition costs"""
+
+    routes = _build_route_table(
+        sample_layered_data,
+        rows_cols=[((1, 1), (1, 2)), ((1, 1), (1, 2))],
+    )
+    routes["start_option"] = "overhead"
+    routes["end_option"] = "underground"
+    routes["voltage"] = [138, 500]
+    routes["polarity"] = ["ac", "dc"]
+    route_table_fp = tmp_path / "route_table_transition_costs.csv"
+    routes.to_csv(route_table_fp, index=False)
+
+    result_fp = compute_lcp_routes(
+        cost_fpath=sample_layered_data,
+        route_table_fpath=route_table_fp,
+        out_dir=tmp_path / "transition_cost_outputs",
+        job_name="transition_costs",
+        routing_options={
+            "overhead": {"cost_layers": [{"layer_name": "layer_1"}]},
+            "underground": {"cost_layers": [{"layer_name": "layer_1"}]},
+        },
+        transition_costs={"default": {"138": {"ac": 2}, "500": 5}},
+        invalid_costs_block_routing=True,
+        _split_params=(0, 1),
+    )
+
+    output = pd.read_csv(result_fp)
+    output = output[output["route_id"] != "route_id"].reset_index(drop=True)
+    output["cost"] = pd.to_numeric(output["cost"])
+    output["optimized_objective"] = pd.to_numeric(
+        output["optimized_objective"]
+    )
+    by_voltage = output.set_index("voltage")
+
+    assert by_voltage.loc[500, "cost"] - by_voltage.loc[138, "cost"] == (
+        pytest.approx(3)
+    )
+    assert (
+        by_voltage.loc[500, "optimized_objective"]
+        - by_voltage.loc[138, "optimized_objective"]
+    ) == pytest.approx(3)
+
+
 def test_compute_lcp_routes_expands_combined_spatial_multipliers(
     sample_layered_data, tmp_path
 ):

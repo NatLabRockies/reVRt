@@ -132,6 +132,7 @@ def sample_layered_data(tmp_path_factory):
         dtype=np.float32,
     )
 
+    # ruff:ignore[whitespace-after-open-bracket, multiple-spaces-after-comma]
     # fmt: off
     layer_7 = np.array(
         [
@@ -140,7 +141,7 @@ def sample_layered_data(tmp_path_factory):
                 [-1, -1, -1, -1, -1, -1, -1, -1],
                 [-1, -1, -1, -1, -1, -1, -1, -1],
                 [-1, -1, -1, -1, -1, -1, -1, -1],
-                [ 8, -1, -1, -1, -1,  4, -1, -1],  # noqa: E201, E241
+                [ 8, -1, -1, -1, -1,  4, -1, -1],
                 [-1, -1, -1, -1, -1, -1, -1, -1],
                 [-1, -1, -1, -1, -1, -1, -1, -1],
             ]
@@ -235,7 +236,7 @@ def test_basic_single_route_applies_cost_multiplier_layer_to_objective(
         routing_options={
             "default": {
                 "cost_layers": [{"layer_name": "layer_1"}],
-                "cost_multiplier_layer": "layer_3",
+                "cost_multiplier_layer": ["layer_3"],
             }
         },
         algorithm=algorithm,
@@ -872,12 +873,12 @@ def test_multi_layer_route_with_scalar_and_layer_multipliers(
                     {"layer_name": "layer_2", "multiplier_scalar": 0.5},
                     {
                         "layer_name": "layer_3",
-                        "multiplier_layer": "layer_4",
+                        "multiplier_layer": ["layer_4"],
                     },
                     {
                         "layer_name": "layer_5",
                         "multiplier_scalar": 2,
-                        "multiplier_layer": "layer_4",
+                        "multiplier_layer": ["layer_4"],
                     },
                 ]
             }
@@ -978,7 +979,7 @@ def test_start_point_on_barrier_returns_no_route(
     )
     if use_friction:
         scenario.routing_options["default"]["friction_layers"] = [
-            {"multiplier_layer": "layer_5", "multiplier_scalar": -10}
+            {"multiplier_layer": ["layer_5"], "multiplier_scalar": -10}
         ]
 
     out_csv = tmp_path / "routes.csv"
@@ -1450,7 +1451,7 @@ def test_length_invariant_hidden_and_friction_layers(
                 ],
                 "friction_layers": [
                     {
-                        "multiplier_layer": "layer_4",
+                        "multiplier_layer": ["layer_4"],
                         "multiplier_scalar": 0.5,
                     },
                 ],
@@ -1532,7 +1533,7 @@ def test_friction_layer_influences_objective_without_reporting(
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
                     {
-                        "multiplier_layer": "layer_4",
+                        "multiplier_layer": ["layer_4"],
                         "multiplier_scalar": 0.5,
                     }
                 ],
@@ -1602,7 +1603,7 @@ def test_friction_layer_influences_objective(
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
                     {
-                        "multiplier_layer": "layer_5",
+                        "multiplier_layer": ["layer_4"],
                         "multiplier_scalar": 1000,
                     }
                 ],
@@ -1675,7 +1676,7 @@ def test_negative_friction_layer_influences_objective(
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
                     {
-                        "multiplier_layer": "layer_5",
+                        "multiplier_layer": ["layer_5"],
                         "multiplier_scalar": -10,
                     }
                 ],
@@ -1748,11 +1749,11 @@ def test_negative_friction_layer_does_not_go_thru_barrier(
                 "cost_layers": [{"layer_name": "layer_6"}],
                 "friction_layers": [
                     {
-                        "multiplier_layer": "layer_5",
+                        "multiplier_layer": ["layer_5"],
                         "multiplier_scalar": -10,
                     }
                 ],
-            }
+            },
         },
         algorithm=algorithm,
     )

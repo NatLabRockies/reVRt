@@ -32,6 +32,9 @@ the zone.
 type MultiplierLayerInput = list[str] | None
 """One or more layer names used as spatial multipliers"""
 
+type TransitionCostValue = float | dict[str, float | dict[str, float]]
+"""A scalar transition cost or a voltage/polarity-dependent cost"""
+
 
 class RoutingCostLayer(BaseModel, extra="forbid"):
     """Config for one cost layer in a routing option
@@ -481,11 +484,13 @@ class TransitionCostRule(BaseModel, extra="forbid"):
     transition cost applies.
     """
 
-    cost: float
+    cost: TransitionCostValue
     """The transition cost
 
     This is the transition cost (in $) applied when a route switches
-    between the specified options.
+    between the specified options. It may be a scalar, a mapping from
+    voltage to scalar cost, or a mapping from voltage and polarity to
+    scalar cost.
     """
 
 
@@ -496,8 +501,12 @@ class TransitionCostsConfig(BaseModel, extra="forbid"):
     ignored.**
     """
 
-    default: float = 0
-    """Fallback cost applied when no pairwise rule is configured"""
+    default: TransitionCostValue = 0
+    """Fallback cost applied when no pairwise rule is configured
+
+    This may be a scalar, a mapping from voltage to scalar cost, or a
+    mapping from voltage and polarity to scalar cost.
+    """
 
     pairwise: list[TransitionCostRule] = Field(default_factory=list)
     """Explicit transition costs between routing options"""
@@ -538,8 +547,8 @@ def validate_driver_configs(drivers, routing_options):
     return _flatten_driver_config(validated)
 
 
-def validate_transition_cost_configs(transition_costs, routing_options):
-    """[NOT PUBLIC API] Normalize transition costs"""
+def validate_transition_cost_input(transition_costs, routing_options):
+    """[NOT PUBLIC API] Normalize user-supplied transition costs"""
     if transition_costs is None:
         return None
 
@@ -630,8 +639,9 @@ __all__ = [
     "RoutingOptionsMap",
     "TrackedLayer",
     "TransitionCostRule",
+    "TransitionCostValue",
     "TransitionCostsConfig",
     "validate_driver_configs",
     "validate_routing_options",
-    "validate_transition_cost_configs",
+    "validate_transition_cost_input",
 ]

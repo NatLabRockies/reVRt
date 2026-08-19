@@ -9,7 +9,12 @@ import xarray as xr
 from rasterio.transform import from_origin
 
 from revrt.utilities import LayeredFile
-from revrt.models.routing import DriverConfig
+from revrt.models.routing import (
+    DriverConfig,
+    validate_driver_configs,
+    validate_routing_options,
+    validate_transition_cost_input,
+)
 from revrt.routing.base import (
     RouteMetrics,
     RoutingLayerManager,
@@ -178,11 +183,10 @@ def sample_layered_data(tmp_path_factory):
 
 
 def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
-    """RoutingScenario emits the Rust multi-option schema"""
+    """RoutingScenario emits validated options in the Rust schema"""
 
-    scenario = RoutingScenario(
-        cost_fpath=sample_layered_data,
-        routing_options={
+    routing_options = validate_routing_options(
+        {
             "overhead": {
                 "cost_layers": [
                     {
@@ -210,7 +214,11 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
             "underground": {
                 "cost_layers": [{"layer_name": "layer_2"}],
             },
-        },
+        }
+    )
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options=routing_options,
         drivers={
             "default": {"overhead": 1, "underground": "excluded"},
             "zones": [
@@ -236,6 +244,7 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
 
     payload = json.loads(scenario.cost_function_json)
 
+    assert scenario.routing_options is routing_options
     assert payload["invalid_costs_block_routing"] is False
     assert payload["drivers"] == {
         "default": {"overhead": 1, "underground": "excluded"},
@@ -412,34 +421,42 @@ def test_transition_cost_lookup_uses_between_rules_bidirectionally():
     assert pairwise_costs[("underground", "overhead")] == pytest.approx(3.5)
 
 
-def test_routing_scenario_rejects_unknown_driver_option(sample_layered_data):
+def test_routing_scenario_preserves_validated_transition_costs(
+    sample_layered_data,
+):
+    """RoutingScenario should preserve validated transition costs"""
+
+    transition_costs = {"default": 3, "pairwise": []}
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options={
+            "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
+        },
+        transition_costs=transition_costs,
+    )
+
+    assert scenario.transition_costs is transition_costs
+
+
+def test_driver_config_rejects_unknown_routing_option():
     """Driver rules must reference known routing options"""
 
     with pytest.raises(
         revrtConfigurationError,
         match=r"unknown routing option 'underground' in drivers.default",
     ):
-        RoutingScenario(
-            cost_fpath=sample_layered_data,
-            routing_options={
-                "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
-            },
-            drivers={"default": {"underground": 2}},
+        validate_driver_configs(
+            {"default": {"underground": 2}},
+            {"overhead": {"cost_layers": [{"layer_name": "layer_1"}]}},
         )
 
 
-def test_routing_scenario_rejects_invalid_driver_zone_where(
-    sample_layered_data,
-):
+def test_driver_config_rejects_invalid_zone_where():
     """Driver zones validate comparison syntax up front"""
 
     with pytest.raises(revrtConfigurationError, match="Barrier values must"):
-        RoutingScenario(
-            cost_fpath=sample_layered_data,
-            routing_options={
-                "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
-            },
-            drivers={
+        validate_driver_configs(
+            {
                 "zones": [
                     {
                         "layer_name": "layer_5",
@@ -448,28 +465,24 @@ def test_routing_scenario_rejects_invalid_driver_zone_where(
                     }
                 ]
             },
+            {"overhead": {"cost_layers": [{"layer_name": "layer_1"}]}},
         )
 
 
-def test_routing_scenario_rejects_unknown_transition_option(
-    sample_layered_data,
-):
+def test_transition_cost_input_rejects_unknown_routing_option():
     """Transition rules must reference known routing options"""
 
     with pytest.raises(
         revrtConfigurationError,
         match=r"unknown routing option 'underground' in transition_costs",
     ):
-        RoutingScenario(
-            cost_fpath=sample_layered_data,
-            routing_options={
-                "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
-            },
-            transition_costs={
+        validate_transition_cost_input(
+            {
                 "pairwise": [
                     {"between": ["overhead", "underground"], "cost": 3}
                 ]
             },
+            {"overhead": {"cost_layers": [{"layer_name": "layer_1"}]}},
         )
 
 
@@ -1258,9 +1271,8 @@ def test_characterized_layer_total_length_computation(sample_layered_data):
 def test_friction_layer_with_multiplier_layer_only(sample_layered_data):
     """Friction layers support multiplier layer without mask"""
 
-    scenario = RoutingScenario(
-        cost_fpath=sample_layered_data,
-        routing_options={
+    routing_options = validate_routing_options(
+        {
             "default": {
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
@@ -1270,7 +1282,11 @@ def test_friction_layer_with_multiplier_layer_only(sample_layered_data):
                     }
                 ],
             }
-        },
+        }
+    )
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options=routing_options,
     )
 
     layers_for_rust = list(
