@@ -425,6 +425,7 @@ def test_routing_option_results_split_transition_segment_midpoint(
         True,
         route_computer.routing_layers.cost_crs,
         route_computer.routing_layers.transform,
+        route_computer._routing_option_file_skip_keys,
     )
 
     try:
