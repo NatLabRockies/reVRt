@@ -187,7 +187,7 @@ def test_converter_maps_lat_lon_and_iterates(point_feature_dataset):
 
     batches = list(converter)
     assert len(batches) == 1
-    __, route_definitions, route_attrs = batches[0]
+    *__, route_definitions, route_attrs = batches[0]
     assert len(route_definitions) == 1
 
     route_id, start_points, end_points = route_definitions[0]
