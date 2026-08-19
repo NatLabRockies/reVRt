@@ -547,8 +547,8 @@ def validate_driver_configs(drivers, routing_options):
     return _flatten_driver_config(validated)
 
 
-def validate_transition_cost_configs(transition_costs, routing_options):
-    """[NOT PUBLIC API] Normalize transition costs"""
+def validate_transition_cost_input(transition_costs, routing_options):
+    """[NOT PUBLIC API] Normalize user-supplied transition costs"""
     if transition_costs is None:
         return None
 
@@ -576,6 +576,25 @@ def validate_transition_cost_configs(transition_costs, routing_options):
     if "pairwise" in payload:
         payload["pairwise"] = normalized_rules
     return payload
+
+
+def validate_transition_cost_configs(transition_costs, routing_options):
+    """[NOT PUBLIC API] Normalize resolved transition costs"""
+    payload = validate_transition_cost_input(transition_costs, routing_options)
+    if payload is None:
+        return None
+
+    costs = [payload.get("default", 0)] + [
+        rule["cost"] for rule in payload.get("pairwise", [])
+    ]
+    if all(isinstance(cost, float) for cost in costs):
+        return payload
+
+    msg = (
+        "transition costs with voltage or polarity mappings must be "
+        "resolved from route values before creating a RoutingScenario"
+    )
+    raise revrtConfigurationError(msg)
 
 
 def _flatten_driver_config(drivers):
@@ -639,8 +658,10 @@ __all__ = [
     "RoutingOptionsMap",
     "TrackedLayer",
     "TransitionCostRule",
+    "TransitionCostValue",
     "TransitionCostsConfig",
     "validate_driver_configs",
     "validate_routing_options",
     "validate_transition_cost_configs",
+    "validate_transition_cost_input",
 ]
