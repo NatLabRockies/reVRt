@@ -346,7 +346,7 @@ def test_multi_option_routes_write_companion_output(
             "underground": {"cost_layers": [{"layer_name": "layer_2"}]},
         },
         drivers={"default": {"overhead": 1, "underground": 10}},
-        transition_costs={"default": 0},
+        transition_costs={"default": 3.5},
         invalid_costs_block_routing=True,
     )
     route_computer = BatchRouteProcessor(
@@ -373,6 +373,32 @@ def test_multi_option_routes_write_companion_output(
     }
     assert set(option_routes["route_id"]) == {"route_7"}
     assert np.all(option_routes["length_km"] > 0)
+    full_route = full_routes.iloc[0]
+    assert {
+        "cost",
+        "length_km",
+        "total_transition_costs",
+        "overhead_cost",
+        "overhead_length_km",
+        "underground_cost",
+        "underground_length_km",
+    } <= set(full_routes.columns)
+    assert full_route["total_transition_costs"] == pytest.approx(3.5)
+    assert full_route["cost"] == pytest.approx(
+        full_route["overhead_cost"]
+        + full_route["underground_cost"]
+        + full_route["total_transition_costs"]
+    )
+    assert full_route["length_km"] == pytest.approx(
+        full_route["overhead_length_km"] + full_route["underground_length_km"]
+    )
+    assert not {
+        "total_transition_costs",
+        "overhead_cost",
+        "overhead_length_km",
+        "underground_cost",
+        "underground_length_km",
+    } & set(option_routes.columns)
     assert ("geometry" in option_routes.columns) is save_paths
     if save_paths:
         assert set(option_routes.geometry.geom_type) == {"MultiLineString"}
