@@ -283,7 +283,12 @@ def compute_lcp_routes(  # ruff:ignore[too-many-arguments, too-many-positional-a
         Optional transition-cost configuration between routing
         options. See
         :class:`~revrt.models.routing.TransitionCostsConfig` for
-        details.
+        details. The ``default`` and each pairwise ``cost`` value may
+        be a scalar, a mapping from voltage to scalar cost, or a nested
+        mapping from voltage and polarity to cost. A voltage scalar
+        applies to every polarity at that voltage. Dependent pairwise
+        costs require matching voltage and polarity for both options;
+        a dependent default requires matching values for every option.
     tracked_layers : list, optional
         List of dictionaries defining route-characterization layers.
         These layers do not influence the routing objective and are
