@@ -27,6 +27,7 @@ from revrt.routing.cli.base import (
     split_routes,
     _get_row_multiplier,
     _get_polarity_multiplier,
+    _resolve_transition_costs,
     _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL,
 )
 from revrt.routing.cli.utilities import (
@@ -1372,11 +1373,17 @@ def test_route_converter_updates_multi_option_layers(tmp_path):
         transition_costs={"default": 0},
     )
 
-    route_ro, route_definitions, route_attrs = next(iter(converter))
+    (
+        route_ro,
+        transition_costs,
+        route_definitions,
+        route_attrs,
+    ) = next(iter(converter))
 
     assert route_ro["overhead"]["cost_layers"][0][
         "multiplier_scalar"
     ] == pytest.approx(3)
+    assert transition_costs == {"default": 0.0}
     assert route_ro["overhead"]["friction_layers"][0][
         "multiplier_scalar"
     ] == pytest.approx(0.5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
@@ -1444,7 +1451,12 @@ def test_route_converter_applies_different_polarities_per_option(tmp_path):
         transmission_config=transmission_config,
     )
 
-    route_options, route_definitions, route_attrs = next(iter(converter))
+    (
+        route_options,
+        transition_costs,
+        route_definitions,
+        route_attrs,
+    ) = next(iter(converter))
 
     assert route_options["overhead"]["cost_layers"][0][
         "multiplier_scalar"
@@ -1452,12 +1464,79 @@ def test_route_converter_applies_different_polarities_per_option(tmp_path):
     assert route_options["underground"]["cost_layers"][0][
         "multiplier_scalar"
     ] == pytest.approx(5 * _MILLION_USD_PER_MILE_TO_USD_PER_PIXEL)
+    assert transition_costs is None
     assert route_definitions == [
         (0, [(0, 1, "overhead")], [(2, 3, "underground")])
     ]
     route_attrs = route_attrs[(0, (0, 1, "overhead"))]
     assert route_attrs["polarity_overhead"] == "ac"
     assert route_attrs["polarity_underground"] == "dc"
+
+
+def test_resolve_transition_costs_by_voltage_and_polarity():
+    """Transition costs should resolve per route batch values"""
+
+    resolved = _resolve_transition_costs(
+        {
+            "default": {"500": 2},
+            "pairwise": [
+                {
+                    "between": ["overhead", "underground"],
+                    "cost": {"500": {"dc": 5}},
+                }
+            ],
+        },
+        {
+            "overhead": {"voltage": 500, "polarity": "dc"},
+            "underground": {"voltage": 500, "polarity": "dc"},
+        },
+    )
+
+    assert resolved == {
+        "default": 2,
+        "pairwise": [
+            {
+                "between": ["overhead", "underground"],
+                "cost": 5,
+            }
+        ],
+    }
+
+
+def test_resolve_transition_costs_requires_matching_option_values():
+    """Dependent transition costs should reject mismatched options"""
+
+    with pytest.raises(
+        revrtConfigurationError,
+        match=r"requires matching voltage and polarity",
+    ):
+        _resolve_transition_costs(
+            {
+                "pairwise": [
+                    {
+                        "between": ["overhead", "underground"],
+                        "cost": {"500": 5},
+                    }
+                ]
+            },
+            {
+                "overhead": {"voltage": 500, "polarity": "ac"},
+                "underground": {"voltage": 500, "polarity": "dc"},
+            },
+        )
+
+
+def test_resolve_transition_costs_reports_missing_voltage():
+    """Dependent transition costs should identify unavailable voltages"""
+
+    with pytest.raises(
+        revrtKeyError,
+        match=r"no cost for voltage '500'. Available voltages: \['230'\]",
+    ):
+        _resolve_transition_costs(
+            {"default": {"230": 5}},
+            {"overhead": {"voltage": 500, "polarity": "ac"}},
+        )
 
 
 def test_get_row_multiplier_missing_config():
