@@ -650,29 +650,52 @@ class RouteMetrics:
             self._compute_path_length()
         return self._total_path_length
 
+    @cached_property
+    def _costs_by_option(self):
+        """dict: Total route costs indexed by routing option"""
+        rows, cols = np.array(self._route_row_col).T
+        point_lens = xr.DataArray(self._lens, dims="points")
+        costs = {}
+
+        for opt in self._routing_layers.routing_scenario.routing_option_names:
+            mask = self._route_options == opt
+            if not mask.any():
+                costs[opt] = 0.0
+                continue
+
+            option_rows = xr.DataArray(rows[mask], dims="points")
+            option_cols = xr.DataArray(cols[mask], dims="points")
+            cell_costs = self._routing_layers.costs[opt].isel(
+                y=option_rows, x=option_cols
+            )
+            inv_cell_costs = self._routing_layers.li_costs[opt].isel(
+                y=option_rows, x=option_cols
+            )
+            costs[opt] = (
+                da.sum(cell_costs * point_lens[mask]) + da.sum(inv_cell_costs)
+            ).compute()
+
+        return costs
+
+    @cached_property
+    def _lengths_by_option(self):
+        """dict: Total route lengths in kilometers by routing option"""
+        point_lens = da.asarray(self._lens)
+        return {
+            option: float(
+                da.sum(point_lens[self._route_options == option]).compute()
+                * self.cell_size
+                / 1000
+            )
+            for option in (
+                self._routing_layers.routing_scenario.routing_option_names
+            )
+        }
+
     @property
     def cost(self):
         """float: Optimized objective evaluated over the route"""
-        rows, cols = np.array(self._route_row_col).T
-        point_lens = xr.DataArray(self._lens, dims="points")
-        total_cost = da.zeros((), dtype=np.float32)
-
-        for option in np.unique(self._route_options):
-            mask = self._route_options == option
-            option_rows = xr.DataArray(rows[mask], dims="points")
-            option_cols = xr.DataArray(cols[mask], dims="points")
-
-            cell_costs = self._routing_layers.costs[option].isel(
-                y=option_rows, x=option_cols
-            )
-            total_cost += da.sum(cell_costs * point_lens[mask])
-
-            inv_cell_costs = self._routing_layers.li_costs[option].isel(
-                y=option_rows, x=option_cols
-            )
-            total_cost += da.sum(inv_cell_costs)
-
-        return total_cost.compute() + self._transition_cost()
+        return sum(self._costs_by_option.values()) + self._transition_cost()
 
     def _transition_cost(self):
         """float: Total transition cost implied by option changes"""
@@ -685,6 +708,7 @@ class RouteMetrics:
         return sum(
             pairwise_costs.get((src, dst), default_cost)
             for src, dst in pairwise(self._route_options)
+            if src != dst
         )
 
     @property
@@ -724,8 +748,6 @@ class RouteMetrics:
     def compute(self):
         """Assemble route metrics and optional geometry payload"""
         results = {
-            "length_km": self.total_path_length,
-            "cost": self.cost,
             "poi_lat": self.end_lat,
             "poi_lon": self.end_lon,
             "start_row": self._route[0][0],
@@ -733,7 +755,14 @@ class RouteMetrics:
             "end_row": self._route[-1][0],
             "end_col": self._route[-1][1],
             "optimized_objective": self._optimized_objective,
+            "length_km": self.total_path_length,
+            "cost": self.cost,
+            "total_transition_costs": self._transition_cost(),
         }
+
+        for opt in self._routing_layers.routing_scenario.routing_option_names:
+            results[f"{opt}_cost"] = self._costs_by_option[opt]
+            results[f"{opt}_length_km"] = self._lengths_by_option[opt]
 
         results.update(self._attrs)
         for layer in self._routing_layers.tracked_layers:
