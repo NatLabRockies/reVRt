@@ -350,6 +350,7 @@ def test_multi_option_route_metrics_use_option_layers(
                     {"layer_name": "layer_3", "is_invariant": True},
                 ],
             },
+            "unused": {"cost_layers": [{"layer_name": "layer_1"}]},
         },
         drivers={"default": {"overhead": 1, "underground": 10}},
         transition_costs={
@@ -394,6 +395,22 @@ def test_multi_option_route_metrics_use_option_layers(
         )
         assert metrics.cost == pytest.approx(expected_cost)
         assert result["cost"] == pytest.approx(expected_cost)
+        assert result["overhead_cost"] == pytest.approx(5.5)
+        assert result["underground_cost"] == pytest.approx(6.5)
+        assert result["unused_cost"] == 0
+        assert result["total_transition_costs"] == pytest.approx(3.5)
+        assert result["overhead_length_km"] == pytest.approx(0.001)
+        assert result["underground_length_km"] == pytest.approx(0.001)
+        assert result["unused_length_km"] == 0
+        assert result["length_km"] == pytest.approx(
+            result["overhead_length_km"] + result["underground_length_km"]
+        )
+        assert result["cost"] == pytest.approx(
+            result["overhead_cost"]
+            + result["underground_cost"]
+            + result["unused_cost"]
+            + result["total_transition_costs"]
+        )
         assert result["optimized_objective"] == pytest.approx(42.5)
     finally:
         routing_layers.close()
