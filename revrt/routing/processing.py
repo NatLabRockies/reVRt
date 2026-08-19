@@ -97,6 +97,21 @@ class BatchRouteProcessor:
             self.__rd, self.routing_layers, self.routing_scenario
         ).route_definitions
 
+    @cached_property
+    def _routing_option_file_skip_keys(self):
+        """set: Keys to skip when writing routing option files"""
+        full_route_metric_keys = {
+            "cost",
+            "length_km",
+            "optimized_objective",
+            "total_transition_costs",
+        }
+        for option in self.routing_scenario.routing_option_names:
+            full_route_metric_keys.update(
+                {f"{option}_cost", f"{option}_length_km"}
+            )
+        return full_route_metric_keys
+
     def process(self, out_fp, save_paths=False, routing_layer_out_fp=None):
         """Compute all routes and save to disk
 
@@ -135,6 +150,7 @@ class BatchRouteProcessor:
             save_paths,
             self.routing_layers.cost_crs,
             self.routing_layers.transform,
+            self._routing_option_file_skip_keys,
         )
 
         for indices, optimized_objective, attrs in self._route_results(rl):
@@ -387,10 +403,11 @@ class _RouteDefinitionFormatter:
 class _RouteResultWriter:
     """Class to manage output of route results"""
 
-    def __init__(self, out_fp, save_paths, cost_crs, transform):
+    def __init__(self, out_fp, save_paths, cost_crs, transform, skip_keys):
         out_fp = _validate_out_fp(out_fp, save_paths)
         self._save_paths = save_paths
         self._transform = transform
+        self._skip_keys = skip_keys
         self._writer = _IncrementalRouteWriter(out_fp, crs=cost_crs)
         self._option_writer = _IncrementalRouteWriter(
             _routing_options_output_fp(out_fp), crs=cost_crs
@@ -427,13 +444,7 @@ class _RouteResultWriter:
         base_result = {
             key: value
             for key, value in route_result.items()
-            if key
-            not in {
-                "geometry",
-                "cost",
-                "optimized_objective",
-                "length_km",
-            }
+            if key not in {"geometry", *self._skip_keys}
         }
         results = []
         for option, segments in segments_by_option.items():
