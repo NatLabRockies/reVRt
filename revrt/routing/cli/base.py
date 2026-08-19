@@ -15,6 +15,7 @@ import geopandas as gpd
 import xarray as xr
 
 from revrt.models.routing import (
+    validate_driver_configs,
     validate_routing_options,
     validate_transition_cost_input,
 )
@@ -99,9 +100,11 @@ class RouteToDefinitionConverter(ABC):
         self.cost_fpath = cost_fpath
         self.out_fp = Path(out_fp)
         self.transmission_config = transmission_config
-        self.drivers = drivers
         self._input_route_points = route_points
         self._routing_options = RoutingOptions(routing_options)
+        self.drivers = validate_driver_configs(
+            drivers, self._routing_options.routing_options
+        )
         self.transition_costs = validate_transition_cost_input(
             transition_costs, self._routing_options.routing_options
         )

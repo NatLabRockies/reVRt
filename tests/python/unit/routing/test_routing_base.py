@@ -9,7 +9,11 @@ import xarray as xr
 from rasterio.transform import from_origin
 
 from revrt.utilities import LayeredFile
-from revrt.models.routing import DriverConfig, validate_transition_cost_input
+from revrt.models.routing import (
+    DriverConfig,
+    validate_driver_configs,
+    validate_transition_cost_input,
+)
 from revrt.routing.base import (
     RouteMetrics,
     RoutingLayerManager,
@@ -429,34 +433,25 @@ def test_routing_scenario_preserves_validated_transition_costs(
     assert scenario.transition_costs is transition_costs
 
 
-def test_routing_scenario_rejects_unknown_driver_option(sample_layered_data):
+def test_driver_config_rejects_unknown_routing_option():
     """Driver rules must reference known routing options"""
 
     with pytest.raises(
         revrtConfigurationError,
         match=r"unknown routing option 'underground' in drivers.default",
     ):
-        RoutingScenario(
-            cost_fpath=sample_layered_data,
-            routing_options={
-                "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
-            },
-            drivers={"default": {"underground": 2}},
+        validate_driver_configs(
+            {"default": {"underground": 2}},
+            {"overhead": {"cost_layers": [{"layer_name": "layer_1"}]}},
         )
 
 
-def test_routing_scenario_rejects_invalid_driver_zone_where(
-    sample_layered_data,
-):
+def test_driver_config_rejects_invalid_zone_where():
     """Driver zones validate comparison syntax up front"""
 
     with pytest.raises(revrtConfigurationError, match="Barrier values must"):
-        RoutingScenario(
-            cost_fpath=sample_layered_data,
-            routing_options={
-                "overhead": {"cost_layers": [{"layer_name": "layer_1"}]}
-            },
-            drivers={
+        validate_driver_configs(
+            {
                 "zones": [
                     {
                         "layer_name": "layer_5",
@@ -465,6 +460,7 @@ def test_routing_scenario_rejects_invalid_driver_zone_where(
                     }
                 ]
             },
+            {"overhead": {"cost_layers": [{"layer_name": "layer_1"}]}},
         )
 
 

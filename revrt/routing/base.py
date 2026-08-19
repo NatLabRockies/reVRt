@@ -16,7 +16,6 @@ from shapely.geometry.linestring import LineString
 from revrt import simplify_using_slopes
 from revrt.models.cost_layers import BarrierLayer
 from revrt.models.routing import (
-    validate_driver_configs,
     validate_routing_options,
 )
 from revrt.routing.utilities import compute_lens
@@ -91,7 +90,7 @@ class RoutingScenario:
         """
         self.cost_fpath = cost_fpath
         self.routing_options = validate_routing_options(routing_options)
-        self.drivers = validate_driver_configs(drivers, self.routing_options)
+        self.drivers = drivers
         self.transition_costs = transition_costs
         self.tracked_layers = tracked_layers or []
         self.invalid_costs_block_routing = invalid_costs_block_routing
