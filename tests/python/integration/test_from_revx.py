@@ -28,7 +28,7 @@ from revrt.routing.utilities import map_to_costs
 
 DEFAULT_CONFIG = TransmissionConfig()
 DEFAULT_BARRIER_CONFIG = {
-    "multiplier_layer": "transmission_barrier",
+    "multiplier_layer": ["transmission_barrier"],
     "multiplier_scalar": 100,
 }
 CHECK_COLS = ("start_index", "length_km", "cost", "index")
@@ -101,7 +101,9 @@ def _run_cli(
     save_paths=False,
 ):
     """Run reVRt CLI with given configs and return test and truth dataframes"""
-    capacity = random.choice([100, 200, 400, 1000, 3000])  # noqa: S311
+
+    # ruff:ignore[suspicious-non-cryptographic-random-usage]
+    capacity = random.choice([100, 200, 400, 1000, 3000])
     cost_layer = f"tie_line_costs_{_cap_class_to_cap(capacity)}MW"
     cost_layer_config["layer_name"] = cost_layer
     truth = routing_data_dir / f"least_cost_paths_{capacity}MW.csv"
@@ -194,7 +196,8 @@ def test_invariant_costs(
 ):
     """Test reVX invariant cost layer routing against known outputs"""
 
-    capacity = random.choice([100, 200, 400, 1000, 3000])  # noqa: S311
+    # ruff:ignore[suspicious-non-cryptographic-random-usage]
+    capacity = random.choice([100, 200, 400, 1000, 3000])
     cap = _cap_class_to_cap(capacity)
     base_costs = {
         "layer_name": f"tie_line_costs_{cap}MW",
@@ -231,7 +234,8 @@ def test_cost_multiplier_layer(
 ):
     """Test routing with a per-option cost_multiplier_layer"""
 
-    capacity = random.choice([100, 200, 400, 1000, 3000])  # noqa: S311
+    # ruff:ignore[suspicious-non-cryptographic-random-usage]
+    capacity = random.choice([100, 200, 400, 1000, 3000])
     cap = _cap_class_to_cap(capacity)
     cost_layer = {"layer_name": f"tie_line_costs_{cap}MW"}
 
@@ -249,7 +253,7 @@ def test_cost_multiplier_layer(
             "default": {
                 "cost_layers": [cost_layer],
                 "friction_layers": [DEFAULT_BARRIER_CONFIG],
-                "cost_multiplier_layer": "test_layer",
+                "cost_multiplier_layer": ["test_layer"],
             }
         },
     )
@@ -270,7 +274,8 @@ def test_cost_multiplier_scalar(
 ):
     """Test routing with a cost_multiplier_scalar"""
 
-    capacity = random.choice([100, 200, 400, 1000, 3000])  # noqa: S311
+    # ruff:ignore[suspicious-non-cryptographic-random-usage]
+    capacity = random.choice([100, 200, 400, 1000, 3000])
     cap = _cap_class_to_cap(capacity)
     cost_layer = {"layer_name": f"tie_line_costs_{cap}MW"}
 
@@ -345,7 +350,7 @@ def test_not_hard_barrier(revx_transmission_layers, tmp_path):
             "default": {
                 "cost_layers": [{"layer_name": "test_layer"}],
                 "friction_layers": [DEFAULT_BARRIER_CONFIG],
-                "cost_multiplier_layer": "test_layer",
+                "cost_multiplier_layer": ["test_layer"],
             }
         },
         invalid_costs_block_routing=True,
@@ -366,7 +371,7 @@ def test_not_hard_barrier(revx_transmission_layers, tmp_path):
             "default": {
                 "cost_layers": [{"layer_name": "test_layer"}],
                 "friction_layers": [DEFAULT_BARRIER_CONFIG],
-                "cost_multiplier_layer": "test_layer",
+                "cost_multiplier_layer": ["test_layer"],
             }
         },
         invalid_costs_block_routing=False,
