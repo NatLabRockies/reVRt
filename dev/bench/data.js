@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787089856507,
+  "lastUpdate": 1787177144546,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -13943,6 +13943,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 289775568,
             "range": "± 4262359",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "23f8caf10379f4dba89914bfd3e9fa984e460cd7",
+          "message": "Add voltage/polarity-based transition costs (#328)\n\n* Add new type\n\n* Use new type\n\n* Add `validate_transition_cost_configs`\n\n* Update function\n\n* Assume input is validated\n\n* Validator now resolves transition costs\n\n* Update docstrings\n\n* Add tests\n\n* Add tests\n\n* Fix test\n\n* Update directives\n\n* Add test\n\n* move validation\n\n* Assume input is validated\n\n* Fix tests\n\n* Fix test\n\n* Add warning\n\n* Fix tests\n\n* Minor update",
+          "timestamp": "2026-08-19T15:50:00-06:00",
+          "tree_id": "cc9bb1fce33993be786f0b0e56b7c7c698d91df0",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/23f8caf10379f4dba89914bfd3e9fa984e460cd7"
+        },
+        "date": 1787177143133,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 48874307,
+            "range": "± 332229",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 53547831,
+            "range": "± 581483",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 63369262,
+            "range": "± 891088",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 90574433,
+            "range": "± 1018946",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 437954235,
+            "range": "± 13698936",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 139358898,
+            "range": "± 955067",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 139651563,
+            "range": "± 2243098",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 149393996,
+            "range": "± 1373284",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 177270056,
+            "range": "± 793953",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 281575216,
+            "range": "± 2743733",
             "unit": "ns/iter"
           }
         ]
