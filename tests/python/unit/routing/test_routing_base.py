@@ -12,6 +12,7 @@ from revrt.utilities import LayeredFile
 from revrt.models.routing import (
     DriverConfig,
     validate_driver_configs,
+    validate_routing_options,
     validate_transition_cost_input,
 )
 from revrt.routing.base import (
@@ -182,11 +183,10 @@ def sample_layered_data(tmp_path_factory):
 
 
 def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
-    """RoutingScenario emits the Rust multi-option schema"""
+    """RoutingScenario emits validated options in the Rust schema"""
 
-    scenario = RoutingScenario(
-        cost_fpath=sample_layered_data,
-        routing_options={
+    routing_options = validate_routing_options(
+        {
             "overhead": {
                 "cost_layers": [
                     {
@@ -214,7 +214,11 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
             "underground": {
                 "cost_layers": [{"layer_name": "layer_2"}],
             },
-        },
+        }
+    )
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options=routing_options,
         drivers={
             "default": {"overhead": 1, "underground": "excluded"},
             "zones": [
@@ -240,6 +244,7 @@ def test_routing_scenario_serializes_multi_option_config(sample_layered_data):
 
     payload = json.loads(scenario.cost_function_json)
 
+    assert scenario.routing_options is routing_options
     assert payload["invalid_costs_block_routing"] is False
     assert payload["drivers"] == {
         "default": {"overhead": 1, "underground": "excluded"},
@@ -1266,9 +1271,8 @@ def test_characterized_layer_total_length_computation(sample_layered_data):
 def test_friction_layer_with_multiplier_layer_only(sample_layered_data):
     """Friction layers support multiplier layer without mask"""
 
-    scenario = RoutingScenario(
-        cost_fpath=sample_layered_data,
-        routing_options={
+    routing_options = validate_routing_options(
+        {
             "default": {
                 "cost_layers": [{"layer_name": "layer_1"}],
                 "friction_layers": [
@@ -1278,7 +1282,11 @@ def test_friction_layer_with_multiplier_layer_only(sample_layered_data):
                     }
                 ],
             }
-        },
+        }
+    )
+    scenario = RoutingScenario(
+        cost_fpath=sample_layered_data,
+        routing_options=routing_options,
     )
 
     layers_for_rust = list(
