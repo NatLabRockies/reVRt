@@ -47,7 +47,7 @@ type BarrierArray = ndarray::Array<BarrierRank, ndarray::Dim<ndarray::IxDynImpl>
 /// to change in the future. It will keep backward compatibility for
 /// loading from JSON, but its internal structure might change.
 #[derive(Clone, Debug, serde::Deserialize)]
-pub(crate) struct BarrierLayer {
+struct BarrierLayer {
     /// Name of the feature variable this barrier is derived from
     #[serde(rename = "layer_name")]
     name: String,
@@ -148,7 +148,7 @@ impl BarrierLayer {
 /// stays a barrier, so lower ranks are redundant and only the highest one
 /// affects the outcome.
 #[derive(Clone, Debug)]
-pub(crate) struct Barrier {
+struct Barrier {
     /// Layers making up the barrier, or `None` when no barrier applies
     layers: Option<Vec<BarrierLayer>>,
 }
