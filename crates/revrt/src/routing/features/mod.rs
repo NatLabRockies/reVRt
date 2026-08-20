@@ -42,7 +42,7 @@ pub(crate) use lazy_subset::AsyncLazySubset;
 pub(crate) type FeatureArray<T> = ndarray::ArrayD<T>;
 
 /// A source of named feature layers with async, per-variable access
-pub(crate) trait FeatureSource {
+pub(crate) trait FeatureSource: Send + Sync {
     /// Element type of the feature arrays this source yields
     type Elem;
 
