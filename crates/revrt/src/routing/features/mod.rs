@@ -47,6 +47,10 @@ pub(crate) trait FeatureSource: Send + Sync {
     type Elem;
 
     /// Fetch the feature array registered under `varname`
+    ///
+    /// Every variable resolves to an array of the same shape, so callers
+    /// may combine results from different variables element-wise without
+    /// re-checking shapes.
     fn get(&self, varname: &str) -> impl Future<Output = Result<FeatureArray<Self::Elem>>> + Send;
 }
 

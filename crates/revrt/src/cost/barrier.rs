@@ -161,6 +161,13 @@ impl Barrier {
     /// # Errors
     ///
     /// Returns an error if any layer's feature cannot be provided.
+    ///
+    /// # Panics
+    ///
+    /// Panics if two layers resolve to arrays of different shapes. All
+    /// layers read from the same [`FeatureSource`] over the same subset,
+    /// so their arrays are assumed to share a shape rather than being
+    /// checked on every combination.
     async fn compute<F>(&self, features: &F) -> Result<Option<BarrierArray>>
     where
         F: FeatureSource,
