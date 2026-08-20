@@ -62,6 +62,7 @@ revrt.spatial\_characterization.stats.FractionalStat
       ~FractionalStat.format
       ~FractionalStat.format_map
       ~FractionalStat.maketrans
+      ~FractionalStat.allowed
    
    
 

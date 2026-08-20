@@ -444,6 +444,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html">revrt.models.routing.MultiplierLayerInput</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostValue.html">revrt.models.routing.TransitionCostValue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
@@ -678,11 +679,8 @@
 route after applying optional multiplier inputs. See
 <a class="reference internal" href="revrt.models.routing.TrackedLayer.html#revrt.models.routing.TrackedLayer" title="revrt.models.routing.TrackedLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrackedLayer</span></code></a> for the
 canonical schema.</p></li>
-<li><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Mapping of routing-option names to dictionaries containing
-cost, friction, and barrier definitions. See
-<a class="reference internal" href="revrt.models.routing.RoutingOptionConfig.html#revrt.models.routing.RoutingOptionConfig" title="revrt.models.routing.RoutingOptionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoutingOptionConfig</span></code></a> for the
-canonical schema that is serialized for the Rust routing
-core.</p></li>
+<li><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Validated mapping of routing-option names to dictionaries
+containing cost, friction, and barrier definitions.</p></li>
 <li><p><strong>drivers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional driver-rule configuration keyed by routing option.
 See <a class="reference internal" href="revrt.models.routing.DriverConfig.html#revrt.models.routing.DriverConfig" title="revrt.models.routing.DriverConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">DriverConfig</span></code></a> and
 <a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html#revrt.models.routing.DriverZoneConfig" title="revrt.models.routing.DriverZoneConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">DriverZoneConfig</span></code></a>.</p></li>

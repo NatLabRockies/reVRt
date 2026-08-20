@@ -43,182 +43,17 @@
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.routing.cli.point_to_feature</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;reVRt point-to-feature routing CLI command&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""reVRt point-to-feature routing CLI command"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
@@ -857,7 +777,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="PointToFeatureRouteDefinitionConverter">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter.html#revrt.routing.cli.point_to_feature.PointToFeatureRouteDefinitionConverter">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PointToFeatureRouteDefinitionConverter</span><span class="p">(</span><span class="n">RouteToDefinitionConverter</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert route points DataFrame to route definition for Rust&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Convert route points DataFrame to route definition for Rust"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -869,9 +789,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">transmission_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">drivers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">transition_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
+        <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">"end_feat_id"</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -897,7 +817,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            description of</span>
 <span class="sd">            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`</span>
 <span class="sd">            for more details.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
             <span class="n">route_points</span><span class="o">=</span><span class="n">route_points</span><span class="p">,</span>
@@ -911,51 +831,51 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span> <span class="o">=</span> <span class="n">connection_identifier_column</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_rp_with_expected_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure route points has required columns&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Ensure route points has required columns"""</span>
 
         <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">&quot;start_row&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="o">.</span><span class="n">columns</span>
-            <span class="ow">or</span> <span class="s2">&quot;start_col&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="o">.</span><span class="n">columns</span>
+            <span class="s2">"start_row"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="o">.</span><span class="n">columns</span>
+            <span class="ow">or</span> <span class="s2">"start_col"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="o">.</span><span class="n">columns</span>
         <span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Mapping route start points to cost grid...&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Mapping route start points to cost grid..."</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span> <span class="o">=</span> <span class="n">map_to_costs</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="p">,</span>
-                <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;crs&quot;</span><span class="p">],</span>
-                <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">],</span>
-                <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">],</span>
+                <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">"crs"</span><span class="p">],</span>
+                <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">"transform"</span><span class="p">],</span>
+                <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">"shape"</span><span class="p">],</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_rp_with_expected_cols</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_route_as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert route row to a tuple for existing route checking&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Convert route row to a tuple for existing route checking"""</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">]),</span>
-            <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;start_col&quot;</span><span class="p">]),</span>
-            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start_option&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span><span class="o">.</span><span class="n">default</span><span class="p">)),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"start_row"</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"start_col"</span><span class="p">]),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"start_option"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span><span class="o">.</span><span class="n">default</span><span class="p">)),</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="p">]),</span>
             <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_route_value_signature</span><span class="p">(</span><span class="n">row</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_route_definitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert route DataFrame to route definitions format&quot;&quot;&quot;</span>
-        <span class="n">start_point_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">,</span> <span class="s2">&quot;start_col&quot;</span><span class="p">]</span>
-        <span class="n">start_option</span> <span class="o">=</span> <span class="s2">&quot;start_option&quot;</span>
+<span class="w">        </span><span class="sd">"""Convert route DataFrame to route definitions format"""</span>
+        <span class="n">start_point_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"start_row"</span><span class="p">,</span> <span class="s2">"start_col"</span><span class="p">]</span>
+        <span class="n">start_option</span> <span class="o">=</span> <span class="s2">"start_option"</span>
 
         <span class="n">route_definitions</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">route_attrs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">cost_height</span><span class="p">,</span> <span class="n">cost_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+        <span class="n">cost_height</span><span class="p">,</span> <span class="n">cost_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">"shape"</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">route_id</span><span class="p">,</span> <span class="p">((</span><span class="n">feat_id</span><span class="p">,</span> <span class="n">eo</span><span class="p">),</span> <span class="n">sub_routes</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
-            <span class="n">routes</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="p">,</span> <span class="s2">&quot;end_option&quot;</span><span class="p">])</span>
+            <span class="n">routes</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="p">,</span> <span class="s2">"end_option"</span><span class="p">])</span>
         <span class="p">):</span>
             <span class="n">end_feats</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">features_fpath</span><span class="p">,</span>
-                <span class="n">where</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="si">}</span><span class="s2"> == </span><span class="si">{</span><span class="n">feat_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">where</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="si">}</span><span class="s2"> == </span><span class="si">{</span><span class="n">feat_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">end_feats</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;No features found with &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="si">}</span><span class="s2"> == </span><span class="si">{</span><span class="n">feat_id</span><span class="si">}</span><span class="s2">!&quot;</span>
+                    <span class="sa">f</span><span class="s2">"No features found with "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_identifier_column</span><span class="si">}</span><span class="s2"> == </span><span class="si">{</span><span class="n">feat_id</span><span class="si">}</span><span class="s2">!"</span>
                 <span class="p">)</span>
                 <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
                 <span class="k">continue</span>
@@ -965,7 +885,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">start_points</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">__</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">sub_routes</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
                 <span class="n">start_idx</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="o">*</span><span class="n">info</span><span class="p">[</span><span class="n">start_point_cols</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
+                    <span class="o">*</span><span class="n">info</span><span class="p">[</span><span class="n">start_point_cols</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span>
                     <span class="n">info</span><span class="p">[</span><span class="n">start_option</span><span class="p">],</span>
                 <span class="p">)</span>
                 <span class="n">route_attrs</span><span class="p">[(</span><span class="n">route_id</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">)]</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
@@ -986,13 +906,13 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_end_feats_to_row_col</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end_feats</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert end features to row/col indices in cost grid&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Convert end features to row/col indices in cost grid"""</span>
         <span class="n">window</span> <span class="o">=</span> <span class="n">integer_dimension_window</span><span class="p">(</span>
             <span class="n">bounds</span><span class="o">=</span><span class="n">end_feats</span><span class="o">.</span><span class="n">total_bounds</span><span class="p">,</span>
-            <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">],</span>
+            <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">"transform"</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="n">window_transform</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">windows</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
-            <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">]</span>
+            <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_metadata</span><span class="p">[</span><span class="s2">"transform"</span><span class="p">]</span>
         <span class="p">)</span>
 
         <span class="n">mask</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">geometry_mask</span><span class="p">(</span>
@@ -1016,8 +936,8 @@ window.runMermaid = runMermaid;</script>
     <span class="n">out_dir</span><span class="p">,</span>
     <span class="n">job_name</span><span class="p">,</span>
     <span class="n">routing_options</span><span class="p">,</span>
-    <span class="n">route_table_fpath</span><span class="o">=</span><span class="s2">&quot;PIPELINE&quot;</span><span class="p">,</span>
-    <span class="n">features_fpath</span><span class="o">=</span><span class="s2">&quot;PIPELINE&quot;</span><span class="p">,</span>
+    <span class="n">route_table_fpath</span><span class="o">=</span><span class="s2">"PIPELINE"</span><span class="p">,</span>
+    <span class="n">features_fpath</span><span class="o">=</span><span class="s2">"PIPELINE"</span><span class="p">,</span>
     <span class="n">drivers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">transition_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">tracked_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1025,13 +945,13 @@ window.runMermaid = runMermaid;</script>
     <span class="n">save_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">save_routing_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
-    <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;bidirectional_long_range_dijkstra&quot;</span><span class="p">,</span>
+    <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">"end_feat_id"</span><span class="p">,</span>
+    <span class="n">algorithm</span><span class="o">=</span><span class="s2">"bidirectional_long_range_dijkstra"</span><span class="p">,</span>
     <span class="n">memory_utilization_limit</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
     <span class="n">system_mem_limit_gb</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
     <span class="n">_split_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Run least-cost path routing for points mapped to features</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Run least-cost path routing for points mapped to features</span>
 
 <span class="sd">    Given a table that defines each route as a start point (via latitude</span>
 <span class="sd">    and longitude input or preferably a row/column index into the data)</span>
@@ -1048,12 +968,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Directory where routing outputs should be written.</span>
 <span class="sd">    job_name : str</span>
 <span class="sd">        Label used to name the generated output file.</span>
-<span class="sd">    route_table_fpath : path-like, str, or list, default=&quot;PIPELINE&quot;</span>
+<span class="sd">    route_table_fpath : path-like, str, or list, default="PIPELINE"</span>
 <span class="sd">        Route-table input defining all route start points and end</span>
 <span class="sd">        features.</span>
 
-<span class="sd">        If set to ``&quot;PIPELINE&quot;``, then ``features_fpath`` must also</span>
-<span class="sd">        be ``&quot;PIPELINE&quot;`` and the route tables will be pulled from</span>
+<span class="sd">        If set to ``"PIPELINE"``, then ``features_fpath`` must also</span>
+<span class="sd">        be ``"PIPELINE"`` and the route tables will be pulled from</span>
 <span class="sd">        the previous pipeline step. Pipeline inputs require previous</span>
 <span class="sd">        outputs containing matching CSV route tables and GPKG</span>
 <span class="sd">        feature files.</span>
@@ -1065,11 +985,11 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        Each route table must have the following columns:</span>
 
-<span class="sd">            - &quot;start_lat&quot;: Stating point latitude (can alternatively use</span>
-<span class="sd">              &quot;start_col&quot; to define the start point column index in the</span>
+<span class="sd">            - "start_lat": Stating point latitude (can alternatively use</span>
+<span class="sd">              "start_col" to define the start point column index in the</span>
 <span class="sd">              cost raster).</span>
-<span class="sd">            - &quot;start_lon&quot;: Stating point longitude (can alternatively</span>
-<span class="sd">              use &quot;start_row&quot; to define the start point row index in the</span>
+<span class="sd">            - "start_lon": Stating point longitude (can alternatively</span>
+<span class="sd">              use "start_row" to define the start point row index in the</span>
 <span class="sd">              cost raster).</span>
 <span class="sd">            - `connection_identifier_column`: ID of the feature that</span>
 <span class="sd">              should be mapped to. This ID should match at least one of</span>
@@ -1083,11 +1003,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">              are omitted will use `polarity` and `voltage` column</span>
 <span class="sd">              values.</span>
 
-<span class="sd">    features_fpath : path-like, str, or list, default=&quot;PIPELINE&quot;</span>
+<span class="sd">    features_fpath : path-like, str, or list, default="PIPELINE"</span>
 <span class="sd">        Feature input containing the vector geometries to map points to.</span>
 
-<span class="sd">        If set to ``&quot;PIPELINE&quot;``, then ``route_table_fpath`` must</span>
-<span class="sd">        also be ``&quot;PIPELINE&quot;`` and the feature files will be pulled</span>
+<span class="sd">        If set to ``"PIPELINE"``, then ``route_table_fpath`` must</span>
+<span class="sd">        also be ``"PIPELINE"`` and the feature files will be pulled</span>
 <span class="sd">        from the previous pipeline step.</span>
 
 <span class="sd">        Otherwise, provide either a single vector path or a list of</span>
@@ -1112,7 +1032,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Optional transition-cost configuration between routing</span>
 <span class="sd">        options. See</span>
 <span class="sd">        :class:`~revrt.models.routing.TransitionCostsConfig` for</span>
-<span class="sd">        details.</span>
+<span class="sd">        details. The ``default`` and each pairwise ``cost`` value may</span>
+<span class="sd">        be a scalar, a mapping from voltage to scalar cost, or a nested</span>
+<span class="sd">        mapping from voltage and polarity to cost. A voltage scalar</span>
+<span class="sd">        applies to every polarity at that voltage. Dependent pairwise</span>
+<span class="sd">        costs require matching voltage and polarity for both options;</span>
+<span class="sd">        a dependent default requires matching values for every option.</span>
 <span class="sd">    tracked_layers : list, optional</span>
 <span class="sd">        List of dictionaries defining route-characterization layers.</span>
 <span class="sd">        These layers do not influence the routing objective and are</span>
@@ -1151,24 +1076,24 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Optional flag to treat any invalid cost values (&lt;= 0) as</span>
 <span class="sd">        impassable (i.e. no paths can ever cross this). If ``False``,</span>
 <span class="sd">        invalid cost values (&lt;= 0) are set to a large value to simulate</span>
-<span class="sd">        a strong but permeable &quot;quasi-barrier&quot;. By default, ``False``.</span>
-<span class="sd">    connection_identifier_column : str, default=&quot;end_feat_id&quot;</span>
+<span class="sd">        a strong but permeable "quasi-barrier". By default, ``False``.</span>
+<span class="sd">    connection_identifier_column : str, default="end_feat_id"</span>
 <span class="sd">        Column in the `features_fpath` data used to uniquely identify</span>
 <span class="sd">        each feature. This column is also expected to be in the</span>
 <span class="sd">        `route_table` input to map points to features. If a column name</span>
 <span class="sd">        is given that does not exist in the data, an error will be</span>
-<span class="sd">        raised. By default, ``&quot;end_feat_id&quot;``.</span>
-<span class="sd">    algorithm : str, default=&quot;bidirectional_long_range_dijkstra&quot;</span>
+<span class="sd">        raised. By default, ``"end_feat_id"``.</span>
+<span class="sd">    algorithm : str, default="bidirectional_long_range_dijkstra"</span>
 <span class="sd">        Routing algorithm implementation to use. Supported values</span>
-<span class="sd">        are ``&quot;astar&quot;``, ``&quot;long_range_astar&quot;``,</span>
-<span class="sd">        ``&quot;long_range_dijkstra&quot;``,</span>
-<span class="sd">        ``&quot;bidirectional_long_range_dijkstra&quot;``, and</span>
-<span class="sd">        ``&quot;dijkstra&quot;``. ``&quot;astar&quot;`` and ``&quot;dijkstra&quot;`` are</span>
+<span class="sd">        are ``"astar"``, ``"long_range_astar"``,</span>
+<span class="sd">        ``"long_range_dijkstra"``,</span>
+<span class="sd">        ``"bidirectional_long_range_dijkstra"``, and</span>
+<span class="sd">        ``"dijkstra"``. ``"astar"`` and ``"dijkstra"`` are</span>
 <span class="sd">        in-memory implementations that do not respect the memory</span>
 <span class="sd">        limit. Prefer a long-range option unless you know for a fact</span>
 <span class="sd">        that your route computations will not need much memory and</span>
 <span class="sd">        speed is very important to you.</span>
-<span class="sd">        By default, ``&quot;bidirectional_long_range_dijkstra&quot;``.</span>
+<span class="sd">        By default, ``"bidirectional_long_range_dijkstra"``.</span>
 <span class="sd">    memory_utilization_limit : float, default=0.9</span>
 <span class="sd">        Fraction of `system_mem_limit_gb` to utilize for routing. Should</span>
 <span class="sd">        be a value between 0 and 1. By default, ``0.9``.</span>
@@ -1189,13 +1114,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    revrt.routing.cli.build_route_table.point_to_feature_route_table</span>
 <span class="sd">        Helper function to build a routing table for points mapped to</span>
 <span class="sd">        features.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="s2">&quot;LCP processing&quot;</span><span class="p">):</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="s2">"LCP processing"</span><span class="p">):</span>
         <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
         <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tracked layers input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">tracked_layers</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Transmission config input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Tracked layers input: </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">tracked_layers</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Transmission config input: </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">)</span>
 
         <span class="n">transmission_config</span> <span class="o">=</span> <span class="n">parse_config</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">)</span>
 
@@ -1203,13 +1128,13 @@ window.runMermaid = runMermaid;</script>
             <span class="n">route_table_fpath</span><span class="p">,</span> <span class="n">split_params</span><span class="o">=</span><span class="n">_split_params</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No routes to process!&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"No routes to process!"</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="n">out_fp</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.gpkg&quot;</span>
+            <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.gpkg"</span>
             <span class="k">if</span> <span class="n">save_paths</span>
-            <span class="k">else</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+            <span class="k">else</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s2">.csv"</span>
         <span class="p">)</span>
 
         <span class="n">routes_to_compute</span> <span class="o">=</span> <span class="n">PointToFeatureRouteDefinitionConverter</span><span class="p">(</span>
@@ -1241,24 +1166,24 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_prep_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">,</span> <span class="n">command_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pre-process config inputs for point-to-feature routing&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Pre-process config inputs for point-to-feature routing"""</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">_handle_route_table_and_features_input</span><span class="p">(</span>
         <span class="n">config</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">,</span> <span class="n">command_name</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_dir&quot;</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">"cost_fpath"</span><span class="p">,</span> <span class="s2">"out_dir"</span><span class="p">})</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_handle_route_table_and_features_input</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">project_dir</span><span class="p">,</span> <span class="n">command_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle route table and features input from user&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Handle route table and features input from user"""</span>
 
-    <span class="n">rt_is_pipeline</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;PIPELINE&quot;</span>
-    <span class="n">f_is_pipeline</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;PIPELINE&quot;</span>
+    <span class="n">rt_is_pipeline</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">"route_table_fpath"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"PIPELINE"</span>
+    <span class="n">f_is_pipeline</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">"features_fpath"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"PIPELINE"</span>
 
     <span class="k">if</span> <span class="n">rt_is_pipeline</span> <span class="o">!=</span> <span class="n">f_is_pipeline</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Both `route_table_fpath` and `features_fpath` must be set &quot;</span>
-            <span class="s2">&quot;to &#39;PIPELINE&#39; for pipeline runs.&quot;</span>
+            <span class="s2">"Both `route_table_fpath` and `features_fpath` must be set "</span>
+            <span class="s2">"to 'PIPELINE' for pipeline runs."</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1270,27 +1195,27 @@ window.runMermaid = runMermaid;</script>
         <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">parse_previous_status</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">command_name</span><span class="p">)</span>
     <span class="p">]</span>
     <span class="n">route_tables</span><span class="p">,</span> <span class="n">feature_files</span> <span class="o">=</span> <span class="n">_split_pipeline_route_inputs</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
-    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">route_tables</span>
-    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_files</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">"route_table_fpath"</span><span class="p">]</span> <span class="o">=</span> <span class="n">route_tables</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">"features_fpath"</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_files</span>
     <span class="k">return</span> <span class="n">config</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_split_pipeline_route_inputs</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split and align pipeline route-table and feature outputs&quot;&quot;&quot;</span>
-    <span class="n">route_tables</span> <span class="o">=</span> <span class="p">[</span><span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">]</span>
-    <span class="n">feature_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.gpkg&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">"""Split and align pipeline route-table and feature outputs"""</span>
+    <span class="n">route_tables</span> <span class="o">=</span> <span class="p">[</span><span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">".csv"</span><span class="p">]</span>
+    <span class="n">feature_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">".gpkg"</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">route_tables</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">feature_files</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Pipeline route-features input requires previous outputs with &quot;</span>
-            <span class="s2">&quot;both CSV route tables and GPKG feature files.&quot;</span>
+            <span class="s2">"Pipeline route-features input requires previous outputs with "</span>
+            <span class="s2">"both CSV route tables and GPKG feature files."</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_tables</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_files</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Pipeline route-features input requires the same number of &quot;</span>
-            <span class="s2">&quot;CSV route tables and GPKG feature files.&quot;</span>
+            <span class="s2">"Pipeline route-features input requires the same number of "</span>
+            <span class="s2">"CSV route tables and GPKG feature files."</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1302,24 +1227,24 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_match_pipeline_feature_files</span><span class="p">(</span><span class="n">route_tables</span><span class="p">,</span> <span class="n">feature_files</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Match route tables to feature files using the GAPs split tag&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Match route tables to feature files using the GAPs split tag"""</span>
     <span class="n">route_tags</span> <span class="o">=</span> <span class="p">{</span><span class="n">_pipeline_file_tag</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span> <span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">route_tables</span><span class="p">}</span>
     <span class="n">feature_tags</span> <span class="o">=</span> <span class="p">{</span><span class="n">_pipeline_file_tag</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span> <span class="n">fp</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">feature_files</span><span class="p">}</span>
 
     <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">route_tags</span> <span class="ow">or</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">feature_tags</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Pipeline route-features inputs are ambiguously tagged.&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Pipeline route-features inputs are ambiguously tagged."</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_tags</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">route_tables</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_tags</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span>
         <span class="n">feature_files</span>
     <span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Pipeline route-features inputs are ambiguously tagged.&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Pipeline route-features inputs are ambiguously tagged."</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">route_tags</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">feature_tags</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Could not align pipeline route-table CSV outputs with &quot;</span>
-            <span class="s2">&quot;mapped-feature GPKG outputs using the GAPs split tag.&quot;</span>
+            <span class="s2">"Could not align pipeline route-table CSV outputs with "</span>
+            <span class="s2">"mapped-feature GPKG outputs using the GAPs split tag."</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1327,17 +1252,17 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_pipeline_file_tag</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract the GAPs split tag from a pipeline output filepath&quot;&quot;&quot;</span>
-    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">rf</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">TAG</span><span class="p">)</span><span class="si">}</span><span class="s2">\d+)$&quot;</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Extract the GAPs split tag from a pipeline output filepath"""</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">rf</span><span class="s2">"(</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">TAG</span><span class="p">)</span><span class="si">}</span><span class="s2">\d+)$"</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_handle_non_pipeline_input</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle non-pipeline input from user&quot;&quot;&quot;</span>
-    <span class="n">rt_fp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span>
-    <span class="n">f_fp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">"""Handle non-pipeline input from user"""</span>
+    <span class="n">rt_fp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">"route_table_fpath"</span><span class="p">]</span>
+    <span class="n">f_fp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">"features_fpath"</span><span class="p">]</span>
     <span class="n">rt_is_sequence</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
         <span class="n">rt_fp</span><span class="p">,</span> <span class="nb">str</span>
     <span class="p">)</span>
@@ -1346,43 +1271,53 @@ window.runMermaid = runMermaid;</script>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">rt_is_sequence</span> <span class="ow">or</span> <span class="n">f_is_sequence</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rt_is_sequence</span> <span class="ow">and</span> <span class="n">f_is_sequence</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;`route_table_fpath` and `features_fpath` must both &quot;</span>
-                <span class="s2">&quot;be sequences or both be strings.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f_fp</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;`route_table_fpath` and `features_fpath` sequences &quot;</span>
-                <span class="s2">&quot;must be the same length.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">rt_fp</span><span class="p">]</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">f_fp</span><span class="p">]</span>
+        <span class="n">_validate_rt_fp_sequence_input</span><span class="p">(</span>
+            <span class="n">rt_fp</span><span class="p">,</span> <span class="n">f_fp</span><span class="p">,</span> <span class="n">rt_is_sequence</span><span class="p">,</span> <span class="n">f_is_sequence</span>
+        <span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">"route_table_fpath"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">rt_fp</span><span class="p">]</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">"features_fpath"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">f_fp</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">config</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">_validate_rt_fp_str_input</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">,</span> <span class="n">f_fp</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">"route_table_fpath"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">)]</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">"features_fpath"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">f_fp</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">config</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_rt_fp_sequence_input</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">,</span> <span class="n">f_fp</span><span class="p">,</span> <span class="n">rt_is_sequence</span><span class="p">,</span> <span class="n">f_is_sequence</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate that input sequences are correctly formatted"""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rt_is_sequence</span> <span class="ow">and</span> <span class="n">f_is_sequence</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;`route_table_fpath` and `features_fpath` must both be &quot;</span>
-            <span class="s2">&quot;sequences or both be strings.&quot;</span>
+            <span class="s2">"`route_table_fpath` and `features_fpath` must both "</span>
+            <span class="s2">"be sequences or both be strings."</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">)]</span>
-    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">strip_path</span><span class="p">(</span><span class="n">f_fp</span><span class="p">)]</span>
-    <span class="k">return</span> <span class="n">config</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f_fp</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"`route_table_fpath` and `features_fpath` sequences "</span>
+            <span class="s2">"must be the same length."</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_rt_fp_str_input</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">,</span> <span class="n">f_fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate that both inputs are str"""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rt_fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"`route_table_fpath` and `features_fpath` must both be "</span>
+            <span class="s2">"sequences or both be strings."</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="n">route_features_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
     <span class="n">compute_lcp_routes</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;route-features&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"route-features"</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">split_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;route_table_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;features_fpath&quot;</span><span class="p">),</span> <span class="s2">&quot;_split_params&quot;</span><span class="p">],</span>
+    <span class="n">split_keys</span><span class="o">=</span><span class="p">[(</span><span class="s2">"route_table_fpath"</span><span class="p">,</span> <span class="s2">"features_fpath"</span><span class="p">),</span> <span class="s2">"_split_params"</span><span class="p">],</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_prep_config</span><span class="p">,</span>
-    <span class="n">skip_doc_params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;system_mem_limit_gb&quot;</span><span class="p">],</span>
+    <span class="n">skip_doc_params</span><span class="o">=</span><span class="p">[</span><span class="s2">"system_mem_limit_gb"</span><span class="p">],</span>
 <span class="p">)</span>
 </pre></div>
 

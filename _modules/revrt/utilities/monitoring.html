@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.utilities.monitoring</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;reVRt monitoring utilities&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""reVRt monitoring utilities"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">psutil</span>
@@ -842,28 +762,28 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="log_mem">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.monitoring.log_mem.html#revrt.utilities.monitoring.log_mem">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">log_mem</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Log the memory usage to the input logger object</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">log_mem</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s2">"DEBUG"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Log the memory usage to the input logger object</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    log_level : str, default=&quot;DEBUG&quot;</span>
+<span class="sd">    log_level : str, default="DEBUG"</span>
 <span class="sd">        Logging level to use. Can be any valid log level string, such</span>
 <span class="sd">        as  DEBUG or INFO for different log levels for this log message.</span>
-<span class="sd">        By default, ``&quot;DEBUG&quot;``.</span>
+<span class="sd">        By default, ``"DEBUG"``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    msg : str</span>
 <span class="sd">        Memory utilization log message string.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">mem</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Memory utilization is </span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">1024.0</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> GB &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;out of </span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">1024.0</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> GB total &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2"> used)&quot;</span>
+        <span class="sa">f</span><span class="s2">"Memory utilization is </span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">1024.0</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> GB "</span>
+        <span class="sa">f</span><span class="s2">"out of </span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mf">1024.0</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> GB total "</span>
+        <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2"> used)"</span>
     <span class="p">)</span>
-    <span class="n">log_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelNamesMapping</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">log_level</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+    <span class="n">log_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelNamesMapping</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">log_level</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="s2">"DEBUG"</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">log_level</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">msg</span></div>
@@ -873,7 +793,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="log_array_backend">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.monitoring.log_array_backend.html#revrt.utilities.monitoring.log_array_backend">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">log_array_backend</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Log backend information for layer data</span>
+<span class="w">    </span><span class="sd">"""Log backend information for layer data</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -887,35 +807,35 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        present.</span>
 <span class="sd">    kind : str</span>
 <span class="sd">        Short label describing the kind of the layer, such as</span>
-<span class="sd">        ``&quot;processed&quot;`` or ``&quot;lazy reload&quot;``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        ``"processed"`` or ``"lazy reload"``.</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
         <span class="n">backend_name</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
-            <span class="n">storage</span> <span class="o">=</span> <span class="s2">&quot;Dask&quot;</span>
+            <span class="n">storage</span> <span class="o">=</span> <span class="s2">"Dask"</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-            <span class="n">storage</span> <span class="o">=</span> <span class="s2">&quot;NumPy&quot;</span>
+            <span class="n">storage</span> <span class="o">=</span> <span class="s2">"NumPy"</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">storage</span> <span class="o">=</span> <span class="n">backend_name</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
-        <span class="n">storage</span> <span class="o">=</span> <span class="s2">&quot;Dask&quot;</span>
+        <span class="n">storage</span> <span class="o">=</span> <span class="s2">"Dask"</span>
         <span class="n">backend_name</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-        <span class="n">storage</span> <span class="o">=</span> <span class="s2">&quot;NumPy&quot;</span>
+        <span class="n">storage</span> <span class="o">=</span> <span class="s2">"NumPy"</span>
         <span class="n">backend_name</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">storage</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="n">backend_name</span> <span class="o">=</span> <span class="n">storage</span>
 
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> layer </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">-backed (</span><span class="si">%s</span><span class="s2">) with dtype </span><span class="si">%s</span><span class="s2">, and shape </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">"</span><span class="si">%s</span><span class="s2"> layer </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">-backed (</span><span class="si">%s</span><span class="s2">) with dtype </span><span class="si">%s</span><span class="s2">, and shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
         <span class="n">kind</span><span class="p">,</span>
         <span class="n">fname</span><span class="p">,</span>
         <span class="n">storage</span><span class="p">,</span>
         <span class="n">backend_name</span><span class="p">,</span>
-        <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-        <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">"dtype"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
     <span class="p">)</span></div>
 
 
@@ -924,20 +844,20 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.monitoring.log_runtime.html#revrt.utilities.monitoring.log_runtime">[docs]</a>
 <span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">log_runtime</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Log the time taken to run a block of code</span>
+<span class="w">    </span><span class="sd">"""Log the time taken to run a block of code</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    message : str</span>
 <span class="sd">        Message to log with the time taken. The time taken will be</span>
 <span class="sd">        appended to this message.</span>
-<span class="sd">    log_level : int, default=&quot;INFO&quot;</span>
+<span class="sd">    log_level : int, default="INFO"</span>
 <span class="sd">        Logging level to use for the message.</span>
 <span class="sd">        By default, ``logging.INFO``.</span>
 <span class="sd">    hours : bool, default=False</span>
 <span class="sd">        If ``True``, log time in hours instead of minutes.</span>
 <span class="sd">        By default, ``False``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
@@ -945,7 +865,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
         <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">elapsed_time_as_str</span><span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2"> took </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">}</span><span class="s2"> to run&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2"> took </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">}</span><span class="s2"> to run"</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">log_level</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span></div>
 
 
@@ -953,7 +873,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="elapsed_time_as_str">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.monitoring.elapsed_time_as_str.html#revrt.utilities.monitoring.elapsed_time_as_str">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">elapsed_time_as_str</span><span class="p">(</span><span class="n">seconds_elapsed</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format elapsed time into human readable string</span>
+<span class="w">    </span><span class="sd">"""Format elapsed time into human readable string</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -965,13 +885,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    str</span>
 <span class="sd">        Human-readable string representing the number of elapsed</span>
 <span class="sd">        seconds.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">days</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">seconds_elapsed</span><span class="p">),</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">)</span>
     <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
     <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
-    <span class="n">time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">hours</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">hours</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">if</span> <span class="n">days</span><span class="p">:</span>
-        <span class="n">time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">days</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> day</span><span class="si">{</span><span class="s1">&#39;s&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">abs</span><span class="p">(</span><span class="n">days</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">time_str</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">time_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">days</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> day</span><span class="si">{</span><span class="s1">'s'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">abs</span><span class="p">(</span><span class="n">days</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">time_str</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">return</span> <span class="n">time_str</span></div>
 
 
@@ -979,7 +899,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="dask_performance_report">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.monitoring.dask_performance_report.html#revrt.utilities.monitoring.dask_performance_report">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">dask_performance_report</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for generating a Dask performance report</span>
+<span class="w">    </span><span class="sd">"""Context manager for generating a Dask performance report</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1001,12 +921,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        filename to avoid collisions across multiple invocations. If no</span>
 <span class="sd">        output directory is specified, the context manager will do</span>
 <span class="sd">        nothing and simply yield without generating a report.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">out_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">nullcontext</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">performance_report</span><span class="p">(</span>
-        <span class="n">filename</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;dask-report_</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="si">}</span><span class="s2">.html&quot;</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"dask-report_</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="si">}</span><span class="s2">.html"</span>
     <span class="p">)</span></div>
 
 
@@ -1014,7 +934,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="close_dask_client">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.monitoring.close_dask_client.html#revrt.utilities.monitoring.close_dask_client">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">close_dask_client</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Close a Dask client without failing on shutdown timeouts</span>
+<span class="w">    </span><span class="sd">"""Close a Dask client without failing on shutdown timeouts</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1025,7 +945,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        out. If the client fails to close within this time, a warning</span>
 <span class="sd">        is logged and the client is marked as closed anyway to allow</span>
 <span class="sd">        cleanup to proceed without hanging. By default, ``600``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
 
@@ -1033,13 +953,13 @@ window.runMermaid = runMermaid;</script>
         <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">TimeoutError</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s2">&quot;Timed out closing Dask client after </span><span class="si">%s</span><span class="s2"> seconds; &quot;</span>
-            <span class="s2">&quot;continuing cleanup&quot;</span><span class="p">,</span>
+            <span class="s2">"Timed out closing Dask client after </span><span class="si">%s</span><span class="s2"> seconds; "</span>
+            <span class="s2">"continuing cleanup"</span><span class="p">,</span>
             <span class="n">timeout</span><span class="p">,</span>
             <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">client</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;closed&quot;</span>
-        <span class="nb">vars</span><span class="p">(</span><span class="n">client</span><span class="p">)[</span><span class="s2">&quot;_Client__loop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+        <span class="n">client</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"closed"</span>
+        <span class="nb">vars</span><span class="p">(</span><span class="n">client</span><span class="p">)[</span><span class="s2">"_Client__loop"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 </pre></div>
 

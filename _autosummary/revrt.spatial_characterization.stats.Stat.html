@@ -444,6 +444,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html">revrt.models.routing.MultiplierLayerInput</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostValue.html">revrt.models.routing.TransitionCostValue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
@@ -814,6 +815,9 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.spatial_characterization.stats.Stat.maketrans" title="revrt.spatial_characterization.stats.Stat.maketrans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">maketrans</span></code></a></p></td>
 <td><p>Return a translation table usable for str.translate().</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.spatial_characterization.stats.Stat.allowed" title="revrt.spatial_characterization.stats.Stat.allowed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">allowed</span></code></a>()</p></td>
+<td><p>Return a set of allowed stat names</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -938,6 +942,12 @@
 <dt class="sig sig-object py" id="revrt.spatial_characterization.stats.Stat.PIXEL_COUNT">
 <span class="sig-name descname"><span class="pre">PIXEL_COUNT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'pixel_count'</span></span><a class="headerlink" href="#revrt.spatial_characterization.stats.Stat.PIXEL_COUNT" title="Link to this definition">#</a></dt>
 <dd><p>Compute count for each pixel value in zone</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="revrt.spatial_characterization.stats.Stat.allowed">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">allowed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/spatial_characterization/stats.html#Stat.allowed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.spatial_characterization.stats.Stat.allowed" title="Link to this definition">#</a></dt>
+<dd><p>Return a set of allowed stat names</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1454,6 +1464,7 @@ None in the result.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.spatial_characterization.stats.Stat.RANGE"><code class="docutils literal notranslate"><span class="pre">Stat.RANGE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.spatial_characterization.stats.Stat.NODATA"><code class="docutils literal notranslate"><span class="pre">Stat.NODATA</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.spatial_characterization.stats.Stat.PIXEL_COUNT"><code class="docutils literal notranslate"><span class="pre">Stat.PIXEL_COUNT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.spatial_characterization.stats.Stat.allowed"><code class="docutils literal notranslate"><span class="pre">Stat.allowed()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.spatial_characterization.stats.Stat.__add__"><code class="docutils literal notranslate"><span class="pre">Stat.__add__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.spatial_characterization.stats.Stat.__mul__"><code class="docutils literal notranslate"><span class="pre">Stat.__mul__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.spatial_characterization.stats.Stat.encode"><code class="docutils literal notranslate"><span class="pre">Stat.encode()</span></code></a></li>

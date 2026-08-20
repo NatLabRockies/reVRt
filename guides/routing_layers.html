@@ -435,9 +435,9 @@ these cost values if the path goes diagonally through the pixel.</p>
 <h3>Building cost layers<a class="headerlink" href="#building-cost-layers" title="Link to this heading">#</a></h3>
 <p>A single cost layer could be defined as follows:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_cost_layer&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_bool_layer&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.04</span><span class="w">  </span><span class="c1">// adjust for inflation</span>
+<span class="w">    </span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"my_cost_layer"</span><span class="p">,</span>
+<span class="w">    </span><span class="nv">"multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="s">"my_bool_layer"</span><span class="p">,</span>
+<span class="w">    </span><span class="nv">"multiplier_scalar"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.04</span><span class="w">  </span><span class="c1">// adjust for inflation</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -450,23 +450,23 @@ for a single layer; they are all documented
 <p><code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code> also accepts a list of layer names. All listed
 layers are multiplied into the cost term:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_cost_layer&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;regional_adjustment&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;wetland_mask&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"my_cost_layer"</span><span class="p">,</span>
+<span class="w">    </span><span class="nv">"multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">"regional_adjustment"</span><span class="p">,</span><span class="w"> </span><span class="s">"wetland_mask"</span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>An empty list has no effect.</p>
 <p>For maximum flexibility, you can specify multiple such layers that all
 aggregate to form the final routing cost layer:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;cost_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">"cost_layers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_cost_layer&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_bool_layer&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.04</span><span class="w">  </span><span class="c1">// adjust for inflation</span>
+<span class="w">        </span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"my_cost_layer"</span><span class="p">,</span>
+<span class="w">        </span><span class="nv">"multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="s">"my_bool_layer"</span><span class="p">,</span>
+<span class="w">        </span><span class="nv">"multiplier_scalar"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.04</span><span class="w">  </span><span class="c1">// adjust for inflation</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;local_costs_mask&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10000</span><span class="w">  </span><span class="c1">// cost (per pixel) to route through a local town</span>
+<span class="w">        </span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"local_costs_mask"</span><span class="p">,</span>
+<span class="w">        </span><span class="nv">"multiplier_scalar"</span><span class="p">:</span><span class="w"> </span><span class="mf">10000</span><span class="w">  </span><span class="c1">// cost (per pixel) to route through a local town</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="p">]</span>
@@ -482,8 +482,8 @@ the total sum of the values in this layer along the output route.</p>
 summed, including invariant and non-reported layers. It accepts the same
 string-or-list syntax as <code class="docutils literal notranslate"><span class="pre">&quot;multiplier_layer&quot;</span></code>:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nv">&quot;cost_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_cost_layer&quot;</span><span class="p">}],</span>
-<span class="w">    </span><span class="nv">&quot;cost_multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;regional_adjustment&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;permitting_mask&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="nv">"cost_layers"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"my_cost_layer"</span><span class="p">}],</span>
+<span class="w">    </span><span class="nv">"cost_multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">"regional_adjustment"</span><span class="p">,</span><span class="w"> </span><span class="s">"permitting_mask"</span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -535,14 +535,34 @@ other hand, friction values near <code class="docutils literal notranslate"><spa
 (e.g. routing along an existing right-of-way). <code class="docutils literal notranslate"><span class="pre">reVRt</span></code> ensures that
 individual friction values are <span class="math notranslate nohighlight">\(\gt -1\)</span> (i.e. <span class="math notranslate nohighlight">\((1 + F) &gt; 0\)</span> is
 upheld), so the cost values themselves can never flip signs.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Large finite friction values at an endpoint can make routing unexpectedly
+slow and cause cost chunks to be computed far beyond the area between the
+endpoints. The endpoint remains valid, but every complete route must pay its
+large cost. Dijkstra-based algorithms may therefore explore all cells with a
+lower cumulative cost before they can prove that the selected route is
+optimal.</p>
+<p>The endpoint itself does not need to have high friction for this to occur. A
+high-friction region that surrounds an endpoint, or otherwise forms an
+unavoidable bottleneck near it, can have the same effect. This is especially
+noticeable with bidirectional routing because the search starting at the
+endpoint must cross that region before its frontier can advance.</p>
+<p>Check the effective routing cost <span class="math notranslate nohighlight">\(R\)</span> at and around every endpoint when
+using large friction multipliers. Prefer moving an endpoint to a nearby
+representative low-friction cell or reducing the friction where every route
+must enter or leave the endpoint. When <code class="docutils literal notranslate"><span class="pre">save_routing_layer</span></code> is enabled, the
+saved chunk footprint represents the union of the search area explored for
+the route batch, not only the final routes or their endpoint bounds.</p>
+</div>
 </section>
 <section id="building-friction-layers">
 <h3>Building friction layers<a class="headerlink" href="#building-friction-layers" title="Link to this heading">#</a></h3>
 <p>Friction layers are built similarly to cost layers. A single friction
 layer could be defined as follows:</p>
 <div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_friction_region&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="w">  </span><span class="c1">// moderately avoid</span>
+<span class="w">    </span><span class="nv">"multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="s">"my_friction_region"</span><span class="p">,</span>
+<span class="w">    </span><span class="nv">"multiplier_scalar"</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="w">  </span><span class="c1">// moderately avoid</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -558,18 +578,18 @@ For example, <code class="docutils literal notranslate"><span class="pre">[&quot
 adds zero friction.</p>
 <p>For maximum flexibility, you can specify multiple friction layers that all
 aggregate to form the final friction layer:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;friction_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">"friction_layers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_friction_region&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="w">  </span><span class="c1">// moderately avoid</span>
+<span class="w">        </span><span class="nv">"multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="s">"my_friction_region"</span><span class="p">,</span>
+<span class="w">        </span><span class="nv">"multiplier_scalar"</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="w">  </span><span class="c1">// moderately avoid</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;really_avoid_this&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1000</span><span class="w">  </span><span class="c1">// strongly discentivise</span>
+<span class="w">        </span><span class="nv">"multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="s">"really_avoid_this"</span><span class="p">,</span>
+<span class="w">        </span><span class="nv">"multiplier_scalar"</span><span class="p">:</span><span class="w"> </span><span class="mf">1000</span><span class="w">  </span><span class="c1">// strongly discentivise</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;highway_mask&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.5</span><span class="w">  </span><span class="c1">// encourage routing here</span>
+<span class="w">        </span><span class="nv">"multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="s">"highway_mask"</span><span class="p">,</span>
+<span class="w">        </span><span class="nv">"multiplier_scalar"</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.5</span><span class="w">  </span><span class="c1">// encourage routing here</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="p">]</span>
@@ -594,16 +614,16 @@ selected route with statistics that you want to inspect later.</p>
 <p>Tracked layers use the same transformation inputs as cost layers for
 scaling, but replace cost-report controls with a required aggregation
 method:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;tracked_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">"tracked_layers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">                </span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;land_use_score&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nv">&quot;multiplier_layer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;county_adjustment&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;scenario_factor&quot;</span><span class="p">],</span>
-<span class="w">                </span><span class="nv">&quot;multiplier_scalar&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.1</span><span class="p">,</span>
-<span class="w">                </span><span class="nv">&quot;agg_method&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;mean&quot;</span>
+<span class="w">                </span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"land_use_score"</span><span class="p">,</span>
+<span class="w">                </span><span class="nv">"multiplier_layer"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s">"county_adjustment"</span><span class="p">,</span><span class="w"> </span><span class="s">"scenario_factor"</span><span class="p">],</span>
+<span class="w">                </span><span class="nv">"multiplier_scalar"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.1</span><span class="p">,</span>
+<span class="w">                </span><span class="nv">"agg_method"</span><span class="p">:</span><span class="w"> </span><span class="s">"mean"</span>
 <span class="w">        </span><span class="p">},</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">                </span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;wetland_mask&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nv">&quot;agg_method&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+<span class="w">                </span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"wetland_mask"</span><span class="p">,</span>
+<span class="w">                </span><span class="nv">"agg_method"</span><span class="p">:</span><span class="w"> </span><span class="s">"sum"</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="p">]</span>
 </pre></div>
@@ -653,7 +673,7 @@ comparison operators are allowed: <code class="docutils literal notranslate"><sp
 Any pixel with a value that satisfies the comparison operator will be
 treated as a barrier that cannot be crossed by a route. For example, this
 configuration:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">}</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"slope"</span><span class="p">,</span><span class="w"> </span><span class="nv">"where"</span><span class="p">:</span><span class="w"> </span><span class="s">"&gt;=15"</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>would tell the routing algorithm that any pixels with a value <span class="math notranslate nohighlight">\(\ge 15\)</span>
@@ -661,9 +681,9 @@ in the <code class="docutils literal notranslate"><span class="pre">slope</span>
 layers, you can specify multiple barriers to be considered during routing:</p>
 <p>Using <code class="docutils literal notranslate"><span class="pre">&quot;!=0&quot;</span></code> is also valid when you want every non-zero pixel in a layer to
 act as a barrier.</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;barrier_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">},</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">"barrier_layers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"slope"</span><span class="p">,</span><span class="w"> </span><span class="nv">"where"</span><span class="p">:</span><span class="w"> </span><span class="s">"&gt;=15"</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"barrier_bool_mask"</span><span class="p">,</span><span class="w"> </span><span class="nv">"where"</span><span class="p">:</span><span class="w"> </span><span class="s">"==1"</span><span class="p">},</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="p">]</span>
 </pre></div>
@@ -683,9 +703,9 @@ attempt to re-compute the route. This process is repeated until a route is found
 or all barrier layers with a rank have been dropped.</p>
 <p>To specify that a layer can be dropped in order to compute a route (i.e. a soft
 barrier), you have to provide a <code class="docutils literal notranslate"><span class="pre">barrier_importance</span></code> ranking, like so:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;barrier_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1</span><span class="p">},</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">"barrier_layers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"slope"</span><span class="p">,</span><span class="w"> </span><span class="nv">"where"</span><span class="p">:</span><span class="w"> </span><span class="s">"&gt;=15"</span><span class="p">,</span><span class="w"> </span><span class="nv">"barrier_importance"</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"barrier_bool_mask"</span><span class="p">,</span><span class="w"> </span><span class="nv">"where"</span><span class="p">:</span><span class="w"> </span><span class="s">"==1"</span><span class="p">,</span><span class="w"> </span><span class="nv">"barrier_importance"</span><span class="p">:</span><span class="w"> </span><span class="mf">1</span><span class="p">},</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="p">]</span>
 </pre></div>
@@ -697,10 +717,10 @@ than the <code class="docutils literal notranslate"><span class="pre">slope</spa
 barrier, it will be dropped as well.</p>
 <p>You can also specify that a barrier should never be dropped by leaving out the
 <code class="docutils literal notranslate"><span class="pre">barrier_importance</span></code> key altogether. This can be combined with soft barriers:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;barrier_layers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;slope&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&gt;=15&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;barrier_bool_mask&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;==1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;barrier_importance&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="nv">&quot;layer_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;important_barrier&quot;</span><span class="p">,</span><span class="w"> </span><span class="nv">&quot;where&quot;</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;0.5&quot;</span><span class="p">},</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">"barrier_layers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"slope"</span><span class="p">,</span><span class="w"> </span><span class="nv">"where"</span><span class="p">:</span><span class="w"> </span><span class="s">"&gt;=15"</span><span class="p">,</span><span class="w"> </span><span class="nv">"barrier_importance"</span><span class="p">:</span><span class="w"> </span><span class="mf">10</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"barrier_bool_mask"</span><span class="p">,</span><span class="w"> </span><span class="nv">"where"</span><span class="p">:</span><span class="w"> </span><span class="s">"==1"</span><span class="p">,</span><span class="w"> </span><span class="nv">"barrier_importance"</span><span class="p">:</span><span class="w"> </span><span class="mf">1</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nv">"layer_name"</span><span class="p">:</span><span class="w"> </span><span class="s">"important_barrier"</span><span class="p">,</span><span class="w"> </span><span class="nv">"where"</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;0.5"</span><span class="p">},</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="p">]</span>
 </pre></div>
@@ -714,11 +734,11 @@ as a barrier.</p>
 <p>Cost and friction layers with <code class="docutils literal notranslate"><span class="pre">&quot;apply_row_mult&quot;:</span> <span class="pre">true</span></code> can use
 spatial ROW multipliers. The value must be nested below the selected
 routing option:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;row_width&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nv">&quot;500&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nv">&quot;underground&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nv">&quot;rural_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
-<span class="w">            </span><span class="nv">&quot;urban_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">20</span><span class="p">,</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">"row_width"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nv">"500"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nv">"underground"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nv">"rural_mask"</span><span class="p">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">            </span><span class="nv">"urban_mask"</span><span class="p">:</span><span class="w"> </span><span class="mf">20</span><span class="p">,</span>
 <span class="w">        </span><span class="p">},</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="p">}</span>
@@ -733,12 +753,12 @@ always interpreted as a routing-option mapping.</p>
 spatial voltage/polarity multipliers. In addition to the existing shared
 scalar and per-option scalar forms, the selected routing option may map
 spatial layer names to scalar values:</p>
-<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">&quot;voltage_polarity_mult&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nv">&quot;500&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nv">&quot;dc&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nv">&quot;underground&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nv">&quot;rural_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">50</span><span class="p">,</span>
-<span class="w">                </span><span class="nv">&quot;urban_mask&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">60</span><span class="p">,</span>
+<div class="highlight-json5 notranslate"><div class="highlight"><pre><span></span><span class="s">"voltage_polarity_mult"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nv">"500"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nv">"dc"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nv">"underground"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nv">"rural_mask"</span><span class="p">:</span><span class="w"> </span><span class="mf">50</span><span class="p">,</span>
+<span class="w">                </span><span class="nv">"urban_mask"</span><span class="p">:</span><span class="w"> </span><span class="mf">60</span><span class="p">,</span>
 <span class="w">            </span><span class="p">},</span>
 <span class="w">        </span><span class="p">},</span>
 <span class="w">    </span><span class="p">},</span>

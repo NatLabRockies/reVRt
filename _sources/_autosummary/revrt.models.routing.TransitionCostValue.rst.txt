@@ -1,0 +1,6 @@
+revrt.models.routing.TransitionCostValue
+========================================
+
+.. currentmodule:: revrt.models.routing
+
+.. autotype:: TransitionCostValue

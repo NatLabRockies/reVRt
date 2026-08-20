@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.costs.dry_costs_creator</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Module to build and save dry (land) cost raster layers&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Module to build and save dry (land) cost raster layers"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -841,35 +761,35 @@ window.runMermaid = runMermaid;</script>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="n">DRY_MULTIPLIER_TIFF</span> <span class="o">=</span> <span class="s2">&quot;dry_multipliers.tif&quot;</span>
+<span class="n">DRY_MULTIPLIER_TIFF</span> <span class="o">=</span> <span class="s2">"dry_multipliers.tif"</span>
 <span class="n">DEFAULT_HILL_MULTIPLIER</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="sd">&quot;&quot;&quot;Default hill slope multiplier value (1)&quot;&quot;&quot;</span>
+<span class="sd">"""Default hill slope multiplier value (1)"""</span>
 <span class="n">DEFAULT_MTN_MULTIPLIER</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="sd">&quot;&quot;&quot;Default mountain slope multiplier value (1)&quot;&quot;&quot;</span>
+<span class="sd">"""Default mountain slope multiplier value (1)"""</span>
 <span class="n">DEFAULT_HILL_SLOPE</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="sd">&quot;&quot;&quot;Default hill slope cutoff value (2)</span>
+<span class="sd">"""Default hill slope cutoff value (2)</span>
 
-<span class="sd">Slope values above this (inclusive) are considered hills&quot;&quot;&quot;</span>
+<span class="sd">Slope values above this (inclusive) are considered hills"""</span>
 <span class="n">DEFAULT_MTN_SLOPE</span> <span class="o">=</span> <span class="mi">8</span>
-<span class="sd">&quot;&quot;&quot;Default mountain slope cutoff value (8)&quot;&quot;&quot;</span>
+<span class="sd">"""Default mountain slope cutoff value (8)"""</span>
 <span class="n">NLCD_LAND_USE_CLASSES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;cropland&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">80</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
-    <span class="s2">&quot;forest&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">41</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">43</span><span class="p">],</span>
-    <span class="s2">&quot;wetland&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">90</span><span class="p">,</span> <span class="mi">95</span><span class="p">],</span>
-    <span class="s2">&quot;suburban&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">21</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">23</span><span class="p">],</span>
-    <span class="s2">&quot;urban&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">24</span><span class="p">],</span>
+    <span class="s2">"cropland"</span><span class="p">:</span> <span class="p">[</span><span class="mi">80</span><span class="p">,</span> <span class="mi">81</span><span class="p">],</span>
+    <span class="s2">"forest"</span><span class="p">:</span> <span class="p">[</span><span class="mi">41</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">43</span><span class="p">],</span>
+    <span class="s2">"wetland"</span><span class="p">:</span> <span class="p">[</span><span class="mi">90</span><span class="p">,</span> <span class="mi">95</span><span class="p">],</span>
+    <span class="s2">"suburban"</span><span class="p">:</span> <span class="p">[</span><span class="mi">21</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">23</span><span class="p">],</span>
+    <span class="s2">"urban"</span><span class="p">:</span> <span class="p">[</span><span class="mi">24</span><span class="p">],</span>
 <span class="p">}</span>
-<span class="sd">&quot;&quot;&quot;NLCD categories relevant to routing&quot;&quot;&quot;</span>
+<span class="sd">"""NLCD categories relevant to routing"""</span>
 <span class="n">WATER_NLCD_CODE</span> <span class="o">=</span> <span class="mi">11</span>
-<span class="sd">&quot;&quot;&quot;NLCD category value for water (11)&quot;&quot;&quot;</span>
+<span class="sd">"""NLCD category value for water (11)"""</span>
 <span class="n">WATER_MULTIPLIER</span> <span class="o">=</span> <span class="mf">10.0</span>
-<span class="sd">&quot;&quot;&quot;Multiplier value for water cells based on NLCD (10)&quot;&quot;&quot;</span>
+<span class="sd">"""Multiplier value for water cells based on NLCD (10)"""</span>
 
 
 <div class="viewcode-block" id="DryCostsCreator">
 <a class="viewcode-back" href="../../../_autosummary/revrt.costs.dry_costs_creator.DryCostsCreator.html#revrt.costs.dry_costs_creator.DryCostsCreator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DryCostsCreator</span><span class="p">(</span><span class="n">BaseLayerCreator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to create and save dry transmission cost layers&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Class to create and save dry transmission cost layers"""</span>
 
 <div class="viewcode-block" id="DryCostsCreator.build">
 <a class="viewcode-back" href="../../../_autosummary/revrt.costs.dry_costs_creator.DryCostsCreator.html#revrt.costs.dry_costs_creator.DryCostsCreator.build">[docs]</a>
@@ -882,13 +802,13 @@ window.runMermaid = runMermaid;</script>
         <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">default_multipliers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">extra_tiffs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">&quot;file&quot;</span><span class="p">,</span>
+        <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">"file"</span><span class="p">,</span>
         <span class="n">descriptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">lock</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build cost rasters using base line costs and multipliers</span>
+<span class="w">        </span><span class="sd">"""Build cost rasters using base line costs and multipliers</span>
 
 <span class="sd">        This function also allows you to save to GeoTIFF.</span>
 
@@ -907,15 +827,15 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            transmission cost configuration values. Valid configuration</span>
 <span class="sd">            keys are:</span>
 
-<span class="sd">                - &quot;base_line_costs&quot;</span>
-<span class="sd">                - &quot;iso_lookup&quot;</span>
-<span class="sd">                - &quot;iso_multipliers&quot;</span>
-<span class="sd">                - &quot;land_use_classes&quot;</span>
-<span class="sd">                - &quot;new_substation_costs&quot;</span>
-<span class="sd">                - &quot;power_classes&quot;</span>
-<span class="sd">                - &quot;power_to_voltage&quot;</span>
-<span class="sd">                - &quot;transformer_costs&quot;</span>
-<span class="sd">                - &quot;upgrade_substation_costs&quot;</span>
+<span class="sd">                - "base_line_costs"</span>
+<span class="sd">                - "iso_lookup"</span>
+<span class="sd">                - "iso_multipliers"</span>
+<span class="sd">                - "land_use_classes"</span>
+<span class="sd">                - "new_substation_costs"</span>
+<span class="sd">                - "power_classes"</span>
+<span class="sd">                - "power_to_voltage"</span>
+<span class="sd">                - "transformer_costs"</span>
+<span class="sd">                - "upgrade_substation_costs"</span>
 
 <span class="sd">            Each of these keys should point to a dictionary or a path to</span>
 <span class="sd">            a separate path-like file containing a dictionary of</span>
@@ -929,18 +849,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Multipliers for regions not specified in the</span>
 <span class="sd">            `iso_region_tiff`. Must be a dictionary of the form::</span>
 
-<span class="sd">                &quot;land_use&quot;: {</span>
-<span class="sd">                    &quot;cropland&quot;: 1.03,</span>
-<span class="sd">                    &quot;forest&quot;: 1.2,</span>
-<span class="sd">                    &quot;suburban&quot;: 1.08,</span>
-<span class="sd">                    &quot;urban&quot;: 1.2,</span>
-<span class="sd">                    &quot;wetland&quot;: 1.8</span>
+<span class="sd">                "land_use": {</span>
+<span class="sd">                    "cropland": 1.03,</span>
+<span class="sd">                    "forest": 1.2,</span>
+<span class="sd">                    "suburban": 1.08,</span>
+<span class="sd">                    "urban": 1.2,</span>
+<span class="sd">                    "wetland": 1.8</span>
 <span class="sd">                },</span>
-<span class="sd">                &quot;slope&quot;: {</span>
-<span class="sd">                    &quot;hill_mult&quot;: 1.1,</span>
-<span class="sd">                    &quot;hill_slope&quot;: 2,</span>
-<span class="sd">                    &quot;mtn_mult&quot;: 1.21,</span>
-<span class="sd">                    &quot;mtn_slope&quot;: 8</span>
+<span class="sd">                "slope": {</span>
+<span class="sd">                    "hill_mult": 1.1,</span>
+<span class="sd">                    "hill_slope": 2,</span>
+<span class="sd">                    "mtn_mult": 1.21,</span>
+<span class="sd">                    "mtn_slope": 8</span>
 <span class="sd">                }</span>
 
 <span class="sd">            All keys are optional. By default, ``None``.</span>
@@ -950,14 +870,14 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            which does not add any extra layers.</span>
 <span class="sd">        descriptions : dict, optional</span>
 <span class="sd">            Optional mapping  where keys are layer names and values are</span>
-<span class="sd">            descriptions to add to the layer&#39;s attributes meta</span>
-<span class="sd">            dictionary under the &quot;description&quot; key.</span>
+<span class="sd">            descriptions to add to the layer's attributes meta</span>
+<span class="sd">            dictionary under the "description" key.</span>
 <span class="sd">            By default, ``None``, which does not add any description.</span>
 <span class="sd">        nodata : dict, optional</span>
 <span class="sd">            Optional mapping where keys are layer names and values are</span>
 <span class="sd">            the nodata value for the output raster of that layer. This</span>
-<span class="sd">            value will be added to the layer&#39;s attributes meta</span>
-<span class="sd">            dictionary under the &quot;nodata&quot; key. By default, ``None``.</span>
+<span class="sd">            value will be added to the layer's attributes meta</span>
+<span class="sd">            dictionary under the "nodata" key. By default, ``None``.</span>
 <span class="sd">        lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">            Lock to use to write data to GeoTIFF using dask. If not</span>
 <span class="sd">            supplied, a single process is used for writing data to disk.</span>
@@ -975,7 +895,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">                - width</span>
 <span class="sd">                - height</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">xc</span> <span class="o">=</span> <span class="n">TransmissionConfig</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">transmission_config</span><span class="p">)</span>
         <span class="n">nodata</span> <span class="o">=</span> <span class="n">nodata</span> <span class="ow">or</span> <span class="p">{}</span>
 
@@ -983,16 +903,16 @@ window.runMermaid = runMermaid;</script>
             <span class="n">iso_region_tiff</span><span class="p">,</span> <span class="n">slope_tiff</span><span class="p">,</span> <span class="n">nlcd_tiff</span><span class="p">,</span> <span class="n">tiff_chunks</span><span class="o">=</span><span class="n">tiff_chunks</span>
         <span class="p">)</span>
         <span class="n">multipliers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_multipliers</span><span class="p">(</span>
-            <span class="n">xc</span><span class="p">[</span><span class="s2">&quot;iso_multipliers&quot;</span><span class="p">],</span>
+            <span class="n">xc</span><span class="p">[</span><span class="s2">"iso_multipliers"</span><span class="p">],</span>
             <span class="n">layers</span><span class="p">[</span><span class="n">iso_region_tiff</span><span class="p">],</span>
             <span class="n">layers</span><span class="p">[</span><span class="n">slope_tiff</span><span class="p">],</span>
             <span class="n">layers</span><span class="p">[</span><span class="n">nlcd_tiff</span><span class="p">],</span>
-            <span class="n">iso_lookup</span><span class="o">=</span><span class="n">xc</span><span class="p">[</span><span class="s2">&quot;iso_lookup&quot;</span><span class="p">],</span>
-            <span class="n">land_use_classes</span><span class="o">=</span><span class="n">xc</span><span class="p">[</span><span class="s2">&quot;land_use_classes&quot;</span><span class="p">],</span>
+            <span class="n">iso_lookup</span><span class="o">=</span><span class="n">xc</span><span class="p">[</span><span class="s2">"iso_lookup"</span><span class="p">],</span>
+            <span class="n">land_use_classes</span><span class="o">=</span><span class="n">xc</span><span class="p">[</span><span class="s2">"land_use_classes"</span><span class="p">],</span>
             <span class="n">default_multipliers</span><span class="o">=</span><span class="n">default_multipliers</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Saving multipliers array GeoTIFF&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Saving multipliers array GeoTIFF"</span><span class="p">)</span>
         <span class="n">multiplier_tiff_fp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_tiff_dir</span> <span class="o">/</span> <span class="n">DRY_MULTIPLIER_TIFF</span>
         <span class="n">save_data_using_layer_file_profile</span><span class="p">(</span>
             <span class="n">layer_fp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
@@ -1021,20 +941,20 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">tiff_chunks</span><span class="o">=</span><span class="n">tiff_chunks</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">power_class</span><span class="p">,</span> <span class="n">capacity</span> <span class="ow">in</span> <span class="n">xc</span><span class="p">[</span><span class="s2">&quot;power_classes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">power_class</span><span class="p">,</span> <span class="n">capacity</span> <span class="ow">in</span> <span class="n">xc</span><span class="p">[</span><span class="s2">"power_classes"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;Calculating costs for class </span><span class="si">%s</span><span class="s2"> using a </span><span class="si">%s</span><span class="s2">MW line&quot;</span><span class="p">,</span>
+                <span class="s2">"Calculating costs for class </span><span class="si">%s</span><span class="s2"> using a </span><span class="si">%s</span><span class="s2">MW line"</span><span class="p">,</span>
                 <span class="n">power_class</span><span class="p">,</span>
                 <span class="n">capacity</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">blc_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_base_line_costs</span><span class="p">(</span>
                 <span class="n">capacity</span><span class="p">,</span>
-                <span class="n">xc</span><span class="p">[</span><span class="s2">&quot;base_line_costs&quot;</span><span class="p">],</span>
+                <span class="n">xc</span><span class="p">[</span><span class="s2">"base_line_costs"</span><span class="p">],</span>
                 <span class="n">layers</span><span class="p">[</span><span class="n">iso_region_tiff</span><span class="p">],</span>
-                <span class="n">xc</span><span class="p">[</span><span class="s2">&quot;iso_lookup&quot;</span><span class="p">],</span>
+                <span class="n">xc</span><span class="p">[</span><span class="s2">"iso_lookup"</span><span class="p">],</span>
             <span class="p">)</span>
 
-            <span class="n">base_costs_tiff</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;base_line_costs_</span><span class="si">{</span><span class="n">capacity</span><span class="si">}</span><span class="s2">MW.tif&quot;</span>
+            <span class="n">base_costs_tiff</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"base_line_costs_</span><span class="si">{</span><span class="n">capacity</span><span class="si">}</span><span class="s2">MW.tif"</span>
             <span class="n">out_fp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_tiff_dir</span> <span class="o">/</span> <span class="n">base_costs_tiff</span>
             <span class="n">save_data_using_layer_file_profile</span><span class="p">(</span>
                 <span class="n">layer_fp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
@@ -1047,8 +967,8 @@ window.runMermaid = runMermaid;</script>
 
             <span class="n">costs_arr</span> <span class="o">=</span> <span class="n">blc_arr</span> <span class="o">*</span> <span class="n">multipliers</span>
 
-            <span class="n">dry_layer_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;tie_line_costs_</span><span class="si">{</span><span class="n">capacity</span><span class="si">}</span><span class="s2">MW&quot;</span>
-            <span class="n">tie_line_costs_tiff</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dry_layer_name</span><span class="si">}</span><span class="s2">.tif&quot;</span>
+            <span class="n">dry_layer_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"tie_line_costs_</span><span class="si">{</span><span class="n">capacity</span><span class="si">}</span><span class="s2">MW"</span>
+            <span class="n">tie_line_costs_tiff</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dry_layer_name</span><span class="si">}</span><span class="s2">.tif"</span>
             <span class="n">out_fp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_tiff_dir</span> <span class="o">/</span> <span class="n">tie_line_costs_tiff</span>
             <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">costs_arr</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">costs_arr</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -1071,10 +991,10 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_layers</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">iso_region_tiff</span><span class="p">,</span> <span class="n">slope_tiff</span><span class="p">,</span> <span class="n">nlcd_tiff</span><span class="p">,</span> <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">&quot;file&quot;</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">iso_region_tiff</span><span class="p">,</span> <span class="n">slope_tiff</span><span class="p">,</span> <span class="n">nlcd_tiff</span><span class="p">,</span> <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">"file"</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load ISO region, slope and land use rasters&quot;&quot;&quot;</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading ISO region, slope and land use rasters&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Load ISO region, slope and land use rasters"""</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Loading ISO region, slope and land use rasters"</span><span class="p">)</span>
         <span class="n">iso_layer</span> <span class="o">=</span> <span class="n">load_data_using_layer_file_profile</span><span class="p">(</span>
             <span class="n">layer_fp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span><span class="o">.</span><span class="n">fp</span><span class="p">,</span>
             <span class="n">geotiff</span><span class="o">=</span><span class="n">iso_region_tiff</span><span class="p">,</span>
@@ -1096,7 +1016,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">layer_dirs</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_layer_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_tiff_dir</span><span class="p">],</span>
             <span class="n">band_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading complete&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Loading complete"</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">iso_region_tiff</span><span class="p">:</span> <span class="n">iso_layer</span><span class="p">,</span>
             <span class="n">slope_tiff</span><span class="p">:</span> <span class="n">slope_layer</span><span class="p">,</span>
@@ -1110,9 +1030,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">layer_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">descriptions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">&quot;file&quot;</span><span class="p">,</span>
+        <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">"file"</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a single layer to the layered file&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Write a single layer to the layered file"""</span>
         <span class="n">nodata</span> <span class="o">=</span> <span class="n">nodata</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">descriptions</span> <span class="o">=</span> <span class="n">descriptions</span> <span class="ow">or</span> <span class="p">{}</span>
 
@@ -1127,7 +1047,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">layer_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tiff_fp</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Writing </span><span class="si">%s</span><span class="s2"> to layer file: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span><span class="o">.</span><span class="n">fp</span>
+            <span class="s2">"Writing </span><span class="si">%s</span><span class="s2"> to layer file: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span><span class="o">.</span><span class="n">fp</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_io_handler</span><span class="o">.</span><span class="n">write_layer</span><span class="p">(</span>
             <span class="n">data</span><span class="p">,</span>
@@ -1147,7 +1067,41 @@ window.runMermaid = runMermaid;</script>
         <span class="n">land_use_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">default_multipliers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create costs multiplier raster&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Create costs multiplier raster"""</span>
+        <span class="n">multipliers</span><span class="p">,</span> <span class="n">regions_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_iso_multipliers</span><span class="p">(</span>
+            <span class="n">iso_multipliers</span><span class="p">,</span>
+            <span class="n">iso_lookup</span><span class="p">,</span>
+            <span class="n">iso_layer</span><span class="p">,</span>
+            <span class="n">land_use_layer</span><span class="p">,</span>
+            <span class="n">slope_layer</span><span class="p">,</span>
+            <span class="n">land_use_classes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">default_multipliers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">multipliers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_default_region</span><span class="p">(</span>
+                <span class="n">multipliers</span><span class="p">,</span>
+                <span class="n">regions_mask</span><span class="p">,</span>
+                <span class="n">default_multipliers</span><span class="p">,</span>
+                <span class="n">land_use_layer</span><span class="p">,</span>
+                <span class="n">slope_layer</span><span class="p">,</span>
+                <span class="n">land_use_classes</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Set water multiplier last so we don't get super high</span>
+        <span class="c1"># multipliers at water body boundaries next to steep slopes</span>
+        <span class="k">return</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">land_use_layer</span> <span class="o">==</span> <span class="n">WATER_NLCD_CODE</span><span class="p">,</span> <span class="n">WATER_MULTIPLIER</span><span class="p">,</span> <span class="n">multipliers</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_iso_multipliers</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">iso_multipliers</span><span class="p">,</span>
+        <span class="n">iso_lookup</span><span class="p">,</span>
+        <span class="n">iso_layer</span><span class="p">,</span>
+        <span class="n">land_use_layer</span><span class="p">,</span>
+        <span class="n">slope_layer</span><span class="p">,</span>
+        <span class="n">land_use_classes</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create ISO multipliers"""</span>
         <span class="n">multipliers</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks</span>
         <span class="p">)</span>
@@ -1157,87 +1111,86 @@ window.runMermaid = runMermaid;</script>
         <span class="n">land_use_classes</span> <span class="o">=</span> <span class="n">land_use_classes</span> <span class="ow">or</span> <span class="n">NLCD_LAND_USE_CLASSES</span>
 
         <span class="k">for</span> <span class="n">r_conf</span> <span class="ow">in</span> <span class="n">iso_multipliers</span><span class="p">:</span>
-            <span class="n">iso_name</span> <span class="o">=</span> <span class="n">r_conf</span><span class="p">[</span><span class="s2">&quot;iso&quot;</span><span class="p">]</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing multipliers for region </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">iso_name</span><span class="p">)</span>
+            <span class="n">iso_name</span> <span class="o">=</span> <span class="n">r_conf</span><span class="p">[</span><span class="s2">"iso"</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Processing multipliers for region </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">iso_name</span><span class="p">)</span>
 
             <span class="n">iso</span> <span class="o">=</span> <span class="n">iso_lookup</span><span class="p">[</span><span class="n">iso_name</span><span class="p">]</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;ISO </span><span class="si">%s</span><span class="s2"> has id </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">iso_name</span><span class="p">,</span> <span class="n">iso</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"ISO </span><span class="si">%s</span><span class="s2"> has id </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">iso_name</span><span class="p">,</span> <span class="n">iso</span><span class="p">)</span>
 
             <span class="n">mask</span> <span class="o">=</span> <span class="n">iso_layer</span> <span class="o">==</span> <span class="n">iso</span>
             <span class="n">regions_mask</span> <span class="o">|=</span> <span class="n">mask</span>
 
-            <span class="k">if</span> <span class="s2">&quot;land_use&quot;</span> <span class="ow">in</span> <span class="n">r_conf</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"land_use"</span> <span class="ow">in</span> <span class="n">r_conf</span><span class="p">:</span>
                 <span class="n">r_lu</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">land_use_layer</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
                 <span class="n">lum</span> <span class="o">=</span> <span class="n">compute_land_use_multipliers</span><span class="p">(</span>
                     <span class="n">r_lu</span><span class="p">,</span>
-                    <span class="n">r_conf</span><span class="p">[</span><span class="s2">&quot;land_use&quot;</span><span class="p">],</span>
+                    <span class="n">r_conf</span><span class="p">[</span><span class="s2">"land_use"</span><span class="p">],</span>
                     <span class="n">land_use_classes</span><span class="p">,</span>
                     <span class="n">chunks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">multipliers</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">*</span> <span class="n">lum</span><span class="p">,</span> <span class="n">multipliers</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="s2">&quot;slope&quot;</span> <span class="ow">in</span> <span class="n">r_conf</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"slope"</span> <span class="ow">in</span> <span class="n">r_conf</span><span class="p">:</span>
                 <span class="n">r_slope</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">slope_layer</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
                 <span class="n">slope_multipliers</span> <span class="o">=</span> <span class="n">compute_slope_multipliers</span><span class="p">(</span>
                     <span class="n">r_slope</span><span class="p">,</span>
                     <span class="n">chunks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
-                    <span class="n">config</span><span class="o">=</span><span class="n">r_conf</span><span class="p">[</span><span class="s2">&quot;slope&quot;</span><span class="p">],</span>
+                    <span class="n">config</span><span class="o">=</span><span class="n">r_conf</span><span class="p">[</span><span class="s2">"slope"</span><span class="p">],</span>
                 <span class="p">)</span>
                 <span class="n">multipliers</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
                     <span class="n">mask</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">*</span> <span class="n">slope_multipliers</span><span class="p">,</span> <span class="n">multipliers</span>
                 <span class="p">)</span>
+        <span class="k">return</span> <span class="n">multipliers</span><span class="p">,</span> <span class="n">regions_mask</span>
 
-        <span class="c1"># Calculate multipliers for regions not defined in `config`</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Processing default region&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">default_multipliers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">default_mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">regions_mask</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_default_region</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">multipliers</span><span class="p">,</span>
+        <span class="n">regions_mask</span><span class="p">,</span>
+        <span class="n">default_multipliers</span><span class="p">,</span>
+        <span class="n">land_use_layer</span><span class="p">,</span>
+        <span class="n">slope_layer</span><span class="p">,</span>
+        <span class="n">land_use_classes</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Calculate multipliers for regions not defined in `config`"""</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Processing default region"</span><span class="p">)</span>
+        <span class="n">default_mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">regions_mask</span>
 
-            <span class="k">if</span> <span class="s2">&quot;land_use&quot;</span> <span class="ow">in</span> <span class="n">default_multipliers</span><span class="p">:</span>
-                <span class="n">region_land_use</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                    <span class="n">default_mask</span><span class="p">,</span> <span class="n">land_use_layer</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">nan</span>
-                <span class="p">)</span>
-                <span class="n">lum_dict</span> <span class="o">=</span> <span class="n">default_multipliers</span><span class="p">[</span><span class="s2">&quot;land_use&quot;</span><span class="p">]</span>
-                <span class="n">lum</span> <span class="o">=</span> <span class="n">compute_land_use_multipliers</span><span class="p">(</span>
-                    <span class="n">region_land_use</span><span class="p">,</span>
-                    <span class="n">lum_dict</span><span class="p">,</span>
-                    <span class="n">land_use_classes</span><span class="p">,</span>
-                    <span class="n">chunks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="n">multipliers</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                    <span class="n">default_mask</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">*</span> <span class="n">lum</span><span class="p">,</span> <span class="n">multipliers</span>
-                <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"land_use"</span> <span class="ow">in</span> <span class="n">default_multipliers</span><span class="p">:</span>
+            <span class="n">region_land_use</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">default_mask</span><span class="p">,</span> <span class="n">land_use_layer</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">lum_dict</span> <span class="o">=</span> <span class="n">default_multipliers</span><span class="p">[</span><span class="s2">"land_use"</span><span class="p">]</span>
+            <span class="n">lum</span> <span class="o">=</span> <span class="n">compute_land_use_multipliers</span><span class="p">(</span>
+                <span class="n">region_land_use</span><span class="p">,</span> <span class="n">lum_dict</span><span class="p">,</span> <span class="n">land_use_classes</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks</span>
+            <span class="p">)</span>
+            <span class="n">multipliers</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">default_mask</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">*</span> <span class="n">lum</span><span class="p">,</span> <span class="n">multipliers</span>
+            <span class="p">)</span>
 
-            <span class="k">if</span> <span class="s2">&quot;slope&quot;</span> <span class="ow">in</span> <span class="n">default_multipliers</span><span class="p">:</span>
-                <span class="n">region_slope</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">default_mask</span><span class="p">,</span> <span class="n">slope_layer</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-                <span class="n">slope_multipliers</span> <span class="o">=</span> <span class="n">compute_slope_multipliers</span><span class="p">(</span>
-                    <span class="n">region_slope</span><span class="p">,</span>
-                    <span class="n">chunks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
-                    <span class="n">config</span><span class="o">=</span><span class="n">default_multipliers</span><span class="p">[</span><span class="s2">&quot;slope&quot;</span><span class="p">],</span>
-                <span class="p">)</span>
-                <span class="n">multipliers</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                    <span class="n">default_mask</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">*</span> <span class="n">slope_multipliers</span><span class="p">,</span> <span class="n">multipliers</span>
-                <span class="p">)</span>
-
-        <span class="c1"># Set water multiplier last so we don&#39;t get super high</span>
-        <span class="c1"># multipliers at water body boundaries next to steep slopes</span>
-        <span class="k">return</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-            <span class="n">land_use_layer</span> <span class="o">==</span> <span class="n">WATER_NLCD_CODE</span><span class="p">,</span> <span class="n">WATER_MULTIPLIER</span><span class="p">,</span> <span class="n">multipliers</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"slope"</span> <span class="ow">in</span> <span class="n">default_multipliers</span><span class="p">:</span>
+            <span class="n">region_slope</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">default_mask</span><span class="p">,</span> <span class="n">slope_layer</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">slope_multipliers</span> <span class="o">=</span> <span class="n">compute_slope_multipliers</span><span class="p">(</span>
+                <span class="n">region_slope</span><span class="p">,</span>
+                <span class="n">chunks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">default_multipliers</span><span class="p">[</span><span class="s2">"slope"</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">multipliers</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">default_mask</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">*</span> <span class="n">slope_multipliers</span><span class="p">,</span> <span class="n">multipliers</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">multipliers</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_base_line_costs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">base_line_costs</span><span class="p">,</span> <span class="n">iso_layer</span><span class="p">,</span> <span class="n">iso_lookup</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get base line cost per cell raster for a given voltage&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get base line cost per cell raster for a given voltage"""</span>
         <span class="n">base_cost</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">iso</span> <span class="ow">in</span> <span class="n">base_line_costs</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing costs for </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2">MW&quot;</span><span class="p">,</span> <span class="n">iso</span><span class="p">,</span> <span class="n">capacity</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Processing costs for </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2">MW"</span><span class="p">,</span> <span class="n">iso</span><span class="p">,</span> <span class="n">capacity</span><span class="p">)</span>
             <span class="n">iso_code</span> <span class="o">=</span> <span class="n">iso_lookup</span><span class="p">[</span><span class="n">iso</span><span class="p">]</span>
             <span class="n">cost_per_mile</span> <span class="o">=</span> <span class="n">base_line_costs</span><span class="p">[</span><span class="n">iso</span><span class="p">][</span><span class="nb">str</span><span class="p">(</span><span class="n">capacity</span><span class="p">)]</span>
             <span class="n">cost_per_cell</span> <span class="o">=</span> <span class="n">cost_per_mile</span> <span class="o">/</span> <span class="n">METERS_IN_MILE</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_size</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Base line $/mile is </span><span class="si">%s</span><span class="s2">, $/cell is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">"Base line $/mile is </span><span class="si">%s</span><span class="s2">, $/cell is </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                 <span class="n">cost_per_mile</span><span class="p">,</span>
                 <span class="n">cost_per_cell</span><span class="p">,</span>
             <span class="p">)</span>
@@ -1251,14 +1204,14 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="compute_slope_multipliers">
 <a class="viewcode-back" href="../../../_autosummary/revrt.costs.dry_costs_creator.compute_slope_multipliers.html#revrt.costs.dry_costs_creator.compute_slope_multipliers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_slope_multipliers</span><span class="p">(</span><span class="n">slope</span><span class="p">,</span> <span class="n">chunks</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create slope multiplier raster for a region</span>
+<span class="w">    </span><span class="sd">"""Create slope multiplier raster for a region</span>
 
 <span class="sd">    Unspecified slopes are left at 1.0</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    slope : array-like</span>
-<span class="sd">        Slope raster clipped to a region - &quot;Terrain slope in % of grade&quot;</span>
+<span class="sd">        Slope raster clipped to a region - "Terrain slope in % of grade"</span>
 <span class="sd">    chunks : tuple</span>
 <span class="sd">        Dask chunks to use when creating multipliers array. Should be</span>
 <span class="sd">        of the same shape as `slope`.</span>
@@ -1266,11 +1219,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Multipliers and slope cut offs for hilly and mountain terrain.</span>
 <span class="sd">        The following keys are allowed:</span>
 
-<span class="sd">            - &#39;hill_mult&#39; : Multiplier for hilly terrain.</span>
-<span class="sd">            - &#39;mtn_slope&#39; : Multiplier for mountainous terrain.</span>
-<span class="sd">            - &#39;hill_slope&#39; : Slope at and above which a cell is</span>
+<span class="sd">            - 'hill_mult' : Multiplier for hilly terrain.</span>
+<span class="sd">            - 'mtn_slope' : Multiplier for mountainous terrain.</span>
+<span class="sd">            - 'hill_slope' : Slope at and above which a cell is</span>
 <span class="sd">                             classified as hilly.</span>
-<span class="sd">            - &#39;mtn_slope&#39; : Slope at and above which a cell is</span>
+<span class="sd">            - 'mtn_slope' : Slope at and above which a cell is</span>
 <span class="sd">                            classified as mountainous.</span>
 
 <span class="sd">        If ``None``, uses default values. By default, ``None``.</span>
@@ -1279,13 +1232,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    array-like</span>
 <span class="sd">        Slope multiplier raster. Minimum value for any cell is 1.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="p">{}</span>
 
-    <span class="n">hill_multiplier</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hill_mult&quot;</span><span class="p">,</span> <span class="n">DEFAULT_HILL_MULTIPLIER</span><span class="p">)</span>
-    <span class="n">mtn_multiplier</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mtn_mult&quot;</span><span class="p">,</span> <span class="n">DEFAULT_MTN_MULTIPLIER</span><span class="p">)</span>
-    <span class="n">hill_slope</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hill_slope&quot;</span><span class="p">,</span> <span class="n">DEFAULT_HILL_SLOPE</span><span class="p">)</span>
-    <span class="n">mtn_slope</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mtn_slope&quot;</span><span class="p">,</span> <span class="n">DEFAULT_MTN_SLOPE</span><span class="p">)</span>
+    <span class="n">hill_multiplier</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hill_mult"</span><span class="p">,</span> <span class="n">DEFAULT_HILL_MULTIPLIER</span><span class="p">)</span>
+    <span class="n">mtn_multiplier</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mtn_mult"</span><span class="p">,</span> <span class="n">DEFAULT_MTN_MULTIPLIER</span><span class="p">)</span>
+    <span class="n">hill_slope</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hill_slope"</span><span class="p">,</span> <span class="n">DEFAULT_HILL_SLOPE</span><span class="p">)</span>
+    <span class="n">mtn_slope</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mtn_slope"</span><span class="p">,</span> <span class="n">DEFAULT_MTN_SLOPE</span><span class="p">)</span>
 
     <span class="n">hilly</span> <span class="o">=</span> <span class="p">(</span><span class="n">slope</span> <span class="o">&gt;=</span> <span class="n">hill_slope</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">slope</span> <span class="o">&lt;</span> <span class="n">mtn_slope</span><span class="p">)</span>
     <span class="n">mountainous</span> <span class="o">=</span> <span class="n">slope</span> <span class="o">&gt;=</span> <span class="n">mtn_slope</span>
@@ -1302,7 +1255,7 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_land_use_multipliers</span><span class="p">(</span>
     <span class="n">land_use</span><span class="p">,</span> <span class="n">multipliers</span><span class="p">,</span> <span class="n">land_use_classes</span><span class="p">,</span> <span class="n">chunks</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert NLCD raster to land use multiplier raster</span>
+<span class="w">    </span><span class="sd">"""Convert NLCD raster to land use multiplier raster</span>
 
 <span class="sd">    Land classes without specified multipliers are left at 1.</span>
 
@@ -1311,7 +1264,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    land_use : array-like</span>
 <span class="sd">        NLCD land user raster clipped to a region.</span>
 <span class="sd">    multipliers : LandUseMultipliers</span>
-<span class="sd">        Multiplier for for land classes, E.g. {&#39;forest&#39;: 1.5}.</span>
+<span class="sd">        Multiplier for for land classes, E.g. {'forest': 1.5}.</span>
 <span class="sd">    land_use_classes : dict</span>
 <span class="sd">        NLCD land use codes corresponding to use classes for</span>
 <span class="sd">        multipliers.</span>
@@ -1323,7 +1276,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    array-like</span>
 <span class="sd">        Land use multiplier raster. Minimum value for any cell is 1.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">multiplier_raster</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
         <span class="n">land_use</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">DEFAULT_DTYPE</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span>
     <span class="p">)</span>
@@ -1332,12 +1285,12 @@ window.runMermaid = runMermaid;</script>
     <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">class_</span><span class="p">,</span> <span class="n">multiplier</span> <span class="ow">in</span> <span class="n">multipliers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">class_</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">land_use_classes</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Class </span><span class="si">{</span><span class="n">class_</span><span class="si">}</span><span class="s2"> not in land_use_classes: </span><span class="si">{</span><span class="n">land_use_classes</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Class </span><span class="si">{</span><span class="n">class_</span><span class="si">}</span><span class="s2"> not in land_use_classes: </span><span class="si">{</span><span class="n">land_use_classes</span><span class="si">}</span><span class="s2">"</span>
             <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="n">nlcd_values</span> <span class="o">=</span> <span class="n">land_use_classes</span><span class="p">[</span><span class="n">class_</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nlcd_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;NLCD values must be in list form; Got: </span><span class="si">{</span><span class="n">nlcd_values</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"NLCD values must be in list form; Got: </span><span class="si">{</span><span class="n">nlcd_values</span><span class="si">}</span><span class="s2">"</span>
             <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">nlcd_value</span> <span class="ow">in</span> <span class="n">nlcd_values</span><span class="p">:</span>

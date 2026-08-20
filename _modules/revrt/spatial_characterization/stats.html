@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.spatial_characterization.stats</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;revrt statistic computation functions&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""revrt statistic computation functions"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
@@ -837,17 +757,17 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">revrtValueError</span><span class="p">,</span> <span class="n">revrtNotImplementedError</span>
 
 
-<span class="n">_PCT_PREFIX</span> <span class="o">=</span> <span class="s2">&quot;percentile_&quot;</span>
+<span class="n">_PCT_PREFIX</span> <span class="o">=</span> <span class="s2">"percentile_"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_not_implemented</span><span class="p">(</span><span class="n">stat_name</span><span class="p">,</span> <span class="o">*</span><span class="n">__</span><span class="p">,</span> <span class="o">**</span><span class="n">___</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Default function for stats which may not have a computation&quot;&quot;&quot;</span>
-    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Default computation unavailable for </span><span class="si">{</span><span class="n">stat_name</span><span class="si">!r}</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="sd">"""Default function for stats which may not have a computation"""</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Default computation unavailable for </span><span class="si">{</span><span class="n">stat_name</span><span class="si">!r}</span><span class="s2">"</span>
     <span class="k">raise</span> <span class="n">revrtNotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_count</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute number of non-NaN elements&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute number of non-NaN elements"""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">processed_raster</span><span class="o">.</span><span class="n">count</span><span class="p">())</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
@@ -855,70 +775,70 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_min</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute minimum value in raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute minimum value in raster"""</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_max</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute maximum value in raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute maximum value in raster"""</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_mean</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute mean value of raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute mean value of raster"""</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">out_dtype</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_sum</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute sum of raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute sum of raster"""</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">out_dtype</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_std</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute std of raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute std of raster"""</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_median</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute median of raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute median of raster"""</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_majority</span><span class="p">(</span><span class="n">pixel_count</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute value that makes up majority of raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute value that makes up majority of raster"""</span>
     <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">pixel_count</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">pixel_count</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_minority</span><span class="p">(</span><span class="n">pixel_count</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute value that makes up minority of raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute value that makes up minority of raster"""</span>
     <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">pixel_count</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">pixel_count</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_unique</span><span class="p">(</span><span class="n">pixel_count</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute number of unique values in raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute number of unique values in raster"""</span>
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">pixel_count</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_range</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="n">feature_stats</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the range from stats using min/max, compute if not present&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Get the range from stats using min/max, compute if not present"""</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">r_min</span> <span class="o">=</span> <span class="n">feature_stats</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span>
+        <span class="n">r_min</span> <span class="o">=</span> <span class="n">feature_stats</span><span class="p">[</span><span class="s2">"min"</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">r_min</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">))</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">r_max</span> <span class="o">=</span> <span class="n">feature_stats</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span>
+        <span class="n">r_max</span> <span class="o">=</span> <span class="n">feature_stats</span><span class="p">[</span><span class="s2">"max"</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">r_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">r_max</span> <span class="o">-</span> <span class="n">r_min</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_calc_nodata</span><span class="p">(</span><span class="n">masked_raster</span><span class="p">,</span> <span class="n">nodata</span><span class="p">,</span> <span class="o">**</span><span class="n">__</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute number of nodata pixels in raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute number of nodata pixels in raster"""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                 <span class="p">(</span><span class="n">masked_raster</span> <span class="o">==</span> <span class="n">nodata</span><span class="p">)</span>
-                <span class="o">|</span> <span class="p">(</span><span class="n">masked_raster</span> <span class="o">==</span> <span class="n">masked_raster</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodata&quot;</span><span class="p">))</span>
+                <span class="o">|</span> <span class="p">(</span><span class="n">masked_raster</span> <span class="o">==</span> <span class="n">masked_raster</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodata"</span><span class="p">))</span>
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
@@ -928,130 +848,146 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="Stat">
 <a class="viewcode-back" href="../../../_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Stat</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enum of basic computable statistics&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Enum of basic computable statistics"""</span>
 
     <span class="n">COUNT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute number of non-NaN elements&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute number of non-NaN elements"""</span>
 
     <span class="n">MIN</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute minimum value in zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute minimum value in zone"""</span>
 
     <span class="n">MAX</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute maximum value in zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute maximum value in zone"""</span>
 
     <span class="n">MEAN</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute mean value of zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute mean value of zone"""</span>
 
     <span class="n">SUM</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute sum of zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute sum of zone"""</span>
 
     <span class="n">STD</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute std of zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute std of zone"""</span>
 
     <span class="n">MEDIAN</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute median of zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute median of zone"""</span>
 
     <span class="n">MAJORITY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute pixel value that makes up majority of zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute pixel value that makes up majority of zone"""</span>
 
     <span class="n">MINORITY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute pixel value that makes up minority of zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute pixel value that makes up minority of zone"""</span>
 
     <span class="n">UNIQUE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute number of unique pixel values in zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute number of unique pixel values in zone"""</span>
 
     <span class="n">RANGE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute range of pixel values in zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute range of pixel values in zone"""</span>
 
     <span class="n">NODATA</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute number of nodata pixels in zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute number of nodata pixels in zone"""</span>
 
     <span class="n">PIXEL_COUNT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute count for each pixel value in zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute count for each pixel value in zone"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>  <span class="c1"># ruff:ignore[too-many-branches, complex-structure]</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create new enum member&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Create new enum member"""</span>
 
         <span class="n">obj</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
         <span class="n">obj</span><span class="o">.</span><span class="n">_value_</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">match</span> <span class="n">value</span><span class="p">:</span>
-            <span class="k">case</span> <span class="s2">&quot;count&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"count"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_count</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">case</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"min"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_min</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">case</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"max"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_max</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">case</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"mean"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_mean</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">case</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"sum"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_sum</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">case</span> <span class="s2">&quot;std&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"std"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_std</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">case</span> <span class="s2">&quot;median&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"median"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_median</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">case</span> <span class="s2">&quot;majority&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"majority"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_majority</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">case</span> <span class="s2">&quot;minority&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"minority"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_minority</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">case</span> <span class="s2">&quot;unique&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"unique"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_unique</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">case</span> <span class="s2">&quot;range&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"range"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_range</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">case</span> <span class="s2">&quot;nodata&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"nodata"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">_calc_nodata</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">case</span> <span class="s2">&quot;pixel_count&quot;</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"pixel_count"</span><span class="p">:</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_not_implemented</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">compute</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">_not_implemented</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
                 <span class="n">obj</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="k">return</span> <span class="n">obj</span></div>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<div class="viewcode-block" id="Stat.allowed">
+<a class="viewcode-back" href="../../../_autosummary/revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat.allowed">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">allowed</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return a set of allowed stat names"""</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">*</span><span class="bp">cls</span><span class="p">}</span></div>
+</div>
 
 
 
 <div class="viewcode-block" id="FractionalStat">
 <a class="viewcode-back" href="../../../_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FractionalStat</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enum of fractional pixel statistics&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Enum of fractional pixel statistics"""</span>
 
     <span class="n">FRACTIONAL_PIXEL_COUNT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute fractional pixel count for each pixel value in zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute fractional pixel count for each pixel value in zone"""</span>
 
     <span class="n">FRACTIONAL_AREA</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute fractional area for each pixel value in zone&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute fractional area for each pixel value in zone"""</span>
 
     <span class="n">VALUE_MULTIPLIED_BY_FRACTIONAL_AREA</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute fractional pixel * area for each pixel value in zone&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Compute fractional pixel * area for each pixel value in zone"""</span>
+
+<div class="viewcode-block" id="FractionalStat.allowed">
+<a class="viewcode-back" href="../../../_autosummary/revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat.allowed">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">allowed</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return a set of allowed stat names"""</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">*</span><span class="bp">cls</span><span class="p">}</span></div>
+</div>
 
 
 
 <div class="viewcode-block" id="ComputableStats">
 <a class="viewcode-back" href="../../../_autosummary/revrt.spatial_characterization.stats.ComputableStats.html#revrt.spatial_characterization.stats.ComputableStats">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ComputableStats</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to represent computable statistics for zonal stats&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A class to represent computable statistics for zonal stats"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">base_stats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fractional_stats</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        base_stats : iterable of str, optional</span>
-<span class="sd">            Iterable of &quot;base&quot; statistics to compute (i.e. not</span>
+<span class="sd">            Iterable of "base" statistics to compute (i.e. not</span>
 <span class="sd">            fractional or percentile). By default, ``None``.</span>
 <span class="sd">        percentiles : dict, optional</span>
 <span class="sd">            Dictionary mapping the percentile stat name to the int or</span>
@@ -1060,7 +996,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        fractional_stats : iterable of str, optional</span>
 <span class="sd">            One or mre stats from the :class:`FractionalStat` enum to</span>
 <span class="sd">            compute. By default, ``None``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_stats</span> <span class="o">=</span> <span class="n">base_stats</span> <span class="ow">or</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">percentiles</span> <span class="o">=</span> <span class="n">percentiles</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fractional_stats</span> <span class="o">=</span> <span class="n">fractional_stats</span> <span class="ow">or</span> <span class="p">[]</span>
@@ -1075,7 +1011,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Dict with empty stat values&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""dict: Dict with empty stat values"""</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">{</span><span class="n">Stat</span><span class="o">.</span><span class="n">COUNT</span><span class="p">,</span> <span class="n">Stat</span><span class="o">.</span><span class="n">PIXEL_COUNT</span><span class="p">}</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_stats</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fractional_stats</span><span class="p">)</span>
@@ -1087,7 +1023,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="ComputableStats.lazy_pixel_count">
 <a class="viewcode-back" href="../../../_autosummary/revrt.spatial_characterization.stats.ComputableStats.html#revrt.spatial_characterization.stats.ComputableStats.lazy_pixel_count">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">lazy_pixel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processed_raster</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute pixel counts from a raster</span>
+<span class="w">        </span><span class="sd">"""Compute pixel counts from a raster</span>
 
 <span class="sd">        The output dictionary will be empty if this stats collection</span>
 <span class="sd">        does not contain any stats that require a pixel count.</span>
@@ -1106,7 +1042,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            values are the counts for each entry. This dictionary will</span>
 <span class="sd">            be empty if this stats collection does not contain any stats</span>
 <span class="sd">            that require a pixel count.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">requires_pixel_count</span> <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_stats</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{}</span>
 
@@ -1123,7 +1059,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">computed_base_stats</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">processed_raster</span><span class="p">,</span> <span class="n">category_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute statistics on array</span>
+<span class="w">        </span><span class="sd">"""Compute statistics on array</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1143,8 +1079,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            parameters:</span>
 
 <span class="sd">                - `masked_raster`: Raster masked to zone, but still</span>
-<span class="sd">                                   containing the &quot;nodata&quot; value (i.e.</span>
-<span class="sd">                                   it&#39;s not masked out with NaNs).</span>
+<span class="sd">                                   containing the "nodata" value (i.e.</span>
+<span class="sd">                                   it's not masked out with NaNs).</span>
 <span class="sd">                - `nodata`: Value representing `nodata` that will be</span>
 <span class="sd">                            counted for this statistic.</span>
 
@@ -1152,7 +1088,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
 <span class="sd">            Dictionary of computed statistics.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">category_map</span> <span class="o">=</span> <span class="n">category_map</span> <span class="ow">or</span> <span class="p">{}</span>
 
         <span class="n">pixel_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lazy_pixel_count</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">)</span>
@@ -1183,7 +1119,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">computed_fractional_stats</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">zone</span><span class="p">,</span> <span class="n">processed_raster</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">category_map</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute fractional statistics on array</span>
+<span class="w">        </span><span class="sd">"""Compute fractional statistics on array</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1200,7 +1136,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            for statistics computations as well as the pixel area</span>
 <span class="sd">            for each pixel value in the raster.</span>
 <span class="sd">        nodata : int or float, optional</span>
-<span class="sd">            Value representing &quot;nodata&quot; in the array. These values in</span>
+<span class="sd">            Value representing "nodata" in the array. These values in</span>
 <span class="sd">            the raster will be ignored and will not contribute to the</span>
 <span class="sd">            statistics and will not be reported. By default, ``None``.</span>
 <span class="sd">        category_map : dict, optional</span>
@@ -1216,7 +1152,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Dictionary of computed fractional statistics. The keys are</span>
 <span class="sd">            the names of the statistics in the :class:`FractionalStat`</span>
 <span class="sd">            enum and the values are the computed statistics.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fractional_stats</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{}</span>
 
@@ -1229,7 +1165,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="ComputableStats.computed_percentiles">
 <a class="viewcode-back" href="../../../_autosummary/revrt.spatial_characterization.stats.ComputableStats.html#revrt.spatial_characterization.stats.ComputableStats.computed_percentiles">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">computed_percentiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processed_raster</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate percentile statistics for array</span>
+<span class="w">        </span><span class="sd">"""Generate percentile statistics for array</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1242,7 +1178,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Name of percentile stat</span>
 <span class="sd">        int or float</span>
 <span class="sd">            Value representing that percentile in the array.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">stat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">processed_raster</span><span class="p">,</span> <span class="n">pct</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">stat</span><span class="p">,</span> <span class="n">pct</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">percentiles</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
@@ -1253,7 +1189,7 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../_autosummary/revrt.spatial_characterization.stats.ComputableStats.html#revrt.spatial_characterization.stats.ComputableStats.from_iter">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_iter</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">stats</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a ComputableStats object from an iterable of stats</span>
+<span class="w">        </span><span class="sd">"""Create a ComputableStats object from an iterable of stats</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1266,17 +1202,17 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            computed, you can provide it directly as a string.</span>
 <span class="sd">            Otherwise, provide a list of statistic names or a string</span>
 <span class="sd">            with the names separated by a space. You can also provide</span>
-<span class="sd">            the string ``&quot;ALL&quot;`` or ``&quot;*&quot;`` to specify that all</span>
+<span class="sd">            the string ``"ALL"`` or ``"*"`` to specify that all</span>
 <span class="sd">            statistics should be computed. If no input, empty input, or</span>
-<span class="sd">            ``None`` is provided, then only the base stats (&quot;count&quot;,</span>
-<span class="sd">            &quot;min&quot;, &quot;max&quot;, &quot;mean&quot;) are configured. To summarize, all of</span>
+<span class="sd">            ``None`` is provided, then only the base stats ("count",</span>
+<span class="sd">            "min", "max", "mean") are configured. To summarize, all of</span>
 <span class="sd">            the following are valid inputs:</span>
 
-<span class="sd">                - ``stats=&quot;*&quot;`` or ``stats=&quot;ALL&quot;`` or ``stats=&quot;All&quot;``</span>
-<span class="sd">                - ``stats=&quot;min&quot;``</span>
-<span class="sd">                - ``stats=&quot;min max&quot;``</span>
-<span class="sd">                - ``stats=[&quot;min&quot;]``</span>
-<span class="sd">                - ``stats=[&quot;min&quot;, &quot;max&quot;, &quot;percentile_10.5&quot;]``</span>
+<span class="sd">                - ``stats="*"`` or ``stats="ALL"`` or ``stats="All"``</span>
+<span class="sd">                - ``stats="min"``</span>
+<span class="sd">                - ``stats="min max"``</span>
+<span class="sd">                - ``stats=["min"]``</span>
+<span class="sd">                - ``stats=["min", "max", "percentile_10.5"]``</span>
 
 <span class="sd">            By default, ``None``.</span>
 
@@ -1289,12 +1225,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        ------</span>
 <span class="sd">        revrtValueError</span>
 <span class="sd">            If one or more input stats are not known.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">stats</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">base_stats</span><span class="o">=</span><span class="p">[</span><span class="n">Stat</span><span class="o">.</span><span class="n">COUNT</span><span class="p">,</span> <span class="n">Stat</span><span class="o">.</span><span class="n">MIN</span><span class="p">,</span> <span class="n">Stat</span><span class="o">.</span><span class="n">MAX</span><span class="p">,</span> <span class="n">Stat</span><span class="o">.</span><span class="n">MEAN</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">stats</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">}:</span>
+            <span class="k">if</span> <span class="n">stats</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"*"</span><span class="p">,</span> <span class="s2">"all"</span><span class="p">}:</span>
                 <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
                     <span class="n">base_stats</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">Stat</span><span class="p">),</span>
                     <span class="n">fractional_stats</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">FractionalStat</span><span class="p">),</span>
@@ -1302,58 +1238,84 @@ window.runMermaid = runMermaid;</script>
 
             <span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 
-        <span class="n">allowed_base_stats</span> <span class="o">=</span> <span class="p">{</span><span class="o">*</span><span class="n">Stat</span><span class="p">}</span>
-        <span class="n">allowed_fractional_stats</span> <span class="o">=</span> <span class="p">{</span><span class="o">*</span><span class="n">FractionalStat</span><span class="p">}</span>
-        <span class="n">base_stats</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">percentiles</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">fractional_stats</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">:</span>
-            <span class="n">stat_name</span> <span class="o">=</span> <span class="n">stat</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">stat_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_PCT_PREFIX</span><span class="p">):</span>
-                <span class="n">percentiles</span><span class="p">[</span><span class="n">stat_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_get_percentile</span><span class="p">(</span><span class="n">stat_name</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">stat_name</span> <span class="ow">in</span> <span class="n">allowed_fractional_stats</span><span class="p">:</span>
-                <span class="n">fractional_stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stat_name</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">stat_name</span> <span class="ow">in</span> <span class="n">allowed_base_stats</span><span class="p">:</span>
-                <span class="n">base_stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Stat</span><span class="p">(</span><span class="n">stat_name</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">valid_stats</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">Stat</span><span class="p">}</span>
-                <span class="n">valid_stats</span> <span class="o">|=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">FractionalStat</span><span class="p">}</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Stat </span><span class="si">{</span><span class="n">stat</span><span class="si">!r}</span><span class="s2"> not valid; must be one of:</span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">valid_stats</span><span class="si">!r}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">base_stats</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">,</span> <span class="n">fractional_stats</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">*</span><span class="n">_StatBuckets</span><span class="p">()</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span></div>
 </div>
 
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">_StatBuckets</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Helper stat parsing class"""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_stats</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">percentiles</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fractional_stats</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_valid_stats</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">Stat</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_valid_stats</span> <span class="o">|=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">FractionalStat</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stats</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Apply the stat bucketing to the input stats list</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        stats : list of str</span>
+<span class="sd">            The list of statistics to be parsed and bucketed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            A tuple containing three elements:</span>
+<span class="sd">            - base_stats: list of Stat</span>
+<span class="sd">            - percentiles: dict</span>
+<span class="sd">            - fractional_stats: list of FractionalStat</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bucket_stat</span><span class="p">(</span><span class="n">stat</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_stats</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">percentiles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fractional_stats</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bucket_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Place given stat into appropriate tracker"""</span>
+        <span class="k">match</span> <span class="n">stat_name</span> <span class="o">:=</span> <span class="n">stat</span><span class="o">.</span><span class="n">casefold</span><span class="p">():</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span> <span class="k">if</span> <span class="n">stat_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_PCT_PREFIX</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">percentiles</span><span class="p">[</span><span class="n">stat_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_get_percentile</span><span class="p">(</span><span class="n">stat_name</span><span class="p">)</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span> <span class="k">if</span> <span class="n">stat_name</span> <span class="ow">in</span> <span class="n">FractionalStat</span><span class="o">.</span><span class="n">allowed</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fractional_stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stat_name</span><span class="p">)</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span> <span class="k">if</span> <span class="n">stat_name</span> <span class="ow">in</span> <span class="n">Stat</span><span class="o">.</span><span class="n">allowed</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Stat</span><span class="p">(</span><span class="n">stat_name</span><span class="p">))</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Stat </span><span class="si">{</span><span class="n">stat</span><span class="si">!r}</span><span class="s2"> not valid; must be one of:</span><span class="se">\n</span><span class="s2">"</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_valid_stats</span><span class="si">!r}</span><span class="s2">"</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_percentile</span><span class="p">(</span><span class="n">stat</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the percentile value from user string input&quot;&quot;&quot;</span>
-    <span class="n">q</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">_PCT_PREFIX</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="sd">"""Get the percentile value from user string input"""</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">_PCT_PREFIX</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">q</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">):</span>  <span class="c1"># ruff:ignore[magic-value-comparison]</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Percentiles must be between 0 and 100 (inclusive). Got: </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Percentiles must be between 0 and 100 (inclusive). Got: </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">"</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">q</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_out_dtype_from_raster</span><span class="p">(</span><span class="n">raster</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the output dtype for stats like mean and std</span>
+<span class="w">    </span><span class="sd">"""Get the output dtype for stats like mean and std</span>
 
-<span class="sd">    If we&#39;re on a 64 bit platform and the array is an integer type, this</span>
+<span class="sd">    If we're on a 64 bit platform and the array is an integer type, this</span>
 <span class="sd">    function ensures that the array is cast to 64 bit to avoid overflow</span>
 <span class="sd">    for certain numpy ops</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;int64&quot;</span>
+        <span class="k">return</span> <span class="s2">"int64"</span>
     <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># numpy default</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_fractional_stats</span><span class="p">(</span>
     <span class="n">zonal_polygon</span><span class="p">,</span> <span class="n">window_array</span><span class="p">,</span> <span class="n">window_transform</span><span class="p">,</span> <span class="n">nodata</span><span class="p">,</span> <span class="n">category_map</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute fractional statistics on array&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute fractional statistics on array"""</span>
     <span class="n">value_multiplied_by_area</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">category_map</span> <span class="o">=</span> <span class="n">category_map</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">returned_value_pixel_count_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
@@ -1401,7 +1363,7 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compute_pixel_area</span><span class="p">(</span><span class="n">affine</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the pixel area from the affine transform&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute the pixel area from the affine transform"""</span>
     <span class="n">width</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">affine</span>
     <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">width</span><span class="p">)</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
 </pre></div>

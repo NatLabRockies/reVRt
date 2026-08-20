@@ -12,6 +12,7 @@ revrt.models.routing
    
       DriverOptionRules
       MultiplierLayerInput
+      TransitionCostValue
       RoutingOptionsMap
    
    

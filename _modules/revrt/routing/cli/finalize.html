@@ -43,182 +43,17 @@
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.routing.cli.finalize</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;reVRt collection CLI command&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""reVRt collection CLI command"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
@@ -861,10 +781,10 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="RouteToFeatureMapper">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RouteToFeatureMapper.html#revrt.routing.cli.finalize.RouteToFeatureMapper">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RouteToFeatureMapper</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to map routes to transmission features&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Class to map routes to transmission features"""</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cost_fpath</span><span class="p">,</span> <span class="n">transmission_feature_id_col</span><span class="o">=</span><span class="s2">&quot;trans_gid&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cost_fpath</span><span class="p">,</span> <span class="n">transmission_feature_id_col</span><span class="o">=</span><span class="s2">"trans_gid"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -872,30 +792,30 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Filepath to cost layer used for routing. This is used to</span>
 <span class="sd">            obtain profile information for the raster layer in order to</span>
 <span class="sd">            compute transmission feature row/column indices.</span>
-<span class="sd">        transmission_feature_id_col : str, default=&quot;trans_gid&quot;</span>
+<span class="sd">        transmission_feature_id_col : str, default="trans_gid"</span>
 <span class="sd">            Name of column in features file uniquely identifying each</span>
-<span class="sd">            transmission feature. By default, ``&quot;trans_gid&quot;``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            transmission feature. By default, ``"trans_gid"``.</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span> <span class="o">=</span> <span class="n">LayeredFile</span><span class="p">(</span><span class="n">cost_fpath</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tid_col</span> <span class="o">=</span> <span class="n">transmission_feature_id_col</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_buffered_endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Buffered endpoints of a route&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Buffered endpoints of a route"""</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;end_row&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;end_col&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">"transform"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"end_row"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"end_col"</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">cell_size</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.1</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RouteToFeatureMapper.process">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RouteToFeatureMapper.html#revrt.routing.cli.finalize.RouteToFeatureMapper.process">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">,</span> <span class="n">transmission_feature_fp</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Map routes to transmission features</span>
+<span class="w">        </span><span class="sd">"""Map routes to transmission features</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        routes : pandas.DataFrame or geopandas.GeoDataFrame</span>
-<span class="sd">            DataFrame containing routing results with &#39;end_row&#39; and</span>
-<span class="sd">            &#39;end_col&#39; columns representing the endpoint indices (into</span>
+<span class="sd">            DataFrame containing routing results with 'end_row' and</span>
+<span class="sd">            'end_col' columns representing the endpoint indices (into</span>
 <span class="sd">            the cost raster) of each route.</span>
 <span class="sd">        transmission_feature_fp : path-like</span>
 <span class="sd">            Path to GeoPackage file containing transmission features.</span>
@@ -905,12 +825,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        pandas.DataFrame or geopandas.GeoDataFrame</span>
 <span class="sd">            Input routes DataFrame with transmission feature columns</span>
 <span class="sd">            merged in based on route endpoints.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">features_crs</span> <span class="o">=</span> <span class="n">gpkg_crs</span><span class="p">(</span><span class="n">transmission_feature_fp</span><span class="p">)</span>
 
         <span class="n">buffered_endpoints</span> <span class="o">=</span> <span class="n">routes</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffered_endpoint</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">buffered_endpoints</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span>
-            <span class="n">geometry</span><span class="o">=</span><span class="n">buffered_endpoints</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;crs&quot;</span><span class="p">]</span>
+            <span class="n">geometry</span><span class="o">=</span><span class="n">buffered_endpoints</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">"crs"</span><span class="p">]</span>
         <span class="p">)</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">features_crs</span><span class="p">)</span>
 
         <span class="n">transmission_features</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span>
@@ -929,23 +849,23 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
 
         <span class="n">routes_with_features</span> <span class="o">=</span> <span class="n">routes</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-            <span class="n">endpoint_lookup</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;end_row&quot;</span><span class="p">,</span> <span class="s2">&quot;end_col&quot;</span><span class="p">],</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+            <span class="n">endpoint_lookup</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">"end_row"</span><span class="p">,</span> <span class="s2">"end_col"</span><span class="p">],</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">routes_with_features</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-            <span class="n">transmission_features</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">),</span>
+            <span class="n">transmission_features</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">"geometry"</span><span class="p">),</span>
             <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_tid_col</span><span class="p">],</span>
-            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
-            <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;_transmission_feature&quot;</span><span class="p">),</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
+            <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"_transmission_feature"</span><span class="p">),</span>
         <span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_de_duplicate_preserve_geo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gdf</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;De-duplicate GeoDataFrame while preserving geometries&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""De-duplicate GeoDataFrame while preserving geometries"""</span>
         <span class="k">return</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span>
             <span class="p">(</span>
                 <span class="p">{</span>
-                    <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;geometry&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">union_all</span><span class="p">(),</span>
+                    <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"geometry"</span><span class="p">},</span>
+                    <span class="s2">"geometry"</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">union_all</span><span class="p">(),</span>
                 <span class="p">}</span>
                 <span class="k">for</span> <span class="n">__</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gdf</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tid_col</span><span class="p">)</span>
             <span class="p">),</span>
@@ -953,9 +873,9 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_endpoint_lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transmission_features</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create endpoint lookup DataFrame from transmission feats&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Create endpoint lookup DataFrame from transmission feats"""</span>
         <span class="n">transmission_features</span> <span class="o">=</span> <span class="n">transmission_features</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;crs&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">"crs"</span><span class="p">]</span>
         <span class="p">)</span>
 
         <span class="n">endpoint_lookup</span> <span class="o">=</span> <span class="p">[]</span>
@@ -964,24 +884,24 @@ window.runMermaid = runMermaid;</script>
             <span class="n">tid</span> <span class="o">=</span> <span class="n">feat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_tid_col</span><span class="p">]</span>
             <span class="n">endpoint_lookup</span> <span class="o">+=</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;end_row&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
-                    <span class="s2">&quot;end_col&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">),</span>
+                    <span class="s2">"end_row"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
+                    <span class="s2">"end_col"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">),</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_tid_col</span><span class="p">:</span> <span class="n">tid</span><span class="p">,</span>
                 <span class="p">}</span>
                 <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span>
-                <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">"height"</span><span class="p">]</span>
+                <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">"width"</span><span class="p">]</span>
             <span class="p">]</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">endpoint_lookup</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_feature_to_row_col</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feat</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get row/col indices for a transmission feature geometry&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get row/col indices for a transmission feature geometry"""</span>
         <span class="n">window</span> <span class="o">=</span> <span class="n">integer_dimension_window</span><span class="p">(</span>
             <span class="n">feat</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span>
-            <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">],</span>
+            <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">"transform"</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="n">window_transform</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">windows</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
-            <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">]</span>
+            <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cost_lf</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">"transform"</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">geometry_mask</span><span class="p">(</span>
             <span class="p">[</span><span class="n">feat</span><span class="o">.</span><span class="n">geometry</span><span class="p">],</span>
@@ -997,7 +917,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="RoutePostProcessor">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RoutePostProcessor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to finalize routing outputs&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Class to finalize routing outputs"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># ruff:ignore[too-many-arguments, too-many-positional-arguments]</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1010,11 +930,11 @@ window.runMermaid = runMermaid;</script>
         <span class="n">simplify_geo_tolerance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">cost_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">features_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">transmission_feature_id_col</span><span class="o">=</span><span class="s2">&quot;trans_gid&quot;</span><span class="p">,</span>
+        <span class="n">transmission_feature_id_col</span><span class="o">=</span><span class="s2">"trans_gid"</span><span class="p">,</span>
         <span class="n">purge_chunks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">chunk_size</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1036,19 +956,19 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Minimum line length in km. If a line length is below this</span>
 <span class="sd">            value, its length and cost are adjust to meet this minimum.</span>
 <span class="sd">            Costs are scaled up linearly. By default, ``0``.</span>
-<span class="sd">        length_mult_kind : {None, &quot;step&quot;, &quot;linear&quot;}, optional</span>
+<span class="sd">        length_mult_kind : {None, "step", "linear"}, optional</span>
 <span class="sd">            Type of length multiplier calculation to apply. Length</span>
 <span class="sd">            multipliers can be used to increase the cost of short lines</span>
 <span class="sd">            (similar to an economies-of-scale adjustment). Note that</span>
 <span class="sd">            your input files must contain a ``length_km`` column for</span>
 <span class="sd">            this to work. The valid options for this input are:</span>
-<span class="sd">            ``&quot;step&quot;``, which computes length multipliers using a step</span>
-<span class="sd">            function, ``&quot;linear&quot;``, which computes the length multiplier</span>
+<span class="sd">            ``"step"``, which computes length multipliers using a step</span>
+<span class="sd">            function, ``"linear"``, which computes the length multiplier</span>
 <span class="sd">            using a linear interpolation between 0 and 10 mile spur-line</span>
 <span class="sd">            lengths, or ``None``, which indicates no length multipliers</span>
 <span class="sd">            should be applied. The default for reV runs prior to 2024</span>
-<span class="sd">            was ``&quot;step&quot;``, after which it was updated to default to</span>
-<span class="sd">            ``&quot;linear&quot;``. Length multiplier data source:</span>
+<span class="sd">            was ``"step"``, after which it was updated to default to</span>
+<span class="sd">            ``"linear"``. Length multiplier data source:</span>
 <span class="sd">            https://www.wecc.org/Administrative/TEPPC_TransCapCostCalculator_E3_2019_Update.xlsx</span>
 <span class="sd">            By default, ``None``.</span>
 <span class="sd">        simplify_geo_tolerance : float, optional</span>
@@ -1082,11 +1002,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            routes based on which features the routes connected to. To</span>
 <span class="sd">            skip this functionality, leave out **both** `cost_fpath` and</span>
 <span class="sd">            `features_fpath`. By default, ``None``.</span>
-<span class="sd">        transmission_feature_id_col : str, default=&quot;trans_gid&quot;</span>
+<span class="sd">        transmission_feature_id_col : str, default="trans_gid"</span>
 <span class="sd">            Name of column in features file uniquely identifying each</span>
 <span class="sd">            transmission feature. This is only used if both `cost_fpath`</span>
 <span class="sd">            and `features_fpath` are provided.</span>
-<span class="sd">            By default, ``&quot;trans_gid&quot;``.</span>
+<span class="sd">            By default, ``"trans_gid"``.</span>
 <span class="sd">        purge_chunks : bool, default=False</span>
 <span class="sd">            Option to delete single-node input files after the</span>
 <span class="sd">            collection step. By default, ``False``.</span>
@@ -1094,7 +1014,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            Number of features to read into memory at a time when</span>
 <span class="sd">            merging files. This helps limit memory usage when merging</span>
 <span class="sd">            large files. By default, ``10_000``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">collect_pattern</span> <span class="o">=</span> <span class="n">collect_pattern</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span> <span class="o">=</span> <span class="n">project_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">job_name</span> <span class="o">=</span> <span class="n">job_name</span>
@@ -1110,7 +1030,7 @@ window.runMermaid = runMermaid;</script>
 
         <span class="k">if</span> <span class="n">simplify_geo_tolerance</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;Simplifying geometries using a tolerance of </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">"Simplifying geometries using a tolerance of </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
                 <span class="n">simplify_geo_tolerance</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -1118,17 +1038,17 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.files_to_collect">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">files_to_collect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;list: List of files to collect&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""list: List of files to collect"""</span>
         <span class="n">collect_pattern</span> <span class="o">=</span> <span class="n">resolve_path</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">collect_pattern</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">collect_pattern</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-            <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;./</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">collect_pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">collect_pattern</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+            <span class="k">else</span> <span class="sa">f</span><span class="s2">"./</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">collect_pattern</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">files_to_collect</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">collect_pattern</span><span class="p">)))</span>  <span class="c1"># ruff:ignore[glob]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">files_to_collect</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No files found using collect pattern: </span><span class="si">{</span><span class="n">collect_pattern</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"No files found using collect pattern: </span><span class="si">{</span><span class="n">collect_pattern</span><span class="si">}</span><span class="s2">"</span>
             <span class="k">raise</span> <span class="n">revrtFileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">files_to_collect</span></div>
@@ -1138,12 +1058,12 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.file_suffix">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">file_suffix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;str: Output file suffix&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""str: Output file suffix"""</span>
         <span class="n">file_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files_to_collect</span><span class="p">}</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_types</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Multiple file types found to collect! All files must be of &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;the same type. Found: </span><span class="si">{</span><span class="n">file_types</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"Multiple file types found to collect! All files must be of "</span>
+                <span class="sa">f</span><span class="s2">"the same type. Found: </span><span class="si">{</span><span class="n">file_types</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1154,23 +1074,23 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.out_fp">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">out_fp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;pathlib.Path: Output filepath&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">job_name</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_suffix</span><span class="si">}</span><span class="s2">&quot;</span></div>
+<span class="w">        </span><span class="sd">"""pathlib.Path: Output filepath"""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">job_name</span><span class="si">}{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_suffix</span><span class="si">}</span><span class="s2">"</span></div>
 
 
 <div class="viewcode-block" id="RoutePostProcessor.chunk_dir">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.chunk_dir">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chunk_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;pathlib.Path: Directory for chunk files&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">/</span> <span class="s2">&quot;chunk_files&quot;</span></div>
+<span class="w">        </span><span class="sd">"""pathlib.Path: Directory for chunk files"""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">/</span> <span class="s2">"chunk_files"</span></div>
 
 
 <div class="viewcode-block" id="RoutePostProcessor.writer">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.writer">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">writer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;revrt.utilities.handlers.IncrementalWriter: Output writer&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""revrt.utilities.handlers.IncrementalWriter: Output writer"""</span>
         <span class="k">return</span> <span class="n">IncrementalWriter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">)</span></div>
 
 
@@ -1178,7 +1098,7 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.rtf_mapper">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rtf_mapper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;RouteToFeatureMapper: Shared route-to-feature mapper obj&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""RouteToFeatureMapper: Shared route-to-feature mapper obj"""</span>
         <span class="k">return</span> <span class="n">RouteToFeatureMapper</span><span class="p">(</span>
             <span class="n">cost_fpath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">,</span>
             <span class="n">transmission_feature_id_col</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transmission_feature_id_col</span><span class="p">,</span>
@@ -1186,16 +1106,16 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_next_file_to_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generator yielding files to process&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Generator yielding files to process"""</span>
         <span class="n">num_files</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_to_collect</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">purge_chunks</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Creating chunk dir: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_dir</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Creating chunk dir: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_dir</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">chunk_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data_fp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files_to_collect</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%i</span><span class="s2">/</span><span class="si">%i</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">data_fp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">num_files</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Loading </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%i</span><span class="s2">/</span><span class="si">%i</span><span class="s2">)"</span><span class="p">,</span> <span class="n">data_fp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">num_files</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">- Processing file in chunks of </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span>
+                <span class="s2">"</span><span class="se">\t</span><span class="s2">- Processing file in chunks of </span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span>
             <span class="p">)</span>
             <span class="k">yield</span> <span class="n">data_fp</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_handle_chunk_file</span><span class="p">(</span><span class="n">data_fp</span><span class="p">)</span>
@@ -1203,7 +1123,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="RoutePostProcessor.process">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.finalize.RoutePostProcessor.html#revrt.routing.cli.finalize.RoutePostProcessor.process">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge and post-process routes files into a single file</span>
+<span class="w">        </span><span class="sd">"""Merge and post-process routes files into a single file</span>
 
 <span class="sd">        This function collects together multiple LCP routing output</span>
 <span class="sd">        files into a single file and applies any specified</span>
@@ -1219,11 +1139,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        revrtValueError</span>
 <span class="sd">            Raised when multiple file types are found matching the</span>
 <span class="sd">            pattern or if the length multiplier kind is invalid.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Collecting routing outputs to: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Collecting routing outputs to: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_suffix</span> <span class="o">==</span> <span class="s2">&quot;.gpkg&quot;</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_suffix</span> <span class="o">==</span> <span class="s2">".gpkg"</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_collect_geo_files</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_collect_csv_files</span><span class="p">()</span>
@@ -1231,8 +1151,9 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">)</span></div>
 
 
+    <span class="c1"># complexipy: ignore</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_collect_geo_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collect GeoPackage files into a single output file&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Collect GeoPackage files into a single output file"""</span>
         <span class="k">for</span> <span class="n">data_fp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_file_to_process</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">chunked_read_gpkg</span><span class="p">(</span><span class="n">data_fp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">):</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplify_geo_tolerance</span><span class="p">:</span>
@@ -1251,15 +1172,16 @@ window.runMermaid = runMermaid;</script>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
+    <span class="c1"># complexipy: ignore</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_collect_csv_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collect CSV files into a single output file&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Collect CSV files into a single output file"""</span>
         <span class="k">for</span> <span class="n">data_fp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_file_to_process</span><span class="p">():</span>
             <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="n">data_fp</span><span class="p">,</span>
                 <span class="n">chunksize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">,</span>  <span class="c1"># cspell:disable-line</span>
             <span class="p">)</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">chunk_idx</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reader</span><span class="p">):</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">- Processing CSV chunk </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">chunk_idx</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"</span><span class="se">\t\t</span><span class="s2">- Processing CSV chunk </span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span> <span class="n">chunk_idx</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="k">continue</span>
 
@@ -1275,21 +1197,21 @@ window.runMermaid = runMermaid;</script>
                     <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_handle_chunk_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk_fp</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle chunk file after collection step&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Handle chunk file after collection step"""</span>
         <span class="n">chunk_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">chunk_fp</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">purge_chunks</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Purging chunk file: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">chunk_fp</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Purging chunk file: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">chunk_fp</span><span class="p">)</span>
             <span class="n">chunk_fp</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Retaining chunk file: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">chunk_fp</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Retaining chunk file: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">chunk_fp</span><span class="p">)</span>
             <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">chunk_fp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_dir</span> <span class="o">/</span> <span class="n">chunk_fp</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_merge_transmission_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge transmission feature attributes into routes&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Merge transmission feature attributes into routes"""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">features_fpath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Both `cost_fpath` and `features_fpath` must be provided &quot;</span>
-                <span class="s2">&quot;to merge transmission feature attributes into routes!&quot;</span>
+                <span class="s2">"Both `cost_fpath` and `features_fpath` must be provided "</span>
+                <span class="s2">"to merge transmission feature attributes into routes!"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1298,90 +1220,90 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_apply_min_length_floor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">min_line_length</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply minimum line length floor to features&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;length_km&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">features</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot set minimum line length without &#39;length_km&#39; column!&quot;</span>
+<span class="w">    </span><span class="sd">"""Apply minimum line length floor to features"""</span>
+    <span class="k">if</span> <span class="s2">"length_km"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">features</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Cannot set minimum line length without 'length_km' column!"</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;length_km&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_line_length</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">"length_km"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_line_length</span>
     <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Route length will be increased to the minimum allowed length &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">min_line_length</span><span class="si">}</span><span class="s2">) for </span><span class="si">{</span><span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2"> route(s)&quot;</span>
+            <span class="s2">"Route length will be increased to the minimum allowed length "</span>
+            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">min_line_length</span><span class="si">}</span><span class="s2">) for </span><span class="si">{</span><span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2"> route(s)"</span>
         <span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">lengths</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;length_km&quot;</span><span class="p">]</span>
+        <span class="n">lengths</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">"length_km"</span><span class="p">]</span>
         <span class="n">cost_multipliers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">))</span>
         <span class="n">cost_multipliers</span><span class="p">[</span><span class="n">lengths</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_line_length</span> <span class="o">/</span> <span class="n">lengths</span>
-        <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;length_km&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_line_length</span>
-        <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="n">cost_multipliers</span>
+        <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">"length_km"</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_line_length</span>
+        <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">"cost"</span><span class="p">]</span> <span class="o">*=</span> <span class="n">cost_multipliers</span>
 
     <span class="k">return</span> <span class="n">features</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_apply_length_mult</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply length multipliers to features based on distance&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;length_km&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">features</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot compute length multipliers without &#39;length_km&#39; column!&quot;</span>
+<span class="w">    </span><span class="sd">"""Apply length multipliers to features based on distance"""</span>
+    <span class="k">if</span> <span class="s2">"length_km"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">features</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Cannot compute length multipliers without 'length_km' column!"</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">features</span> <span class="o">=</span> <span class="n">_compute_length_mult</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
-    <span class="n">features</span><span class="p">[</span><span class="s2">&quot;raw_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;cost&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">features</span><span class="p">[</span><span class="s2">&quot;cost&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;length_mult&quot;</span><span class="p">]</span>
+    <span class="n">features</span><span class="p">[</span><span class="s2">"raw_cost"</span><span class="p">]</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">features</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">]</span> <span class="o">*=</span> <span class="n">features</span><span class="p">[</span><span class="s2">"length_mult"</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">features</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_compute_length_mult</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute length multipliers based on user input&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">kind</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_length_mult</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"linear"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Compute length multipliers based on user input"""</span>
+    <span class="k">if</span> <span class="n">kind</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"step"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_compute_step_wise_lm</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">kind</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">kind</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"linear"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_compute_linear_lm</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
 
-    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unknown length computation kind: </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Unknown length computation kind: </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compute_step_wise_lm</span><span class="p">(</span><span class="n">features</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute length multipliers using step function&quot;&quot;&quot;</span>
-    <span class="n">features</span><span class="p">[</span><span class="s2">&quot;length_mult&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">"""Compute length multipliers using step function"""</span>
+    <span class="n">features</span><span class="p">[</span><span class="s2">"length_mult"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
 
     <span class="c1"># Handle medium cutoff **FIRST**</span>
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;length_km&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">MEDIUM_CUTOFF</span>
-    <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;length_mult&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MEDIUM_MULT</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">"length_km"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">MEDIUM_CUTOFF</span>
+    <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">"length_mult"</span><span class="p">]</span> <span class="o">=</span> <span class="n">MEDIUM_MULT</span>
 
     <span class="c1"># Short cutoff is second so it can overwrite medium where applicable</span>
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;length_km&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">SHORT_CUTOFF</span>
-    <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;length_mult&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SHORT_MULT</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">"length_km"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">SHORT_CUTOFF</span>
+    <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">"length_mult"</span><span class="p">]</span> <span class="o">=</span> <span class="n">SHORT_MULT</span>
     <span class="k">return</span> <span class="n">features</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compute_linear_lm</span><span class="p">(</span><span class="n">features</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute length multipliers using linear interpolation&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute length multipliers using linear interpolation"""</span>
 
-    <span class="n">features</span><span class="p">[</span><span class="s2">&quot;length_mult&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">features</span><span class="p">[</span><span class="s2">"length_mult"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
     <span class="n">slope</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">SHORT_MULT</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">MEDIUM_CUTOFF</span> <span class="o">-</span> <span class="n">SHORT_CUTOFF</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
 
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;length_km&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">MEDIUM_CUTOFF</span>
-    <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;length_mult&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">slope</span> <span class="o">*</span> <span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;length_km&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">MEDIUM_CUTOFF</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">"length_km"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">MEDIUM_CUTOFF</span>
+    <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">"length_mult"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">slope</span> <span class="o">*</span> <span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">"length_km"</span><span class="p">]</span> <span class="o">-</span> <span class="n">MEDIUM_CUTOFF</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">features</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_finalize_routes</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for finalize-routes command&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Preprocess config for finalize-routes command"""</span>
     <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
-        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;collect_pattern&quot;</span><span class="p">,</span> <span class="s2">&quot;project_dir&quot;</span><span class="p">}</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">"collect_pattern"</span><span class="p">,</span> <span class="s2">"project_dir"</span><span class="p">}</span>
     <span class="p">)</span>
 
 
 <span class="n">finalize_routes_command</span> <span class="o">=</span> <span class="n">CLICommandFromClass</span><span class="p">(</span>
     <span class="n">init</span><span class="o">=</span><span class="n">RoutePostProcessor</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;process&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;finalize-routes&quot;</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"process"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"finalize-routes"</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_finalize_routes</span><span class="p">,</span>
 <span class="p">)</span>

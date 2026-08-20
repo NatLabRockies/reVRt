@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.utilities.base</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Base reVRt utilities&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Base reVRt utilities"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -855,9 +775,9 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="buffer_routes">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.buffer_routes.html#revrt.utilities.base.buffer_routes">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">buffer_routes</span><span class="p">(</span>
-    <span class="n">routes</span><span class="p">,</span> <span class="n">row_widths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">row_width_ranges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">&quot;voltage&quot;</span>
+    <span class="n">routes</span><span class="p">,</span> <span class="n">row_widths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">row_width_ranges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">"voltage"</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Buffer routes by specified row widths or row width ranges</span>
+<span class="w">    </span><span class="sd">"""Buffer routes by specified row widths or row width ranges</span>
 
 <span class="sd">    .. WARNING::</span>
 <span class="sd">        Paths without a valid voltage in the `row_widths` or</span>
@@ -870,7 +790,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        the route geometry as well as the `row_width_key` column.</span>
 <span class="sd">    row_widths : dict, optional</span>
 <span class="sd">        A dictionary specifying the row widths in the following format:</span>
-<span class="sd">        ``{&quot;row_width_id&quot;: row_width_meters}``. The ``row_width_id`` is</span>
+<span class="sd">        ``{"row_width_id": row_width_meters}``. The ``row_width_id`` is</span>
 <span class="sd">        a value used to match each route with a particular ROW width</span>
 <span class="sd">        (this is typically a voltage). The value should be found under</span>
 <span class="sd">        the ``row_width_key`` entry of the ``routes``.</span>
@@ -882,15 +802,15 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        By default, ``None``.</span>
 <span class="sd">    row_width_ranges : list, optional</span>
 <span class="sd">        Optional list of dictionaries, where each dictionary contains</span>
-<span class="sd">        the keys &quot;min&quot;, &quot;max&quot;, and &quot;width&quot;. This can be used to specify</span>
+<span class="sd">        the keys "min", "max", and "width". This can be used to specify</span>
 <span class="sd">        row widths based on ranges of values (e.g. voltage). For</span>
 <span class="sd">        example, the following input::</span>
 
 <span class="sd">            [</span>
-<span class="sd">                {&quot;min&quot;: 0, &quot;max&quot;: 70, &quot;width&quot;: 20},</span>
-<span class="sd">                {&quot;min&quot;: 70, &quot;max&quot;: 150, &quot;width&quot;: 30},</span>
-<span class="sd">                {&quot;min&quot;: 200, &quot;max&quot;: 350, &quot;width&quot;: 40},</span>
-<span class="sd">                {&quot;min&quot;: 400, &quot;max&quot;: 500, &quot;width&quot;: 50},</span>
+<span class="sd">                {"min": 0, "max": 70, "width": 20},</span>
+<span class="sd">                {"min": 70, "max": 150, "width": 30},</span>
+<span class="sd">                {"min": 200, "max": 350, "width": 40},</span>
+<span class="sd">                {"min": 400, "max": 500, "width": 50},</span>
 <span class="sd">            ]</span>
 
 <span class="sd">        would map voltages in the range ``0 &lt;= volt &lt; 70`` to a row</span>
@@ -906,9 +826,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            ranges above.</span>
 
 <span class="sd">        By default, ``None``.</span>
-<span class="sd">    row_width_key : str, default=&quot;voltage&quot;</span>
+<span class="sd">    row_width_key : str, default="voltage"</span>
 <span class="sd">        Name of column in vector file of routes used to map to the ROW</span>
-<span class="sd">        widths. By default, ``&quot;voltage&quot;``.</span>
+<span class="sd">        widths. By default, ``"voltage"``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -921,9 +841,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    ------</span>
 <span class="sd">    revrtValueError</span>
 <span class="sd">        If neither `row_widths` nor `row_width_ranges` are provided.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">row_widths</span> <span class="ow">or</span> <span class="n">row_width_ranges</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Must provide either `row_widths` or `row_width_ranges` input!&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"Must provide either `row_widths` or `row_width_ranges` input!"</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">half_width</span> <span class="o">=</span> <span class="kc">None</span>
@@ -944,14 +864,14 @@ window.runMermaid = runMermaid;</script>
     <span class="n">mask</span> <span class="o">=</span> <span class="n">half_width</span> <span class="o">&lt;</span> <span class="mi">0</span>
     <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> route(s) will be dropped due to missing &quot;</span>
-            <span class="s2">&quot;voltage-to-ROW-width mapping&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> route(s) will be dropped due to missing "</span>
+            <span class="s2">"voltage-to-ROW-width mapping"</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
         <span class="n">routes</span> <span class="o">=</span> <span class="n">routes</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">half_width</span> <span class="o">=</span> <span class="n">half_width</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span>
 
-    <span class="n">routes</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">routes</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">half_width</span><span class="p">,</span> <span class="n">cap_style</span><span class="o">=</span><span class="s2">&quot;flat&quot;</span><span class="p">)</span>
+    <span class="n">routes</span><span class="p">[</span><span class="s2">"geometry"</span><span class="p">]</span> <span class="o">=</span> <span class="n">routes</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">half_width</span><span class="p">,</span> <span class="n">cap_style</span><span class="o">=</span><span class="s2">"flat"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">routes</span></div>
 
@@ -960,13 +880,13 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="delete_data_file">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.delete_data_file.html#revrt.utilities.base.delete_data_file">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">delete_data_file</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Delete data file (can be Zarr, which is a directory)</span>
+<span class="w">    </span><span class="sd">"""Delete data file (can be Zarr, which is a directory)</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    fp : path-like</span>
 <span class="sd">        Path to data file (or directory in case of Zarr).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">return</span>
@@ -981,7 +901,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="check_geotiff">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.check_geotiff.html#revrt.utilities.base.check_geotiff">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_geotiff</span><span class="p">(</span><span class="n">layer_file_fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">transform_atol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compare GeoTIFF with exclusion layer and raise errors if mismatch</span>
+<span class="w">    </span><span class="sd">"""Compare GeoTIFF with exclusion layer and raise errors if mismatch</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -997,24 +917,24 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    revrtProfileCheckError</span>
-<span class="sd">        If shape, profile, or transform don&#39;t match between layered file</span>
+<span class="sd">        If shape, profile, or transform don't match between layered file</span>
 <span class="sd">        and GeoTIFF file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">with</span> <span class="p">(</span>
         <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
-            <span class="n">layer_file_fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span>
+            <span class="n">layer_file_fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">,</span>
         <span class="n">rioxarray</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">)</span> <span class="k">as</span> <span class="n">tif</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tif</span><span class="o">.</span><span class="n">band</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s2"> contains more than one band!&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s2"> contains more than one band!"</span>
             <span class="k">raise</span> <span class="n">revrtProfileCheckError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">layered_file_shape</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">&quot;band&quot;</span><span class="p">],</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
+        <span class="n">layered_file_shape</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"band"</span><span class="p">],</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"y"</span><span class="p">],</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"x"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">layered_file_shape</span> <span class="o">!=</span> <span class="n">tif</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Shape of layer data in </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">layer_file_fp</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;do not match!</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">tif</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> !=</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">layered_file_shape</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"Shape of layer data in </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">layer_file_fp</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"do not match!</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">tif</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> !=</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">layered_file_shape</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtProfileCheckError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1022,8 +942,8 @@ window.runMermaid = runMermaid;</script>
         <span class="n">tif_crs</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_crs_match</span><span class="p">(</span><span class="n">layered_file_crs</span><span class="p">,</span> <span class="n">tif_crs</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s1">&#39;Geospatial &quot;CRS&quot; in </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s1"> and </span><span class="si">{</span><span class="n">layer_file_fp</span><span class="si">}</span><span class="s1"> do not &#39;</span>
-                <span class="sa">f</span><span class="s2">&quot;match!</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">tif_crs</span><span class="si">}</span><span class="s2"> !=</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">layered_file_crs</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s1">'Geospatial "CRS" in </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s1"> and </span><span class="si">{</span><span class="n">layer_file_fp</span><span class="si">}</span><span class="s1"> do not '</span>
+                <span class="sa">f</span><span class="s2">"match!</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">tif_crs</span><span class="si">}</span><span class="s2"> !=</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">layered_file_crs</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtProfileCheckError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1033,9 +953,9 @@ window.runMermaid = runMermaid;</script>
             <span class="n">layered_file_transform</span><span class="p">,</span> <span class="n">tif_transform</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">transform_atol</span>
         <span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s1">&#39;Geospatial &quot;transform&quot; in </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s1"> and </span><span class="si">{</span><span class="n">layer_file_fp</span><span class="si">}</span><span class="s1"> &#39;</span>
-                <span class="sa">f</span><span class="s2">&quot;do not match!</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">tif_transform</span><span class="si">}</span><span class="s2"> !=</span><span class="se">\n</span><span class="s2"> &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layered_file_transform</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s1">'Geospatial "transform" in </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s1"> and </span><span class="si">{</span><span class="n">layer_file_fp</span><span class="si">}</span><span class="s1"> '</span>
+                <span class="sa">f</span><span class="s2">"do not match!</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">tif_transform</span><span class="si">}</span><span class="s2"> !=</span><span class="se">\n</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">layered_file_transform</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtProfileCheckError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
@@ -1044,7 +964,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="file_full_path">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.file_full_path.html#revrt.utilities.base.file_full_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">file_full_path</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="o">*</span><span class="n">layer_dirs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get full path to file, searching `layer_dirs` if needed</span>
+<span class="w">    </span><span class="sd">"""Get full path to file, searching `layer_dirs` if needed</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1066,7 +986,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    revrtFileNotFoundError</span>
 <span class="sd">        If file cannot be found in either the current directory or any</span>
 <span class="sd">        of the `layer_dirs` directories.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">full_fname</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">full_fname</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">return</span> <span class="n">full_fname</span>
@@ -1076,7 +996,7 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">full_fname</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">full_fname</span>
 
-    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unable to find file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Unable to find file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">raise</span> <span class="n">revrtFileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
@@ -1086,13 +1006,13 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_data_using_layer_file_profile</span><span class="p">(</span>
     <span class="n">layer_fp</span><span class="p">,</span>
     <span class="n">geotiff</span><span class="p">,</span>
-    <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">&quot;file&quot;</span><span class="p">,</span>
+    <span class="n">tiff_chunks</span><span class="o">=</span><span class="s2">"file"</span><span class="p">,</span>
     <span class="n">layer_dirs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">band_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">check_tiff</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">fillna</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load GeoTIFF data, reprojecting to LayeredFile CRS if needed</span>
+<span class="w">    </span><span class="sd">"""Load GeoTIFF data, reprojecting to LayeredFile CRS if needed</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1100,10 +1020,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Path to layered file on disk. This file must already exist.</span>
 <span class="sd">    geotiff : path-like</span>
 <span class="sd">        Path to GeoTIFF from which data should be read.</span>
-<span class="sd">    tiff_chunks : int or str, default=&quot;file&quot;</span>
+<span class="sd">    tiff_chunks : int or str, default="file"</span>
 <span class="sd">        Chunk size to use when reading the GeoTIFF file. This will be</span>
 <span class="sd">        passed down as the ``chunks`` argument to</span>
-<span class="sd">        :func:`rioxarray.open_rasterio`. By default, ``&quot;file&quot;``.</span>
+<span class="sd">        :func:`rioxarray.open_rasterio`. By default, ``"file"``.</span>
 <span class="sd">    layer_dirs : iterable of path-like, optional</span>
 <span class="sd">        Directories to search for `geotiff` in, if not found in current</span>
 <span class="sd">        directory. By default, ``None``, which means only the current</span>
@@ -1111,7 +1031,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    check_tiff : bool, default=True</span>
 <span class="sd">        Whether to check that the GeoTIFF profile matches the template</span>
 <span class="sd">        defined by the layered file. If ``True``, the GeoTIFF profile is</span>
-<span class="sd">        compared to the template, and if they don&#39;t match, the GeoTIFF</span>
+<span class="sd">        compared to the template, and if they don't match, the GeoTIFF</span>
 <span class="sd">        is re-projected to match the template. If ``False``, no checks</span>
 <span class="sd">        are performed and the GeoTIFF is loaded as-is.</span>
 <span class="sd">        By default, ``True``.</span>
@@ -1135,19 +1055,19 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    revrtFileNotFoundError</span>
 <span class="sd">        If `geotiff` cannot be found in either the current directory or</span>
 <span class="sd">        the `layer_dir` directory.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">layer_dirs</span><span class="p">:</span>
         <span class="n">geotiff</span> <span class="o">=</span> <span class="n">file_full_path</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="o">*</span><span class="n">layer_dirs</span><span class="p">)</span>
 
-    <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">layer_fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">layer_fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
         <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
         <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">height</span>
         <span class="n">transform</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">tiff_chunks</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span><span class="p">:</span>
-            <span class="n">tiff_chunks</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chunks&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tiff_chunks</span> <span class="o">==</span> <span class="s2">"file"</span><span class="p">:</span>
+            <span class="n">tiff_chunks</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"chunks"</span><span class="p">,</span> <span class="s2">"auto"</span><span class="p">)</span>
 
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">&quot;Using the following chunks to open &#39;</span><span class="si">%s</span><span class="s2">&#39;: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">tiff_chunks</span>
+        <span class="s2">"Using the following chunks to open '</span><span class="si">%s</span><span class="s2">': </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">tiff_chunks</span>
     <span class="p">)</span>
 
     <span class="n">tif</span> <span class="o">=</span> <span class="n">rioxarray</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">tiff_chunks</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1156,13 +1076,13 @@ window.runMermaid = runMermaid;</script>
             <span class="n">check_geotiff</span><span class="p">(</span><span class="n">layer_fp</span><span class="p">,</span> <span class="n">geotiff</span><span class="p">,</span> <span class="n">transform_atol</span><span class="o">=</span><span class="n">_TRANSFORM_ATOL</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">revrtProfileCheckError</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;Profile of &#39;</span><span class="si">%s</span><span class="s2">&#39; does not match template, reprojecting...&quot;</span><span class="p">,</span>
+                <span class="s2">"Profile of '</span><span class="si">%s</span><span class="s2">' does not match template, reprojecting..."</span><span class="p">,</span>
                 <span class="n">geotiff</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">geo_box</span> <span class="o">=</span> <span class="n">odc</span><span class="o">.</span><span class="n">geo</span><span class="o">.</span><span class="n">geobox</span><span class="o">.</span><span class="n">GeoBox</span><span class="p">(</span>
                 <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">),</span> <span class="n">affine</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span>
             <span class="p">)</span>
-            <span class="n">tif</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">odc</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span>
+            <span class="n">tif</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"float32"</span><span class="p">)</span><span class="o">.</span><span class="n">odc</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span>
                 <span class="n">how</span><span class="o">=</span><span class="n">geo_box</span><span class="p">,</span> <span class="n">resampling</span><span class="o">=</span><span class="n">Resampling</span><span class="o">.</span><span class="n">nearest</span><span class="p">,</span> <span class="n">dst_nodata</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
             <span class="p">)</span>
 
@@ -1187,7 +1107,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write to GeoTIFF file</span>
+<span class="w">    </span><span class="sd">"""Write to GeoTIFF file</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1200,7 +1120,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Path to output GeoTIFF file.</span>
 <span class="sd">    nodata : int or float, optional</span>
 <span class="sd">        Optional nodata value for the raster layer. By default,</span>
-<span class="sd">        ``None``, which does not add a &quot;nodata&quot; value.</span>
+<span class="sd">        ``None``, which does not add a "nodata" value.</span>
 <span class="sd">    lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">        Lock to use to write data using dask. If not supplied, a single</span>
 <span class="sd">        process is used for writing data to the GeoTIFF.</span>
@@ -1226,8 +1146,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    revrtValueError</span>
 <span class="sd">        If shape of provided data does not match shape of</span>
 <span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">layer_fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">layer_fp</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
         <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
         <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">height</span>
         <span class="n">transform</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">()</span>
@@ -1259,7 +1179,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write to GeoTIFF file</span>
+<span class="w">    </span><span class="sd">"""Write to GeoTIFF file</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1276,7 +1196,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Affine transform of output raster.</span>
 <span class="sd">    nodata : int or float, optional</span>
 <span class="sd">        Optional nodata value for the raster layer. By default,</span>
-<span class="sd">        ``None``, which does not add a &quot;nodata&quot; value.</span>
+<span class="sd">        ``None``, which does not add a "nodata" value.</span>
 <span class="sd">    lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">        Lock to use to write data using dask. If not supplied, a single</span>
 <span class="sd">        process is used for writing data to the GeoTIFF.</span>
@@ -1302,21 +1222,21 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    revrtValueError</span>
 <span class="sd">        If shape of provided data does not match shape of</span>
 <span class="sd">        :class:`~revrt.utilities.handlers.LayeredFile`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">expand_dim_if_needed</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Shape of provided data </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2"> does &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;not match destination shape: </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"Shape of provided data </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2"> does "</span>
+            <span class="sa">f</span><span class="s2">"not match destination shape: </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"bool"</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"uint8"</span><span class="p">)</span>
 
-    <span class="n">da</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;band&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">))</span>
-    <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">da</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">"band"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">))</span>
+    <span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"count"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span>
     <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
 
@@ -1341,19 +1261,19 @@ window.runMermaid = runMermaid;</script>
     <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write xarray DataArray to GeoTIFF file</span>
+<span class="w">    </span><span class="sd">"""Write xarray DataArray to GeoTIFF file</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    da : xarray.DataArray</span>
-<span class="sd">        DataArray to write to GeoTIFF. This should have &quot;y&quot; and &quot;x&quot;</span>
-<span class="sd">        dimensions, and optionally a &quot;band&quot; dimension (if not provided,</span>
+<span class="sd">        DataArray to write to GeoTIFF. This should have "y" and "x"</span>
+<span class="sd">        dimensions, and optionally a "band" dimension (if not provided,</span>
 <span class="sd">        one will be added).</span>
 <span class="sd">    geotiff : path-like</span>
 <span class="sd">        Path to output GeoTIFF file.</span>
 <span class="sd">    nodata : int or float, optional</span>
 <span class="sd">        Optional nodata value for the raster layer. By default,</span>
-<span class="sd">        ``None``, which does not add a &quot;nodata&quot; value.</span>
+<span class="sd">        ``None``, which does not add a "nodata" value.</span>
 <span class="sd">    lock : bool or `dask.distributed.Lock`, optional</span>
 <span class="sd">        Lock to use to write data using dask. If not supplied, a single</span>
 <span class="sd">        process is used for writing data to the GeoTIFF.</span>
@@ -1373,15 +1293,15 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            - count</span>
 <span class="sd">            - width</span>
 <span class="sd">            - height</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">da</span> <span class="o">=</span> <span class="n">expand_dim_if_needed</span><span class="p">(</span><span class="n">da</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="s2">&quot;y&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">da</span><span class="o">.</span><span class="n">dims</span> <span class="ow">or</span> <span class="s2">&quot;x&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">da</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;DataArray must have &#39;y&#39; and &#39;x&#39; dimensions!&quot;</span>
+    <span class="k">if</span> <span class="s2">"y"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">da</span><span class="o">.</span><span class="n">dims</span> <span class="ow">or</span> <span class="s2">"x"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">da</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"DataArray must have 'y' and 'x' dimensions!"</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;bool&quot;</span><span class="p">:</span>
-        <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"bool"</span><span class="p">:</span>
+        <span class="n">da</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"uint8"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">nodata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">nodata</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">nodata</span><span class="p">)</span>
@@ -1390,18 +1310,18 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># TODO: Grab default profile from template when creating layer file</span>
     <span class="c1"># and use that instead</span>
     <span class="n">pk</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;blockxsize&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-        <span class="s2">&quot;blockysize&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-        <span class="s2">&quot;tiled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;compress&quot;</span><span class="p">:</span> <span class="s2">&quot;lzw&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;interleave&quot;</span><span class="p">:</span> <span class="s2">&quot;band&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
+        <span class="s2">"blockxsize"</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="s2">"blockysize"</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="s2">"tiled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"compress"</span><span class="p">:</span> <span class="s2">"lzw"</span><span class="p">,</span>
+        <span class="s2">"interleave"</span><span class="p">:</span> <span class="s2">"band"</span><span class="p">,</span>
+        <span class="s2">"driver"</span><span class="p">:</span> <span class="s2">"GTiff"</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">pk</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">profile_kwargs</span><span class="p">)</span>
     <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">&quot;Saving TIFF with shape </span><span class="si">%r</span><span class="s2">, dtype </span><span class="si">%r</span><span class="s2">, and metadata </span><span class="si">%r</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">"Saving TIFF with shape </span><span class="si">%r</span><span class="s2">, dtype </span><span class="si">%r</span><span class="s2">, and metadata </span><span class="si">%r</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
         <span class="n">da</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
         <span class="n">da</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
         <span class="n">metadata</span><span class="p">,</span>
@@ -1414,23 +1334,23 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="expand_dim_if_needed">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.expand_dim_if_needed.html#revrt.utilities.base.expand_dim_if_needed">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">expand_dim_if_needed</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Expand data array dimensions if needed to ensure 3D (band, y, x)</span>
+<span class="w">    </span><span class="sd">"""Expand data array dimensions if needed to ensure 3D (band, y, x)</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    values : array-like</span>
-<span class="sd">        Array that is possibly missing a &quot;band&quot; dimension.</span>
+<span class="sd">        Array that is possibly missing a "band" dimension.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    array-like</span>
-<span class="sd">        Input array with a &quot;band&quot; dimension added if it was missing one.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        Input array with a "band" dimension added if it was missing one.</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;=</span> <span class="n">_NUM_GEOTIFF_DIMS</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">values</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;band&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">{</span><span class="s2">"band"</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
@@ -1441,7 +1361,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="region_mapper">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.region_mapper.html#revrt.utilities.base.region_mapper">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">region_mapper</span><span class="p">(</span><span class="n">regions</span><span class="p">,</span> <span class="n">region_identifier_column</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a function to map points to a region</span>
+<span class="w">    </span><span class="sd">"""Generate a function to map points to a region</span>
 
 <span class="sd">    The returned mapping function maps a point to a unique value from</span>
 <span class="sd">    the `region_identifier_column` column in the input GeoDataFrame.</span>
@@ -1452,11 +1372,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        GeoDataFrame defining the regions. This table must</span>
 <span class="sd">        have a `region_identifier_column` column which uniquely</span>
 <span class="sd">        identifies the region, as well as a geometry for each region.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">projected_regions</span><span class="p">,</span> <span class="n">project_point</span> <span class="o">=</span> <span class="n">_get_point_transform</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_map_region</span><span class="p">(</span><span class="n">point</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find the region ID for the input point.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Find the region ID for the input point."""</span>
         <span class="n">point</span> <span class="o">=</span> <span class="n">project_point</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="n">projected_regions</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">regions</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">region_identifier_column</span><span class="p">]</span>
@@ -1468,7 +1388,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="transform_xy">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.transform_xy.html#revrt.utilities.base.transform_xy">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">transform_xy</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform coordinate iterables between coordinate systems</span>
+<span class="w">    </span><span class="sd">"""Transform coordinate iterables between coordinate systems</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1484,7 +1404,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    x, y : ndarray</span>
 <span class="sd">        Numpy arrays of transformed x and y coordinates in the</span>
 <span class="sd">        destination CRS.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">transformer</span> <span class="o">=</span> <span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">out_x</span><span class="p">,</span> <span class="n">out_y</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">out_x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">out_y</span><span class="p">)</span></div>
@@ -1494,7 +1414,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="features_to_route_table">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.base.features_to_route_table.html#revrt.utilities.base.features_to_route_table">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">features_to_route_table</span><span class="p">(</span><span class="n">features</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert features GDF into route start/end point table</span>
+<span class="w">    </span><span class="sd">"""Convert features GDF into route start/end point table</span>
 
 <span class="sd">    This function builds a routing table to define start/end points for</span>
 <span class="sd">    routes between all permutations of the given features. This is</span>
@@ -1512,9 +1432,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Pandas DataFrame with the expected routing columns: `start_lat`,</span>
 <span class="sd">        `start_lon`, `end_lat`, and `end_lon`. Also includes</span>
 <span class="sd">        `start_index` and `index` columns for convenience. DataFrame</span>
-<span class="sd">        index name is set to &quot;rid&quot;.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">coords</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">centroid</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">)</span>
+<span class="sd">        index name is set to "rid".</span>
+<span class="sd">    """</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">"geometry"</span><span class="p">]</span><span class="o">.</span><span class="n">centroid</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">)</span>
     <span class="n">all_routes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">start_ind</span><span class="p">,</span> <span class="n">start_coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coords</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
         <span class="n">start_lat</span><span class="p">,</span> <span class="n">start_lon</span> <span class="o">=</span> <span class="n">start_coord</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">start_coord</span><span class="o">.</span><span class="n">x</span>
@@ -1522,24 +1442,24 @@ window.runMermaid = runMermaid;</script>
         <span class="n">end_idx</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>
         <span class="n">new_routes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
             <span class="p">{</span>
-                <span class="s2">&quot;end_lat&quot;</span><span class="p">:</span> <span class="n">end_coords</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
-                <span class="s2">&quot;end_lon&quot;</span><span class="p">:</span> <span class="n">end_coords</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
-                <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">end_idx</span><span class="p">,</span>
+                <span class="s2">"end_lat"</span><span class="p">:</span> <span class="n">end_coords</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                <span class="s2">"end_lon"</span><span class="p">:</span> <span class="n">end_coords</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                <span class="s2">"index"</span><span class="p">:</span> <span class="n">end_idx</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
-        <span class="n">new_routes</span><span class="p">[</span><span class="s2">&quot;start_lat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_lat</span>
-        <span class="n">new_routes</span><span class="p">[</span><span class="s2">&quot;start_lon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_lon</span>
-        <span class="n">new_routes</span><span class="p">[</span><span class="s2">&quot;start_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_ind</span>
+        <span class="n">new_routes</span><span class="p">[</span><span class="s2">"start_lat"</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_lat</span>
+        <span class="n">new_routes</span><span class="p">[</span><span class="s2">"start_lon"</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_lon</span>
+        <span class="n">new_routes</span><span class="p">[</span><span class="s2">"start_index"</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_ind</span>
         <span class="n">all_routes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_routes</span><span class="p">)</span>
 
     <span class="n">all_routes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">all_routes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">all_routes</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;rid&quot;</span>
+    <span class="n">all_routes</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">"rid"</span>
     <span class="k">return</span> <span class="n">all_routes</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Strip whitespace from path-like keys&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Strip whitespace from path-like keys"""</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_fix</span><span class="p">:</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1548,9 +1468,9 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">strip_path</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Strip whitespace from path-like value&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Strip whitespace from path-like value"""</span>
     <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\n&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\r&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\t&quot;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="p">(</span><span class="sa">r</span><span class="s2">"\n"</span><span class="p">,</span> <span class="sa">r</span><span class="s2">"\r"</span><span class="p">,</span> <span class="sa">r</span><span class="s2">"\t"</span><span class="p">):</span>
         <span class="k">while</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
         <span class="k">while</span> <span class="n">value</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
@@ -1559,7 +1479,7 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_crs_match</span><span class="p">(</span><span class="n">first_crs</span><span class="p">,</span> <span class="n">second_crs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether two CRS definitions are semantically equivalent&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return whether two CRS definitions are semantically equivalent"""</span>
     <span class="k">if</span> <span class="n">first_crs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">second_crs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">first_crs</span> <span class="o">==</span> <span class="n">second_crs</span>
 
@@ -1590,11 +1510,11 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compute_half_width_using_ranges</span><span class="p">(</span>
-    <span class="n">routes</span><span class="p">,</span> <span class="n">row_width_ranges</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">&quot;voltage&quot;</span>
+    <span class="n">routes</span><span class="p">,</span> <span class="n">row_width_ranges</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">"voltage"</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute half-width for routes using row width ranges&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute half-width for routes using row width ranges"""</span>
 
-    <span class="n">ranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">row_width_ranges</span><span class="p">]</span>
+    <span class="n">ranges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">r</span><span class="p">[</span><span class="s2">"min"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"max"</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s2">"width"</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">row_width_ranges</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_half_width</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">ranges</span><span class="p">:</span>
@@ -1606,9 +1526,9 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_compute_half_width_using_voltages</span><span class="p">(</span>
-    <span class="n">routes</span><span class="p">,</span> <span class="n">row_widths</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">&quot;voltage&quot;</span>
+    <span class="n">routes</span><span class="p">,</span> <span class="n">row_widths</span><span class="p">,</span> <span class="n">row_width_key</span><span class="o">=</span><span class="s2">"voltage"</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute half-width for routes using row width ranges&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Compute half-width for routes using row width ranges"""</span>
     <span class="n">row_widths</span> <span class="o">=</span> <span class="p">{</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row_widths</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_half_width</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -1621,11 +1541,11 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_point_transform</span><span class="p">(</span><span class="n">regions</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get function to transform points to region CRS if needed&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Get function to transform points to region CRS if needed"""</span>
     <span class="k">if</span> <span class="n">regions</span><span class="o">.</span><span class="n">crs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">regions</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">is_geographic</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">regions</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">point</span><span class="p">:</span> <span class="n">point</span>
 
-    <span class="n">projected_crs</span> <span class="o">=</span> <span class="n">regions</span><span class="o">.</span><span class="n">estimate_utm_crs</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;EPSG:3857&quot;</span>
+    <span class="n">projected_crs</span> <span class="o">=</span> <span class="n">regions</span><span class="o">.</span><span class="n">estimate_utm_crs</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"EPSG:3857"</span>
     <span class="n">projected_regions</span> <span class="o">=</span> <span class="n">regions</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">projected_crs</span><span class="p">)</span>
     <span class="n">transformer</span> <span class="o">=</span> <span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span>
         <span class="n">regions</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">projected_crs</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span>

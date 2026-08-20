@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.routing.processing</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;reVRt batch routing logic&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""reVRt batch routing logic"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -862,7 +782,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BatchRouteProcessor">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.processing.BatchRouteProcessor.html#revrt.routing.processing.BatchRouteProcessor">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchRouteProcessor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to manage batches of route computations&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Class to manage batches of route computations"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -871,7 +791,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">route_attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">mem_limit_gb</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -891,7 +811,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        mem_limit_gb : int or float, default=4</span>
 <span class="sd">            Memory limit in gigabytes for routing computations.</span>
 <span class="sd">            By default, ``4``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span> <span class="o">=</span> <span class="n">routing_scenario</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_route_attrs</span> <span class="o">=</span> <span class="n">route_attrs</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mem_limit_gb</span> <span class="o">=</span> <span class="n">mem_limit_gb</span>
@@ -901,7 +821,7 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.processing.BatchRouteProcessor.html#revrt.routing.processing.BatchRouteProcessor.default_attrs">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">default_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Default attributes for all routes&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""dict: Default attributes for all routes"""</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_attrs</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span></div>
 
@@ -910,7 +830,7 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.processing.BatchRouteProcessor.html#revrt.routing.processing.BatchRouteProcessor.route_attrs">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">route_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Mapping of frozen route node pair sets to attributes&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""dict: Mapping of frozen route node pair sets to attributes"""</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">k</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">default_attrs</span><span class="p">,</span> <span class="o">**</span><span class="n">v</span><span class="p">}</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
@@ -921,7 +841,7 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.processing.BatchRouteProcessor.html#revrt.routing.processing.BatchRouteProcessor.routing_layers">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">routing_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;RoutingLayerManager: Built routing layers for the scenario&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""RoutingLayerManager: Built routing layers for the scenario"""</span>
         <span class="k">return</span> <span class="n">RoutingLayerManager</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span></div>
 
 
@@ -929,7 +849,7 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.processing.BatchRouteProcessor.html#revrt.routing.processing.BatchRouteProcessor.route_definitions">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">route_definitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;list: Validated route definitions for computation&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""list: Validated route definitions for computation"""</span>
         <span class="k">return</span> <span class="n">_RouteDefinitionFormatter</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__rd</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span>
         <span class="p">)</span><span class="o">.</span><span class="n">route_definitions</span></div>
@@ -938,27 +858,27 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BatchRouteProcessor.process">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.processing.BatchRouteProcessor.html#revrt.routing.processing.BatchRouteProcessor.process">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">routing_layer_out_fp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute all routes and save to disk</span>
+<span class="w">        </span><span class="sd">"""Compute all routes and save to disk</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        out_fp : path-like</span>
 <span class="sd">            Path to output file. If ``save_paths=True``, a GeoPackage</span>
 <span class="sd">            will be created (recommend to pass in a filepath ending in</span>
-<span class="sd">            &quot;.gpkg&quot;). Otherwise, a CSV file will be created (recommend</span>
-<span class="sd">            to pass in a filepath ending in &quot;.csv&quot;).</span>
+<span class="sd">            ".gpkg"). Otherwise, a CSV file will be created (recommend</span>
+<span class="sd">            to pass in a filepath ending in ".csv").</span>
 <span class="sd">        save_paths : bool, default=False</span>
 <span class="sd">            Include shapely geometries in the output when ``True``.</span>
 <span class="sd">            By default, ``False``.</span>
 <span class="sd">        routing_layer_out_fp : path-like, optional</span>
 <span class="sd">            Optional output path for Rust routing-layer cache data.</span>
 <span class="sd">            By default, ``None``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">:</span>
             <span class="k">return</span>
 
         <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Routing for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">)</span><span class="si">}</span><span class="s2"> route definitions&quot;</span>
+            <span class="sa">f</span><span class="s2">"Routing for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">)</span><span class="si">}</span><span class="s2"> route definitions"</span>
         <span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_compute_routes</span><span class="p">(</span>
@@ -969,7 +889,7 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="p">,</span> <span class="n">rl</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate route definitions and build result records&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Evaluate route definitions and build result records"""</span>
 
         <span class="n">result_writer</span> <span class="o">=</span> <span class="n">_RouteResultWriter</span><span class="p">(</span>
             <span class="n">out_fp</span><span class="p">,</span>
@@ -990,12 +910,12 @@ window.runMermaid = runMermaid;</script>
             <span class="n">result_writer</span><span class="o">.</span><span class="n">persist</span><span class="p">(</span><span class="n">route_result</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_route_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routing_layer_out_fp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generator yielding route results from Rust computations&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Generator yielding route results from Rust computations"""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">:</span>
             <span class="k">return</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Setting memory limit to </span><span class="si">%.2f</span><span class="s2"> GB for Rust computations&quot;</span><span class="p">,</span>
+            <span class="s2">"Setting memory limit to </span><span class="si">%.2f</span><span class="s2"> GB for Rust computations"</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mem_limit_gb</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">route_results</span> <span class="o">=</span> <span class="n">RouteFinder</span><span class="p">(</span>
@@ -1007,13 +927,13 @@ window.runMermaid = runMermaid;</script>
             <span class="p">],</span>
             <span class="n">mem_limit_bytes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mem_limit_gb</span> <span class="o">*</span> <span class="mi">1_000_000_000</span><span class="p">),</span>
             <span class="n">algorithm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">algorithm</span><span class="p">,</span>
-            <span class="n">log_level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;revrt&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">level</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"revrt"</span><span class="p">)</span><span class="o">.</span><span class="n">level</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">routing_layer_out_fp</span><span class="o">=</span><span class="n">routing_layer_out_fp</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_failed_routes</span><span class="p">(</span><span class="n">route_results</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_skip_failed_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routing_results</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield only successfully computed routes from Rust results&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Yield only successfully computed routes from Rust results"""</span>
 
         <span class="n">results_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">routing_results</span><span class="p">)</span>
         <span class="n">num_complete</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1023,37 +943,37 @@ window.runMermaid = runMermaid;</script>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">route_id</span><span class="p">,</span> <span class="n">solutions</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">results_iter</span><span class="p">)</span>
                 <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_formatted_solutions</span><span class="p">(</span><span class="n">solutions</span><span class="p">,</span> <span class="n">route_id</span><span class="p">)</span>
-                <span class="n">time_elapsed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> minute(s)&quot;</span>
+                <span class="n">time_elapsed</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ts</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> minute(s)"</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> (</span><span class="si">%.2f%%</span><span class="s2">) route definitions processed in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="s2">"</span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> (</span><span class="si">%.2f%%</span><span class="s2">) route definitions processed in </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                     <span class="n">num_complete</span><span class="p">,</span>
                     <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">),</span>
                     <span class="p">(</span><span class="n">num_complete</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
                     <span class="n">time_elapsed</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="n">revrtRustError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Rust error when computing route&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Rust error when computing route"</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Routing complete&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Routing complete"</span><span class="p">)</span>
                 <span class="k">break</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_formatted_solutions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solutions</span><span class="p">,</span> <span class="n">route_id</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format reVRt output solutions and log any failures&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Format reVRt output solutions and log any failures"""</span>
         <span class="n">start_points</span><span class="p">,</span> <span class="n">end_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_definitions</span><span class="p">[</span><span class="n">route_id</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">solutions</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Unable to find route from </span><span class="si">{</span><span class="n">start_points</span><span class="si">}</span><span class="s2"> to any of &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">end_points</span><span class="si">}</span><span class="s2"> (route ID: </span><span class="si">{</span><span class="n">route_id</span><span class="si">}</span><span class="s2">). Please verify &quot;</span>
-                <span class="s2">&quot;that the start and end points are not separated by &quot;</span>
-                <span class="s2">&quot;hard barriers or invalid cost cells.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Unable to find route from </span><span class="si">{</span><span class="n">start_points</span><span class="si">}</span><span class="s2"> to any of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">end_points</span><span class="si">}</span><span class="s2"> (route ID: </span><span class="si">{</span><span class="n">route_id</span><span class="si">}</span><span class="s2">). Please verify "</span>
+                <span class="s2">"that the start and end points are not separated by "</span>
+                <span class="s2">"hard barriers or invalid cost cells."</span>
             <span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;Got result from Rust for route_id </span><span class="si">%d</span><span class="s2">. Processing...&quot;</span>
-            <span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- Start points: </span><span class="si">%r</span><span class="se">\n\t</span><span class="s2">- End points: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">"Got result from Rust for route_id </span><span class="si">%d</span><span class="s2">. Processing..."</span>
+            <span class="s2">"</span><span class="se">\n\t</span><span class="s2">- Start points: </span><span class="si">%r</span><span class="se">\n\t</span><span class="s2">- End points: </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
             <span class="n">route_id</span><span class="p">,</span>
             <span class="n">start_points</span><span class="p">,</span>
             <span class="n">end_points</span><span class="p">,</span>
@@ -1062,18 +982,18 @@ window.runMermaid = runMermaid;</script>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span> <span class="o">==</span> <span class="n">_ROUTE_SOLUTION_LEN</span><span class="p">:</span>
                 <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">dbl</span> <span class="o">=</span> <span class="n">solution</span>
             <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unexpected route solution payload: </span><span class="si">{</span><span class="n">solution</span><span class="si">!r}</span><span class="s2">&quot;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Unexpected route solution payload: </span><span class="si">{</span><span class="n">solution</span><span class="si">!r}</span><span class="s2">"</span>
                 <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
             <span class="n">attrs_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">route_id</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">route_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attrs_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_attrs</span><span class="p">),</span>
-                <span class="s2">&quot;dropped_barrier_layers&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dbl</span><span class="p">),</span>
+                <span class="s2">"dropped_barrier_layers"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dbl</span><span class="p">),</span>
             <span class="p">}</span>
             <span class="k">yield</span> <span class="n">indices</span><span class="p">,</span> <span class="n">optimized_objective</span><span class="p">,</span> <span class="n">attrs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_reset_routing_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close handler and remove built routing layers from memory&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Close handler and remove built routing layers from memory"""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
         <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">AttributeError</span><span class="p">):</span>
@@ -1085,7 +1005,7 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_RouteDefinitionFormatter</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate route definitions against routing layers&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Validate route definitions against routing layers"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">routing_layers</span><span class="p">,</span> <span class="n">routing_scenario</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_route_definitions</span> <span class="o">=</span> <span class="n">route_definitions</span>
@@ -1094,11 +1014,11 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">route_definitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;list: Validated route definitions for computation&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""list: Validated route definitions for computation"""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compile_valid_route_definitions</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compile_valid_route_definitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter route definitions to those with valid route nodes&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Filter route definitions to those with valid route nodes"""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_definitions</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{}</span>
 
@@ -1111,8 +1031,8 @@ window.runMermaid = runMermaid;</script>
             <span class="n">filtered_start_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_start_points</span><span class="p">(</span><span class="n">start_points</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">filtered_start_points</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;All start points are invalid for route with ID &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">route_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">start_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">Skipping...&quot;</span>
+                    <span class="sa">f</span><span class="s2">"All start points are invalid for route with ID "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">route_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">start_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">Skipping..."</span>
                 <span class="p">)</span>
                 <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
                 <span class="k">continue</span>
@@ -1124,8 +1044,8 @@ window.runMermaid = runMermaid;</script>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">filtered_end_points</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;All end points are invalid for route with ID &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">route_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">end_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">Skipping...&quot;</span>
+                    <span class="sa">f</span><span class="s2">"All end points are invalid for route with ID "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">route_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">end_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">Skipping..."</span>
                 <span class="p">)</span>
                 <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
                 <span class="k">continue</span>
@@ -1138,9 +1058,9 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">routes_to_compute</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_start_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate start points by removing cells invalid cost&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Validate start points by removing cells invalid cost"""</span>
         <span class="n">points</span> <span class="o">=</span> <span class="n">_get_valid_points</span><span class="p">(</span>
-            <span class="n">points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">full_shape</span><span class="p">,</span> <span class="n">point_type</span><span class="o">=</span><span class="s2">&quot;start&quot;</span>
+            <span class="n">points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">full_shape</span><span class="p">,</span> <span class="n">point_type</span><span class="o">=</span><span class="s2">"start"</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">points</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">invalid_costs_block_routing</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">points</span>
@@ -1152,8 +1072,8 @@ window.runMermaid = runMermaid;</script>
                 <span class="p">[</span><span class="n">point</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span> <span class="k">if</span> <span class="n">point</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">r_o</span><span class="p">]</span>
             <span class="p">)</span><span class="o">.</span><span class="n">T</span>
             <span class="n">costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="n">r_o</span><span class="p">]</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span>
-                <span class="n">y</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
-                <span class="n">x</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">),</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">),</span>
             <span class="p">)</span>
 
             <span class="n">cost_values</span> <span class="o">=</span> <span class="n">costs</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
@@ -1166,25 +1086,25 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">invalid_points</span> <span class="o">=</span> <span class="p">{</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bad_point_inds</span><span class="p">}</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;One or more of the start points have an invalid cost &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;(must be &gt; 0): </span><span class="si">{</span><span class="n">invalid_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Dropping these from consideration...&quot;</span>
+            <span class="sa">f</span><span class="s2">"One or more of the start points have an invalid cost "</span>
+            <span class="sa">f</span><span class="s2">"(must be &gt; 0): </span><span class="si">{</span><span class="n">invalid_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"Dropping these from consideration..."</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">points</span><span class="p">:</span>
             <span class="n">all_invalid_points_msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;None of the start points have a valid cost (must be &gt; 0): &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"None of the start points have a valid cost (must be &gt; 0): "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtLeastCostPathNotFoundError</span><span class="p">(</span><span class="n">all_invalid_points_msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invalid_points</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_end_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter out invalid endpoints; raise if all are invalid&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Filter out invalid endpoints; raise if all are invalid"""</span>
         <span class="n">points</span> <span class="o">=</span> <span class="n">_get_valid_points</span><span class="p">(</span>
-            <span class="n">points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">full_shape</span><span class="p">,</span> <span class="n">point_type</span><span class="o">=</span><span class="s2">&quot;end&quot;</span>
+            <span class="n">points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">full_shape</span><span class="p">,</span> <span class="n">point_type</span><span class="o">=</span><span class="s2">"end"</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">points</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">invalid_costs_block_routing</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">points</span>
@@ -1196,8 +1116,8 @@ window.runMermaid = runMermaid;</script>
                 <span class="p">[</span><span class="n">point</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span> <span class="k">if</span> <span class="n">point</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">r_o</span><span class="p">]</span>
             <span class="p">)</span><span class="o">.</span><span class="n">T</span>
             <span class="n">costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_layers</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="n">r_o</span><span class="p">]</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span>
-                <span class="n">y</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
-                <span class="n">x</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">),</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">),</span>
             <span class="p">)</span>
 
             <span class="n">cost_values</span> <span class="o">=</span> <span class="n">costs</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
@@ -1209,17 +1129,17 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">invalid_points</span> <span class="o">=</span> <span class="p">{</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bad_point_inds</span><span class="p">}</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;One or more of the end points have an invalid cost &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;(must be &gt; 0): </span><span class="si">{</span><span class="n">invalid_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Dropping these from consideration...&quot;</span>
+            <span class="sa">f</span><span class="s2">"One or more of the end points have an invalid cost "</span>
+            <span class="sa">f</span><span class="s2">"(must be &gt; 0): </span><span class="si">{</span><span class="n">invalid_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"Dropping these from consideration..."</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
         <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invalid_points</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">points</span><span class="p">:</span>
             <span class="n">all_invalid_points_msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;None of the end points have a valid cost (must be &gt; 0): &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">invalid_points</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"None of the end points have a valid cost (must be &gt; 0): "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">invalid_points</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtLeastCostPathNotFoundError</span><span class="p">(</span><span class="n">all_invalid_points_msg</span><span class="p">)</span>
 
@@ -1227,7 +1147,7 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_RouteResultWriter</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to manage output of route results&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Class to manage output of route results"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="p">,</span> <span class="n">cost_crs</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
         <span class="n">out_fp</span> <span class="o">=</span> <span class="n">_validate_out_fp</span><span class="p">(</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="p">)</span>
@@ -1239,7 +1159,7 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">persist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route_result</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Persist route result and any routing-option pieces to disk</span>
+<span class="w">        </span><span class="sd">"""Persist route result and any routing-option pieces to disk</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1249,7 +1169,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        indices : list</span>
 <span class="sd">            List of route indices as returned by the Rust routing</span>
 <span class="sd">            engine.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">route_result</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">option_result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_option_results</span><span class="p">(</span>
@@ -1258,23 +1178,23 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">_option_writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">option_result</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_routing_option_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">route_result</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield aggregated results for each routing option used&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Yield aggregated results for each routing option used"""</span>
 
         <span class="n">segments_by_option</span> <span class="o">=</span> <span class="n">_ResultsByOption</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_option_results</span><span class="p">(</span><span class="n">segments_by_option</span><span class="p">,</span> <span class="n">route_result</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_option_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segments_by_option</span><span class="p">,</span> <span class="n">route_result</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;list: Output records for each routing option traversed&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""list: Output records for each routing option traversed"""</span>
         <span class="n">cell_size</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
         <span class="n">base_result</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">route_result</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">key</span>
             <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span>
-                <span class="s2">&quot;geometry&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;cost&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;optimized_objective&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;length_km&quot;</span><span class="p">,</span>
+                <span class="s2">"geometry"</span><span class="p">,</span>
+                <span class="s2">"cost"</span><span class="p">,</span>
+                <span class="s2">"optimized_objective"</span><span class="p">,</span>
+                <span class="s2">"length_km"</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">}</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1284,21 +1204,21 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
             <span class="n">option_result</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="o">**</span><span class="n">base_result</span><span class="p">,</span>
-                <span class="s2">&quot;routing_option&quot;</span><span class="p">:</span> <span class="n">option</span><span class="p">,</span>
-                <span class="s2">&quot;length_km&quot;</span><span class="p">:</span> <span class="n">length_km</span><span class="p">,</span>
+                <span class="s2">"routing_option"</span><span class="p">:</span> <span class="n">option</span><span class="p">,</span>
+                <span class="s2">"length_km"</span><span class="p">:</span> <span class="n">length_km</span><span class="p">,</span>
             <span class="p">}</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_paths</span><span class="p">:</span>
                 <span class="n">geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_option_geometry</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">geometry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">continue</span>
-                <span class="n">option_result</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">geometry</span>
+                <span class="n">option_result</span><span class="p">[</span><span class="s2">"geometry"</span><span class="p">]</span> <span class="o">=</span> <span class="n">geometry</span>
 
             <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option_result</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">results</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_option_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segments</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;shapely geometry or None: Combined geometry for one option&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""shapely geometry or None: Combined geometry for one option"""</span>
         <span class="n">geoms</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_component_geometry</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span> <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">geoms</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -1306,7 +1226,7 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">MultiLineString</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span> <span class="k">for</span> <span class="n">geom</span> <span class="ow">in</span> <span class="n">geoms</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_component_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build geometry for one contiguous routing-option segment&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Build geometry for one contiguous routing-option segment"""</span>
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">route</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -1316,13 +1236,13 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_IncrementalRouteWriter</span><span class="p">(</span><span class="n">IncrementalWriter</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stream results to disk by appending each new result to a file</span>
+<span class="w">    </span><span class="sd">"""Stream results to disk by appending each new result to a file</span>
 
 <span class="sd">    A new file is created if one does not exist.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1331,12 +1251,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        crs : rasterio.crs.CRS or dict, optional</span>
 <span class="sd">            Coordinate reference system for geometries when saving to</span>
 <span class="sd">            GeoPackage. By default, ``None``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">crs</span> <span class="o">=</span> <span class="n">crs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Turn result into a dataframe chunk</span>
+<span class="w">        </span><span class="sd">"""Turn result into a dataframe chunk</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1348,16 +1268,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        -------</span>
 <span class="sd">        pandas.DataFrame or geopandas.GeoDataFrame</span>
 <span class="sd">            A dataframe holding the route result.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="s2">&quot;geometry&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="s2">"geometry"</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">result</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span>
+                <span class="p">[</span><span class="n">result</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="s2">"geometry"</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crs</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">result</span><span class="p">])</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_ResultsByOption</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Break route indices into contiguous segments by routing option&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Break route indices into contiguous segments by routing option"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span>
@@ -1366,14 +1286,14 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">__segments_by_option</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">collect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Contiguous route segments grouped by routing option</span>
+<span class="w">        </span><span class="sd">"""Contiguous route segments grouped by routing option</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
 <span class="sd">            Mapping of routing option to list of contiguous route</span>
 <span class="sd">            segments.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">for</span> <span class="n">start_p</span><span class="p">,</span> <span class="n">end_p</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">start_p</span> <span class="o">==</span> <span class="n">end_p</span><span class="p">:</span>
@@ -1385,7 +1305,7 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__segments_by_option</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_update_option_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_p</span><span class="p">,</span> <span class="n">end_p</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;tuple: Updated routing-option segment state for one step&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""tuple: Updated routing-option segment state for one step"""</span>
 
         <span class="n">start</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">start_p</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
         <span class="n">end</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">end_p</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
@@ -1416,7 +1336,7 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">__current_segment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_append_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append a completed routing-option segment when long enough&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Append a completed routing-option segment when long enough"""</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__current_segment</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -1426,37 +1346,37 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validate_out_fp</span><span class="p">(</span><span class="n">out_fp</span><span class="p">,</span> <span class="n">save_paths</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate output filepath extension&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Validate output filepath extension"""</span>
     <span class="n">out_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">save_paths</span> <span class="ow">and</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;.gpkg&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">save_paths</span> <span class="ow">and</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".gpkg"</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;When saving paths, the output file should have a &#39;.gpkg&#39; &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;extension to ensure proper format! Got input file: &#39;</span><span class="si">{</span><span class="n">out_fp</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-            <span class="s2">&quot;Adding &#39;.gpkg&#39; extension... &quot;</span>
+            <span class="s2">"When saving paths, the output file should have a '.gpkg' "</span>
+            <span class="sa">f</span><span class="s2">"extension to ensure proper format! Got input file: '</span><span class="si">{</span><span class="n">out_fp</span><span class="si">}</span><span class="s2">'. "</span>
+            <span class="s2">"Adding '.gpkg' extension... "</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
-        <span class="n">out_fp</span> <span class="o">=</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.gpkg&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="n">save_paths</span> <span class="ow">and</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+        <span class="n">out_fp</span> <span class="o">=</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".gpkg"</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">save_paths</span> <span class="ow">and</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".csv"</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;When not saving paths, the output file should have a &#39;.csv&#39; &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;extension to ensure proper format! Got input file: &#39;</span><span class="si">{</span><span class="n">out_fp</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-            <span class="s2">&quot;Adding &#39;.csv&#39; extension... &quot;</span>
+            <span class="s2">"When not saving paths, the output file should have a '.csv' "</span>
+            <span class="sa">f</span><span class="s2">"extension to ensure proper format! Got input file: '</span><span class="si">{</span><span class="n">out_fp</span><span class="si">}</span><span class="s2">'. "</span>
+            <span class="s2">"Adding '.csv' extension... "</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
-        <span class="n">out_fp</span> <span class="o">=</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
+        <span class="n">out_fp</span> <span class="o">=</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".csv"</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Validated output filepath: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Validated output filepath: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">out_fp</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out_fp</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_routing_options_output_fp</span><span class="p">(</span><span class="n">out_fp</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;pathlib.Path: Companion output path for routing-option pieces&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_fp</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_routing_options</span><span class="si">{</span><span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""pathlib.Path: Companion output path for routing-option pieces"""</span>
+    <span class="k">return</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">out_fp</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_routing_options</span><span class="si">{</span><span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_valid_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">arr_shape</span><span class="p">,</span> <span class="n">point_type</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get only points that are within array bounds&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Get only points that are within array bounds"""</span>
     <span class="n">valid_points</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">invalid_points</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
@@ -1467,9 +1387,9 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">if</span> <span class="n">invalid_points</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;One or more of the </span><span class="si">{</span><span class="n">point_type</span><span class="si">}</span><span class="s2"> points are out of bounds for an &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;array of shape </span><span class="si">{</span><span class="n">arr_shape</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">invalid_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;Dropping these from consideration...&quot;</span>
+            <span class="sa">f</span><span class="s2">"One or more of the </span><span class="si">{</span><span class="n">point_type</span><span class="si">}</span><span class="s2"> points are out of bounds for an "</span>
+            <span class="sa">f</span><span class="s2">"array of shape </span><span class="si">{</span><span class="n">arr_shape</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">invalid_points</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="s2">"Dropping these from consideration..."</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
 
@@ -1477,13 +1397,13 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_valid_point</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">arr_shape</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if point is within array bounds&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Check if point is within array bounds"""</span>
     <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="o">*</span><span class="n">__</span> <span class="o">=</span> <span class="n">point</span>
     <span class="k">return</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">row</span> <span class="o">&lt;</span> <span class="n">arr_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">col</span> <span class="o">&lt;</span> <span class="n">arr_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_midpoint</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;tuple: Midpoint between two route indices&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""tuple: Midpoint between two route indices"""</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">end</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
         <span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">end</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
@@ -1491,10 +1411,10 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_add_route_ids</span><span class="p">(</span><span class="n">route_definitions</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add route IDs to route definitions missing them&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Add route IDs to route definitions missing them"""</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="s2">&quot;Route ID&#39;s missing from route definitions - adding definition &quot;</span>
-        <span class="s2">&quot;index as route ID...&quot;</span>
+        <span class="s2">"Route ID's missing from route definitions - adding definition "</span>
+        <span class="s2">"index as route ID..."</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">start_points</span><span class="p">,</span> <span class="n">end_points</span><span class="p">)</span>

@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.routing.base</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;reVRt base routing functionality&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""reVRt base routing functionality"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -839,11 +759,6 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt</span><span class="w"> </span><span class="kn">import</span> <span class="n">simplify_using_slopes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.models.cost_layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BarrierLayer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.models.routing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">validate_driver_configs</span><span class="p">,</span>
-    <span class="n">validate_routing_options</span><span class="p">,</span>
-    <span class="n">validate_transition_cost_configs</span><span class="p">,</span>
-<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_lens</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">parse_comparison_values</span><span class="p">,</span>
@@ -854,8 +769,8 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-<span class="n">LCP_AGG_COST_LAYER_NAME</span> <span class="o">=</span> <span class="s2">&quot;lcp_agg_costs&quot;</span>
-<span class="sd">&quot;&quot;&quot;Special name reserved for internally-built cost layer&quot;&quot;&quot;</span>
+<span class="n">LCP_AGG_COST_LAYER_NAME</span> <span class="o">=</span> <span class="s2">"lcp_agg_costs"</span>
+<span class="sd">"""Special name reserved for internally-built cost layer"""</span>
 
 <span class="n">ROUTE_SOLUTION_LEN</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">MIN_ROUTE_POINTS_FOR_TRANSITION_COST</span> <span class="o">=</span> <span class="mi">2</span>
@@ -864,7 +779,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="RoutingScenario">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.RoutingScenario.html#revrt.routing.base.RoutingScenario">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RoutingScenario</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for routing scenario configuration&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Container for routing scenario configuration"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -874,9 +789,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">drivers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">transition_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;bidirectional_long_range_dijkstra&quot;</span><span class="p">,</span>
+        <span class="n">algorithm</span><span class="o">=</span><span class="s2">"bidirectional_long_range_dijkstra"</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -888,11 +803,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            :class:`~revrt.models.routing.TrackedLayer` for the</span>
 <span class="sd">            canonical schema.</span>
 <span class="sd">        routing_options : dict</span>
-<span class="sd">            Mapping of routing-option names to dictionaries containing</span>
-<span class="sd">            cost, friction, and barrier definitions. See</span>
-<span class="sd">            :class:`~revrt.models.routing.RoutingOptionConfig` for the</span>
-<span class="sd">            canonical schema that is serialized for the Rust routing</span>
-<span class="sd">            core.</span>
+<span class="sd">            Validated mapping of routing-option names to dictionaries</span>
+<span class="sd">            containing cost, friction, and barrier definitions.</span>
 <span class="sd">        drivers : dict, optional</span>
 <span class="sd">            Optional driver-rule configuration keyed by routing option.</span>
 <span class="sd">            See :class:`~revrt.models.routing.DriverConfig` and</span>
@@ -904,77 +816,75 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            :class:`~revrt.models.routing.TransitionCostRule`.</span>
 <span class="sd">        invalid_costs_block_routing : bool, optional</span>
 <span class="sd">            Flag indicating whether non-positive costs block traversal.</span>
-<span class="sd">        algorithm : str, default=&quot;bidirectional_long_range_dijkstra&quot;</span>
+<span class="sd">        algorithm : str, default="bidirectional_long_range_dijkstra"</span>
 <span class="sd">            Routing algorithm implementation to use. Supported values</span>
-<span class="sd">            are ``&quot;astar&quot;``, ``&quot;long_range_astar&quot;``,</span>
-<span class="sd">            ``&quot;long_range_dijkstra&quot;``,</span>
-<span class="sd">            ``&quot;bidirectional_long_range_dijkstra&quot;``, and</span>
-<span class="sd">            ``&quot;dijkstra&quot;``. ``&quot;astar&quot;`` and ``&quot;dijkstra&quot;`` are</span>
+<span class="sd">            are ``"astar"``, ``"long_range_astar"``,</span>
+<span class="sd">            ``"long_range_dijkstra"``,</span>
+<span class="sd">            ``"bidirectional_long_range_dijkstra"``, and</span>
+<span class="sd">            ``"dijkstra"``. ``"astar"`` and ``"dijkstra"`` are</span>
 <span class="sd">            in-memory implementations that do not respect the memory</span>
 <span class="sd">            limit. Prefer a long-range option unless you know for a fact</span>
 <span class="sd">            that your route computations will not need much memory and</span>
 <span class="sd">            speed is very important to you.</span>
-<span class="sd">            By default, ``&quot;bidirectional_long_range_dijkstra&quot;``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            By default, ``"bidirectional_long_range_dijkstra"``.</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span> <span class="o">=</span> <span class="n">cost_fpath</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span> <span class="o">=</span> <span class="n">validate_routing_options</span><span class="p">(</span><span class="n">routing_options</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">drivers</span> <span class="o">=</span> <span class="n">validate_driver_configs</span><span class="p">(</span><span class="n">drivers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span> <span class="o">=</span> <span class="n">validate_transition_cost_configs</span><span class="p">(</span>
-            <span class="n">transition_costs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span> <span class="o">=</span> <span class="n">routing_options</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drivers</span> <span class="o">=</span> <span class="n">drivers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span> <span class="o">=</span> <span class="n">transition_costs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span> <span class="o">=</span> <span class="n">tracked_layers</span> <span class="ow">or</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">invalid_costs_block_routing</span> <span class="o">=</span> <span class="n">invalid_costs_block_routing</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="s2">&quot;RoutingScenario:&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- routing_options: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- drivers: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">drivers</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- transition_costs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\t</span><span class="s2">- algorithm: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="s2">"RoutingScenario:"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="se">\n\t</span><span class="s2">- routing_options: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="si">}</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="se">\n\t</span><span class="s2">- drivers: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">drivers</span><span class="si">}</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="se">\n\t</span><span class="s2">- transition_costs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span><span class="si">}</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="se">\n\t</span><span class="s2">- algorithm: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">routing_option_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;list: Routing option names in solver index order&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""list: Routing option names in solver index order"""</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RoutingScenario.cost_function_json">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.RoutingScenario.html#revrt.routing.base.RoutingScenario.cost_function_json">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cost_function_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;str: JSON string describing configured cost layers&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""str: JSON string describing configured cost layers"""</span>
         <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;invalid_costs_block_routing&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">invalid_costs_block_routing</span><span class="p">,</span>
-            <span class="s2">&quot;routing_options&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options_for_rust</span><span class="p">(),</span>
+            <span class="s2">"invalid_costs_block_routing"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">invalid_costs_block_routing</span><span class="p">,</span>
+            <span class="s2">"routing_options"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options_for_rust</span><span class="p">(),</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drivers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;drivers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_drivers_for_rust</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drivers</span><span class="p">)</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"drivers"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_drivers_for_rust</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">drivers</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;transition_costs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">"transition_costs"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span>
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_routing_options_for_rust</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Routing options formatted for Rust ingestion&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""dict: Routing options formatted for Rust ingestion"""</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">option_name</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;cost_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
-                    <span class="n">_cost_layers_for_rust</span><span class="p">(</span><span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+                <span class="s2">"cost_layers"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
+                    <span class="n">_cost_layers_for_rust</span><span class="p">(</span><span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cost_layers"</span><span class="p">,</span> <span class="p">[]))</span>
                 <span class="p">),</span>
-                <span class="s2">&quot;friction_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="s2">"friction_layers"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
                     <span class="n">_friction_layers_for_rust</span><span class="p">(</span>
-                        <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">,</span> <span class="p">[])</span>
+                        <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"friction_layers"</span><span class="p">,</span> <span class="p">[])</span>
                     <span class="p">)</span>
                 <span class="p">),</span>
-                <span class="s2">&quot;barrier_layers&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="s2">"barrier_layers"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span>
                     <span class="n">_barrier_layers_for_rust</span><span class="p">(</span>
-                        <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">,</span> <span class="p">[])</span>
+                        <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"barrier_layers"</span><span class="p">,</span> <span class="p">[])</span>
                     <span class="p">)</span>
                 <span class="p">),</span>
-                <span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">:</span> <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                    <span class="s2">&quot;cost_multiplier_layer&quot;</span>
+                <span class="s2">"cost_multiplier_layer"</span><span class="p">:</span> <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">"cost_multiplier_layer"</span>
                 <span class="p">),</span>
             <span class="p">}</span>
             <span class="k">for</span> <span class="n">option_name</span><span class="p">,</span> <span class="n">option_config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
@@ -985,25 +895,25 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="RoutingLayerManager">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RoutingLayerManager</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to build routing layers from user input&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Class to build routing layers from user input"""</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routing_scenario</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routing_scenario</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        routing_scenario : RoutingScenario</span>
 <span class="sd">            Scenario containing cost, friction, and tracking metadata.</span>
-<span class="sd">        chunks : str or mapping, default=&quot;auto&quot;</span>
+<span class="sd">        chunks : str or mapping, default="auto"</span>
 <span class="sd">            Chunk specification forwarded to ``xarray.open_dataset``.</span>
-<span class="sd">            By default, ``&quot;auto&quot;``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            By default, ``"auto"``.</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span> <span class="o">=</span> <span class="n">routing_scenario</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_layer_fh</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">,</span>
             <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">,</span>
             <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -1017,40 +927,40 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">final_routing_layers</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;RoutingLayerManager for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="si">!r}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"RoutingLayerManager for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="si">!r}</span><span class="s2">"</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">latitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;xarray.DataArray: Latitude coordinates for the cost grid&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_fh</span><span class="p">[</span><span class="s2">&quot;latitude&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="sd">"""xarray.DataArray: Latitude coordinates for the cost grid"""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_fh</span><span class="p">[</span><span class="s2">"latitude"</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">longitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;xarray.DataArray: Longitude coordinates for the cost grid&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_fh</span><span class="p">[</span><span class="s2">&quot;longitude&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="sd">"""xarray.DataArray: Longitude coordinates for the cost grid"""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_fh</span><span class="p">[</span><span class="s2">"longitude"</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_verify_layer_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Verify that layer exists in cost file&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Verify that layer exists in cost file"""</span>
         <span class="k">if</span> <span class="n">layer_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Did not find layer </span><span class="si">{</span><span class="n">layer_name</span><span class="si">!r}</span><span class="s2"> in cost &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;file </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">)</span><span class="si">!r}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"Did not find layer </span><span class="si">{</span><span class="n">layer_name</span><span class="si">!r}</span><span class="s2"> in cost "</span>
+                <span class="sa">f</span><span class="s2">"file </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RoutingLayerManager.close">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager.close">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the underlying xarray file handle&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Close the underlying xarray file handle"""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_layer_fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="RoutingLayerManager.build">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.RoutingLayerManager.html#revrt.routing.base.RoutingLayerManager.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build lazy routing arrays from layered file&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Build lazy routing arrays from layered file"""</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Building </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Building </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_cost_layers</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_tracked_layers</span><span class="p">()</span>
 
@@ -1058,7 +968,7 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_cost_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a coarse validation layer across routing options&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Build a coarse validation layer across routing options"""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">costs</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -1066,58 +976,18 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">_build_cost_layer_from_option</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_empty_cost_layer_data_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;xarray.DataArray: Empty routing-cost layer template&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""xarray.DataArray: Empty routing-cost layer template"""</span>
         <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitudes</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">template</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">full_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">template</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_cost_layer_from_option</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a single routing option&#39;s cost layer&quot;&quot;&quot;</span>
-        <span class="n">option_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
-        <span class="n">option_li_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
-        <span class="n">option_untracked_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
-        <span class="n">reported_costs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">layer_info</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-            <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_and_scale_layer</span><span class="p">(</span><span class="n">layer_info</span><span class="p">)</span>
-            <span class="n">cost</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cost</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cost</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">is_li</span> <span class="o">=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_invariant&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include_in_final_cost&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">is_li</span><span class="p">:</span>
-                    <span class="n">option_li_cost</span> <span class="o">+=</span> <span class="n">cost</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">option_cost</span> <span class="o">+=</span> <span class="n">cost</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">option_untracked_cost</span> <span class="o">+=</span> <span class="n">cost</span>
-
-            <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include_in_report&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-                <span class="n">report_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">layer_info</span><span class="p">[</span><span class="s2">&quot;layer_name&quot;</span><span class="p">],</span> <span class="n">is_li</span><span class="p">)</span>
-                <span class="n">reported_costs</span><span class="p">[</span><span class="n">report_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">reported_costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">report_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">cost</span>
-                <span class="p">)</span>
-
-        <span class="k">for</span> <span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="n">is_li</span><span class="p">),</span> <span class="n">cost</span> <span class="ow">in</span> <span class="n">reported_costs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">CharacterizedLayer</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="n">cost</span><span class="p">,</span>
-                    <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span>
-                    <span class="n">is_length_invariant</span><span class="o">=</span><span class="n">is_li</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="n">mult</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span>
-        <span class="n">option_cost</span> <span class="o">*=</span> <span class="n">mult</span>
-        <span class="n">option_li_cost</span> <span class="o">*=</span> <span class="n">mult</span>
-        <span class="n">option_untracked_cost</span> <span class="o">*=</span> <span class="n">mult</span>
-
-        <span class="n">multiplier_layer_names</span> <span class="o">=</span> <span class="n">normalize_str_list_input</span><span class="p">(</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cost_multiplier_layer&quot;</span>
+<span class="w">        </span><span class="sd">"""Build a single routing option's cost layer"""</span>
+        <span class="n">cost_layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_cost_layers_single_option</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">option</span><span class="p">)</span>
+        <span class="n">scaled_layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_single_option_cost_layers</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span> <span class="o">*</span><span class="n">cost_layers</span>
         <span class="p">)</span>
-        <span class="k">for</span> <span class="n">multiplier_layer_name</span> <span class="ow">in</span> <span class="n">multiplier_layer_names</span> <span class="ow">or</span> <span class="p">():</span>
-            <span class="n">multiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_name</span><span class="p">)</span>
-            <span class="n">option_cost</span> <span class="o">*=</span> <span class="n">multiplier</span>
-            <span class="n">option_li_cost</span> <span class="o">*=</span> <span class="n">multiplier</span>
-            <span class="n">option_untracked_cost</span> <span class="o">*=</span> <span class="n">multiplier</span>
+        <span class="n">option_cost</span><span class="p">,</span> <span class="n">option_li_cost</span><span class="p">,</span> <span class="n">option_untracked_cost</span> <span class="o">=</span> <span class="n">scaled_layers</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="n">option</span><span class="p">]</span> <span class="o">=</span> <span class="n">option_cost</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">li_costs</span><span class="p">[</span><span class="n">option</span><span class="p">]</span> <span class="o">=</span> <span class="n">option_li_cost</span>
@@ -1127,26 +997,78 @@ window.runMermaid = runMermaid;</script>
             <span class="n">option_cost</span> <span class="o">+</span> <span class="n">option_li_cost</span> <span class="o">+</span> <span class="n">option_untracked_cost</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_cost_layers_single_option</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">option</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Build cost layers for a single routing option"""</span>
+        <span class="n">option_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
+        <span class="n">option_li_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
+        <span class="n">option_untracked_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_cost_layer_data_array</span><span class="p">()</span>
+        <span class="n">reported_costs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">layer_info</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cost_layers"</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_and_scale_layer</span><span class="p">(</span><span class="n">layer_info</span><span class="p">)</span>
+            <span class="n">cost</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cost</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cost</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">is_li</span> <span class="o">=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_invariant"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">base_cost_layer</span> <span class="o">=</span> <span class="n">_select_base_cost_layer</span><span class="p">(</span>
+                <span class="n">layer_info</span><span class="p">,</span> <span class="n">option_li_cost</span><span class="p">,</span> <span class="n">option_cost</span><span class="p">,</span> <span class="n">option_untracked_cost</span>
+            <span class="p">)</span>
+            <span class="n">base_cost_layer</span> <span class="o">+=</span> <span class="n">cost</span>
+            <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"include_in_report"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+                <span class="n">report_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">layer_info</span><span class="p">[</span><span class="s2">"layer_name"</span><span class="p">],</span> <span class="n">is_li</span><span class="p">)</span>
+                <span class="n">reported_costs</span><span class="p">[</span><span class="n">report_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">reported_costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">report_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">cost</span>
+                <span class="p">)</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="n">is_li</span><span class="p">),</span> <span class="n">cost</span> <span class="ow">in</span> <span class="n">reported_costs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">CharacterizedLayer</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">cost</span><span class="p">,</span>
+                    <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span>
+                    <span class="n">is_length_invariant</span><span class="o">=</span><span class="n">is_li</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">option_cost</span><span class="p">,</span> <span class="n">option_li_cost</span><span class="p">,</span> <span class="n">option_untracked_cost</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scale_single_option_cost_layers</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">option_cost</span><span class="p">,</span> <span class="n">option_li_cost</span><span class="p">,</span> <span class="n">option_untracked_cost</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Scale the cost layers for a single routing option"""</span>
+        <span class="n">mult</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cost_multiplier_scalar"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span>
+        <span class="n">option_cost</span> <span class="o">*=</span> <span class="n">mult</span>
+        <span class="n">option_li_cost</span> <span class="o">*=</span> <span class="n">mult</span>
+        <span class="n">option_untracked_cost</span> <span class="o">*=</span> <span class="n">mult</span>
+
+        <span class="n">multiplier_layer_names</span> <span class="o">=</span> <span class="n">normalize_str_list_input</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cost_multiplier_layer"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"cost_multiplier_layer"</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">multiplier_layer_name</span> <span class="ow">in</span> <span class="n">multiplier_layer_names</span> <span class="ow">or</span> <span class="p">():</span>
+            <span class="n">multiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_name</span><span class="p">)</span>
+            <span class="n">option_cost</span> <span class="o">*=</span> <span class="n">multiplier</span>
+            <span class="n">option_li_cost</span> <span class="o">*=</span> <span class="n">multiplier</span>
+            <span class="n">option_untracked_cost</span> <span class="o">*=</span> <span class="n">multiplier</span>
+
+        <span class="k">return</span> <span class="n">option_cost</span><span class="p">,</span> <span class="n">option_li_cost</span><span class="p">,</span> <span class="n">option_untracked_cost</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_final_routing_layer_from_option</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">option_layer</span>
     <span class="p">):</span>
         <span class="n">frictions</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">full_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">layer_info</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="k">for</span> <span class="n">layer_info</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"friction_layers"</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="n">multiplier_layer_names</span> <span class="o">=</span> <span class="n">normalize_str_list_input</span><span class="p">(</span>
-                <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">),</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;friction multiplier_layer&quot;</span><span class="p">,</span>
+                <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplier_layer"</span><span class="p">),</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">"friction multiplier_layer"</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">friction_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_and_scale_friction_layer</span><span class="p">(</span>
                 <span class="n">multiplier_layer_names</span><span class="p">,</span> <span class="n">layer_info</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span>
-                <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include_in_report&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"include_in_report"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
                 <span class="ow">and</span> <span class="n">multiplier_layer_names</span>
             <span class="p">):</span>
-                <span class="n">layer_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">multiplier_layer_names</span> <span class="ow">or</span> <span class="p">())</span>
+                <span class="n">layer_name</span> <span class="o">=</span> <span class="s2">"_"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">multiplier_layer_names</span> <span class="ow">or</span> <span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">CharacterizedLayer</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">friction_layer</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">layer_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">friction_layer</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="n">option</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="n">frictions</span> <span class="o">+=</span> <span class="n">friction_layer</span>
@@ -1155,8 +1077,8 @@ window.runMermaid = runMermaid;</script>
         <span class="n">option_layer</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">frictions</span>
 
         <span class="n">barrier_mask</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">full_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">layer_info</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-            <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;barrier_importance&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer_info</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"barrier_layers"</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"barrier_importance"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">barrier_mask</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_barrier_layer</span><span class="p">(</span>
                 <span class="n">BarrierLayer</span><span class="p">(</span><span class="o">**</span><span class="n">layer_info</span><span class="p">)</span><span class="o">.</span><span class="n">to_routing_dict</span><span class="p">()</span>
@@ -1175,26 +1097,26 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">final_routing_layers</span><span class="p">[</span><span class="n">option</span><span class="p">]</span> <span class="o">=</span> <span class="n">option_layer</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_extract_and_scale_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_info</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract layer based on name and scale according to input&quot;&quot;&quot;</span>
-        <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">layer_info</span><span class="p">[</span><span class="s2">&quot;layer_name&quot;</span><span class="p">])</span>
+<span class="w">        </span><span class="sd">"""Extract layer based on name and scale according to input"""</span>
+        <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">layer_info</span><span class="p">[</span><span class="s2">"layer_name"</span><span class="p">])</span>
 
         <span class="n">multiplier_layer_names</span> <span class="o">=</span> <span class="n">normalize_str_list_input</span><span class="p">(</span>
-            <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span>
+            <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplier_layer"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"multiplier_layer"</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">multiplier_layer_name</span> <span class="ow">in</span> <span class="n">multiplier_layer_names</span> <span class="ow">or</span> <span class="p">():</span>
             <span class="n">cost</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_name</span><span class="p">)</span>
 
-        <span class="n">cost</span> <span class="o">*=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">cost</span> <span class="o">*=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplier_scalar"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cost</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_extract_and_scale_friction_layer</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">multiplier_layer_names</span><span class="p">,</span> <span class="n">layer_info</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract layer based on name and scale according to input&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Extract layer based on name and scale according to input"""</span>
         <span class="k">if</span> <span class="n">multiplier_layer_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Friction layers must specify a &#39;mask&#39; or &quot;</span>
-                <span class="s2">&quot;&#39;multiplier_layer&#39; key!&quot;</span>
+                <span class="s2">"Friction layers must specify a 'mask' or "</span>
+                <span class="s2">"'multiplier_layer' key!"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1204,77 +1126,77 @@ window.runMermaid = runMermaid;</script>
         <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">multiplier_layer_name</span> <span class="ow">in</span> <span class="n">multiplier_layer_names</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
             <span class="n">cost</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">multiplier_layer_name</span><span class="p">)</span>
-        <span class="n">cost</span> <span class="o">*=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">cost</span> <span class="o">*=</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplier_scalar"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cost</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_extract_barrier_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_info</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract one barrier layer mask from the layered file&quot;&quot;&quot;</span>
-        <span class="n">layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">layer_info</span><span class="p">[</span><span class="s2">&quot;layer_name&quot;</span><span class="p">])</span>
-        <span class="n">layer_data</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
-        <span class="n">threshold</span> <span class="o">=</span> <span class="n">layer_info</span><span class="p">[</span><span class="s2">&quot;barrier_threshold&quot;</span><span class="p">]</span>
-        <span class="n">operator</span> <span class="o">=</span> <span class="n">layer_info</span><span class="p">[</span><span class="s2">&quot;barrier_operator&quot;</span><span class="p">]</span>
+<span class="w">        </span><span class="sd">"""Extract one barrier layer mask from the layered file"""</span>
+        <span class="n">layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_layer</span><span class="p">(</span><span class="n">layer_info</span><span class="p">[</span><span class="s2">"layer_name"</span><span class="p">])</span>
+        <span class="n">layer_data</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"data"</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="n">layer_info</span><span class="p">[</span><span class="s2">"barrier_threshold"</span><span class="p">]</span>
+        <span class="n">operator</span> <span class="o">=</span> <span class="n">layer_info</span><span class="p">[</span><span class="s2">"barrier_operator"</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">&quot;gt&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">"gt"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">layer_data</span> <span class="o">&gt;</span> <span class="n">threshold</span>
-        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">&quot;ge&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">"ge"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">layer_data</span> <span class="o">&gt;=</span> <span class="n">threshold</span>
-        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">&quot;lt&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">"lt"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">layer_data</span> <span class="o">&lt;</span> <span class="n">threshold</span>
-        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">&quot;le&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">"le"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">layer_data</span> <span class="o">&lt;=</span> <span class="n">threshold</span>
-        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">&quot;ne&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">"ne"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">layer_data</span> <span class="o">!=</span> <span class="n">threshold</span>
-        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">&quot;eq&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="s2">"eq"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">layer_data</span> <span class="o">==</span> <span class="n">threshold</span>
 
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Did not recognize barrier operator &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">operator</span><span class="si">!r}</span><span class="s2"> for layer </span><span class="si">{</span><span class="n">layer_info</span><span class="p">[</span><span class="s1">&#39;layer_name&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2">&quot;</span>
+            <span class="s2">"Did not recognize barrier operator "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">operator</span><span class="si">!r}</span><span class="s2"> for layer </span><span class="si">{</span><span class="n">layer_info</span><span class="p">[</span><span class="s1">'layer_name'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_extract_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract layer based on name&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Extract layer based on name"""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_verify_layer_exists</span><span class="p">(</span><span class="n">layer_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_fh</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">band</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_tracked_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build out a dictionary of tracked layers&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Build out a dictionary of tracked layers"""</span>
         <span class="k">for</span> <span class="n">tracked_layer_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">tracked_layers</span><span class="p">:</span>
-            <span class="n">tracked_layer</span> <span class="o">=</span> <span class="n">tracked_layer_info</span><span class="p">[</span><span class="s2">&quot;layer_name&quot;</span><span class="p">]</span>
-            <span class="n">method</span> <span class="o">=</span> <span class="n">tracked_layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;agg_method&quot;</span><span class="p">)</span>
+            <span class="n">tracked_layer</span> <span class="o">=</span> <span class="n">tracked_layer_info</span><span class="p">[</span><span class="s2">"layer_name"</span><span class="p">]</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">tracked_layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"agg_method"</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Tracked layer </span><span class="si">{</span><span class="n">tracked_layer</span><span class="si">!r}</span><span class="s2"> must specify an &quot;</span>
-                    <span class="s2">&quot;&#39;agg_method&#39; key! Skipping...&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Tracked layer </span><span class="si">{</span><span class="n">tracked_layer</span><span class="si">!r}</span><span class="s2"> must specify an "</span>
+                    <span class="s2">"'agg_method' key! Skipping..."</span>
                 <span class="p">)</span>
                 <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">da</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Did not find method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2"> in dask.array! &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Skipping tracked layer </span><span class="si">{</span><span class="n">tracked_layer</span><span class="si">!r}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Did not find method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2"> in dask.array! "</span>
+                    <span class="sa">f</span><span class="s2">"Skipping tracked layer </span><span class="si">{</span><span class="n">tracked_layer</span><span class="si">!r}</span><span class="s2">"</span>
                 <span class="p">)</span>
                 <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="k">if</span> <span class="n">tracked_layer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Did not find layer </span><span class="si">{</span><span class="n">tracked_layer</span><span class="si">!r}</span><span class="s2"> in cost file &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">)</span><span class="si">!r}</span><span class="s2">. &quot;</span>
-                    <span class="s2">&quot;Skipping...&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Did not find layer </span><span class="si">{</span><span class="n">tracked_layer</span><span class="si">!r}</span><span class="s2"> in cost file "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">)</span><span class="si">!r}</span><span class="s2">. "</span>
+                    <span class="s2">"Skipping..."</span>
                 <span class="p">)</span>
                 <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="n">layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_and_scale_layer</span><span class="p">(</span><span class="n">tracked_layer_info</span><span class="p">)</span>
-            <span class="n">is_li</span> <span class="o">=</span> <span class="n">tracked_layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_invariant&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">is_li</span> <span class="o">=</span> <span class="n">tracked_layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_invariant"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_scenario</span><span class="o">.</span><span class="n">routing_option_names</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">tracked_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">CharacterizedLayer</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tracked_layer</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tracked_layer</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                         <span class="n">layer</span><span class="p">,</span>
                         <span class="n">option</span><span class="o">=</span><span class="n">option</span><span class="p">,</span>
                         <span class="n">is_length_invariant</span><span class="o">=</span><span class="n">is_li</span><span class="p">,</span>
@@ -1287,7 +1209,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="CharacterizedLayer">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.CharacterizedLayer.html#revrt.routing.base.CharacterizedLayer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CharacterizedLayer</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Encapsulate tracked routing layer metadata&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Encapsulate tracked routing layer metadata"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1297,7 +1219,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">is_length_invariant</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">agg_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1314,7 +1236,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        agg_method : str, optional</span>
 <span class="sd">            Name of dask aggregation used when tracking statistics.</span>
 <span class="sd">            By default, ``None``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">layer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">option</span> <span class="o">=</span> <span class="n">option</span>
@@ -1323,16 +1245,16 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;CharacterizedLayer(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;option=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">option</span><span class="si">!r}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;is_length_invariant=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">is_length_invariant</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;agg_method=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span><span class="si">!r}</span><span class="s2">)&quot;</span>
+            <span class="sa">f</span><span class="s2">"CharacterizedLayer(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"option=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">option</span><span class="si">!r}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"is_length_invariant=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">is_length_invariant</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"agg_method=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span><span class="si">!r}</span><span class="s2">)"</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="CharacterizedLayer.compute">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.CharacterizedLayer.html#revrt.routing.base.CharacterizedLayer.compute">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">route</span><span class="p">,</span> <span class="n">cell_size</span><span class="p">,</span> <span class="n">point_lens</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute layer metrics along a route</span>
+<span class="w">        </span><span class="sd">"""Compute layer metrics along a route</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1347,7 +1269,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        -------</span>
 <span class="sd">        dict</span>
 <span class="sd">            Mapping of metric names to aggregated layer values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">route_points</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">filtered_point_lens</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">point_len</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">route</span><span class="p">,</span> <span class="n">point_lens</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1365,8 +1287,8 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">route_points</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">layer_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span>
-            <span class="n">y</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
-            <span class="n">x</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">),</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">),</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">),</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1381,26 +1303,26 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_empty_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Empty metrics for routes that skip this option&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""dict: Empty metrics for routes that skip this option"""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_cost&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_length_km&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_cost"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_length_km"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
             <span class="p">}</span>
 
-        <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_total_and_length</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">layer_values</span><span class="p">,</span> <span class="n">route</span><span class="p">,</span> <span class="n">cell_size</span><span class="p">,</span> <span class="n">point_lens</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute total cost and length metrics for the layer&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Compute total cost and length metrics for the layer"""</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">route</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_cost&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_length_km&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_cost"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_length_km"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
             <span class="p">}</span>
 
-        <span class="n">layer_data</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer_values</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">layer_values</span><span class="p">)</span>
+        <span class="n">layer_data</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer_values</span><span class="p">,</span> <span class="s2">"data"</span><span class="p">,</span> <span class="n">layer_values</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_data</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
             <span class="n">layer_data</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">layer_data</span><span class="p">)</span>
         <span class="n">point_lens</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">point_lens</span><span class="p">)</span>
@@ -1413,25 +1335,25 @@ window.runMermaid = runMermaid;</script>
         <span class="n">layer_length</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">point_lens</span><span class="p">[</span><span class="n">layer_data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">cell_size</span> <span class="o">/</span> <span class="mi">1000</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_cost&quot;</span><span class="p">:</span> <span class="n">layer_cost</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">(),</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_length_km&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_cost"</span><span class="p">:</span> <span class="n">layer_cost</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">(),</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_length_km"</span><span class="p">:</span> <span class="p">(</span>
                 <span class="n">layer_length</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
             <span class="p">),</span>
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_agg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_values</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute aggregated statistic for tracked layer&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Compute aggregated statistic for tracked layer"""</span>
         <span class="n">aggregate</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">da</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span><span class="p">)(</span><span class="n">layer_values</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">aggregate</span><span class="o">.</span><span class="n">compute</span><span class="p">()}</span></div>
+        <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_method</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">aggregate</span><span class="o">.</span><span class="n">compute</span><span class="p">()}</span></div>
 
 
 
 <div class="viewcode-block" id="RouteMetrics">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RouteMetrics</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to compute route characteristics given layer cost maps&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Class to compute route characteristics given layer cost maps"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1441,7 +1363,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">add_geom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1457,7 +1379,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        attrs : dict, optional</span>
 <span class="sd">            Additional metadata merged into the result dictionary.</span>
 <span class="sd">            By default, ``None``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_routing_layers</span> <span class="o">=</span> <span class="n">routing_layers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_route</span> <span class="o">=</span> <span class="n">route</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimized_objective</span> <span class="o">=</span> <span class="n">optimized_objective</span>
@@ -1468,44 +1390,44 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cell_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;float: Raster cell size in meters&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""float: Raster cell size in meters"""</span>
         <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_routing_layers</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_route_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;list | None: Route option ids aligned with route points&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""list | None: Route option ids aligned with route points"""</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">p</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">])</span>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_route_row_col</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;list: List of (row, col) tuples defining the path&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""list: List of (row, col) tuples defining the path"""</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_lens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;array-like: Cached per-cell travel distances&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""array-like: Cached per-cell travel distances"""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__lens</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_path_length</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__lens</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">total_path_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;float: Total path length in kilometers&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""float: Total path length in kilometers"""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_path_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_path_length</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_path_length</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;float: Optimized objective evaluated over the route&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""float: Optimized objective evaluated over the route"""</span>
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route_row_col</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">point_lens</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lens</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">)</span>
+        <span class="n">point_lens</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lens</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">)</span>
         <span class="n">total_cost</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">zeros</span><span class="p">((),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route_options</span><span class="p">):</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_options</span> <span class="o">==</span> <span class="n">option</span>
-            <span class="n">option_rows</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">)</span>
-            <span class="n">option_cols</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="s2">&quot;points&quot;</span><span class="p">)</span>
+            <span class="n">option_rows</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">)</span>
+            <span class="n">option_cols</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cols</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"points"</span><span class="p">)</span>
 
             <span class="n">cell_costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_layers</span><span class="o">.</span><span class="n">costs</span><span class="p">[</span><span class="n">option</span><span class="p">]</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span>
                 <span class="n">y</span><span class="o">=</span><span class="n">option_rows</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">option_cols</span>
@@ -1520,7 +1442,7 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">total_cost</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transition_cost</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_transition_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;float: Total transition cost implied by option changes&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""float: Total transition cost implied by option changes"""</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">MIN_ROUTE_POINTS_FOR_TRANSITION_COST</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.0</span>
 
@@ -1534,7 +1456,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">end_lat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;float: Latitude of the terminal path cell&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""float: Latitude of the terminal path cell"""</span>
         <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_row_col</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_routing_layers</span><span class="o">.</span><span class="n">latitudes</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
@@ -1545,7 +1467,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">end_lon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;float: Longitude of the terminal path cell&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""float: Longitude of the terminal path cell"""</span>
         <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route_row_col</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_routing_layers</span><span class="o">.</span><span class="n">longitudes</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">col</span><span class="p">)</span>
@@ -1556,7 +1478,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">geom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;shapely.GeometryType: Geometry for the computed path&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""shapely.GeometryType: Geometry for the computed path"""</span>
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_route_row_col</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_routing_layers</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span>
@@ -1569,17 +1491,17 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="RouteMetrics.compute">
 <a class="viewcode-back" href="../../../_autosummary/revrt.routing.base.RouteMetrics.html#revrt.routing.base.RouteMetrics.compute">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Assemble route metrics and optional geometry payload&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Assemble route metrics and optional geometry payload"""</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;length_km&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_path_length</span><span class="p">,</span>
-            <span class="s2">&quot;cost&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span>
-            <span class="s2">&quot;poi_lat&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_lat</span><span class="p">,</span>
-            <span class="s2">&quot;poi_lon&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_lon</span><span class="p">,</span>
-            <span class="s2">&quot;start_row&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-            <span class="s2">&quot;start_col&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
-            <span class="s2">&quot;end_row&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-            <span class="s2">&quot;end_col&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
-            <span class="s2">&quot;optimized_objective&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimized_objective</span><span class="p">,</span>
+            <span class="s2">"length_km"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_path_length</span><span class="p">,</span>
+            <span class="s2">"cost"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span>
+            <span class="s2">"poi_lat"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_lat</span><span class="p">,</span>
+            <span class="s2">"poi_lon"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_lon</span><span class="p">,</span>
+            <span class="s2">"start_row"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">"start_col"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">"end_row"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">"end_col"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_route</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">"optimized_objective"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimized_objective</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="n">results</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_attrs</span><span class="p">)</span>
@@ -1590,13 +1512,13 @@ window.runMermaid = runMermaid;</script>
             <span class="n">results</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">layer_result</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_geom</span><span class="p">:</span>
-            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geom</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">"geometry"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geom</span>
 
         <span class="k">return</span> <span class="n">results</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_path_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the total length and cell by cell length of LCP&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Compute the total length and cell by cell length of LCP"""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__lens</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_path_length</span> <span class="o">=</span> <span class="n">compute_lens</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_route_row_col</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_size</span>
         <span class="p">)</span></div>
@@ -1604,81 +1526,92 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_transition_cost_lookup</span><span class="p">(</span><span class="n">transition_costs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the directed transition-cost lookup used in reports&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Build the directed transition-cost lookup used in reports"""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">transition_costs</span><span class="p">:</span>
         <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="p">{}</span>
 
-    <span class="n">default_cost</span> <span class="o">=</span> <span class="n">transition_costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span>
+    <span class="n">default_cost</span> <span class="o">=</span> <span class="n">transition_costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span>
     <span class="n">pairwise_costs</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">transition_costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pairwise&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-        <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s2">&quot;between&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">transition_costs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pairwise"</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s2">"between"</span><span class="p">]</span>
         <span class="n">pairwise_costs</span><span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">src</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">pairwise_costs</span><span class="p">[(</span><span class="n">dst</span><span class="p">,</span> <span class="n">dst</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">pairwise_costs</span><span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s2">&quot;cost&quot;</span><span class="p">]</span>
-        <span class="n">pairwise_costs</span><span class="p">[(</span><span class="n">dst</span><span class="p">,</span> <span class="n">src</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s2">&quot;cost&quot;</span><span class="p">]</span>
+        <span class="n">pairwise_costs</span><span class="p">[(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">]</span>
+        <span class="n">pairwise_costs</span><span class="p">[(</span><span class="n">dst</span><span class="p">,</span> <span class="n">src</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="n">default_cost</span><span class="p">,</span> <span class="n">pairwise_costs</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_cost_layers_for_rust</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cost layers formatted for Rust ingestion&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cost layers formatted for Rust ingestion"""</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
         <span class="n">out_layer</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;include_in_report&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;include_in_final_cost&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"include_in_report"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"include_in_final_cost"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">yield</span> <span class="n">out_layer</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_friction_layers_for_rust</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Friction layers formatted for Rust ingestion&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Friction layers formatted for Rust ingestion"""</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
         <span class="n">out_layer</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;layer_name&quot;</span> <span class="ow">in</span> <span class="n">out_layer</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"layer_name"</span> <span class="ow">in</span> <span class="n">out_layer</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Specifying `layer_name` for a friction layer is &quot;</span>
-                <span class="s2">&quot;deprecated! The default behavior of friction layers is &quot;</span>
-                <span class="s2">&quot;to be multiplied to the aggregated cost layer. Please &quot;</span>
-                <span class="s2">&quot;remove this key in order to silence this warning.&quot;</span>
+                <span class="s2">"Specifying `layer_name` for a friction layer is "</span>
+                <span class="s2">"deprecated! The default behavior of friction layers is "</span>
+                <span class="s2">"to be multiplied to the aggregated cost layer. Please "</span>
+                <span class="s2">"remove this key in order to silence this warning."</span>
             <span class="p">)</span>
             <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtDeprecationWarning</span><span class="p">)</span>
-            <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;layer_name&quot;</span><span class="p">)</span>
+            <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"layer_name"</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="s2">&quot;mask&quot;</span> <span class="ow">in</span> <span class="n">out_layer</span><span class="p">:</span>
-            <span class="n">out_layer</span><span class="p">[</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;mask&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"mask"</span> <span class="ow">in</span> <span class="n">out_layer</span><span class="p">:</span>
+            <span class="n">out_layer</span><span class="p">[</span><span class="s2">"multiplier_layer"</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"mask"</span><span class="p">)</span>
 
-        <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;include_in_report&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"include_in_report"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">yield</span> <span class="n">out_layer</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_barrier_layers_for_rust</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Barrier layers formatted for Rust ingestion&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Barrier layers formatted for Rust ingestion"""</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
         <span class="n">out_layer</span> <span class="o">=</span> <span class="n">BarrierLayer</span><span class="p">(</span><span class="o">**</span><span class="n">layer</span><span class="p">)</span><span class="o">.</span><span class="n">to_routing_dict</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">out_layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;barrier_importance&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;barrier_importance&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">out_layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"barrier_importance"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out_layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"barrier_importance"</span><span class="p">)</span>
         <span class="k">yield</span> <span class="n">out_layer</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_drivers_for_rust</span><span class="p">(</span><span class="n">drivers</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Driver rules formatted for Rust ingestion&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Driver rules formatted for Rust ingestion"""</span>
     <span class="n">out_drivers</span> <span class="o">=</span> <span class="n">drivers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="k">if</span> <span class="s2">&quot;zones&quot;</span> <span class="ow">in</span> <span class="n">drivers</span><span class="p">:</span>
-        <span class="n">out_drivers</span><span class="p">[</span><span class="s2">&quot;zones&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="n">_driver_zones_for_rust</span><span class="p">(</span><span class="n">drivers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zones&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+    <span class="k">if</span> <span class="s2">"zones"</span> <span class="ow">in</span> <span class="n">drivers</span><span class="p">:</span>
+        <span class="n">out_drivers</span><span class="p">[</span><span class="s2">"zones"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">_driver_zones_for_rust</span><span class="p">(</span><span class="n">drivers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zones"</span><span class="p">,</span> <span class="p">[]))</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">out_drivers</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_driver_zones_for_rust</span><span class="p">(</span><span class="n">zones</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Driver zones formatted for Rust ingestion&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Driver zones formatted for Rust ingestion"""</span>
     <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">zones</span><span class="p">:</span>
         <span class="n">out_zone</span> <span class="o">=</span> <span class="n">zone</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">where</span> <span class="o">=</span> <span class="n">out_zone</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;where&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="n">out_zone</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"where"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">where</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mask_operator</span><span class="p">,</span> <span class="n">mask_threshold</span> <span class="o">=</span> <span class="n">parse_comparison_values</span><span class="p">(</span><span class="n">where</span><span class="p">)</span>
-            <span class="n">out_zone</span><span class="p">[</span><span class="s2">&quot;mask_operator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_operator</span>
-            <span class="n">out_zone</span><span class="p">[</span><span class="s2">&quot;mask_threshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_threshold</span>
+            <span class="n">out_zone</span><span class="p">[</span><span class="s2">"mask_operator"</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_operator</span>
+            <span class="n">out_zone</span><span class="p">[</span><span class="s2">"mask_threshold"</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_threshold</span>
         <span class="k">yield</span> <span class="n">out_zone</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_select_base_cost_layer</span><span class="p">(</span>
+    <span class="n">layer_info</span><span class="p">,</span> <span class="n">option_li_cost</span><span class="p">,</span> <span class="n">option_cost</span><span class="p">,</span> <span class="n">option_untracked_cost</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Select the appropriate base cost layer based on config"""</span>
+    <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"include_in_final_cost"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">layer_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_invariant"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">option_li_cost</span>
+        <span class="k">return</span> <span class="n">option_cost</span>
+    <span class="k">return</span> <span class="n">option_untracked_cost</span>
 </pre></div>
 
                 </article>

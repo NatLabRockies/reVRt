@@ -62,6 +62,7 @@ revrt.spatial\_characterization.stats.Stat
       ~Stat.format
       ~Stat.format_map
       ~Stat.maketrans
+      ~Stat.allowed
    
    
 

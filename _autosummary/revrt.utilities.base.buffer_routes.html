@@ -444,6 +444,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html">revrt.models.routing.MultiplierLayerInput</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostValue.html">revrt.models.routing.TransitionCostValue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
@@ -696,10 +697,10 @@ the keys “min”, “max”, and “width”. This can be used to specify
 row widths based on ranges of values (e.g. voltage). For
 example, the following input:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
-    <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">70</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">},</span>
-    <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">70</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">150</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">},</span>
-    <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">350</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">40</span><span class="p">},</span>
-    <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"min"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">:</span> <span class="mi">70</span><span class="p">,</span> <span class="s2">"width"</span><span class="p">:</span> <span class="mi">20</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"min"</span><span class="p">:</span> <span class="mi">70</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">:</span> <span class="mi">150</span><span class="p">,</span> <span class="s2">"width"</span><span class="p">:</span> <span class="mi">30</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"min"</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">:</span> <span class="mi">350</span><span class="p">,</span> <span class="s2">"width"</span><span class="p">:</span> <span class="mi">40</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">"min"</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">"width"</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
 <span class="p">]</span>
 </pre></div>
 </div>

@@ -43,182 +43,17 @@
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.routing.cli.base</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;reVRt routing CLI functions and helpers&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""reVRt routing CLI functions and helpers"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
@@ -838,7 +758,11 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.models.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_routing_options</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.models.routing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">validate_driver_configs</span><span class="p">,</span>
+    <span class="n">validate_routing_options</span><span class="p">,</span>
+    <span class="n">validate_transition_cost_input</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.cli.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">routing_layer_mover</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoutingScenario</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchRouteProcessor</span>
@@ -849,26 +773,26 @@ window.runMermaid = runMermaid;</script>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">_MILLION_USD_PER_MILE_TO_USD_PER_PIXEL</span> <span class="o">=</span> <span class="mf">55923.40730136006</span>
-<span class="sd">&quot;&quot;&quot;Conversion from million dollars/mile to $/pixel</span>
+<span class="sd">"""Conversion from million dollars/mile to $/pixel</span>
 
 <span class="sd">1,000,000 [$/million dollars]</span>
 <span class="sd">* 90 [meters/pixel]</span>
 <span class="sd">/ 1609.344 [meters/mile]</span>
 <span class="sd">= 55923.40730136006 [$/pixel]</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 <span class="n">_RUST_MEM_FRACTION</span> <span class="o">=</span> <span class="mf">0.75</span>
-<span class="sd">&quot;&quot;&quot;Fraction of user-input memory to use for Rust computations</span>
+<span class="sd">"""Fraction of user-input memory to use for Rust computations</span>
 
 <span class="sd">The remaining memory is assumed to be for the Python process.</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="n">_POLARITY</span> <span class="o">=</span> <span class="s2">&quot;polarity&quot;</span>
-<span class="n">_VOLTAGE</span> <span class="o">=</span> <span class="s2">&quot;voltage&quot;</span>
+<span class="sd">"""</span>
+<span class="n">_POLARITY</span> <span class="o">=</span> <span class="s2">"polarity"</span>
+<span class="n">_VOLTAGE</span> <span class="o">=</span> <span class="s2">"voltage"</span>
 
 
 <div class="viewcode-block" id="RouteToDefinitionConverter">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RouteToDefinitionConverter</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for route definition converters&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Abstract base class for route definition converters"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -880,7 +804,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">drivers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">transition_costs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -890,11 +814,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        route_points : pandas.DataFrame</span>
 <span class="sd">            DataFrame defining the points to be routed. This DataFrame</span>
 <span class="sd">            should contain route definitions to be transformed and</span>
-<span class="sd">            passed down to the Rust routing algorithm. Route values for</span>
-<span class="sd">            polarity and voltage must be provided either as one shared</span>
-<span class="sd">            `polarity` / `voltage` pair that applies to every routing</span>
-<span class="sd">            option, or as a full per-option set of</span>
-<span class="sd">            `polarity_&lt;option&gt;` / `voltage_&lt;option&gt;` columns.</span>
+<span class="sd">            passed down to the Rust routing algorithm. Provide route</span>
+<span class="sd">            values for polarity and voltage when cost multipliers or</span>
+<span class="sd">            transition costs depend on them. Values may be supplied as</span>
+<span class="sd">            one shared ``polarity`` / ``voltage`` pair or as a full</span>
+<span class="sd">            per-option set of ``polarity_&lt;option&gt;`` /</span>
+<span class="sd">            ``voltage_&lt;option&gt;`` columns.</span>
 <span class="sd">        out_fp : path-like</span>
 <span class="sd">            Path to output file where computed routes will be saved.</span>
 <span class="sd">            This file will be checked for existing routes to avoid</span>
@@ -908,47 +833,59 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            path to JSON/JSON5 file containing this dictionary. See the</span>
 <span class="sd">            description of</span>
 <span class="sd">            :func:`revrt.routing.cli.point_to_point.compute_lcp_routes`</span>
-<span class="sd">            for more details.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            for more details. By default, ``None``.</span>
+<span class="sd">        drivers : dict, optional</span>
+<span class="sd">            Optional driver-rule configuration keyed by routing option.</span>
+<span class="sd">            By default, ``None``.</span>
+<span class="sd">        transition_costs : dict, optional</span>
+<span class="sd">            Optional transition-cost configuration between routing</span>
+<span class="sd">            options. A voltage/polarity-dependent cost requires matching</span>
+<span class="sd">            values for every affected routing option.</span>
+<span class="sd">            By default, ``None``.</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span> <span class="o">=</span> <span class="n">cost_fpath</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transmission_config</span> <span class="o">=</span> <span class="n">transmission_config</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">drivers</span> <span class="o">=</span> <span class="n">drivers</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span> <span class="o">=</span> <span class="n">transition_costs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span> <span class="o">=</span> <span class="n">route_points</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span> <span class="o">=</span> <span class="n">RoutingOptions</span><span class="p">(</span><span class="n">routing_options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drivers</span> <span class="o">=</span> <span class="n">validate_driver_configs</span><span class="p">(</span>
+            <span class="n">drivers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span><span class="o">.</span><span class="n">routing_options</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span> <span class="o">=</span> <span class="n">validate_transition_cost_input</span><span class="p">(</span>
+            <span class="n">transition_costs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span><span class="o">.</span><span class="n">routing_options</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="RouteToDefinitionConverter.route_points">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter.route_points">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">route_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;pandas.DataFrame: Validated routing points&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""pandas.DataFrame: Validated routing points"""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rp_with_expected_cols</span><span class="p">()</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_rp_with_expected_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure route points has required columns&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Ensure route points has required columns"""</span>
         <span class="k">return</span> <span class="n">_validate_route_points</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">num_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;int: Number of routes to be computed&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""int: Number of routes to be computed"""</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_route_points</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RouteToDefinitionConverter.cost_metadata">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter.cost_metadata">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cost_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Metadata from cost file (CRS, transform, shape)&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""dict: Metadata from cost file (CRS, transform, shape)"""</span>
         <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cost_fpath</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
-                <span class="s2">&quot;transform&quot;</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">(),</span>
-                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="s2">"crs"</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
+                <span class="s2">"transform"</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">transform</span><span class="p">(),</span>
+                <span class="s2">"shape"</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
             <span class="p">}</span></div>
 
 
@@ -956,11 +893,11 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RouteToDefinitionConverter.html#revrt.routing.cli.base.RouteToDefinitionConverter.existing_routes">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">existing_routes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;set: Already computed routes in the output file&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""set: Already computed routes in the output file"""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.gpkg&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">".gpkg"</span><span class="p">:</span>
             <span class="n">existing_df</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">existing_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_fp</span><span class="p">)</span>
@@ -972,10 +909,10 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_group_cols_by_option_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Explicit per-option columns used for batching&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""dict: Explicit per-option columns used for batching"""</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">option</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">value_name</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">value_name</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">value_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">"</span>
                 <span class="k">for</span> <span class="n">value_name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_POLARITY</span><span class="p">,</span> <span class="n">_VOLTAGE</span><span class="p">)</span>
             <span class="p">}</span>
             <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_options</span>
@@ -983,7 +920,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_group_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;list: Explicit per-option columns used for batching&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""list: Explicit per-option columns used for batching"""</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="n">c</span>
             <span class="k">for</span> <span class="n">cols</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_cols_by_option_value</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
@@ -996,7 +933,7 @@ window.runMermaid = runMermaid;</script>
 
         <span class="k">for</span> <span class="n">pv_by_option</span><span class="p">,</span> <span class="n">routes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths_to_compute</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;Computing routes for </span><span class="si">%d</span><span class="s2"> points with option values: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">"Computing routes for </span><span class="si">%d</span><span class="s2"> points with option values: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                 <span class="nb">len</span><span class="p">(</span><span class="n">routes</span><span class="p">),</span>
                 <span class="n">_format_pv_by_option</span><span class="p">(</span><span class="n">pv_by_option</span><span class="p">),</span>
             <span class="p">)</span>
@@ -1004,14 +941,22 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">pv_by_option</span><span class="o">=</span><span class="n">pv_by_option</span><span class="p">,</span>
                 <span class="n">transmission_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">transmission_config</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="n">transition_costs</span> <span class="o">=</span> <span class="n">_resolve_transition_costs</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transition_costs</span><span class="p">,</span> <span class="n">pv_by_option</span>
+            <span class="p">)</span>
             <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_route_definitions</span><span class="p">(</span><span class="n">routes</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="k">yield</span> <span class="n">route_options</span><span class="p">,</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span>
+            <span class="k">yield</span> <span class="p">(</span>
+                <span class="n">route_options</span><span class="p">,</span>
+                <span class="n">transition_costs</span><span class="p">,</span>
+                <span class="n">route_definitions</span><span class="p">,</span>
+                <span class="n">route_attrs</span><span class="p">,</span>
+            <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_paths_to_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generator that yields route groups to be computed&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Generator that yields route groups to be computed"""</span>
         <span class="k">for</span> <span class="n">__</span><span class="p">,</span> <span class="n">routes</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">route_points</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_group_cols</span><span class="p">):</span>
             <span class="n">pv_by_option</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pv_by_option_for_row</span><span class="p">(</span><span class="n">routes</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">existing_routes</span><span class="p">:</span>
@@ -1029,24 +974,24 @@ window.runMermaid = runMermaid;</script>
             <span class="k">yield</span> <span class="n">pv_by_option</span><span class="p">,</span> <span class="n">routes</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_pv_by_option_for_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;dict: Per-option polarity and voltage values for one row&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""dict: Per-option polarity and voltage values for one row"""</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">option</span><span class="p">:</span> <span class="p">{</span><span class="n">value_name</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">value_name</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
             <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_cols_by_option_value</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_route_value_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;object: Explicit per-option route values for one route row&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""object: Explicit per-option route values for one route row"""</span>
         <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group_cols</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_route_as_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert route row to a tuple for existing route checking&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Convert route row to a tuple for existing route checking"""</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_route_definitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routes</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert route DataFrame to route definitions format&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Convert route DataFrame to route definitions format"""</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 
@@ -1054,10 +999,10 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="RoutingOptions">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RoutingOptions.html#revrt.routing.cli.base.RoutingOptions">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RoutingOptions</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to manage validated routing-option configurations&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Class to manage validated routing-option configurations"""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1066,7 +1011,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            the cost, friction, barrier, and option-level multiplier</span>
 <span class="sd">            inputs for that option. See</span>
 <span class="sd">            :class:`~revrt.models.routing.RoutingOptionConfig`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span> <span class="o">=</span> <span class="n">validate_routing_options</span><span class="p">(</span><span class="n">routing_options</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1076,23 +1021,23 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RoutingOptions.html#revrt.routing.cli.base.RoutingOptions.default">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;str: Default routing option to use if omitted from points&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="s2">&quot;default&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;default&quot;</span>
+<span class="w">        </span><span class="sd">"""str: Default routing option to use if omitted from points"""</span>
+        <span class="k">if</span> <span class="s2">"default"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"default"</span>
         <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="RoutingOptions.update_from">
 <a class="viewcode-back" href="../../../../_autosummary/revrt.routing.cli.base.RoutingOptions.html#revrt.routing.cli.base.RoutingOptions.update_from">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pv_by_option</span><span class="p">,</span> <span class="n">transmission_config</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update multipliers for multi-option routing</span>
+<span class="w">        </span><span class="sd">"""Update multipliers for multi-option routing</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        pv_by_option : dict</span>
 <span class="sd">            Dictionary mapping routing options to their corresponding</span>
 <span class="sd">            polarity and voltage values, for example</span>
-<span class="sd">            ``{&quot;option_name&quot;: {&quot;polarity&quot;: &quot;val&quot;, &quot;voltage&quot;: &quot;val&quot;}}``.</span>
+<span class="sd">            ``{"option_name": {"polarity": "val", "voltage": "val"}}``.</span>
 <span class="sd">        transmission_config : dict</span>
 <span class="sd">            Dictionary of transmission cost configuration values.</span>
 
@@ -1101,27 +1046,27 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        dict</span>
 <span class="sd">            Updated routing options with multipliers applied based on</span>
 <span class="sd">            the provided polarity and voltage values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">updated_options</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">routing_options</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">option_name</span><span class="p">,</span> <span class="n">option_config</span> <span class="ow">in</span> <span class="n">updated_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">option_polarity</span> <span class="o">=</span> <span class="n">pv_by_option</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;polarity&quot;</span><span class="p">)</span>
-            <span class="n">option_voltage</span> <span class="o">=</span> <span class="n">pv_by_option</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;voltage&quot;</span><span class="p">)</span>
-            <span class="n">option_config</span><span class="p">[</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
-                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="n">option_polarity</span> <span class="o">=</span> <span class="n">pv_by_option</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"polarity"</span><span class="p">)</span>
+            <span class="n">option_voltage</span> <span class="o">=</span> <span class="n">pv_by_option</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"voltage"</span><span class="p">)</span>
+            <span class="n">option_config</span><span class="p">[</span><span class="s2">"cost_layers"</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
+                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cost_layers"</span><span class="p">,</span> <span class="p">[]),</span>
                 <span class="n">option_polarity</span><span class="p">,</span>
                 <span class="n">option_voltage</span><span class="p">,</span>
                 <span class="n">option_name</span><span class="p">,</span>
                 <span class="n">transmission_config</span> <span class="ow">or</span> <span class="p">{},</span>
             <span class="p">)</span>
-            <span class="n">option_config</span><span class="p">[</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
-                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;friction_layers&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="n">option_config</span><span class="p">[</span><span class="s2">"friction_layers"</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_multipliers</span><span class="p">(</span>
+                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"friction_layers"</span><span class="p">,</span> <span class="p">[]),</span>
                 <span class="n">option_polarity</span><span class="p">,</span>
                 <span class="n">option_voltage</span><span class="p">,</span>
                 <span class="n">option_name</span><span class="p">,</span>
                 <span class="n">transmission_config</span> <span class="ow">or</span> <span class="p">{},</span>
             <span class="p">)</span>
-            <span class="n">option_config</span><span class="p">[</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span>
-                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;barrier_layers&quot;</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">option_config</span><span class="p">[</span><span class="s2">"barrier_layers"</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span>
+                <span class="n">option_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"barrier_layers"</span><span class="p">,</span> <span class="p">[])</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">updated_options</span></div>
@@ -1133,21 +1078,21 @@ window.runMermaid = runMermaid;</script>
     <span class="n">cost_fpath</span><span class="p">,</span>
     <span class="n">out_fp</span><span class="p">,</span>
     <span class="n">routes_to_compute</span><span class="p">,</span>
-    <span class="n">job_name</span><span class="o">=</span><span class="s2">&quot;routes&quot;</span><span class="p">,</span>
+    <span class="n">job_name</span><span class="o">=</span><span class="s2">"routes"</span><span class="p">,</span>
     <span class="n">tracked_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">user_mem_limit_gb</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
     <span class="n">save_routing_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;long_range_dijkstra&quot;</span><span class="p">,</span>
+    <span class="n">algorithm</span><span class="o">=</span><span class="s2">"long_range_dijkstra"</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Run LCP routing and save to output file&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Run LCP routing and save to output file"""</span>
 
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="s2">&quot;Computing best routes for </span><span class="si">%d</span><span class="s2"> point pairs&quot;</span><span class="p">,</span>
+        <span class="s2">"Computing best routes for </span><span class="si">%d</span><span class="s2"> point pairs"</span><span class="p">,</span>
         <span class="n">routes_to_compute</span><span class="o">.</span><span class="n">num_routes</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Routing for </span><span class="si">{</span><span class="n">routes_to_compute</span><span class="o">.</span><span class="n">num_routes</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> points&quot;</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Routing for </span><span class="si">{</span><span class="n">routes_to_compute</span><span class="o">.</span><span class="n">num_routes</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span><span class="s2"> points"</span><span class="p">):</span>
         <span class="n">_run_all_lcp_batches</span><span class="p">(</span>
             <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
             <span class="n">out_fp</span><span class="o">=</span><span class="n">out_fp</span><span class="p">,</span>
@@ -1172,15 +1117,20 @@ window.runMermaid = runMermaid;</script>
     <span class="n">save_routing_layer</span><span class="p">,</span>
     <span class="n">algorithm</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run LCP routing for all batches of routes and save results&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run LCP routing for all batches of routes and save results"""</span>
     <span class="n">out_fp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fp</span><span class="p">)</span>
-    <span class="n">save_paths</span> <span class="o">=</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.gpkg&quot;</span>
-    <span class="k">for</span> <span class="n">route_options</span><span class="p">,</span> <span class="n">route_definitions</span><span class="p">,</span> <span class="n">route_attrs</span> <span class="ow">in</span> <span class="n">routes_to_compute</span><span class="p">:</span>
+    <span class="n">save_paths</span> <span class="o">=</span> <span class="n">out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">".gpkg"</span>
+    <span class="k">for</span> <span class="p">(</span>
+        <span class="n">route_options</span><span class="p">,</span>
+        <span class="n">transition_costs</span><span class="p">,</span>
+        <span class="n">route_definitions</span><span class="p">,</span>
+        <span class="n">route_attrs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="ow">in</span> <span class="n">routes_to_compute</span><span class="p">:</span>
         <span class="n">scenario</span> <span class="o">=</span> <span class="n">RoutingScenario</span><span class="p">(</span>
             <span class="n">cost_fpath</span><span class="o">=</span><span class="n">cost_fpath</span><span class="p">,</span>
             <span class="n">routing_options</span><span class="o">=</span><span class="n">route_options</span><span class="p">,</span>
             <span class="n">drivers</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="o">.</span><span class="n">drivers</span><span class="p">,</span>
-            <span class="n">transition_costs</span><span class="o">=</span><span class="n">routes_to_compute</span><span class="o">.</span><span class="n">transition_costs</span><span class="p">,</span>
+            <span class="n">transition_costs</span><span class="o">=</span><span class="n">transition_costs</span><span class="p">,</span>
             <span class="n">tracked_layers</span><span class="o">=</span><span class="n">tracked_layers</span><span class="p">,</span>
             <span class="n">invalid_costs_block_routing</span><span class="o">=</span><span class="n">invalid_costs_block_routing</span><span class="p">,</span>
             <span class="n">algorithm</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>
@@ -1211,14 +1161,14 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">route_points_subset</span><span class="p">(</span><span class="n">route_points</span><span class="p">,</span> <span class="n">split_params</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Get indices of points sorted by location&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Get indices of points sorted by location"""</span>
 
     <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">UnicodeDecodeError</span><span class="p">):</span>
         <span class="n">route_points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">route_points</span><span class="p">)</span>
 
-    <span class="n">sort_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start_lat&quot;</span><span class="p">,</span> <span class="s2">&quot;start_lon&quot;</span><span class="p">]</span>
+    <span class="n">sort_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"start_lat"</span><span class="p">,</span> <span class="s2">"start_lon"</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">sort_cols</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">route_points</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
-        <span class="n">sort_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">,</span> <span class="s2">&quot;start_col&quot;</span><span class="p">]</span>
+        <span class="n">sort_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"start_row"</span><span class="p">,</span> <span class="s2">"start_col"</span><span class="p">]</span>
 
     <span class="n">route_points</span> <span class="o">=</span> <span class="n">route_points</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">sort_cols</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1230,18 +1180,18 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Compute route split params inside of config&quot;&quot;&quot;</span>
-    <span class="n">exec_control</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;execution_control&quot;</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="k">if</span> <span class="n">mem_limit_gb</span> <span class="o">:=</span> <span class="n">exec_control</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;memory&quot;</span><span class="p">):</span>
-        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;system_mem_limit_gb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mem_limit_gb</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Compute route split params inside of config"""</span>
+    <span class="n">exec_control</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"execution_control"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="n">mem_limit_gb</span> <span class="o">:=</span> <span class="n">exec_control</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"memory"</span><span class="p">):</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">"system_mem_limit_gb"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mem_limit_gb</span><span class="p">)</span>
 
-    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;_split_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nodes</span><span class="p">)]</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">"_split_params"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nodes</span><span class="p">)]</span>
     <span class="k">return</span> <span class="n">config</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validate_route_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure route points has required columns&quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">option_col</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;start_option&quot;</span><span class="p">,</span> <span class="s2">&quot;end_option&quot;</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Ensure route points has required columns"""</span>
+    <span class="k">for</span> <span class="n">option_col</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"start_option"</span><span class="p">,</span> <span class="s2">"end_option"</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">option_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">points</span><span class="p">[</span><span class="n">option_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">routing_options</span><span class="o">.</span><span class="n">default</span>
 
@@ -1249,37 +1199,140 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validate_route_value_columns</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure explicit per-option route-value columns are present&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Ensure explicit per-option route-value columns are present"""</span>
     <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">routing_options</span><span class="p">:</span>
-        <span class="n">polarity_col</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_POLARITY</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">voltage_col</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_VOLTAGE</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span>
-
-        <span class="k">if</span> <span class="n">polarity_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">_POLARITY</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">_POLARITY</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">voltage_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">_VOLTAGE</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="n">points</span><span class="p">[</span><span class="n">voltage_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">_VOLTAGE</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">points</span><span class="p">[</span><span class="n">voltage_col</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">points</span><span class="p">[</span><span class="n">voltage_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">voltage_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">_handle_maybe_missing_column</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">_POLARITY</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">_handle_maybe_missing_column</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">_VOLTAGE</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">points</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_handle_maybe_missing_column</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">base_col</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Handle potentially missing per-option column"""</span>
+    <span class="n">polarity_col</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">base_col</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="k">if</span> <span class="n">polarity_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">base_col</span> <span class="ow">in</span> <span class="n">points</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">base_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">"unknown"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"unknown"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">polarity_col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">"unknown"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">points</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_transition_costs</span><span class="p">(</span><span class="n">transition_costs</span><span class="p">,</span> <span class="n">pv_by_option</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Resolve transition-cost mappings from route values"""</span>
+    <span class="k">if</span> <span class="n">transition_costs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">resolved</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="s2">"default"</span> <span class="ow">in</span> <span class="n">transition_costs</span><span class="p">:</span>
+        <span class="n">resolved</span><span class="p">[</span><span class="s2">"default"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_resolve_transition_cost_value</span><span class="p">(</span>
+            <span class="n">transition_costs</span><span class="p">[</span><span class="s2">"default"</span><span class="p">],</span>
+            <span class="n">pv_by_option</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">pv_by_option</span><span class="p">),</span>
+            <span class="n">context</span><span class="o">=</span><span class="s2">"transition_costs.default"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">"pairwise"</span> <span class="ow">in</span> <span class="n">transition_costs</span><span class="p">:</span>
+        <span class="n">resolved</span><span class="p">[</span><span class="s2">"pairwise"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">transition_costs</span><span class="p">[</span><span class="s2">"pairwise"</span><span class="p">]:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s2">"between"</span><span class="p">]</span>
+            <span class="n">resolved</span><span class="p">[</span><span class="s2">"pairwise"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"between"</span><span class="p">:</span> <span class="n">options</span><span class="p">,</span>
+                    <span class="s2">"cost"</span><span class="p">:</span> <span class="n">_resolve_transition_cost_value</span><span class="p">(</span>
+                        <span class="n">rule</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">],</span>
+                        <span class="n">pv_by_option</span><span class="p">,</span>
+                        <span class="n">options</span><span class="p">,</span>
+                        <span class="n">context</span><span class="o">=</span><span class="p">(</span>
+                            <span class="s2">"transition_costs.pairwise cost between "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">options</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">!r}</span><span class="s2">"</span>
+                        <span class="p">),</span>
+                    <span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">resolved</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_transition_cost_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">pv_by_option</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Resolve one scalar or voltage/polarity transition-cost value"""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="n">option_values</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">option</span><span class="p">:</span> <span class="n">_normalized_transition_values</span><span class="p">(</span><span class="n">pv_by_option</span><span class="p">[</span><span class="n">option</span><span class="p">],</span> <span class="n">option</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">options</span>
+    <span class="p">}</span>
+    <span class="n">unique_values</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">option_values</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_values</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">received</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">(polarity=</span><span class="si">{</span><span class="n">polarity</span><span class="si">!r}</span><span class="s2">, voltage=</span><span class="si">{</span><span class="n">voltage</span><span class="si">!r}</span><span class="s2">)"</span>
+            <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="p">(</span><span class="n">voltage</span><span class="p">,</span> <span class="n">polarity</span><span class="p">)</span> <span class="ow">in</span> <span class="n">option_values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> requires matching voltage and polarity across "</span>
+            <span class="sa">f</span><span class="s2">"routing options. Received: </span><span class="si">{</span><span class="n">received</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">voltage</span><span class="p">,</span> <span class="n">polarity</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">unique_values</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resolved</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">voltage</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> has no cost for voltage </span><span class="si">{</span><span class="n">voltage</span><span class="si">!r}</span><span class="s2">. Available "</span>
+            <span class="sa">f</span><span class="s2">"voltages: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resolved</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">resolved</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">resolved</span><span class="p">[</span><span class="n">polarity</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> has no cost for voltage </span><span class="si">{</span><span class="n">voltage</span><span class="si">!r}</span><span class="s2"> and polarity "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">polarity</span><span class="si">!r}</span><span class="s2">. Available polarities: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">resolved</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalized_transition_values</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">option</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""tuple[str, str]: Normalized values for one routing option"""</span>
+    <span class="n">polarity</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_POLARITY</span><span class="p">)</span>
+    <span class="n">voltage</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_VOLTAGE</span><span class="p">)</span>
+    <span class="n">unknowns</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"None"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">polarity</span> <span class="ow">in</span> <span class="n">unknowns</span> <span class="ow">or</span> <span class="n">voltage</span> <span class="ow">in</span> <span class="n">unknowns</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"voltage/polarity-dependent transition costs require known "</span>
+            <span class="sa">f</span><span class="s2">"values for routing option </span><span class="si">{</span><span class="n">option</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">voltage</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">voltage</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"voltage/polarity-dependent transition costs require an integer "</span>
+            <span class="sa">f</span><span class="s2">"voltage for routing option </span><span class="si">{</span><span class="n">option</span><span class="si">!r}</span><span class="s2">, received </span><span class="si">{</span><span class="n">voltage</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
+    <span class="k">return</span> <span class="n">voltage</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">polarity</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">update_multipliers</span><span class="p">(</span>
     <span class="n">layers</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">,</span> <span class="n">transmission_config</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Update layer multipliers based on user input&quot;&quot;&quot;</span>
-    <span class="n">unknowns</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">}</span>
-    <span class="n">polarity</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="n">polarity</span> <span class="ow">in</span> <span class="n">unknowns</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">polarity</span><span class="p">)</span>
-    <span class="n">voltage</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="n">voltage</span> <span class="ow">in</span> <span class="n">unknowns</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">voltage</span><span class="p">))</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Update layer multipliers based on user input"""</span>
+    <span class="n">unknowns</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"None"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">}</span>
+    <span class="n">polarity</span> <span class="o">=</span> <span class="s2">"unknown"</span> <span class="k">if</span> <span class="n">polarity</span> <span class="ow">in</span> <span class="n">unknowns</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">polarity</span><span class="p">)</span>
+    <span class="n">voltage</span> <span class="o">=</span> <span class="s2">"unknown"</span> <span class="k">if</span> <span class="n">voltage</span> <span class="ow">in</span> <span class="n">unknowns</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">voltage</span><span class="p">))</span>
 
     <span class="n">output_layers</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
@@ -1295,7 +1348,7 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">_parsed_multiplier_layers</span><span class="p">(</span>
     <span class="n">layer</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">,</span> <span class="n">transmission_config</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert layer into one or more layers with updated multipliers&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Convert layer into one or more layers with updated multipliers"""</span>
     <span class="n">row_layers</span> <span class="o">=</span> <span class="n">_apply_row_mult_to_layer</span><span class="p">(</span>
         <span class="n">layer</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">,</span> <span class="n">transmission_config</span>
     <span class="p">)</span>
@@ -1316,8 +1369,8 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">_apply_row_mult_to_layer</span><span class="p">(</span>
     <span class="n">layer</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">,</span> <span class="n">transmission_config</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply right-of-way width multiplier to a layer if requested&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;apply_row_mult&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Apply right-of-way width multiplier to a layer if requested"""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"apply_row_mult"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">layer</span><span class="p">]</span>
 
     <span class="n">row_multiplier</span> <span class="o">=</span> <span class="n">_get_row_multiplier</span><span class="p">(</span>
@@ -1329,8 +1382,8 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">_apply_polarity_mult_to_layer</span><span class="p">(</span>
     <span class="n">layer</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">,</span> <span class="n">transmission_config</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply polarity multiplier to a layer if requested&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;apply_polarity_mult&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Apply polarity multiplier to a layer if requested"""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">layer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"apply_polarity_mult"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">layer</span><span class="p">]</span>
 
     <span class="n">polarity_multiplier</span> <span class="o">=</span> <span class="n">_get_polarity_multiplier</span><span class="p">(</span>
@@ -1344,26 +1397,26 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_apply_multiplier_to_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">multiplier</span><span class="p">,</span> <span class="n">conversion</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Expand one layer for a scalar or spatial multiplier&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Expand one layer for a scalar or spatial multiplier"""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">multiplier</span> <span class="o">*</span> <span class="n">conversion</span>
+        <span class="n">layer</span><span class="p">[</span><span class="s2">"multiplier_scalar"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplier_scalar"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">multiplier</span> <span class="o">*</span> <span class="n">conversion</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">layer</span><span class="p">]</span>
 
     <span class="n">output_layers</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">multiplier_layers</span> <span class="o">=</span> <span class="n">normalize_str_list_input</span><span class="p">(</span>
-        <span class="n">layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">),</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">,</span>
+        <span class="n">layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplier_layer"</span><span class="p">),</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"multiplier_layer"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">for</span> <span class="n">multiplier_layer</span><span class="p">,</span> <span class="n">multiplier_scalar</span> <span class="ow">in</span> <span class="n">multiplier</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">output_layer</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
-        <span class="n">output_layer</span><span class="p">[</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">output_layer</span><span class="p">[</span><span class="s2">"multiplier_layer"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
             <span class="o">*</span><span class="p">(</span><span class="n">multiplier_layers</span> <span class="ow">or</span> <span class="p">()),</span>
             <span class="n">multiplier_layer</span><span class="p">,</span>
         <span class="p">]</span>
-        <span class="n">output_layer</span><span class="p">[</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">output_layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multiplier_scalar&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">output_layer</span><span class="p">[</span><span class="s2">"multiplier_scalar"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">output_layer</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"multiplier_scalar"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="o">*</span> <span class="n">multiplier_scalar</span>
             <span class="o">*</span> <span class="n">conversion</span>
         <span class="p">)</span>
@@ -1372,13 +1425,13 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_row_multiplier</span><span class="p">(</span><span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">routing_option</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get right-of-way width multiplier for a voltage and option&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Get right-of-way width multiplier for a voltage and option"""</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">row_widths</span> <span class="o">=</span> <span class="n">transmission_config</span><span class="p">[</span><span class="s2">&quot;row_width&quot;</span><span class="p">]</span>
+        <span class="n">row_widths</span> <span class="o">=</span> <span class="n">transmission_config</span><span class="p">[</span><span class="s2">"row_width"</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;`apply_row_mult` was set to `True`, but &#39;row_width&#39; &quot;</span>
-            <span class="s2">&quot;not found in transmission config!&quot;</span>
+            <span class="s2">"`apply_row_mult` was set to `True`, but 'row_width' "</span>
+            <span class="s2">"not found in transmission config!"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
@@ -1386,10 +1439,10 @@ window.runMermaid = runMermaid;</script>
         <span class="n">row_multiplier</span> <span class="o">=</span> <span class="n">row_widths</span><span class="p">[</span><span class="n">voltage</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;`apply_row_mult` was set to `True`, but voltage &#39;&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">&#39; not found in transmission config &quot;</span>
-            <span class="s2">&quot;&#39;row_width&#39; settings. Available voltages: &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">row_widths</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="s2">"`apply_row_mult` was set to `True`, but voltage '"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">' not found in transmission config "</span>
+            <span class="s2">"'row_width' settings. Available voltages: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">row_widths</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
@@ -1398,28 +1451,28 @@ window.runMermaid = runMermaid;</script>
             <span class="n">row_multiplier</span> <span class="o">=</span> <span class="n">row_multiplier</span><span class="p">[</span><span class="n">routing_option</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;`apply_row_mult` was set to `True`, but routing option &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">routing_option</span><span class="si">}</span><span class="s2">&#39; not found for voltage &#39;</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Available routing options: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">row_multiplier</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"`apply_row_mult` was set to `True`, but routing option "</span>
+                <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">routing_option</span><span class="si">}</span><span class="s2">' not found for voltage '</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">'. "</span>
+                <span class="sa">f</span><span class="s2">"Available routing options: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">row_multiplier</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
-    <span class="n">context</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;voltage </span><span class="si">{</span><span class="n">voltage</span><span class="si">!r}</span><span class="s2"> and routing option </span><span class="si">{</span><span class="n">routing_option</span><span class="si">!r}</span><span class="s2">&quot;</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"voltage </span><span class="si">{</span><span class="n">voltage</span><span class="si">!r}</span><span class="s2"> and routing option </span><span class="si">{</span><span class="n">routing_option</span><span class="si">!r}</span><span class="s2">"</span>
     <span class="k">return</span> <span class="n">_validate_multiplier</span><span class="p">(</span>
-        <span class="n">row_multiplier</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">multiplier_name</span><span class="o">=</span><span class="s2">&quot;`apply_row_mult`&quot;</span>
+        <span class="n">row_multiplier</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">multiplier_name</span><span class="o">=</span><span class="s2">"`apply_row_mult`"</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_polarity_multiplier</span><span class="p">(</span>
     <span class="n">transmission_config</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">routing_option</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get multiplier for a given voltage and polarity&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Get multiplier for a given voltage and polarity"""</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">polarity_config</span> <span class="o">=</span> <span class="n">transmission_config</span><span class="p">[</span><span class="s2">&quot;voltage_polarity_mult&quot;</span><span class="p">]</span>
+        <span class="n">polarity_config</span> <span class="o">=</span> <span class="n">transmission_config</span><span class="p">[</span><span class="s2">"voltage_polarity_mult"</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;`apply_polarity_mult` was set to `True`, but &quot;</span>
-            <span class="s2">&quot;&#39;voltage_polarity_mult&#39; not found in transmission config!&quot;</span>
+            <span class="s2">"`apply_polarity_mult` was set to `True`, but "</span>
+            <span class="s2">"'voltage_polarity_mult' not found in transmission config!"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
@@ -1427,9 +1480,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">polarity_voltages</span> <span class="o">=</span> <span class="n">polarity_config</span><span class="p">[</span><span class="n">voltage</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;`apply_polarity_mult` was set to `True`, but voltage &#39;&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">&#39; not found in polarity config. Available voltages: &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">polarity_config</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="s2">"`apply_polarity_mult` was set to `True`, but voltage '"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">' not found in polarity config. Available voltages: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">polarity_config</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
@@ -1437,9 +1490,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">polarity_multiplier</span> <span class="o">=</span> <span class="n">polarity_voltages</span><span class="p">[</span><span class="n">polarity</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;`apply_polarity_mult` was set to `True`, but polarity &#39; &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">polarity</span><span class="si">}</span><span class="s2">&#39; not found in voltage config. Available polarities: &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">polarity_voltages</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="s2">"`apply_polarity_mult` was set to `True`, but polarity ' "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">polarity</span><span class="si">}</span><span class="s2">' not found in voltage config. Available polarities: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">polarity_voltages</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
@@ -1448,41 +1501,41 @@ window.runMermaid = runMermaid;</script>
             <span class="n">polarity_multiplier</span> <span class="o">=</span> <span class="n">polarity_multiplier</span><span class="p">[</span><span class="n">routing_option</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;`apply_polarity_mult` was set to `True`, but routing &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;option &#39;</span><span class="si">{</span><span class="n">routing_option</span><span class="si">}</span><span class="s2">&#39; not found for voltage &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">&#39; and polarity &#39;</span><span class="si">{</span><span class="n">polarity</span><span class="si">}</span><span class="s2">&#39;. Available routing &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;options: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">polarity_multiplier</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"`apply_polarity_mult` was set to `True`, but routing "</span>
+                <span class="sa">f</span><span class="s2">"option '</span><span class="si">{</span><span class="n">routing_option</span><span class="si">}</span><span class="s2">' not found for voltage "</span>
+                <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">voltage</span><span class="si">}</span><span class="s2">' and polarity '</span><span class="si">{</span><span class="n">polarity</span><span class="si">}</span><span class="s2">'. Available routing "</span>
+                <span class="sa">f</span><span class="s2">"options: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">polarity_multiplier</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtKeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
     <span class="n">context</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;voltage </span><span class="si">{</span><span class="n">voltage</span><span class="si">!r}</span><span class="s2">, polarity </span><span class="si">{</span><span class="n">polarity</span><span class="si">!r}</span><span class="s2">, and routing option &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">routing_option</span><span class="si">!r}</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">"voltage </span><span class="si">{</span><span class="n">voltage</span><span class="si">!r}</span><span class="s2">, polarity </span><span class="si">{</span><span class="n">polarity</span><span class="si">!r}</span><span class="s2">, and routing option "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">routing_option</span><span class="si">!r}</span><span class="s2">"</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">_validate_multiplier</span><span class="p">(</span>
         <span class="n">polarity_multiplier</span><span class="p">,</span>
         <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
-        <span class="n">multiplier_name</span><span class="o">=</span><span class="s2">&quot;`apply_polarity_mult`&quot;</span><span class="p">,</span>
+        <span class="n">multiplier_name</span><span class="o">=</span><span class="s2">"`apply_polarity_mult`"</span><span class="p">,</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validate_multiplier</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">multiplier_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate a scalar or spatial routing multiplier&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Validate a scalar or spatial routing multiplier"""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">_is_finite_number</span><span class="p">(</span><span class="n">multiplier</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">multiplier</span><span class="p">)</span>
 
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">multiplier_name</span><span class="si">}</span><span class="s2"> multiplier for &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> must be a finite number or a mapping of spatial &quot;</span>
-            <span class="s2">&quot;layer names to finite numbers&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">multiplier_name</span><span class="si">}</span><span class="s2"> multiplier for "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> must be a finite number or a mapping of spatial "</span>
+            <span class="s2">"layer names to finite numbers"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">multiplier</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">multiplier_name</span><span class="si">}</span><span class="s2"> spatial multiplier mapping for &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> must not be empty&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">multiplier_name</span><span class="si">}</span><span class="s2"> spatial multiplier mapping for "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> must not be empty"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1490,14 +1543,14 @@ window.runMermaid = runMermaid;</script>
     <span class="k">for</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">multiplier</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">layer_name</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">multiplier_name</span><span class="si">}</span><span class="s2"> spatial multiplier mapping for &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> must use non-empty layer names&quot;</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">multiplier_name</span><span class="si">}</span><span class="s2"> spatial multiplier mapping for "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> must use non-empty layer names"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_finite_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">multiplier_name</span><span class="si">}</span><span class="s2"> spatial multiplier for layer &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer_name</span><span class="si">!r}</span><span class="s2"> in </span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> must be a finite number&quot;</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">multiplier_name</span><span class="si">}</span><span class="s2"> spatial multiplier for layer "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">layer_name</span><span class="si">!r}</span><span class="s2"> in </span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> must be a finite number"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">validated_multiplier</span><span class="p">[</span><span class="n">layer_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -1506,7 +1559,7 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_finite_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;bool: Whether a multiplier value is a finite numeric scalar&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""bool: Whether a multiplier value is a finite numeric scalar"""</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span>
         <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
@@ -1515,15 +1568,15 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_format_pv_by_option</span><span class="p">(</span><span class="n">pv_by_option</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;str: Human-readable per-option route values&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""str: Human-readable per-option route values"""</span>
     <span class="n">formatted_values</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">pv_by_option</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">formatted_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">(polarity=</span><span class="si">{</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;polarity&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;voltage=</span><span class="si">{</span><span class="n">values</span><span class="p">[</span><span class="s1">&#39;voltage&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2">)&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">(polarity=</span><span class="si">{</span><span class="n">values</span><span class="p">[</span><span class="s1">'polarity'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"voltage=</span><span class="si">{</span><span class="n">values</span><span class="p">[</span><span class="s1">'voltage'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">)"</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formatted_values</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formatted_values</span><span class="p">)</span>
 </pre></div>
 
                 </article>

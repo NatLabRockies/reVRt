@@ -470,8 +470,8 @@ maintainability, and consistency that is extremely fast.</p>
 if you are developing using VSCode. If you do so, make sure to set the path to the <code class="docutils literal notranslate"><span class="pre">ruff</span></code>
 executable in your VSCode settings to point to the <code class="docutils literal notranslate"><span class="pre">ruff</span></code> installed in the <code class="docutils literal notranslate"><span class="pre">dev</span></code> environment.
 You can do this by adding the following to your <code class="docutils literal notranslate"><span class="pre">settings.json</span></code> file:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;ruff.path&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="s2">&quot;${workspaceFolder}/.pixi/envs/dev/bin/ruff&quot;</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"ruff.path"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"${workspaceFolder}/.pixi/envs/dev/bin/ruff"</span>
 <span class="p">]</span>
 </pre></div>
 </div>
@@ -690,10 +690,10 @@ or re-compile anything for the environment.</p>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">my_func</span><span class="p">():</span>
     <span class="k">if</span> <span class="n">not_good_enough_data</span><span class="p">:</span>
-        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Watch out for your data!&quot;</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s2">"Watch out for your data!"</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">unacceptable_value</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="s2">&quot;This value is unacceptable&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="s2">"This value is unacceptable"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This allows maximum flexibility for downstream users of the library.
@@ -704,7 +704,7 @@ version of the error (i.e. by catching <code class="docutils literal notranslate
 This means you no longer need to do something like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># BAD - do not do this</span>
 <span class="k">if</span> <span class="n">unacceptable_value</span><span class="p">:</span>
-    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;This value is unacceptable&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">"This value is unacceptable"</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 </pre></div>
@@ -720,8 +720,8 @@ logging call shown above, internally, every time.</p>
 
 <span class="o">...</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="s2">&quot;-q&quot;</span><span class="p">,</span> <span class="s2">&quot;--show-capture=all&quot;</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;-rapP&quot;</span><span class="p">])</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">pytest</span><span class="o">.</span><span class="n">main</span><span class="p">([</span><span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"--show-capture=all"</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">"-rapP"</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>This allows the (single) file to be executed, running only the tests contained
@@ -778,7 +778,7 @@ sampling profiler has enough data to highlight hotspots clearly.</p>
 <p>This will save all of the benchmarking outputs to <code class="docutils literal notranslate"><span class="pre">output.txt</span></code>.
 If you are working on routing internals and would like to check the
 output of a routing scenario, you can use this command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span>revrt-cli<span class="w"> </span>--<span class="w"> </span>-v<span class="w"> </span>--dataset<span class="w"> </span>./tests/data/utilities/transmission_layers.zarr<span class="w"> </span>--cost-function<span class="w"> </span><span class="s1">&#39;{&quot;cost_layers&quot;: [{&quot;layer_name&quot;: &quot;tie_line_costs_102MW&quot;}]}&#39;</span><span class="w"> </span>--start<span class="w"> </span><span class="m">10</span>,10<span class="w"> </span>--end<span class="w"> </span><span class="m">20</span>,20<span class="w"> </span>--cache-size<span class="w"> </span><span class="m">250000000</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span>revrt-cli<span class="w"> </span>--<span class="w"> </span>-v<span class="w"> </span>--dataset<span class="w"> </span>./tests/data/utilities/transmission_layers.zarr<span class="w"> </span>--cost-function<span class="w"> </span><span class="s1">'{"cost_layers": [{"layer_name": "tie_line_costs_102MW"}]}'</span><span class="w"> </span>--start<span class="w"> </span><span class="m">10</span>,10<span class="w"> </span>--end<span class="w"> </span><span class="m">20</span>,20<span class="w"> </span>--cache-size<span class="w"> </span><span class="m">250000000</span>
 </pre></div>
 </div>
 <p>You can of course change the start and end points and cache size as needed.

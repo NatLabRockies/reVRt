@@ -43,182 +43,17 @@
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.routing.cli.build_route_table</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;reVRt build route table to features CLI command&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""reVRt build route table to features CLI command"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -861,16 +781,16 @@ window.runMermaid = runMermaid;</script>
     <span class="n">expand_radius</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">voltages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">polarities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">feature_out_fp</span><span class="o">=</span><span class="s2">&quot;mapped_features.gpkg&quot;</span><span class="p">,</span>
-    <span class="n">route_table_out_fp</span><span class="o">=</span><span class="s2">&quot;route_table.csv&quot;</span><span class="p">,</span>
-    <span class="n">region_identifier_column</span><span class="o">=</span><span class="s2">&quot;rid&quot;</span><span class="p">,</span>
-    <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">&quot;end_feat_id&quot;</span><span class="p">,</span>
+    <span class="n">feature_out_fp</span><span class="o">=</span><span class="s2">"mapped_features.gpkg"</span><span class="p">,</span>
+    <span class="n">route_table_out_fp</span><span class="o">=</span><span class="s2">"route_table.csv"</span><span class="p">,</span>
+    <span class="n">region_identifier_column</span><span class="o">=</span><span class="s2">"rid"</span><span class="p">,</span>
+    <span class="n">connection_identifier_column</span><span class="o">=</span><span class="s2">"end_feat_id"</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
     <span class="n">max_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">tag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">_split_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a route table mapping points to nearest features</span>
+<span class="w">    </span><span class="sd">"""Create a route table mapping points to nearest features</span>
 
 <span class="sd">    This table is used as an input to the routing step, which computes</span>
 <span class="sd">    the least cost path from each point to its mapped feature. The</span>
@@ -903,7 +823,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Directory where routing outputs should be written.</span>
 <span class="sd">    points_fpath : path-like, optional</span>
 <span class="sd">        Path to csv file defining the start points to map to features.</span>
-<span class="sd">        This input must contain &quot;latitude&quot; and &quot;longitude&quot; columns,</span>
+<span class="sd">        This input must contain "latitude" and "longitude" columns,</span>
 <span class="sd">        which define the location of each starting point. This input may</span>
 <span class="sd">        also have a radius column that defines a unique radius per</span>
 <span class="sd">        point (see the `radius` input for details). At least one of</span>
@@ -931,7 +851,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        or `resolution` must be provided. By default, ``None``.</span>
 <span class="sd">    radius : str or float, optional</span>
 <span class="sd">        Distance (in cost CRS units) used to limit radial connection</span>
-<span class="sd">        length (i.e. a radius input of ``25_000`` in a &quot;meter&quot; CRS will</span>
+<span class="sd">        length (i.e. a radius input of ``25_000`` in a "meter" CRS will</span>
 <span class="sd">        limit all connections for the point to be within a circle of</span>
 <span class="sd">        25 km radius). If this input is a string, it should be the</span>
 <span class="sd">        column name in the input points that contains a unique radius</span>
@@ -957,25 +877,25 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        combination and explicit ``polarity_&lt;option&gt;`` columns are</span>
 <span class="sd">        added for each configured routing option. By default,</span>
 <span class="sd">        ``None``.</span>
-<span class="sd">    feature_out_fp : str, default=&quot;mapped_features.gpkg&quot;</span>
+<span class="sd">    feature_out_fp : str, default="mapped_features.gpkg"</span>
 <span class="sd">        Name of output file for mapped (and potentially clipped)</span>
 <span class="sd">        features. This output file will contain an identifier column</span>
 <span class="sd">        that can be linked back to the output route table. By default,</span>
-<span class="sd">        ``&quot;mapped_features.gpkg&quot;``.</span>
-<span class="sd">    route_table_out_fp : str, default=&quot;route_table.csv&quot;</span>
+<span class="sd">        ``"mapped_features.gpkg"``.</span>
+<span class="sd">    route_table_out_fp : str, default="route_table.csv"</span>
 <span class="sd">        Name of route table output file. This file will contain a start</span>
 <span class="sd">        row and column index (into the cost raster) as well as a feature</span>
 <span class="sd">        ID that maps into the `feature_out_fp` to route to.</span>
-<span class="sd">        By default, ``&quot;route_table.csv&quot;``.</span>
-<span class="sd">    region_identifier_column : str, default=&quot;rid&quot;</span>
+<span class="sd">        By default, ``"route_table.csv"``.</span>
+<span class="sd">    region_identifier_column : str, default="rid"</span>
 <span class="sd">        Column in the `regions_fpath` data used to uniquely identify</span>
 <span class="sd">        each region. If a column name is given that does not exist in</span>
 <span class="sd">        the data, it will created using the feature index as the ID.</span>
-<span class="sd">        By default, ``&quot;rid&quot;``.</span>
-<span class="sd">    connection_identifier_column : str, default=&quot;end_feat_id&quot;</span>
+<span class="sd">        By default, ``"rid"``.</span>
+<span class="sd">    connection_identifier_column : str, default="end_feat_id"</span>
 <span class="sd">        Column name in the `feature_out_fp` and `route_table_out_fp`</span>
 <span class="sd">        used to identify which features map to which points.</span>
-<span class="sd">        By default, ``&quot;end_feat_id&quot;``.</span>
+<span class="sd">        By default, ``"end_feat_id"``.</span>
 <span class="sd">    batch_size : int, default=500</span>
 <span class="sd">        Number of features to process before writing to output feature</span>
 <span class="sd">        file. This can be used to tune the tradeoff between performance</span>
@@ -989,8 +909,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    list of path-like</span>
 <span class="sd">        Path to route table output file and mapped feature output file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="s2">&quot;Building point-to-feature routing table&quot;</span><span class="p">):</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">log_runtime</span><span class="p">(</span><span class="s2">"Building point-to-feature routing table"</span><span class="p">):</span>
         <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
         <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1004,16 +924,16 @@ window.runMermaid = runMermaid;</script>
             <span class="n">split_params</span><span class="o">=</span><span class="n">_split_params</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cost input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">cost_fpath</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Features input: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">features_fpath</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Output directory: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Cost input: </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">cost_fpath</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Features input: </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">features_fpath</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Output directory: </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">)</span>
 
         <span class="n">regions</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">regions_fpath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">regions</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">regions_fpath</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
-            <span class="n">cost_fpath</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span>
+            <span class="n">cost_fpath</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
             <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
             <span class="n">cost_shape</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">width</span>
@@ -1055,11 +975,11 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">_make_points</span><span class="p">(</span>
     <span class="n">crs</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">cost_shape</span><span class="p">,</span> <span class="n">points_fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create routing points from file or grid&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Create routing points from file or grid"""</span>
     <span class="k">if</span> <span class="n">points_fpath</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">resolution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Either `points_fpath` or `resolution` must be provided to &quot;</span>
-            <span class="s2">&quot;create route table!&quot;</span>
+            <span class="s2">"Either `points_fpath` or `resolution` must be provided to "</span>
+            <span class="s2">"create route table!"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1074,26 +994,26 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_output_filepaths</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check and fix output filepaths/extensions&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Check and fix output filepaths/extensions"""</span>
     <span class="n">feature_out_fp</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="n">feature_out_fp</span>
-    <span class="k">if</span> <span class="n">feature_out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;.gpkg&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">feature_out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".gpkg"</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;The feature output file should have a &#39;.gpkg&#39; extension to &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;ensure proper format! Got input file: &#39;</span><span class="si">{</span><span class="n">feature_out_fp</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-            <span class="s2">&quot;Adding &#39;.gpkg&#39; extension... &quot;</span>
+            <span class="s2">"The feature output file should have a '.gpkg' extension to "</span>
+            <span class="sa">f</span><span class="s2">"ensure proper format! Got input file: '</span><span class="si">{</span><span class="n">feature_out_fp</span><span class="si">}</span><span class="s2">'. "</span>
+            <span class="s2">"Adding '.gpkg' extension... "</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
-        <span class="n">feature_out_fp</span> <span class="o">=</span> <span class="n">feature_out_fp</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.gpkg&quot;</span><span class="p">)</span>
+        <span class="n">feature_out_fp</span> <span class="o">=</span> <span class="n">feature_out_fp</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".gpkg"</span><span class="p">)</span>
 
     <span class="n">route_table_out_fp</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="n">route_table_out_fp</span>
-    <span class="k">if</span> <span class="n">route_table_out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">route_table_out_fp</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".csv"</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;The route table output file should have a &#39;.csv&#39; extension to &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;ensure proper format! Got input file: &#39;</span><span class="si">{</span><span class="n">route_table_out_fp</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-            <span class="s2">&quot;Adding &#39;.csv&#39; extension... &quot;</span>
+            <span class="s2">"The route table output file should have a '.csv' extension to "</span>
+            <span class="sa">f</span><span class="s2">"ensure proper format! Got input file: '</span><span class="si">{</span><span class="n">route_table_out_fp</span><span class="si">}</span><span class="s2">'. "</span>
+            <span class="s2">"Adding '.csv' extension... "</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
-        <span class="n">route_table_out_fp</span> <span class="o">=</span> <span class="n">route_table_out_fp</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
+        <span class="n">route_table_out_fp</span> <span class="o">=</span> <span class="n">route_table_out_fp</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".csv"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
 
@@ -1101,7 +1021,7 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">_tag_output_filepaths</span><span class="p">(</span>
     <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">split_params</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tag node outputs so split runs do not clobber each other&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Tag node outputs so split runs do not clobber each other"""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">tag</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">feature_out_fp</span><span class="p">,</span> <span class="n">route_table_out_fp</span>
 
@@ -1116,30 +1036,30 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_tag_filepath</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Insert node tag before file suffix&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">fp</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fp</span><span class="o">.</span><span class="n">stem</span><span class="si">}{</span><span class="n">tag</span><span class="si">}{</span><span class="n">fp</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Insert node tag before file suffix"""</span>
+    <span class="k">return</span> <span class="n">fp</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">fp</span><span class="o">.</span><span class="n">stem</span><span class="si">}{</span><span class="n">tag</span><span class="si">}{</span><span class="n">fp</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_point_to_feature_route_table</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for point_to_feature_route_table command&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Preprocess config for point_to_feature_route_table command"""</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">split_routes</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
         <span class="n">config</span><span class="p">,</span>
         <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;cost_fpath&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;features_fpath&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;out_dir&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;points_fpath&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;regions_fpath&quot;</span><span class="p">,</span>
+            <span class="s2">"cost_fpath"</span><span class="p">,</span>
+            <span class="s2">"features_fpath"</span><span class="p">,</span>
+            <span class="s2">"out_dir"</span><span class="p">,</span>
+            <span class="s2">"points_fpath"</span><span class="p">,</span>
+            <span class="s2">"regions_fpath"</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
 
 
 <span class="n">build_point_to_feature_route_table_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
     <span class="n">point_to_feature_route_table</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;build-feature-route-table&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"build-feature-route-table"</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">split_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;_split_params&quot;</span><span class="p">},</span>
+    <span class="n">split_keys</span><span class="o">=</span><span class="p">{</span><span class="s2">"_split_params"</span><span class="p">},</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_point_to_feature_route_table</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>

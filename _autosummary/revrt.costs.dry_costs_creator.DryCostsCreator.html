@@ -444,6 +444,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html">revrt.models.routing.MultiplierLayerInput</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostValue.html">revrt.models.routing.TransitionCostValue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
@@ -747,18 +748,18 @@ be applied. BY default, <code class="docutils literal notranslate"><span class="
 mask to the cost array.</p></li>
 <li><p><strong>default_multipliers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference internal" href="revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers" title="revrt.models.cost_layers.IsoMultipliers"><code class="xref py py-class docutils literal notranslate"><span class="pre">IsoMultipliers</span></code></a>, <em>optional</em>) – <p>Multipliers for regions not specified in the
 <cite>iso_region_tiff</cite>. Must be a dictionary of the form:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;land_use&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s2">&quot;cropland&quot;</span><span class="p">:</span> <span class="mf">1.03</span><span class="p">,</span>
-    <span class="s2">&quot;forest&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
-    <span class="s2">&quot;suburban&quot;</span><span class="p">:</span> <span class="mf">1.08</span><span class="p">,</span>
-    <span class="s2">&quot;urban&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
-    <span class="s2">&quot;wetland&quot;</span><span class="p">:</span> <span class="mf">1.8</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">"land_use"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"cropland"</span><span class="p">:</span> <span class="mf">1.03</span><span class="p">,</span>
+    <span class="s2">"forest"</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
+    <span class="s2">"suburban"</span><span class="p">:</span> <span class="mf">1.08</span><span class="p">,</span>
+    <span class="s2">"urban"</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
+    <span class="s2">"wetland"</span><span class="p">:</span> <span class="mf">1.8</span>
 <span class="p">},</span>
-<span class="s2">&quot;slope&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s2">&quot;hill_mult&quot;</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span>
-    <span class="s2">&quot;hill_slope&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-    <span class="s2">&quot;mtn_mult&quot;</span><span class="p">:</span> <span class="mf">1.21</span><span class="p">,</span>
-    <span class="s2">&quot;mtn_slope&quot;</span><span class="p">:</span> <span class="mi">8</span>
+<span class="s2">"slope"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"hill_mult"</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span>
+    <span class="s2">"hill_slope"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">"mtn_mult"</span><span class="p">:</span> <span class="mf">1.21</span><span class="p">,</span>
+    <span class="s2">"mtn_slope"</span><span class="p">:</span> <span class="mi">8</span>
 <span class="p">}</span>
 </pre></div>
 </div>

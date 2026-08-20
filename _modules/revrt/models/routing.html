@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.models.routing</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Pydantic models for routing inputs&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Pydantic models for routing inputs"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
@@ -844,23 +764,26 @@ window.runMermaid = runMermaid;</script>
 <span class="p">)</span>
 
 
-<span class="nb">type</span> <span class="n">DriverOptionRules</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;excluded&quot;</span><span class="p">]]</span>
-<span class="sd">&quot;&quot;&quot;Per-option driver multipliers</span>
+<span class="nb">type</span> <span class="n">DriverOptionRules</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"excluded"</span><span class="p">]]</span>
+<span class="sd">"""Per-option driver multipliers</span>
 
 <span class="sd">Keys are routing-option names and values are either numeric friction</span>
 <span class="sd">multipliers to apply while routing in that option or the keyword</span>
-<span class="sd">``&quot;excluded&quot;``, which means the option is not allowed at all in</span>
+<span class="sd">``"excluded"``, which means the option is not allowed at all in</span>
 <span class="sd">the zone.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="nb">type</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
-<span class="sd">&quot;&quot;&quot;One or more layer names used as spatial multipliers&quot;&quot;&quot;</span>
+<span class="sd">"""One or more layer names used as spatial multipliers"""</span>
+
+<span class="nb">type</span> <span class="n">TransitionCostValue</span> <span class="o">=</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
+<span class="sd">"""A scalar transition cost or a voltage/polarity-dependent cost"""</span>
 
 
 <div class="viewcode-block" id="RoutingCostLayer">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.RoutingCostLayer.html#revrt.models.routing.RoutingCostLayer">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RoutingCostLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for one cost layer in a routing option</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RoutingCostLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for one cost layer in a routing option</span>
 
 <span class="sd">    Cost layers are summed to build the routing cost surface for an</span>
 <span class="sd">    option. Each layer may be rescaled before aggregation and may also</span>
@@ -868,57 +791,57 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">layer_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of layer in layered file containing cost data&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name of layer in layered file containing cost data"""</span>
 
     <span class="n">multiplier_layer</span><span class="p">:</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional spatial multiplier layer(s) applied before summation</span>
+<span class="w">    </span><span class="sd">"""Optional spatial multiplier layer(s) applied before summation</span>
 
 <span class="sd">    A string or iterable is accepted and normalized to a list.</span>
 <span class="sd">    All supplied layers are multiplied together.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_normalize_multiplier_layer</span> <span class="o">=</span> <span class="n">field_validator</span><span class="p">(</span>
-        <span class="s2">&quot;multiplier_layer&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span>
-    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">))</span>
+        <span class="s2">"multiplier_layer"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span>
+    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"multiplier_layer"</span><span class="p">))</span>
 
     <span class="n">multiplier_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional scalar multiplier applied before summation&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Optional scalar multiplier applied before summation"""</span>
 
     <span class="n">is_invariant</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Skip path-length scaling when ``True``</span>
+<span class="w">    </span><span class="sd">"""Skip path-length scaling when ``True``</span>
 
 <span class="sd">    Use this for layers whose values are already lump-sum route costs,</span>
 <span class="sd">    such as fixed-dollar costs to cross into a region.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">include_in_final_cost</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Include this layer in final route cost output when ``True``&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Include this layer in final route cost output when ``True``"""</span>
 
     <span class="n">include_in_report</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Report this layer&#39;s cost and distance outputs if ``True``&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Report this layer's cost and distance outputs if ``True``"""</span>
 
     <span class="n">apply_row_mult</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply the transmission ``row_width`` multiplier when ``True``</span>
+<span class="w">    </span><span class="sd">"""Apply the transmission ``row_width`` multiplier when ``True``</span>
 
 <span class="sd">    The routing table input should resolve a voltage value for each</span>
 <span class="sd">    routing option, either from the shared `voltage` column or from</span>
 <span class="sd">    `voltage_&lt;option&gt;` column. The ``row_width`` dictionary may specify</span>
 <span class="sd">    one multiplier for every option at a voltage, such as</span>
-<span class="sd">    ``{&quot;138&quot;: 1.15}``, or values by routing option, such as</span>
-<span class="sd">    ``{&quot;500&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}``. An</span>
+<span class="sd">    ``{"138": 1.15}``, or values by routing option, such as</span>
+<span class="sd">    ``{"500": {"overhead": 1.15, "underground": 2}}``. An</span>
 <span class="sd">    option value may instead map spatial layer names to scalar values.</span>
-<span class="sd">    For example, ``{&quot;500&quot;: {&quot;underground&quot;: {&quot;rural&quot;: 2, &quot;urban&quot;: 20}}}``</span>
+<span class="sd">    For example, ``{"500": {"underground": {"rural": 2, "urban": 20}}}``</span>
 <span class="sd">    produces one cost term per spatial layer. Existing</span>
 <span class="sd">    ``multiplier_layer`` inputs apply to every generated term. Every</span>
 <span class="sd">    resolved voltage must be listed. For an option mapping, every</span>
 <span class="sd">    routing option using this multiplier must be listed.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">apply_polarity_mult</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply the voltage and polarity multiplier when ``True``</span>
+<span class="w">    </span><span class="sd">"""Apply the voltage and polarity multiplier when ``True``</span>
 
 <span class="sd">    The routing table input should resolve both a voltage and a polarity</span>
 <span class="sd">    value for each routing option, either from shared columns or from</span>
@@ -929,7 +852,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    of routing-option names to scalar values. A routing-option value may</span>
 <span class="sd">    instead map spatial layer names to scalar values. In that case, each</span>
 <span class="sd">    layer is expanded into one cost term per spatial layer. For example,</span>
-<span class="sd">    ``{&quot;500&quot;: {&quot;dc&quot;: {&quot;underground&quot;: {&quot;rural&quot;: 50, &quot;urban&quot;: 60}}}}``</span>
+<span class="sd">    ``{"500": {"dc": {"underground": {"rural": 50, "urban": 60}}}}``</span>
 <span class="sd">    produces terms weighted by ``50 * rural`` and ``60 * urban``.</span>
 <span class="sd">    Existing ``multiplier_layer`` inputs apply to each generated term.</span>
 
@@ -937,14 +860,14 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">      The configured multiplier is assumed to be in million dollars per</span>
 <span class="sd">      mile and is converted to dollars per pixel before being applied.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 
 
 <div class="viewcode-block" id="RoutingFrictionLayer">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.RoutingFrictionLayer.html#revrt.models.routing.RoutingFrictionLayer">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RoutingFrictionLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for one friction layer in a routing option</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RoutingFrictionLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for one friction layer in a routing option</span>
 
 <span class="sd">    Friction layers are aggregated separately and then multiplied onto</span>
 <span class="sd">    the summed cost surface using</span>
@@ -953,44 +876,44 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">multiplier_layer</span><span class="p">:</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Spatial multiplier layer(s) applied to the aggregated costs</span>
+<span class="w">    </span><span class="sd">"""Spatial multiplier layer(s) applied to the aggregated costs</span>
 
 <span class="sd">    A string or iterable is accepted and normalized to a list.</span>
 <span class="sd">    All supplied layers are multiplied together.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_normalize_multiplier_layer</span> <span class="o">=</span> <span class="n">field_validator</span><span class="p">(</span>
-        <span class="s2">&quot;multiplier_layer&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span>
-    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">))</span>
+        <span class="s2">"multiplier_layer"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span>
+    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"multiplier_layer"</span><span class="p">))</span>
 
     <span class="n">multiplier_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scalar multiplier applied before friction is aggregated&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Scalar multiplier applied before friction is aggregated"""</span>
 
     <span class="n">include_in_report</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Report route distance and values for this layer when ``True``&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Report route distance and values for this layer when ``True``"""</span>
 
     <span class="n">apply_row_mult</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply the transmission ``row_width`` multiplier when ``True``</span>
+<span class="w">    </span><span class="sd">"""Apply the transmission ``row_width`` multiplier when ``True``</span>
 
 <span class="sd">    The routing table input should resolve a voltage value for each</span>
 <span class="sd">    routing option, either from the shared `voltage` column or from</span>
 <span class="sd">    `voltage_&lt;option&gt;` column. The ``row_width`` dictionary may specify</span>
 <span class="sd">    one multiplier for every option at a voltage, such as</span>
-<span class="sd">    ``{&quot;138&quot;: 1.15}``, or values by routing option, such as</span>
-<span class="sd">    ``{&quot;500&quot;: {&quot;overhead&quot;: 1.15, &quot;underground&quot;: 2}}``. An</span>
+<span class="sd">    ``{"138": 1.15}``, or values by routing option, such as</span>
+<span class="sd">    ``{"500": {"overhead": 1.15, "underground": 2}}``. An</span>
 <span class="sd">    option value may instead map spatial layer names to scalar values.</span>
-<span class="sd">    For example, ``{&quot;500&quot;: {&quot;underground&quot;: {&quot;rural&quot;: 2, &quot;urban&quot;: 20}}}``</span>
+<span class="sd">    For example, ``{"500": {"underground": {"rural": 2, "urban": 20}}}``</span>
 <span class="sd">    produces one friction term per spatial layer. Existing</span>
 <span class="sd">    ``multiplier_layer`` inputs apply to every generated term. Every</span>
 <span class="sd">    resolved voltage must be listed. For an option mapping, every</span>
 <span class="sd">    routing option using this multiplier must be listed.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">apply_polarity_mult</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply the voltage and polarity multiplier when ``True``</span>
+<span class="w">    </span><span class="sd">"""Apply the voltage and polarity multiplier when ``True``</span>
 
 <span class="sd">    The routing table input should resolve both a voltage and a polarity</span>
 <span class="sd">    value for each routing option, either from shared columns or from</span>
@@ -1002,7 +925,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    instead map spatial layer names to scalar values. In that case, each</span>
 <span class="sd">    layer is expanded into one friction term per spatial layer. For</span>
 <span class="sd">    example,</span>
-<span class="sd">    ``{&quot;500&quot;: {&quot;dc&quot;: {&quot;underground&quot;: {&quot;rural&quot;: 50, &quot;urban&quot;: 60}}}}``</span>
+<span class="sd">    ``{"500": {"dc": {"underground": {"rural": 50, "urban": 60}}}}``</span>
 <span class="sd">    produces terms weighted by ``50 * rural`` and ``60 * urban``.</span>
 <span class="sd">    Existing ``multiplier_layer`` inputs apply to each generated term.</span>
 
@@ -1010,51 +933,51 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">      The configured multiplier is assumed to be in million dollars per</span>
 <span class="sd">      mile and is converted to dollars per pixel before being applied.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 
 
 <div class="viewcode-block" id="RoutingBarrierLayer">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.RoutingBarrierLayer.html#revrt.models.routing.RoutingBarrierLayer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RoutingBarrierLayer</span><span class="p">(</span><span class="n">BarrierLayer</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for one hard or soft routing barrier</span>
+<span class="w">    </span><span class="sd">"""Config for one hard or soft routing barrier</span>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">layer_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of layer containing barrier candidate values&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name of layer containing barrier candidate values"""</span>
 
     <span class="n">where</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Comparison expression defining which values act as barriers</span>
+<span class="w">    </span><span class="sd">"""Comparison expression defining which values act as barriers</span>
 
 <span class="sd">    Any pixel matching ``where`` is treated as blocked during routing.</span>
 
 <span class="sd">    Supported operators are ``==``, ``!=``, ``&gt;``, ``&gt;=``, ``&lt;``, and</span>
-<span class="sd">    ``&lt;=``, followed by a numeric threshold such as ``&quot;&gt;=15&quot;`` or</span>
-<span class="sd">    ``&quot;!=0&quot;``.</span>
+<span class="sd">    ``&lt;=``, followed by a numeric threshold such as ``"&gt;=15"`` or</span>
+<span class="sd">    ``"!=0"``.</span>
 
 <span class="sd">    Multiple entries may reference the same layer with different</span>
-<span class="sd">    ``&quot;where&quot;`` definitions.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    ``"where"`` definitions.</span>
+<span class="sd">    """</span>
 
     <span class="n">barrier_importance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional positive rank used to relax soft barriers when needed</span>
+<span class="w">    </span><span class="sd">"""Optional positive rank used to relax soft barriers when needed</span>
 
 <span class="sd">    When a route cannot be found, reVRt will iteratively drop the</span>
 <span class="sd">    lowest-ranked soft barrier and retry routing until a route is found</span>
 <span class="sd">    or all ranked barriers have been removed. If a barrier should never</span>
 <span class="sd">    be relaxed, omit this field or set it to ``None``. This allows hard</span>
 <span class="sd">    and soft barriers to be combined in the same routing run.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 
 
 <div class="viewcode-block" id="TrackedLayer">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.TrackedLayer.html#revrt.models.routing.TrackedLayer">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">TrackedLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for one route-characterization layer</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TrackedLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for one route-characterization layer</span>
 
 <span class="sd">    Tracked layers mirror the scaling behavior used by cost layers,</span>
 <span class="sd">    but do not contribute to routing cost and do not influence the</span>
@@ -1063,51 +986,51 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">layer_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of layer in layered file to aggregate along the route&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name of layer in layered file to aggregate along the route"""</span>
 
     <span class="n">agg_method</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of the ``dask.array`` aggregation applied to route values</span>
+<span class="w">    </span><span class="sd">"""Name of the ``dask.array`` aggregation applied to route values</span>
 
-<span class="sd">    Examples of this input include ``&quot;sum&quot;``, ``&quot;mean&quot;``, ``&quot;max&quot;``,</span>
+<span class="sd">    Examples of this input include ``"sum"``, ``"mean"``, ``"max"``,</span>
 <span class="sd">    etc.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">multiplier_layer</span><span class="p">:</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional spatial multiplier layer(s) applied before aggregation</span>
+<span class="w">    </span><span class="sd">"""Optional spatial multiplier layer(s) applied before aggregation</span>
 
 <span class="sd">    A string or iterable is accepted and normalized to a list.</span>
 <span class="sd">    All supplied layers are multiplied together.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_normalize_multiplier_layer</span> <span class="o">=</span> <span class="n">field_validator</span><span class="p">(</span>
-        <span class="s2">&quot;multiplier_layer&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span>
-    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;multiplier_layer&quot;</span><span class="p">))</span>
+        <span class="s2">"multiplier_layer"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span>
+    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"multiplier_layer"</span><span class="p">))</span>
 
     <span class="n">multiplier_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional scalar multiplier applied before aggregation&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Optional scalar multiplier applied before aggregation"""</span></div>
 
 
 
 <div class="viewcode-block" id="RoutingOptionConfig">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.RoutingOptionConfig.html#revrt.models.routing.RoutingOptionConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RoutingOptionConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for one named routing option</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RoutingOptionConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for one named routing option</span>
 
-<span class="sd">    Routing options are keyed by name, such as ``&quot;overhead&quot;`` or</span>
-<span class="sd">    ``&quot;underground&quot;``. Route tables may reference these option names in</span>
+<span class="sd">    Routing options are keyed by name, such as ``"overhead"`` or</span>
+<span class="sd">    ``"underground"``. Route tables may reference these option names in</span>
 <span class="sd">    ``start_option`` and ``end_option`` columns.</span>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">cost_layers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RoutingCostLayer</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Cost layers definitions</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Cost layers definitions</span>
 
-<span class="sd">    The cost layers are built and then summed to create the option&#39;s</span>
+<span class="sd">    The cost layers are built and then summed to create the option's</span>
 <span class="sd">    base routing surface, which determines the cost output for each</span>
 <span class="sd">    route. Specifically, the cost at each pixel is multiplied by the</span>
 <span class="sd">    length that the route takes through the pixel, and all of these</span>
@@ -1119,10 +1042,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        treated as a barrier (i.e. no paths can ever cross this pixel).</span>
 
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">friction_layers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RoutingFrictionLayer</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Friction layer definitions</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Friction layer definitions</span>
 
 
 <span class="sd">    Friction layers are multiplied onto the aggregated cost layer to</span>
@@ -1145,15 +1068,15 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        This means friction can scale costs to/away from zero but</span>
 <span class="sd">        never cause the sign of the cost layer to flip (even if</span>
 <span class="sd">        friction values themselves are negative). This means all</span>
-<span class="sd">        &quot;barrier&quot; pixels (i.e. cost value :math:`\leq 0`) will remain</span>
+<span class="sd">        "barrier" pixels (i.e. cost value :math:`\leq 0`) will remain</span>
 <span class="sd">        barriers after friction is applied (assuming</span>
 <span class="sd">        `invalid_costs_block_routing` is set to ``True``).</span>
 
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">barrier_layers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RoutingBarrierLayer</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Barrier layer definitions</span>
+<span class="w">    </span><span class="sd">"""Barrier layer definitions</span>
 
 <span class="sd">    Barrier layers define explicit routing barriers that routes should</span>
 <span class="sd">    not cross. Unlike `friction_layers`, barrier layers do not add a</span>
@@ -1161,29 +1084,29 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    barrier definition is treated as blocked during routing. Barrier</span>
 <span class="sd">    layers _can_ be relaxed to allow routing through them if no valid</span>
 <span class="sd">    route can be found. This behavior can be configured.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">cost_multiplier_layer</span><span class="p">:</span> <span class="n">MultiplierLayerInput</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional option-level multiplier layer(s) applied to final costs</span>
+<span class="w">    </span><span class="sd">"""Optional option-level multiplier layer(s) applied to final costs</span>
 
 <span class="sd">    A string or iterable is accepted and normalized to a list.</span>
 <span class="sd">    All supplied layers are multiplied together.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_normalize_cost_multiplier_layer</span> <span class="o">=</span> <span class="n">field_validator</span><span class="p">(</span>
-        <span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span>
-    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cost_multiplier_layer&quot;</span><span class="p">))</span>
+        <span class="s2">"cost_multiplier_layer"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span>
+    <span class="p">)(</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize_str_list_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"cost_multiplier_layer"</span><span class="p">))</span>
 
     <span class="n">cost_multiplier_scalar</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional option-level scalar multiplied onto final costs&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Optional option-level scalar multiplied onto final costs"""</span>
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_fix_missing_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">data</span>
 
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cost_layers&quot;</span><span class="p">,</span> <span class="s2">&quot;friction_layers&quot;</span><span class="p">,</span> <span class="s2">&quot;barrier_layers&quot;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"cost_layers"</span><span class="p">,</span> <span class="s2">"friction_layers"</span><span class="p">,</span> <span class="s2">"barrier_layers"</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -1192,24 +1115,24 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="nb">type</span> <span class="n">RoutingOptionsMap</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RoutingOptionConfig</span><span class="p">]</span>
-<span class="sd">&quot;&quot;&quot;Mapping of routing-option names to configurations&quot;&quot;&quot;</span>
+<span class="sd">"""Mapping of routing-option names to configurations"""</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_RoutingOptionsInput</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Canonical container for routing-option configurations</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_RoutingOptionsInput</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Canonical container for routing-option configurations</span>
 
 <span class="sd">    The ``routing_options`` mapping is keyed by the option names that</span>
-<span class="sd">    route tables and driver rules reference, such as ``&quot;overhead&quot;`` or</span>
-<span class="sd">    ``&quot;underground&quot;``.</span>
+<span class="sd">    route tables and driver rules reference, such as ``"overhead"`` or</span>
+<span class="sd">    ``"underground"``.</span>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">routing_options</span><span class="p">:</span> <span class="n">RoutingOptionsMap</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mapping of routing-option names to option configurations&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Mapping of routing-option names to option configurations"""</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;routing_options&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"routing_options"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_routing_options</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">TypeAdapter</span><span class="p">(</span><span class="n">RoutingOptionsMap</span><span class="p">)</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span><span class="n">routing_options</span><span class="p">)</span>
@@ -1217,63 +1140,63 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="DriverZoneConfig">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.DriverZoneConfig.html#revrt.models.routing.DriverZoneConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DriverZoneConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for one spatially varying driver rule zone</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DriverZoneConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for one spatially varying driver rule zone</span>
 
 <span class="sd">    Driver zones define route-option multipliers or exclusions within a</span>
 <span class="sd">    subset of the raster identified by ``layer_name`` and ``where``.</span>
 
-<span class="sd">    You may specify the zone&#39;s route-option multipliers as flat mapping</span>
+<span class="sd">    You may specify the zone's route-option multipliers as flat mapping</span>
 <span class="sd">    of names to values instead of a nested ``options`` input.</span>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">layer_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Layer in the cost file used to define the spatial driver mask&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Layer in the cost file used to define the spatial driver mask"""</span>
 
     <span class="n">where</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Comparison expression describing cells that belong to the zone</span>
+<span class="w">    </span><span class="sd">"""Comparison expression describing cells that belong to the zone</span>
 
 <span class="sd">    Any pixel matching ``where`` is treated as part of the zone.</span>
 
 <span class="sd">    Supported operators are ``==``, ``!=``, ``&gt;``, ``&gt;=``, ``&lt;``, and</span>
-<span class="sd">    ``&lt;=``, followed by a numeric threshold such as ``&quot;&gt;=15&quot;`` or</span>
-<span class="sd">    ``&quot;!=0&quot;``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    ``&lt;=``, followed by a numeric threshold such as ``"&gt;=15"`` or</span>
+<span class="sd">    ``"!=0"``.</span>
+<span class="sd">    """</span>
 
     <span class="n">options</span><span class="p">:</span> <span class="n">DriverOptionRules</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-option rules within this zone</span>
+<span class="w">    </span><span class="sd">"""Per-option rules within this zone</span>
 
 <span class="sd">    The values can either be friction multipliers to apply while routing</span>
-<span class="sd">    within this zone in that option or the keyword ``&quot;excluded&quot;``, which</span>
+<span class="sd">    within this zone in that option or the keyword ``"excluded"``, which</span>
 <span class="sd">    means the option is not allowed at all within this zone.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">)</span>
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_flat_options</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;options&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"options"</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">data</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;layer_name&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;layer_name&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;where&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;where&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"layer_name"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">"layer_name"</span><span class="p">],</span>
+            <span class="s2">"where"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">"where"</span><span class="p">],</span>
+            <span class="s2">"options"</span><span class="p">:</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;layer_name&quot;</span><span class="p">,</span> <span class="s2">&quot;where&quot;</span><span class="p">}</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"layer_name"</span><span class="p">,</span> <span class="s2">"where"</span><span class="p">}</span>
             <span class="p">},</span>
         <span class="p">}</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;where&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"where"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_where</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">where</span><span class="p">):</span>
         <span class="n">parse_comparison_values</span><span class="p">(</span><span class="n">where</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">where</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;options&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"options"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_options</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">TypeAdapter</span><span class="p">(</span><span class="n">DriverOptionRules</span><span class="p">)</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span><span class="n">options</span><span class="p">)</span></div>
@@ -1282,30 +1205,30 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="DriverConfig">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.DriverConfig.html#revrt.models.routing.DriverConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DriverConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for route-option driver rules</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DriverConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for route-option driver rules</span>
 
 <span class="sd">    Drivers adjust the relative desirability of routing options. Values</span>
-<span class="sd">    may be numeric multipliers or the special keyword ``&quot;excluded&quot;`` to</span>
+<span class="sd">    may be numeric multipliers or the special keyword ``"excluded"`` to</span>
 <span class="sd">    make an option unavailable.</span>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">default</span><span class="p">:</span> <span class="n">DriverOptionRules</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Default per-option multipliers or exclusions applied everywhere</span>
+<span class="w">    </span><span class="sd">"""Default per-option multipliers or exclusions applied everywhere</span>
 
 <span class="sd">    Keys are names of the routing options and values are either numeric</span>
 <span class="sd">    friction multipliers to apply while routing by default in that</span>
-<span class="sd">    option or the keyword ``&quot;excluded&quot;``, which means the option is not</span>
+<span class="sd">    option or the keyword ``"excluded"``, which means the option is not</span>
 <span class="sd">    allowed at all by default.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">zones</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">DriverZoneConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Specific zones that override the default rules&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Specific zones that override the default rules"""</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"default"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_default</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">TypeAdapter</span><span class="p">(</span><span class="n">DriverOptionRules</span><span class="p">)</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span><span class="n">default</span><span class="p">)</span></div>
@@ -1314,62 +1237,68 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="TransitionCostRule">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.TransitionCostRule.html#revrt.models.routing.TransitionCostRule">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">TransitionCostRule</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for one pairwise transition cost rule</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransitionCostRule</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for one pairwise transition cost rule</span>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">between</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Routing option names</span>
+<span class="w">    </span><span class="sd">"""Routing option names</span>
 
 <span class="sd">    These two routing option names define the options between which this</span>
 <span class="sd">    transition cost applies.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">cost</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The transition cost</span>
+    <span class="n">cost</span><span class="p">:</span> <span class="n">TransitionCostValue</span>
+<span class="w">    </span><span class="sd">"""The transition cost</span>
 
 <span class="sd">    This is the transition cost (in $) applied when a route switches</span>
-<span class="sd">    between the specified options.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    between the specified options. It may be a scalar, a mapping from</span>
+<span class="sd">    voltage to scalar cost, or a mapping from voltage and polarity to</span>
+<span class="sd">    scalar cost.</span>
+<span class="sd">    """</span></div>
 
 
 
 <div class="viewcode-block" id="TransitionCostsConfig">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.routing.TransitionCostsConfig.html#revrt.models.routing.TransitionCostsConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">TransitionCostsConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for route-option transition costs</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransitionCostsConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for route-option transition costs</span>
 
 <span class="sd">    **The rest of this docstring is inserted by Pydantic and can be</span>
 <span class="sd">    ignored.**</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">default</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fallback cost applied when no pairwise rule is configured&quot;&quot;&quot;</span>
+    <span class="n">default</span><span class="p">:</span> <span class="n">TransitionCostValue</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">"""Fallback cost applied when no pairwise rule is configured</span>
+
+<span class="sd">    This may be a scalar, a mapping from voltage to scalar cost, or a</span>
+<span class="sd">    mapping from voltage and polarity to scalar cost.</span>
+<span class="sd">    """</span>
 
     <span class="n">pairwise</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TransitionCostRule</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Explicit transition costs between routing options&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Explicit transition costs between routing options"""</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_routing_options</span><span class="p">(</span><span class="n">routing_options</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Normalize routing options&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Normalize routing options"""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">validated</span> <span class="o">=</span> <span class="n">_RoutingOptionsInput</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;routing_options&quot;</span><span class="p">:</span> <span class="n">routing_options</span><span class="p">}</span>
+            <span class="p">{</span><span class="s2">"routing_options"</span><span class="p">:</span> <span class="n">routing_options</span><span class="p">}</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">_validation_error_to_config_error</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
     <span class="k">return</span> <span class="n">validated</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span>
-        <span class="s2">&quot;routing_options&quot;</span>
+        <span class="s2">"routing_options"</span>
     <span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_driver_configs</span><span class="p">(</span><span class="n">drivers</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Normalize driver rules&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Normalize driver rules"""</span>
     <span class="k">if</span> <span class="n">drivers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
@@ -1379,18 +1308,18 @@ window.runMermaid = runMermaid;</script>
         <span class="k">raise</span> <span class="n">_validation_error_to_config_error</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
     <span class="n">_validate_driver_option_names</span><span class="p">(</span>
-        <span class="n">validated</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;drivers.default&quot;</span>
+        <span class="n">validated</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">"drivers.default"</span>
     <span class="p">)</span>
     <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">validated</span><span class="o">.</span><span class="n">zones</span><span class="p">:</span>
         <span class="n">_validate_driver_option_names</span><span class="p">(</span>
-            <span class="n">zone</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;drivers.zones&quot;</span>
+            <span class="n">zone</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">"drivers.zones"</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">_flatten_driver_config</span><span class="p">(</span><span class="n">validated</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">validate_transition_cost_configs</span><span class="p">(</span><span class="n">transition_costs</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Normalize transition costs&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_transition_cost_input</span><span class="p">(</span><span class="n">transition_costs</span><span class="p">,</span> <span class="n">routing_options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""[NOT PUBLIC API] Normalize user-supplied transition costs"""</span>
     <span class="k">if</span> <span class="n">transition_costs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
@@ -1401,7 +1330,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="n">normalized_rules</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">&quot;between&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"between"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="n">_validate_transition_option_ref</span><span class="p">(</span>
                     <span class="n">rule</span><span class="o">.</span><span class="n">between</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">routing_options</span>
                 <span class="p">),</span>
@@ -1409,82 +1338,83 @@ window.runMermaid = runMermaid;</script>
                     <span class="n">rule</span><span class="o">.</span><span class="n">between</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">routing_options</span>
                 <span class="p">),</span>
             <span class="p">],</span>
-            <span class="s2">&quot;cost&quot;</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span>
+            <span class="s2">"cost"</span><span class="p">:</span> <span class="n">rule</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">validated</span><span class="o">.</span><span class="n">pairwise</span>
     <span class="p">]</span>
 
     <span class="n">payload</span> <span class="o">=</span> <span class="n">validated</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s2">&quot;pairwise&quot;</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">:</span>
-        <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;pairwise&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalized_rules</span>
+    <span class="k">if</span> <span class="s2">"pairwise"</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">:</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s2">"pairwise"</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalized_rules</span>
     <span class="k">return</span> <span class="n">payload</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_flatten_driver_config</span><span class="p">(</span><span class="n">drivers</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert canonical driver config to the current runtime shape&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Convert canonical driver config to the current runtime shape"""</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="n">drivers</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s2">&quot;zones&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">"zones"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">payload</span>
 
-    <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;zones&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">payload</span><span class="p">[</span><span class="s2">"zones"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">&quot;layer_name&quot;</span><span class="p">:</span> <span class="n">zone</span><span class="p">[</span><span class="s2">&quot;layer_name&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;where&quot;</span><span class="p">:</span> <span class="n">zone</span><span class="p">[</span><span class="s2">&quot;where&quot;</span><span class="p">],</span>
-            <span class="o">**</span><span class="n">zone</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;options&quot;</span><span class="p">,</span> <span class="p">{}),</span>
+            <span class="s2">"layer_name"</span><span class="p">:</span> <span class="n">zone</span><span class="p">[</span><span class="s2">"layer_name"</span><span class="p">],</span>
+            <span class="s2">"where"</span><span class="p">:</span> <span class="n">zone</span><span class="p">[</span><span class="s2">"where"</span><span class="p">],</span>
+            <span class="o">**</span><span class="n">zone</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"options"</span><span class="p">,</span> <span class="p">{}),</span>
         <span class="p">}</span>
-        <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;zones&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"zones"</span><span class="p">]</span>
     <span class="p">]</span>
     <span class="k">return</span> <span class="n">payload</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validate_driver_option_names</span><span class="p">(</span><span class="n">option_rules</span><span class="p">,</span> <span class="n">routing_option_names</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure driver rules only reference known routing options&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Ensure driver rules only reference known routing options"""</span>
     <span class="n">known_options</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">routing_option_names</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">option_name</span> <span class="ow">in</span> <span class="n">option_rules</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">option_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known_options</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;unknown routing option </span><span class="si">{</span><span class="n">option_name</span><span class="si">!r}</span><span class="s2"> in </span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Known options: </span><span class="si">{</span><span class="n">routing_option_names</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"unknown routing option </span><span class="si">{</span><span class="n">option_name</span><span class="si">!r}</span><span class="s2"> in </span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="sa">f</span><span class="s2">"Known options: </span><span class="si">{</span><span class="n">routing_option_names</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validate_transition_option_ref</span><span class="p">(</span><span class="n">option_ref</span><span class="p">,</span> <span class="n">routing_option_names</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize a transition-cost option reference to an option name&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Normalize a transition-cost option reference to an option name"""</span>
     <span class="k">if</span> <span class="n">option_ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">routing_option_names</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;unknown routing option </span><span class="si">{</span><span class="n">option_ref</span><span class="si">!r}</span><span class="s2"> in transition_costs. &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;Known options: </span><span class="si">{</span><span class="n">routing_option_names</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"unknown routing option </span><span class="si">{</span><span class="n">option_ref</span><span class="si">!r}</span><span class="s2"> in transition_costs. "</span>
+            <span class="sa">f</span><span class="s2">"Known options: </span><span class="si">{</span><span class="n">routing_option_names</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">option_ref</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_validation_error_to_config_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a Pydantic validation error to a configuration error&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Convert a Pydantic validation error to a configuration error"""</span>
     <span class="n">first_error</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">errors</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">msg</span> <span class="o">=</span> <span class="n">first_error</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Value error, &quot;</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">&quot;Value error, &quot;</span><span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">first_error</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"msg"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Value error, "</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"Value error, "</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;DriverConfig&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;DriverOptionRules&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;DriverZoneConfig&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;MultiplierLayerInput&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;RoutingBarrierLayer&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;RoutingCostLayer&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;RoutingFrictionLayer&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;RoutingOptionConfig&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;RoutingOptionsMap&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;TrackedLayer&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;TransitionCostRule&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;TransitionCostsConfig&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_driver_configs&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_routing_options&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;validate_transition_cost_configs&quot;</span><span class="p">,</span>
+    <span class="s2">"DriverConfig"</span><span class="p">,</span>
+    <span class="s2">"DriverOptionRules"</span><span class="p">,</span>
+    <span class="s2">"DriverZoneConfig"</span><span class="p">,</span>
+    <span class="s2">"MultiplierLayerInput"</span><span class="p">,</span>
+    <span class="s2">"RoutingBarrierLayer"</span><span class="p">,</span>
+    <span class="s2">"RoutingCostLayer"</span><span class="p">,</span>
+    <span class="s2">"RoutingFrictionLayer"</span><span class="p">,</span>
+    <span class="s2">"RoutingOptionConfig"</span><span class="p">,</span>
+    <span class="s2">"RoutingOptionsMap"</span><span class="p">,</span>
+    <span class="s2">"TrackedLayer"</span><span class="p">,</span>
+    <span class="s2">"TransitionCostRule"</span><span class="p">,</span>
+    <span class="s2">"TransitionCostValue"</span><span class="p">,</span>
+    <span class="s2">"TransitionCostsConfig"</span><span class="p">,</span>
+    <span class="s2">"validate_driver_configs"</span><span class="p">,</span>
+    <span class="s2">"validate_routing_options"</span><span class="p">,</span>
+    <span class="s2">"validate_transition_cost_input"</span><span class="p">,</span>
 <span class="p">]</span>
 </pre></div>
 

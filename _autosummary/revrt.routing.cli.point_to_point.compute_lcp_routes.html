@@ -444,6 +444,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html">revrt.models.routing.MultiplierLayerInput</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostValue.html">revrt.models.routing.TransitionCostValue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
@@ -708,7 +709,12 @@ each option. See
 <li><p><strong>transition_costs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional transition-cost configuration between routing
 options. See
 <a class="reference internal" href="revrt.models.routing.TransitionCostsConfig.html#revrt.models.routing.TransitionCostsConfig" title="revrt.models.routing.TransitionCostsConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitionCostsConfig</span></code></a> for
-details.</p></li>
+details. The <code class="docutils literal notranslate"><span class="pre">default</span></code> and each pairwise <code class="docutils literal notranslate"><span class="pre">cost</span></code> value may
+be a scalar, a mapping from voltage to scalar cost, or a nested
+mapping from voltage and polarity to cost. A voltage scalar
+applies to every polarity at that voltage. Dependent pairwise
+costs require matching voltage and polarity for both options;
+a dependent default requires matching values for every option.</p></li>
 <li><p><strong>tracked_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – List of dictionaries defining route-characterization layers.
 These layers do not influence the routing objective and are
 only summarized for output characterization. See

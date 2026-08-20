@@ -142,6 +142,28 @@ other hand, friction values near ``-1`` can be used to represent incentives
 individual friction values are {math}`\gt -1` (i.e. {math}`(1 + F) > 0` is
 upheld), so the cost values themselves can never flip signs.
 
+```{warning}
+Large finite friction values at an endpoint can make routing unexpectedly
+slow and cause cost chunks to be computed far beyond the area between the
+endpoints. The endpoint remains valid, but every complete route must pay its
+large cost. Dijkstra-based algorithms may therefore explore all cells with a
+lower cumulative cost before they can prove that the selected route is
+optimal.
+
+The endpoint itself does not need to have high friction for this to occur. A
+high-friction region that surrounds an endpoint, or otherwise forms an
+unavoidable bottleneck near it, can have the same effect. This is especially
+noticeable with bidirectional routing because the search starting at the
+endpoint must cross that region before its frontier can advance.
+
+Check the effective routing cost {math}`R` at and around every endpoint when
+using large friction multipliers. Prefer moving an endpoint to a nearby
+representative low-friction cell or reducing the friction where every route
+must enter or leave the endpoint. When ``save_routing_layer`` is enabled, the
+saved chunk footprint represents the union of the search area explored for
+the route batch, not only the final routes or their endpoint bounds.
+```
+
 ### Building friction layers
 Friction layers are built similarly to cost layers. A single friction
 layer could be defined as follows:

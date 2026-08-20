@@ -444,6 +444,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="revrt.models.routing.html">revrt.models.routing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverOptionRules.html">revrt.models.routing.DriverOptionRules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.MultiplierLayerInput.html">revrt.models.routing.MultiplierLayerInput</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.TransitionCostValue.html">revrt.models.routing.TransitionCostValue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.RoutingOptionsMap.html">revrt.models.routing.RoutingOptionsMap</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverConfig.html">revrt.models.routing.DriverConfig</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html">revrt.models.routing.DriverZoneConfig</a></li>
@@ -680,11 +681,12 @@
 routing layers.</p></li>
 <li><p><strong>route_points</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a>) – DataFrame defining the points to be routed. This DataFrame
 should contain route definitions to be transformed and
-passed down to the Rust routing algorithm. Route values for
-polarity and voltage must be provided either as one shared
-<cite>polarity</cite> / <cite>voltage</cite> pair that applies to every routing
-option, or as a full per-option set of
-<cite>polarity_&lt;option&gt;</cite> / <cite>voltage_&lt;option&gt;</cite> columns.</p></li>
+passed down to the Rust routing algorithm. Provide route
+values for polarity and voltage when cost multipliers or
+transition costs depend on them. Values may be supplied as
+one shared <code class="docutils literal notranslate"><span class="pre">polarity</span></code> / <code class="docutils literal notranslate"><span class="pre">voltage</span></code> pair or as a full
+per-option set of <code class="docutils literal notranslate"><span class="pre">polarity_&lt;option&gt;</span></code> /
+<code class="docutils literal notranslate"><span class="pre">voltage_&lt;option&gt;</span></code> columns.</p></li>
 <li><p><strong>out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to output file where computed routes will be saved.
 This file will be checked for existing routes to avoid
 recomputation.</p></li>
@@ -695,7 +697,13 @@ the cost, friction, and barrier layers for each option. See
 path to JSON/JSON5 file containing this dictionary. See the
 description of
 <a class="reference internal" href="revrt.routing.cli.point_to_point.compute_lcp_routes.html#revrt.routing.cli.point_to_point.compute_lcp_routes" title="revrt.routing.cli.point_to_point.compute_lcp_routes"><code class="xref py py-func docutils literal notranslate"><span class="pre">revrt.routing.cli.point_to_point.compute_lcp_routes()</span></code></a>
-for more details.</p></li>
+for more details. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>drivers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional driver-rule configuration keyed by routing option.
+By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>transition_costs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional transition-cost configuration between routing
+options. A voltage/polarity-dependent cost requires matching
+values for every affected routing option.
+By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 </dl>

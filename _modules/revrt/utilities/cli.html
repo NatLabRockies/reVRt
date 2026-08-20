@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.utilities.cli</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;revrt utilities command line interface (CLI)&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""revrt utilities command line interface (CLI)"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -856,7 +776,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="layers_from_file">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.cli.layers_from_file.html#revrt.utilities.cli.layers_from_file">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">layers_from_file</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">_out_layer_dir</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">profile_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract layers from a layered file on disk</span>
+<span class="w">    </span><span class="sd">"""Extract layers from a layered file on disk</span>
 
 <span class="sd">    Layers are output as individual GeoTIFF files.</span>
 
@@ -889,7 +809,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    list</span>
 <span class="sd">        List of paths to the GeoTIFF files that were created.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># TODO: Add dask client here??</span>
     <span class="n">out_layer_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">_out_layer_dir</span><span class="p">)</span>
     <span class="n">out_layer_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -897,7 +817,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">profile_kwargs</span> <span class="o">=</span> <span class="n">profile_kwargs</span> <span class="ow">or</span> <span class="p">{}</span>
 
     <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">layers</span> <span class="o">=</span> <span class="p">{</span><span class="n">layer</span><span class="p">:</span> <span class="n">out_layer_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s2">.tif&quot;</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">}</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">{</span><span class="n">layer</span><span class="p">:</span> <span class="n">out_layer_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">layer</span><span class="si">}</span><span class="s2">.tif"</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">}</span>
         <span class="n">LayeredFile</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">extract_layers</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="o">**</span><span class="n">profile_kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">layers</span> <span class="o">=</span> <span class="n">LayeredFile</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">.</span><span class="n">extract_all_layers</span><span class="p">(</span>
@@ -909,7 +829,7 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_layers_from_file_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">out_layer_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess user config</span>
+<span class="w">    </span><span class="sd">"""Preprocess user config</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -923,15 +843,15 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        GeoTIFFs. This directory will be created if it does not already</span>
 <span class="sd">        exist. If not provided, will use the config directory as output.</span>
 <span class="sd">        By default, ``None``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;_out_layer_dir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_layer_dir</span> <span class="ow">or</span> <span class="n">out_dir</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fp&quot;</span><span class="p">,</span> <span class="s2">&quot;_out_layer_dir&quot;</span><span class="p">})</span>
+<span class="sd">    """</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">"_out_layer_dir"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_layer_dir</span> <span class="ow">or</span> <span class="n">out_dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">"fp"</span><span class="p">,</span> <span class="s2">"_out_layer_dir"</span><span class="p">})</span>
 
 
 <div class="viewcode-block" id="convert_pois_to_lines">
 <a class="viewcode-back" href="../../../_autosummary/revrt.utilities.cli.convert_pois_to_lines.html#revrt.utilities.cli.convert_pois_to_lines">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">convert_pois_to_lines</span><span class="p">(</span><span class="n">poi_csv_f</span><span class="p">,</span> <span class="n">template_f</span><span class="p">,</span> <span class="n">out_f</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert POIs in CSV to lines and save in a GPKG as substations</span>
+<span class="w">    </span><span class="sd">"""Convert POIs in CSV to lines and save in a GPKG as substations</span>
 
 <span class="sd">    This function also creates a fake transmission line to connect to</span>
 <span class="sd">    the substations to satisfy LCP code requirements.</span>
@@ -944,18 +864,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Path to template raster with CRS to use for GeoPackage.</span>
 <span class="sd">    out_f : path-like</span>
 <span class="sd">        Path and file name for GeoPackage.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Converting POIs in </span><span class="si">%s</span><span class="s2"> to lines in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">poi_csv_f</span><span class="p">,</span> <span class="n">out_f</span><span class="p">)</span>
+<span class="sd">    """</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Converting POIs in </span><span class="si">%s</span><span class="s2"> to lines in </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">poi_csv_f</span><span class="p">,</span> <span class="n">out_f</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">template_f</span><span class="p">)</span> <span class="k">as</span> <span class="n">tif</span><span class="p">:</span>
         <span class="n">crs</span> <span class="o">=</span> <span class="n">tif</span><span class="o">.</span><span class="n">crs</span>
 
     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">poi_csv_f</span><span class="p">)[</span>
-        <span class="p">[</span><span class="s2">&quot;POI Name&quot;</span><span class="p">,</span> <span class="s2">&quot;State&quot;</span><span class="p">,</span> <span class="s2">&quot;Voltage (kV)&quot;</span><span class="p">,</span> <span class="s2">&quot;Lat&quot;</span><span class="p">,</span> <span class="s2">&quot;Long&quot;</span><span class="p">]</span>
+        <span class="p">[</span><span class="s2">"POI Name"</span><span class="p">,</span> <span class="s2">"State"</span><span class="p">,</span> <span class="s2">"Voltage (kV)"</span><span class="p">,</span> <span class="s2">"Lat"</span><span class="p">,</span> <span class="s2">"Long"</span><span class="p">]</span>
     <span class="p">]</span>
 
     <span class="n">pts</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">Long</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">Lat</span><span class="p">))</span>
-    <span class="n">pts</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">set_crs</span><span class="p">(</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">)</span>
-    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">transform_xy</span><span class="p">(</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">Long</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">Lat</span><span class="p">)</span>
+    <span class="n">pts</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">set_crs</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">transform_xy</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">Long</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">Lat</span><span class="p">)</span>
     <span class="n">pts</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">set_geometry</span><span class="p">(</span><span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">)</span>
 
     <span class="c1"># Convert points to short lines</span>
@@ -967,19 +887,19 @@ window.runMermaid = runMermaid;</script>
     <span class="n">lines</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">set_geometry</span><span class="p">(</span><span class="n">new_geom</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">)</span>
 
     <span class="c1"># Append some fake values to make the LCP code happy</span>
-    <span class="n">lines</span><span class="p">[</span><span class="s2">&quot;ac_cap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9999999</span>
-    <span class="n">lines</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Substation&quot;</span>
-    <span class="n">lines</span><span class="p">[</span><span class="s2">&quot;voltage&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># kV</span>
-    <span class="n">lines</span><span class="p">[</span><span class="s2">&quot;trans_gids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;[9999]&quot;</span>
+    <span class="n">lines</span><span class="p">[</span><span class="s2">"ac_cap"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9999999</span>
+    <span class="n">lines</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Substation"</span>
+    <span class="n">lines</span><span class="p">[</span><span class="s2">"voltage"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">500</span>  <span class="c1"># kV</span>
+    <span class="n">lines</span><span class="p">[</span><span class="s2">"trans_gids"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[9999]"</span>
 
     <span class="c1"># add a fake trans line for the subs to connect to</span>
     <span class="n">trans_line</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
         <span class="p">{</span>
-            <span class="s2">&quot;POI Name&quot;</span><span class="p">:</span> <span class="s2">&quot;fake&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ac_cap&quot;</span><span class="p">:</span> <span class="mi">9999999</span><span class="p">,</span>
-            <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="s2">&quot;TransLine&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;voltage&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>  <span class="c1"># kV</span>
-            <span class="s2">&quot;trans_gids&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"POI Name"</span><span class="p">:</span> <span class="s2">"fake"</span><span class="p">,</span>
+            <span class="s2">"ac_cap"</span><span class="p">:</span> <span class="mi">9999999</span><span class="p">,</span>
+            <span class="s2">"category"</span><span class="p">:</span> <span class="s2">"TransLine"</span><span class="p">,</span>
+            <span class="s2">"voltage"</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>  <span class="c1"># kV</span>
+            <span class="s2">"trans_gids"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">},</span>
         <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">9999</span><span class="p">],</span>
     <span class="p">)</span>
@@ -989,10 +909,10 @@ window.runMermaid = runMermaid;</script>
     <span class="n">trans_line</span> <span class="o">=</span> <span class="n">trans_line</span><span class="o">.</span><span class="n">set_geometry</span><span class="p">([</span><span class="n">geo</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">)</span>
 
     <span class="n">pois</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">lines</span><span class="p">,</span> <span class="n">trans_line</span><span class="p">])</span>
-    <span class="n">pois</span><span class="p">[</span><span class="s2">&quot;gid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pois</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">pois</span><span class="p">[</span><span class="s2">"gid"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pois</span><span class="o">.</span><span class="n">index</span>
 
-    <span class="n">pois</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">out_f</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GPKG&quot;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Complete&quot;</span><span class="p">)</span></div>
+    <span class="n">pois</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">out_f</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"GPKG"</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Complete"</span><span class="p">)</span></div>
 
 
 
@@ -1003,10 +923,10 @@ window.runMermaid = runMermaid;</script>
     <span class="n">regions_fpath</span><span class="p">,</span>
     <span class="n">region_identifier_column</span><span class="p">,</span>
     <span class="n">out_fpath</span><span class="p">,</span>
-    <span class="n">substation_category_name</span><span class="o">=</span><span class="s2">&quot;Substation&quot;</span><span class="p">,</span>
+    <span class="n">substation_category_name</span><span class="o">=</span><span class="s2">"Substation"</span><span class="p">,</span>
     <span class="n">minimum_substation_voltage_kv</span><span class="o">=</span><span class="mi">69</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Map substation locations to reinforcement regions.</span>
 
 <span class="sd">    Reinforcement regions are user-defined. Typical regions are</span>
@@ -1015,7 +935,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    the input file.</span>
 
 <span class="sd">    This method also removes substations that do not meet the min 69 kV</span>
-<span class="sd">    voltage requirement and adds {&#39;min_volts&#39;, &#39;max_volts&#39;} fields to</span>
+<span class="sd">    voltage requirement and adds {'min_volts', 'max_volts'} fields to</span>
 <span class="sd">    the remaining substations.</span>
 
 <span class="sd">    .. IMPORTANT::</span>
@@ -1040,25 +960,25 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        containing a unique identifier for each region.</span>
 <span class="sd">    out_fpath : path-like, optional</span>
 <span class="sd">        Name for output GeoPackage file.</span>
-<span class="sd">    substation_category_name : str, default=&quot;Substation&quot;</span>
+<span class="sd">    substation_category_name : str, default="Substation"</span>
 <span class="sd">        Name of category in features GeoPackage that contains</span>
-<span class="sd">        substation features. By default, &quot;Substation&quot;.</span>
+<span class="sd">        substation features. By default, "Substation".</span>
 <span class="sd">    minimum_substation_voltage_kv : float, default=69</span>
 <span class="sd">        Minimum voltage (kV) that a substation must have to be</span>
 <span class="sd">        included in the output file. By default, 69 kV.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">features</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">features_fpath</span><span class="p">)</span>
-    <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;gid&quot;</span><span class="p">:</span> <span class="s2">&quot;trans_gid&quot;</span><span class="p">})</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"gid"</span><span class="p">:</span> <span class="s2">"trans_gid"</span><span class="p">})</span>
     <span class="n">substations</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">features</span><span class="p">[</span><span class="n">features</span><span class="o">.</span><span class="n">category</span> <span class="o">==</span> <span class="n">substation_category_name</span><span class="p">]</span>
         <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"columns"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"all"</span><span class="p">)</span>
     <span class="p">)</span>
 
     <span class="n">regions</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">regions_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="s2">&quot;Mapping </span><span class="si">%d</span><span class="s2"> substation locations to </span><span class="si">%d</span><span class="s2"> reinforcement regions&quot;</span><span class="p">,</span>
+        <span class="s2">"Mapping </span><span class="si">%d</span><span class="s2"> substation locations to </span><span class="si">%d</span><span class="s2"> reinforcement regions"</span><span class="p">,</span>
         <span class="n">substations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="n">regions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
     <span class="p">)</span>
@@ -1067,34 +987,34 @@ window.runMermaid = runMermaid;</script>
     <span class="n">centroids</span> <span class="o">=</span> <span class="n">_geometry_centroids</span><span class="p">(</span><span class="n">substations</span><span class="p">)</span>
     <span class="n">substations</span><span class="p">[</span><span class="n">region_identifier_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">centroids</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">map_func</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating min/max voltage for each substation...&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Calculating min/max voltage for each substation..."</span><span class="p">)</span>
     <span class="n">bad_subs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">substations</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">substations</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;trans_gids&quot;</span><span class="p">]</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"trans_gids"</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">lines</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
-        <span class="n">lines_mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">&quot;trans_gid&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-        <span class="n">voltage</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">lines_mask</span><span class="p">,</span> <span class="s2">&quot;voltage&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">lines_mask</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s2">"trans_gid"</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="n">voltage</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">lines_mask</span><span class="p">,</span> <span class="s2">"voltage"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">voltage</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">minimum_substation_voltage_kv</span><span class="p">:</span>
-            <span class="n">substations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="s2">&quot;min_volts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">voltage</span><span class="p">)</span>
-            <span class="n">substations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="s2">&quot;max_volts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">voltage</span><span class="p">)</span>
+            <span class="n">substations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="s2">"min_volts"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">voltage</span><span class="p">)</span>
+            <span class="n">substations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="s2">"max_volts"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">voltage</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">bad_subs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">bad_subs</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;The following sub-stations do not have the minimum &quot;</span>
-            <span class="s2">&quot;required voltage of 69 kV and will be dropped:</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">substations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">bad_subs</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;trans_gid&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="s2">"The following sub-stations do not have the minimum "</span>
+            <span class="s2">"required voltage of 69 kV and will be dropped:</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">substations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">bad_subs</span><span class="p">,</span><span class="w"> </span><span class="s1">'trans_gid'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
         <span class="n">substations</span> <span class="o">=</span> <span class="n">substations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">bad_subs</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">out_fpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.gpkg&quot;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing substation output to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_fpath</span><span class="p">)</span>
-    <span class="n">substations</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GPKG&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+    <span class="n">out_fpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".gpkg"</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Writing substation output to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">out_fpath</span><span class="p">)</span>
+    <span class="n">substations</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"GPKG"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 
@@ -1106,7 +1026,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">region_identifier_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract substations from connections table output by LCP.</span>
+<span class="w">    </span><span class="sd">"""Extract substations from connections table output by LCP.</span>
 
 <span class="sd">    Substations extracted by this method can be used for reinforcement</span>
 <span class="sd">    calculations.</span>
@@ -1147,42 +1067,33 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    ------</span>
 <span class="sd">    revrtValueError</span>
 <span class="sd">        If `batch_size` is not a positive integer or if the connections</span>
-<span class="sd">        file does not end with &#39;.csv&#39; or &#39;.gpkg&#39;.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        file does not end with '.csv' or '.gpkg'.</span>
+<span class="sd">    """</span>
 
     <span class="k">if</span> <span class="n">batch_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;`batch_size` must be a positive integer&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">"`batch_size` must be a positive integer"</span>
         <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing connection info in batches of </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">connections_fpath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">):</span>
-        <span class="n">chunk_iter</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">connections_fpath</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">connections_fpath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.gpkg&quot;</span><span class="p">):</span>
-        <span class="n">chunk_iter</span> <span class="o">=</span> <span class="n">chunked_read_gpkg</span><span class="p">(</span><span class="n">connections_fpath</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Unknown file ending for features file (must be &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;&#39;.csv&#39; or &#39;.gpkg&#39;): </span><span class="si">{</span><span class="n">connections_fpath</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-        <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Processing connection info in batches of </span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">chunk_iter</span> <span class="o">=</span> <span class="n">_load_chunked_data</span><span class="p">(</span><span class="n">connections_fpath</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Filtering out NaN&#39;s in connection info...&quot;</span><span class="p">)</span>
-    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;poi_gid&quot;</span><span class="p">,</span> <span class="s2">&quot;poi_lat&quot;</span><span class="p">,</span> <span class="s2">&quot;poi_lon&quot;</span><span class="p">]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Filtering out NaN's in connection info..."</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"poi_gid"</span><span class="p">,</span> <span class="s2">"poi_lat"</span><span class="p">,</span> <span class="s2">"poi_lon"</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">region_identifier_column</span><span class="p">:</span>
         <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region_identifier_column</span><span class="p">)</span>
 
-    <span class="n">out_fpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.gpkg&quot;</span><span class="p">)</span>
+    <span class="n">out_fpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".gpkg"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">out_fpath</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="n">out_fpath</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
 
     <span class="n">seen_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="n">writer</span> <span class="o">=</span> <span class="n">IncrementalWriter</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Extracting substation locations...&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Extracting substation locations..."</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunk_iter</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">chunk</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">continue</span>
 
-        <span class="n">subset</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;poi_gid&quot;</span><span class="p">,</span> <span class="s2">&quot;poi_lat&quot;</span><span class="p">,</span> <span class="s2">&quot;poi_lon&quot;</span><span class="p">])</span>
+        <span class="n">subset</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"poi_gid"</span><span class="p">,</span> <span class="s2">"poi_lat"</span><span class="p">,</span> <span class="s2">"poi_lon"</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">subset</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="k">continue</span>
 
@@ -1192,17 +1103,32 @@ window.runMermaid = runMermaid;</script>
             <span class="k">continue</span>
 
         <span class="n">substations</span> <span class="o">=</span> <span class="n">_records_to_geo_df_with_points</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">%d</span><span class="s2"> substation records&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">substations</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Writing </span><span class="si">%d</span><span class="s2"> substation records"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">substations</span><span class="p">))</span>
         <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">substations</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Substation extraction complete; output at </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_fpath</span><span class="p">)</span></div>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Substation extraction complete; output at </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">out_fpath</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_chunked_data</span><span class="p">(</span><span class="n">connections_fpath</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Load data in chunks from CSV or GeoPackage files"""</span>
+    <span class="k">if</span> <span class="n">connections_fpath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".csv"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">connections_fpath</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">connections_fpath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".gpkg"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">chunked_read_gpkg</span><span class="p">(</span><span class="n">connections_fpath</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+
+    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"Unknown file ending for features file (must be "</span>
+        <span class="sa">f</span><span class="s2">"'.csv' or '.gpkg'): </span><span class="si">{</span><span class="n">connections_fpath</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+    <span class="k">raise</span> <span class="n">revrtValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_deduplicate_records_across_batches</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">seen_keys</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deduplicate records across batches based on specified columns&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Deduplicate records across batches based on specified columns"""</span>
     <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">subset</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s2">&quot;records&quot;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">subset</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s2">"records"</span><span class="p">):</span>
         <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen_keys</span><span class="p">:</span>
             <span class="k">continue</span>
@@ -1212,11 +1138,11 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_records_to_geo_df_with_points</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert list of records to GeoDataFrame with Point geometry&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Convert list of records to GeoDataFrame with Point geometry"""</span>
     <span class="n">pois</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span>
-    <span class="n">pois</span><span class="p">[</span><span class="s2">&quot;poi_gid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pois</span><span class="p">[</span><span class="s2">&quot;poi_gid&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;Int64&quot;</span><span class="p">)</span>
-    <span class="n">geometry</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">pois</span><span class="p">[</span><span class="s2">&quot;poi_lon&quot;</span><span class="p">],</span> <span class="n">pois</span><span class="p">[</span><span class="s2">&quot;poi_lat&quot;</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">pois</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="n">geometry</span><span class="p">)</span>
+    <span class="n">pois</span><span class="p">[</span><span class="s2">"poi_gid"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pois</span><span class="p">[</span><span class="s2">"poi_gid"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"Int64"</span><span class="p">)</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">points_from_xy</span><span class="p">(</span><span class="n">pois</span><span class="p">[</span><span class="s2">"poi_lon"</span><span class="p">],</span> <span class="n">pois</span><span class="p">[</span><span class="s2">"poi_lat"</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">pois</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="s2">"epsg:4326"</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="n">geometry</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="add_rr_to_nn">
@@ -1228,7 +1154,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">out_fpath</span><span class="p">,</span>
     <span class="n">crs_template_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add reinforcement region column to network node file.</span>
+<span class="w">    </span><span class="sd">"""Add reinforcement region column to network node file.</span>
 
 <span class="sd">    Reinforcement regions are user-defined. Typical regions are</span>
 <span class="sd">    Balancing Areas, States, or Counties, though custom regions are also</span>
@@ -1255,20 +1181,20 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        a GeoTIFF, or any file tha can be read with GeoPandas. If</span>
 <span class="sd">        ``None``, the `network_nodes_fpath` file CRS is used to</span>
 <span class="sd">        perform the mapping. By default, ``None``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">crs_template_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">crs_template_file</span> <span class="ow">or</span> <span class="n">network_nodes_fpath</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Reading in network node info...&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Reading in network node info..."</span><span class="p">)</span>
     <span class="n">network_nodes_fpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">network_nodes_fpath</span><span class="p">)</span>
     <span class="n">network_nodes</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">network_nodes_fpath</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Reading in CRS template...&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">crs_template_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.zarr&quot;</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Reading in CRS template..."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">crs_template_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">".zarr"</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
-            <span class="n">crs_template_file</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span>
+            <span class="n">crs_template_file</span><span class="p">,</span> <span class="n">consolidated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
             <span class="n">crs</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
-    <span class="k">elif</span> <span class="n">crs_template_file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;.tiff&quot;</span><span class="p">}:</span>
+    <span class="k">elif</span> <span class="n">crs_template_file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">".tif"</span><span class="p">,</span> <span class="s2">".tiff"</span><span class="p">}:</span>
         <span class="k">with</span> <span class="n">rioxarray</span><span class="o">.</span><span class="n">open_rasterio</span><span class="p">(</span><span class="n">crs_template_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">geo</span><span class="p">:</span>
             <span class="n">crs</span> <span class="o">=</span> <span class="n">geo</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">crs</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1278,26 +1204,26 @@ window.runMermaid = runMermaid;</script>
     <span class="n">regions</span> <span class="o">=</span> <span class="n">_safe_to_crs</span><span class="p">(</span><span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">regions_fpath</span><span class="p">),</span> <span class="n">crs</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">region_identifier_column</span> <span class="ow">in</span> <span class="n">network_nodes</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Network nodes file </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">network_nodes_fpath</span><span class="p">)</span><span class="si">!r}</span><span class="s2"> was specified &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;but it already contains the </span><span class="si">{</span><span class="n">region_identifier_column</span><span class="si">!r}</span><span class="s2"> &quot;</span>
-            <span class="s2">&quot;column. No data modified!&quot;</span>
+            <span class="sa">f</span><span class="s2">"Network nodes file </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">network_nodes_fpath</span><span class="p">)</span><span class="si">!r}</span><span class="s2"> was specified "</span>
+            <span class="sa">f</span><span class="s2">"but it already contains the </span><span class="si">{</span><span class="n">region_identifier_column</span><span class="si">!r}</span><span class="s2"> "</span>
+            <span class="s2">"column. No data modified!"</span>
         <span class="p">)</span>
         <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">revrtWarning</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Adding regions to network nodes...&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Adding regions to network nodes..."</span><span class="p">)</span>
     <span class="n">centroids</span> <span class="o">=</span> <span class="n">_geometry_centroids</span><span class="p">(</span><span class="n">network_nodes</span><span class="p">)</span>
     <span class="n">map_func</span> <span class="o">=</span> <span class="n">region_mapper</span><span class="p">(</span><span class="n">regions</span><span class="p">,</span> <span class="n">region_identifier_column</span><span class="p">)</span>
     <span class="n">network_nodes</span><span class="p">[</span><span class="n">region_identifier_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">centroids</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">map_func</span><span class="p">)</span>
 
-    <span class="n">out_fpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.gpkg&quot;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing updated network node data to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">out_fpath</span><span class="p">)</span>
-    <span class="n">network_nodes</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GPKG&quot;</span><span class="p">)</span></div>
+    <span class="n">out_fpath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".gpkg"</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Writing updated network node data to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">out_fpath</span><span class="p">)</span>
+    <span class="n">network_nodes</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">out_fpath</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"GPKG"</span><span class="p">)</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_safe_to_crs</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">crs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Project a GeoDataFrame while avoiding single-feature warnings&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Project a GeoDataFrame while avoiding single-feature warnings"""</span>
 
     <span class="k">if</span> <span class="n">features</span><span class="o">.</span><span class="n">crs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">crs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">features</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">crs</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">features</span>
@@ -1313,12 +1239,12 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_geometry_centroids</span><span class="p">(</span><span class="n">features</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return centroids without geographic CRS warnings&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return centroids without geographic CRS warnings"""</span>
 
     <span class="k">if</span> <span class="n">features</span><span class="o">.</span><span class="n">crs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">features</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">is_geographic</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">features</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">centroid</span>
 
-    <span class="n">projected_crs</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">estimate_utm_crs</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;EPSG:3857&quot;</span>
+    <span class="n">projected_crs</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">estimate_utm_crs</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"EPSG:3857"</span>
     <span class="n">projected</span> <span class="o">=</span> <span class="n">_safe_to_crs</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">projected_crs</span><span class="p">)</span>
     <span class="n">centroids</span> <span class="o">=</span> <span class="n">projected</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">centroid</span>
 
@@ -1335,42 +1261,42 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_layers_to_file</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for layers_to_file command&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fp&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="sd">"""Preprocess config for layers_to_file command"""</span>
+    <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">"fp"</span><span class="p">})</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_convert_pois_to_lines</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for convert_pois_to_lines command&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Preprocess config for convert_pois_to_lines command"""</span>
     <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
-        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;poi_csv_f&quot;</span><span class="p">,</span> <span class="s2">&quot;template_f&quot;</span><span class="p">,</span> <span class="s2">&quot;out_f&quot;</span><span class="p">}</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">"poi_csv_f"</span><span class="p">,</span> <span class="s2">"template_f"</span><span class="p">,</span> <span class="s2">"out_f"</span><span class="p">}</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_convert_map_ss_to_rr</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for map_ss_to_rr command&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Preprocess config for map_ss_to_rr command"""</span>
     <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
-        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;features_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;regions_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_fpath&quot;</span><span class="p">}</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">"features_fpath"</span><span class="p">,</span> <span class="s2">"regions_fpath"</span><span class="p">,</span> <span class="s2">"out_fpath"</span><span class="p">}</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_convert_ss_from_conn</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for ss_from_conn command&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Preprocess config for ss_from_conn command"""</span>
     <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
-        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connections_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_fpath&quot;</span><span class="p">}</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">"connections_fpath"</span><span class="p">,</span> <span class="s2">"out_fpath"</span><span class="p">}</span>
     <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_convert_add_rr_to_nn</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Preprocess config for add_rr_to_nn command&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Preprocess config for add_rr_to_nn command"""</span>
     <span class="k">return</span> <span class="n">strip_path_keys</span><span class="p">(</span>
         <span class="n">config</span><span class="p">,</span>
-        <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;network_nodes_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;regions_fpath&quot;</span><span class="p">,</span> <span class="s2">&quot;out_fpath&quot;</span><span class="p">},</span>
+        <span class="n">keys_to_fix</span><span class="o">=</span><span class="p">{</span><span class="s2">"network_nodes_fpath"</span><span class="p">,</span> <span class="s2">"regions_fpath"</span><span class="p">,</span> <span class="s2">"out_fpath"</span><span class="p">},</span>
     <span class="p">)</span>
 
 
 <span class="n">layers_to_file_command</span> <span class="o">=</span> <span class="n">CLICommandFromClass</span><span class="p">(</span>
     <span class="n">LayeredFile</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;layers_to_file&quot;</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"layers_to_file"</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_layers_to_file</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1381,7 +1307,7 @@ window.runMermaid = runMermaid;</script>
 <span class="p">)</span>
 <span class="n">convert_pois_to_lines_command</span> <span class="o">=</span> <span class="n">CLICommandFromFunction</span><span class="p">(</span>
     <span class="n">convert_pois_to_lines</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;convert-pois-to-lines&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"convert-pois-to-lines"</span><span class="p">,</span>
     <span class="n">add_collect</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">split_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">config_preprocessor</span><span class="o">=</span><span class="n">_preprocess_convert_pois_to_lines</span><span class="p">,</span>

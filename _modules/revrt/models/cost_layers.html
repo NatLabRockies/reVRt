@@ -43,182 +43,17 @@
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.esm.min.mjs";
-
-
 
 
 
 const initStyles = () => {
     const defaultStyle = document.createElement('style');
-    defaultStyle.textContent = `pre.mermaid {
-    /* Same as .mermaid-container > pre */
-    display: block;
-    width: 100%;
-}
-
-pre.mermaid > svg {
-    /* Same as .mermaid-container > pre > svg */
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}`;
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
     document.head.appendChild(defaultStyle);
 
     const fullscreenStyle = document.createElement('style');
-    fullscreenStyle.textContent = `.mermaid-container {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-}
-
-.mermaid-container > pre {
-    display: block;
-    width: 100%;
-}
-
-.mermaid-container > pre > svg {
-    height: 500px;
-    width: 100%;
-    max-width: 100% !important;
-}
-
-.mermaid-fullscreen-btn {
-    width: 28px;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    line-height: 1;
-    padding: 0;
-    color: #333;
-}
-
-.mermaid-fullscreen-btn:hover {
-    opacity: 100% !important;
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-btn.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-btn.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal {
-    display: none;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 95vw;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    z-index: 9999;
-    padding: 20px;
-    overflow: auto;
-}
-
-.mermaid-fullscreen-modal.dark-theme {
-    background: rgba(0, 0, 0, 0.98);
-}
-
-.mermaid-fullscreen-modal.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen.dark-theme {
-    background: #1a1a1a;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-}
-
-.mermaid-container-fullscreen pre.mermaid {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mermaid-container-fullscreen .mermaid svg {
-    height: 100% !important;
-    width: 100% !important;
-    cursor: grab;
-}
-
-.mermaid-fullscreen-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s;
-    font-size: 24px;
-    line-height: 1;
-    color: #333;
-}
-
-.mermaid-fullscreen-close:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    transform: scale(1.1);
-}
-
-.mermaid-fullscreen-close.dark-theme {
-    background: rgba(50, 50, 50, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-}
-
-.mermaid-fullscreen-close.dark-theme:hover {
-    background: rgba(60, 60, 60, 1);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
-}
-
-.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
-    display: none !important;
-}`;
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
     document.head.appendChild(fullscreenStyle);
 }
 
@@ -263,6 +98,32 @@ let darkTheme = isDarkTheme();
 let modal = null;
 let modalContent = null;
 let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
 
 const runMermaid = async (rerun) => {
     console.log("Running mermaid diagrams, rerun =", rerun);
@@ -270,7 +131,15 @@ const runMermaid = async (rerun) => {
     let all_mermaids = document.querySelectorAll(".mermaid");
 
     if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
         all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
             if(!el.hasAttribute("data-original-code")) {
                 // store original code
                 // console.log(`Storing original code for first run: `, el.innerHTML);
@@ -287,42 +156,100 @@ const runMermaid = async (rerun) => {
                 el.setAttribute('data-original-code', el.innerHTML);
             }
         });
-        await mermaid.run();
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
     }
 
     all_mermaids = document.querySelectorAll(".mermaid");
-    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
 
-    if ("False" === "True") {
-        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
         if(mermaids_to_add_zoom > 0) {
-            var svgs = d3.selectAll("");
-            if(all_mermaids.length !== mermaids_processed.length) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
                 setTimeout(() => runMermaid(false), 200);
                 return;
-            } else if(svgs.size() !== mermaids_to_add_zoom) {
-                setTimeout(() => runMermaid(false), 200);
-                return;
-            } else {
-                svgs.each(function() {
-                    var svg = d3.select(this);
-                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
-                    var inner = svg.select("g");
-                    var zoom = d3.zoom().on("zoom", function(event) {
-                        inner.attr("transform", event.transform);
-                    });
-                    svg.call(zoom);
-                });
             }
+            addZoomToSvgs(svgs);
         }
-    } else if(all_mermaids.length !== mermaids_processed.length) {
+    } else if(mermaids_active.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
         setTimeout(() => runMermaid(false), 200);
         return;
     }
 
     // Stop here if not adding fullscreen capability
-    if ("True" !== "True") return;
+    if (!true) return;
 
     if (modal !== null ) {
         // Destroy existing modal
@@ -345,7 +272,7 @@ const runMermaid = async (rerun) => {
     modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
 
-    const closeModal = () => {
+    closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
         document.body.style.overflow = ''
@@ -356,12 +283,6 @@ const runMermaid = async (rerun) => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-            closeModal();
-        }
-    });
-
     document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
         if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
             mermaidDiv.closest('.mermaid-fullscreen-modal')) {
@@ -381,8 +302,8 @@ const runMermaid = async (rerun) => {
         const fullscreenBtn = document.createElement('button');
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
-        fullscreenBtn.textContent = '⛶';
-        fullscreenBtn.style.opacity = '50%';
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -394,7 +315,7 @@ const runMermaid = async (rerun) => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
-            previousScrollOffset = [window.scroll, window.scrollY];
+            previousScrollOffset = [window.scrollX, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -406,9 +327,9 @@ const runMermaid = async (rerun) => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.sdisplay = 'block';
+                svg.style.display = 'block';
 
-                if ("False" === "True") {
+                if (false) {
                     setTimeout(() => {
                         const g = svg.querySelector('g');
                         if (g) {
@@ -431,8 +352,11 @@ const runMermaid = async (rerun) => {
     });
 };
 
+
+
 const load = async () => {
     initStyles();
+
 
     await runMermaid(true);
 
@@ -442,10 +366,8 @@ const load = async () => {
             darkTheme = newDarkTheme;
             console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
             await mermaid.initialize(
-                {...JSON.parse(
-                    `{"startOnLoad": false}`
-                ),
-                ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
                 }
             );
             await runMermaid(true);
@@ -470,10 +392,8 @@ const load = async () => {
 
 console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
 mermaid.initialize(
-    {...JSON.parse(
-        `{"startOnLoad": false}`
-    ),
-    ...{ darkMode: darkTheme, theme: darkTheme ? 'dark' : 'default' },
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
     }
 );
 
@@ -822,7 +742,7 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for revrt.models.cost_layers</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Definition of friction, barrier, and costs processing config files&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Definition of friction, barrier, and costs processing config files"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
@@ -835,420 +755,420 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_comparison_values</span>
 
 
-<span class="n">Extents</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;wet&quot;</span><span class="p">,</span> <span class="s2">&quot;wet+&quot;</span><span class="p">,</span> <span class="s2">&quot;landfall&quot;</span><span class="p">,</span> <span class="s2">&quot;dry+&quot;</span><span class="p">,</span> <span class="s2">&quot;dry&quot;</span><span class="p">]</span>
-<span class="sd">&quot;&quot;&quot;Terms for specifying masks</span>
+<span class="n">Extents</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"all"</span><span class="p">,</span> <span class="s2">"wet"</span><span class="p">,</span> <span class="s2">"wet+"</span><span class="p">,</span> <span class="s2">"landfall"</span><span class="p">,</span> <span class="s2">"dry+"</span><span class="p">,</span> <span class="s2">"dry"</span><span class="p">]</span>
+<span class="sd">"""Terms for specifying masks</span>
 
 <span class="sd">Defined as follows:</span>
 
-<span class="sd">    - &#39;all&#39;: Full extent, including offshore, onshore, and landfall</span>
-<span class="sd">    - &#39;wet&#39;: offshore extent only</span>
-<span class="sd">    - &#39;wet+&#39;: offshore extent + landfall extent</span>
-<span class="sd">    - &#39;landfall&#39;: landfall extent (area between wet and dry extents)</span>
-<span class="sd">    - &#39;dry+&#39;: onshore extent + landfall extent</span>
-<span class="sd">    - &#39;dry&#39;: onshore extent only</span>
+<span class="sd">    - 'all': Full extent, including offshore, onshore, and landfall</span>
+<span class="sd">    - 'wet': offshore extent only</span>
+<span class="sd">    - 'wet+': offshore extent + landfall extent</span>
+<span class="sd">    - 'landfall': landfall extent (area between wet and dry extents)</span>
+<span class="sd">    - 'dry+': onshore extent + landfall extent</span>
+<span class="sd">    - 'dry': onshore extent only</span>
 
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 
 <div class="viewcode-block" id="LandUseMultipliers">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.LandUseMultipliers.html#revrt.models.cost_layers.LandUseMultipliers">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LandUseMultipliers</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Land use multipliers&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Land use multipliers"""</span>
 
     <span class="n">cropland</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cost multiplier for cropland&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cost multiplier for cropland"""</span>
 
     <span class="n">forest</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cost multiplier for forest&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cost multiplier for forest"""</span>
 
     <span class="n">suburban</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cost multiplier for suburban areas&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cost multiplier for suburban areas"""</span>
 
     <span class="n">urban</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cost multiplier for urban areas&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cost multiplier for urban areas"""</span>
 
     <span class="n">wetland</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cost multiplier for wetlands</span>
+<span class="w">    </span><span class="sd">"""Cost multiplier for wetlands</span>
 
 <span class="sd">    This value is independent of the water multiplier.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 
 
 <div class="viewcode-block" id="SlopeMultipliers">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.SlopeMultipliers.html#revrt.models.cost_layers.SlopeMultipliers">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SlopeMultipliers</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Slope multipliers and cutoffs&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Slope multipliers and cutoffs"""</span>
 
     <span class="n">hill_mult</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cost multiplier for hills&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cost multiplier for hills"""</span>
 
     <span class="n">hill_slope</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lowest slope that qualifies as a hill (decimal percent)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Lowest slope that qualifies as a hill (decimal percent)"""</span>
 
     <span class="n">mtn_mult</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cost multiplier for mountains&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Cost multiplier for mountains"""</span>
 
     <span class="n">mtn_slope</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lowest slope that qualifies as a mountain (decimal percent)&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Lowest slope that qualifies as a mountain (decimal percent)"""</span></div>
 
 
 
 <div class="viewcode-block" id="IsoMultipliers">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">IsoMultipliers</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multiplier config for one ISO&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Multiplier config for one ISO"""</span>
 
     <span class="n">iso</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of ISO these multipliers are for&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name of ISO these multipliers are for"""</span>
 
     <span class="n">land_use</span><span class="p">:</span> <span class="n">LandUseMultipliers</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Land use multipliers&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Land use multipliers"""</span>
 
     <span class="n">slope</span><span class="p">:</span> <span class="n">SlopeMultipliers</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Slope multipliers and cutoffs&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Slope multipliers and cutoffs"""</span></div>
 
 
 
 <div class="viewcode-block" id="RangeConfig">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.RangeConfig.html#revrt.models.cost_layers.RangeConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RangeConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for defining a range</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RangeConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for defining a range</span>
 
 <span class="sd">    When you define a range, you can add a value to assign to cells</span>
 <span class="sd">    matching that range. Cells with values &gt;= than `min` and &lt; `max`</span>
 <span class="sd">    will be assigned `value`. One or both of `min` and `max` can be</span>
 <span class="sd">    specified.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="nb">min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimum value to get a cost assigned (inclusive)&quot;&quot;&quot;</span>
+    <span class="nb">min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Minimum value to get a cost assigned (inclusive)"""</span>
 
-    <span class="nb">max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximum value to get a cost assigned (exclusive)&quot;&quot;&quot;</span>
+    <span class="nb">max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Maximum value to get a cost assigned (exclusive)"""</span>
 
     <span class="n">value</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value to assign to the range defined by `min` and `max`&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Value to assign to the range defined by `min` and `max`"""</span></div>
 
 
 
 <div class="viewcode-block" id="Rasterize">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.Rasterize.html#revrt.models.cost_layers.Rasterize">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Rasterize</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config to rasterize a vector layer and apply a value to it&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Rasterize</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config to rasterize a vector layer and apply a value to it"""</span>
 
     <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value or source column name to burn in to raster&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Value or source column name to burn in to raster"""</span>
 
     <span class="n">buffer</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value to buffer by (can be negative)&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Value to buffer by (can be negative)"""</span>
 
     <span class="n">reproject</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reproject vector to raster CRS if ``True``&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Reproject vector to raster CRS if ``True``"""</span>
 
     <span class="n">all_touched</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rasterize all cells touched by vector if ``True``&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Rasterize all cells touched by vector if ``True``"""</span>
 
     <span class="n">tile_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tile size to use for rasterization</span>
+<span class="w">    </span><span class="sd">"""Tile size to use for rasterization</span>
 
 <span class="sd">    If not specified, a default value of 2048 will be used.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">simply_before_rasterize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simplify geometries before rasterization if ``True``</span>
+<span class="w">    </span><span class="sd">"""Simplify geometries before rasterization if ``True``</span>
 
 <span class="sd">    Geometries are simplified to half of the raster cell size when this</span>
 <span class="sd">    is ``True``. This can help speed up rasterization and reduce memory</span>
 <span class="sd">    usage for very complex vectors, but may result in less accurate</span>
 <span class="sd">    rasterization. By default, ``False``.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 
 
 <div class="viewcode-block" id="LayerBuildConfig">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.LayerBuildConfig.html#revrt.models.cost_layers.LayerBuildConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">LayerBuildConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Friction and barrier layers config model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LayerBuildConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Friction and barrier layers config model</span>
 
 <span class="sd">    The inputs `global_value`, `map`, `bins`, `rasterize`, and</span>
 <span class="sd">    `forced_inclusion` are exclusive, but exactly one must be specified.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">extent</span><span class="p">:</span> <span class="n">Extents</span> <span class="o">=</span> <span class="n">ALL</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extent to apply map or range to</span>
+<span class="w">    </span><span class="sd">"""Extent to apply map or range to</span>
 
 <span class="sd">    Must be one of the following:</span>
 
-<span class="sd">        - &#39;all&#39;: Full extent, including offshore, onshore, and landfall</span>
-<span class="sd">        - &#39;wet&#39;: offshore extent only</span>
-<span class="sd">        - &#39;wet+&#39;: offshore extent + landfall extent</span>
-<span class="sd">        - &#39;landfall&#39;: landfall extent (area between wet and dry extents)</span>
-<span class="sd">        - &#39;dry+&#39;: onshore extent + landfall extent</span>
-<span class="sd">        - &#39;dry&#39;: onshore extent only</span>
+<span class="sd">        - 'all': Full extent, including offshore, onshore, and landfall</span>
+<span class="sd">        - 'wet': offshore extent only</span>
+<span class="sd">        - 'wet+': offshore extent + landfall extent</span>
+<span class="sd">        - 'landfall': landfall extent (area between wet and dry extents)</span>
+<span class="sd">        - 'dry+': onshore extent + landfall extent</span>
+<span class="sd">        - 'dry': onshore extent only</span>
 
-<span class="sd">    By default, &#39;all&#39;.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    By default, 'all'.</span>
+<span class="sd">    """</span>
 
     <span class="n">global_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Global value to use for entire layer extent&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Global value to use for entire layer extent"""</span>
 
     <span class="nb">map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Values in raster (keys) and values to use layer&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Values in raster (keys) and values to use layer"""</span>
 
     <span class="n">bins</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RangeConfig</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ranges of raster values</span>
+<span class="w">    </span><span class="sd">"""Ranges of raster values</span>
 
 <span class="sd">    This input can be one or more ranges of raster values to apply to</span>
 <span class="sd">    barrier/friction. The value of overlapping ranges are added</span>
 <span class="sd">    together.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">pass_through</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pass cost data through without extra processing&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Pass cost data through without extra processing"""</span>
 
     <span class="n">rasterize</span><span class="p">:</span> <span class="n">Rasterize</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rasterize a vector and save as layer&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Rasterize a vector and save as layer"""</span>
 
     <span class="n">forced_inclusion</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Force inclusion</span>
+<span class="w">    </span><span class="sd">"""Force inclusion</span>
 
 <span class="sd">    If `forced_inclusion` is ``True``, any cells with a value &gt; 0 will</span>
 <span class="sd">    force the final value of corresponding cells to 0. Multiple forced</span>
 <span class="sd">    inclusions are allowed.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">na_fill</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value to fill NA cells with after processing&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Value to fill NA cells with after processing"""</span></div>
 
 
 
 <div class="viewcode-block" id="BarrierLayer">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.BarrierLayer.html#revrt.models.cost_layers.BarrierLayer">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">BarrierLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for a routing barrier layer&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BarrierLayer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config for a routing barrier layer"""</span>
 
     <span class="n">layer_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of layer in Zarr file&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name of layer in Zarr file"""</span>
 
     <span class="n">where</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Comparison definition describing barrier cells&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Comparison definition describing barrier cells"""</span>
 
     <span class="n">barrier_importance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional rank used when relaxing soft barriers&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Optional rank used when relaxing soft barriers"""</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;where&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"where"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_where</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">where</span><span class="p">):</span>
         <span class="n">parse_comparison_values</span><span class="p">(</span><span class="n">where</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">where</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;barrier_importance&quot;</span><span class="p">)</span>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"barrier_importance"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_barrier_importance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">barrier_importance</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">barrier_importance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">barrier_importance</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Barrier importance must be a positive integer when &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;provided. Got: </span><span class="si">{</span><span class="n">barrier_importance</span><span class="si">!r}</span><span class="s2">&quot;</span>
+                <span class="s2">"Barrier importance must be a positive integer when "</span>
+                <span class="sa">f</span><span class="s2">"provided. Got: </span><span class="si">{</span><span class="n">barrier_importance</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">revrtConfigurationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">barrier_importance</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_routing_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;[NOT PUBLIC API] Convert barrier config to routing payload&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""[NOT PUBLIC API] Convert barrier config to routing payload"""</span>
         <span class="n">barrier_operator</span><span class="p">,</span> <span class="n">barrier_threshold</span> <span class="o">=</span> <span class="n">parse_comparison_values</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">where</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;layer_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_name</span><span class="p">,</span>
-            <span class="s2">&quot;barrier_operator&quot;</span><span class="p">:</span> <span class="n">barrier_operator</span><span class="p">,</span>
-            <span class="s2">&quot;barrier_threshold&quot;</span><span class="p">:</span> <span class="n">barrier_threshold</span><span class="p">,</span>
-            <span class="s2">&quot;barrier_importance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">barrier_importance</span><span class="p">,</span>
+            <span class="s2">"layer_name"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer_name</span><span class="p">,</span>
+            <span class="s2">"barrier_operator"</span><span class="p">:</span> <span class="n">barrier_operator</span><span class="p">,</span>
+            <span class="s2">"barrier_threshold"</span><span class="p">:</span> <span class="n">barrier_threshold</span><span class="p">,</span>
+            <span class="s2">"barrier_importance"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">barrier_importance</span><span class="p">,</span>
         <span class="p">}</span></div>
 
 
 
 <div class="viewcode-block" id="DryCosts">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.DryCosts.html#revrt.models.cost_layers.DryCosts">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DryCosts</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config items required to generate dry costs&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DryCosts</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config items required to generate dry costs"""</span>
 
     <span class="n">iso_region_tiff</span><span class="p">:</span> <span class="n">FilePath</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filename of ISO region GeoTIFF&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Filename of ISO region GeoTIFF"""</span>
 
     <span class="n">nlcd_tiff</span><span class="p">:</span> <span class="n">FilePath</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;File name of NLCD GeoTiff&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""File name of NLCD GeoTiff"""</span>
 
     <span class="n">slope_tiff</span><span class="p">:</span> <span class="n">FilePath</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;File name of slope GeoTiff&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""File name of slope GeoTiff"""</span>
 
     <span class="n">cost_configs</span><span class="p">:</span> <span class="n">FilePath</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Path to json file with transmission cost configuration values</span>
+<span class="w">    </span><span class="sd">"""Path to json file with transmission cost configuration values</span>
 
 <span class="sd">    Path to json file containing dictionary with transmission cost</span>
 <span class="sd">    configuration values. Valid configuration keys are:</span>
 
-<span class="sd">        - &quot;base_line_costs&quot;</span>
-<span class="sd">        - &quot;iso_lookup&quot;</span>
-<span class="sd">        - &quot;iso_multipliers&quot;</span>
-<span class="sd">        - &quot;land_use_classes&quot;</span>
-<span class="sd">        - &quot;new_substation_costs&quot;</span>
-<span class="sd">        - &quot;power_classes&quot;</span>
-<span class="sd">        - &quot;power_to_voltage&quot;</span>
-<span class="sd">        - &quot;transformer_costs&quot;</span>
-<span class="sd">        - &quot;upgrade_substation_costs&quot;</span>
+<span class="sd">        - "base_line_costs"</span>
+<span class="sd">        - "iso_lookup"</span>
+<span class="sd">        - "iso_multipliers"</span>
+<span class="sd">        - "land_use_classes"</span>
+<span class="sd">        - "new_substation_costs"</span>
+<span class="sd">        - "power_classes"</span>
+<span class="sd">        - "power_to_voltage"</span>
+<span class="sd">        - "transformer_costs"</span>
+<span class="sd">        - "upgrade_substation_costs"</span>
 
 <span class="sd">    Each of these keys should point to a dictionary or a path to</span>
 <span class="sd">    a separate json file containing a dictionary of</span>
 <span class="sd">    configurations for each section.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">default_mults</span><span class="p">:</span> <span class="n">IsoMultipliers</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multipliers to be used for default region</span>
+<span class="w">    </span><span class="sd">"""Multipliers to be used for default region</span>
 
 <span class="sd">    This input should be a dictionary with three keys:</span>
 
-<span class="sd">        - &quot;iso&quot;: This key is ignored, but is required. Can set to</span>
-<span class="sd">          &quot;default&quot; and move on.</span>
-<span class="sd">        - &quot;land_use&quot;: A dictionary where keys are the land use types</span>
-<span class="sd">          (e.g. &quot;cropland&quot;, &quot;forest&quot;, &quot;wetland&quot;, etc.) and values are</span>
+<span class="sd">        - "iso": This key is ignored, but is required. Can set to</span>
+<span class="sd">          "default" and move on.</span>
+<span class="sd">        - "land_use": A dictionary where keys are the land use types</span>
+<span class="sd">          (e.g. "cropland", "forest", "wetland", etc.) and values are</span>
 <span class="sd">          the multipliers for those land uses.</span>
-<span class="sd">        - &quot;slope&quot;: A dictionary where keys are the slope</span>
-<span class="sd">          types/multipliers (e.g. &quot;hill_mult&quot;, &quot;hill_slope&quot;,</span>
-<span class="sd">          &quot;mtn_mult&quot;, &quot;mtn_slope&quot;, etc.) and values are the</span>
+<span class="sd">        - "slope": A dictionary where keys are the slope</span>
+<span class="sd">          types/multipliers (e.g. "hill_mult", "hill_slope",</span>
+<span class="sd">          "mtn_mult", "mtn_slope", etc.) and values are the</span>
 <span class="sd">          slopes/multipliers.</span>
 
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">extra_tiffs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FilePath</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional list of extra GeoTIFFs to add to cost Zarr file&quot;&quot;&quot;</span></div>
+<span class="w">    </span><span class="sd">"""Optional list of extra GeoTIFFs to add to cost Zarr file"""</span></div>
 
 
 
 <div class="viewcode-block" id="MergeFrictionBarriers">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.MergeFrictionBarriers.html#revrt.models.cost_layers.MergeFrictionBarriers">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MergeFrictionBarriers</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config to combine friction and barriers and save to file</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MergeFrictionBarriers</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Config to combine friction and barriers and save to file</span>
 
 <span class="sd">    All barrier values are multiplied by a factor before merging with</span>
 <span class="sd">    friction. The multiplier should be large enough that all barriers</span>
 <span class="sd">    have a higher value than any possible friction.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">friction_layer</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of friction layer</span>
+<span class="w">    </span><span class="sd">"""Name of friction layer</span>
 
-<span class="sd">    A file with this name plus a &#39;.tif&#39; extension must have just been</span>
+<span class="sd">    A file with this name plus a '.tif' extension must have just been</span>
 <span class="sd">    created or had already existed in the tiff directory.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">barrier_layer</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of barrier layer</span>
+<span class="w">    </span><span class="sd">"""Name of barrier layer</span>
 
-<span class="sd">    A file with this name plus a &#39;.tif&#39; extension must have just been</span>
+<span class="sd">    A file with this name plus a '.tif' extension must have just been</span>
 <span class="sd">    created or had already existed in the tiff directory.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">output_layer_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">BARRIER_LAYER_NAME</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of combined output layer</span>
+<span class="w">    </span><span class="sd">"""Name of combined output layer</span>
 
 <span class="sd">    By default, :obj:`~revrt.constants.BARRIER_LAYER_NAME`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">barrier_multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e6</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Value to multiply barrier layer by during merge with friction</span>
+<span class="w">    </span><span class="sd">"""Value to multiply barrier layer by during merge with friction</span>
 
 <span class="sd">    The multiplier should be large enough that all barriers have</span>
 <span class="sd">    a higher value than any possible friction.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 
 
 <span class="n">LayerBuildComponents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">LayerBuildConfig</span><span class="p">]</span>
-<span class="sd">&quot;&quot;&quot;Mapping of layer components to use for building the final layer</span>
+<span class="sd">"""Mapping of layer components to use for building the final layer</span>
 
 <span class="sd">Keys are GeoTIFF or vector filepaths. Values are the</span>
 <span class="sd">:class:`LayerBuildConfig` to use for that file.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 
 <div class="viewcode-block" id="LayerConfig">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.LayerConfig.html#revrt.models.cost_layers.LayerConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LayerConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for friction, barrier, and costs processing&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Config for friction, barrier, and costs processing"""</span>
 
     <span class="n">layer_name</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Name of layer in Zarr file&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Name of layer in Zarr file"""</span>
 
     <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional description to store in attrs for layer&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Optional description to store in attrs for layer"""</span>
 
     <span class="n">include_in_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flag to specify whether layer should be stored in the file&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Flag to specify whether layer should be stored in the file"""</span>
 
     <span class="n">values_are_costs_per_mile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Option to specify that the values given represent $/mile</span>
+<span class="w">    </span><span class="sd">"""Option to specify that the values given represent $/mile</span>
 
 <span class="sd">    If ``True``, the values will be converted to $/cell_size,</span>
 <span class="sd">    which is what is ultimately used for routing.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">build</span><span class="p">:</span> <span class="n">LayerBuildComponents</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mapping of layer components used to build this layer</span>
+<span class="w">    </span><span class="sd">"""Mapping of layer components used to build this layer</span>
 
 <span class="sd">    Keys are GeoTIFF or vector filepaths. Values are the</span>
 <span class="sd">    :class:`LayerBuildConfig` to use for that file.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 
 
 <span class="n">Layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="n">LayerConfig</span><span class="p">]</span>
-<span class="sd">&quot;&quot;&quot;Layer configs to build and potentially add to file&quot;&quot;&quot;</span>
+<span class="sd">"""Layer configs to build and potentially add to file"""</span>
 
 
 <div class="viewcode-block" id="TransmissionLayerCreationConfig">
 <a class="viewcode-back" href="../../../_autosummary/revrt.models.cost_layers.TransmissionLayerCreationConfig.html#revrt.models.cost_layers.TransmissionLayerCreationConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TransmissionLayerCreationConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Config for transmission layer creation&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Config for transmission layer creation"""</span>
 
     <span class="n">template_file</span><span class="p">:</span> <span class="n">FilePath</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Template GeoTIFF/Zarr file for shape, profile, and transform&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Template GeoTIFF/Zarr file for shape, profile, and transform"""</span>
 
     <span class="n">routing_file</span><span class="p">:</span> <span class="n">Path</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Layer file to store results in&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Layer file to store results in"""</span>
 
     <span class="n">input_layer_dir</span><span class="p">:</span> <span class="n">DirectoryPath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Directory to look for GeoTIFFs in, in addition to &#39;.&#39;&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Directory to look for GeoTIFFs in, in addition to '.'"""</span>
 
     <span class="n">masks_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional path for mask GeoTIFFs&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Optional path for mask GeoTIFFs"""</span>
 
     <span class="n">output_tiff_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">()</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Directory to store output tiff files in&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Directory to store output tiff files in"""</span>
 
     <span class="n">layers</span><span class="p">:</span> <span class="n">Layers</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional configuration for layers to be built</span>
+<span class="w">    </span><span class="sd">"""Optional configuration for layers to be built</span>
 
 <span class="sd">    At least one of `layers`, `dry_costs`, or</span>
 <span class="sd">    `merge_friction_and_barriers` must be defined.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">dry_costs</span><span class="p">:</span> <span class="n">DryCosts</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional dry cost layer</span>
+<span class="w">    </span><span class="sd">"""Optional dry cost layer</span>
 
 <span class="sd">    At least one of `layers`, `dry_costs`, or</span>
 <span class="sd">    `merge_friction_and_barriers` must be defined.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">merge_friction_and_barriers</span><span class="p">:</span> <span class="n">MergeFrictionBarriers</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optional config to merge friction barriers</span>
+<span class="w">    </span><span class="sd">"""Optional config to merge friction barriers</span>
 
 <span class="sd">    At least one of `layers`, `dry_costs`, or</span>
 <span class="sd">    `merge_friction_and_barriers` must be defined.</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
+<span class="sd">    """</span></div>
 
 </pre></div>
 
