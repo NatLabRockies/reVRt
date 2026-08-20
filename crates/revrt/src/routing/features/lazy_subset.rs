@@ -401,7 +401,7 @@ impl<T: AsyncLazyElement> FeatureSource for AsyncLazySubset<T> {
     type Elem = T;
 
     fn get(&self, varname: &str) -> impl Future<Output = Result<FeatureArray<T>>> + Send {
-        self.get(varname)
+        AsyncLazySubset::<T>::get(self, varname)
     }
 }
 
