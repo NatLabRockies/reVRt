@@ -34,6 +34,21 @@ type BarrierRank = u8;
 /// A multi-dimensional array of barrier ranks
 type BarrierArray = ndarray::Array<BarrierRank, ndarray::Dim<ndarray::IxDynImpl>>;
 
+/// Value type a barrier threshold can take
+///
+/// Bundles the bounds every threshold must satisfy: it is deserialized
+/// from configuration, compared against feature values, and copied per
+/// cell. Implemented for the same element types as a [`FeatureSource`], so
+/// a [`Barrier`] threshold aligns with the source it is compared against.
+trait BarrierThreshold:
+    serde::de::DeserializeOwned + PartialOrd + Copy + Send + Sync + std::fmt::Debug
+{
+}
+
+impl BarrierThreshold for f32 {}
+
+impl BarrierThreshold for f64 {}
+
 /// A single barrier layer
 ///
 /// A barrier layer defines a criterion over one feature variable that
@@ -47,7 +62,7 @@ type BarrierArray = ndarray::Array<BarrierRank, ndarray::Dim<ndarray::IxDynImpl>
 /// to change in the future. It will keep backward compatibility for
 /// loading from JSON, but its internal structure might change.
 #[derive(Clone, Debug, serde::Deserialize)]
-struct BarrierLayer {
+struct BarrierLayer<T> {
     /// Name of the feature variable this barrier is derived from
     #[serde(rename = "layer_name")]
     name: String,
@@ -56,7 +71,7 @@ struct BarrierLayer {
     operator: BarrierOperator,
     /// Value the operator compares each feature value against
     #[serde(rename = "barrier_threshold")]
-    threshold: f32,
+    threshold: T,
     /// Barrier rank used to relax soft barriers
     ///
     /// Lower ranks are dropped first, so `rank == 1` is the first to be
@@ -66,7 +81,7 @@ struct BarrierLayer {
     rank: Option<BarrierRank>,
 }
 
-impl BarrierLayer {
+impl<T> BarrierLayer<T> {
     /// Warn once if a soft rank falls outside the valid range
     fn warn_on_out_of_range_rank(&self) {
         if let Some(rank) = self.rank
@@ -106,14 +121,14 @@ impl BarrierLayer {
     /// variable.
     async fn compute<F>(&self, features: &F) -> Result<BarrierArray>
     where
-        F: FeatureSource,
-        F::Elem: From<f32> + PartialOrd + Copy,
+        F: FeatureSource<Elem = T>,
+        T: BarrierThreshold,
     {
         trace!("Building barrier layer: {:?}", self);
 
         // Hard barriers carry no rank, so mark them as maximally important
         let rank = self.rank.unwrap_or(BarrierRank::MAX);
-        let threshold = F::Elem::from(self.threshold);
+        let threshold = self.threshold;
 
         let array = features.get(&self.name).await?;
         Ok(array.mapv(|value| {
@@ -148,12 +163,12 @@ impl BarrierLayer {
 /// stays a barrier, so lower ranks are redundant and only the highest one
 /// affects the outcome.
 #[derive(Clone, Debug)]
-struct Barrier {
+struct Barrier<T> {
     /// Layers making up the barrier, or `None` when no barrier applies
-    layers: Option<Vec<BarrierLayer>>,
+    layers: Option<Vec<BarrierLayer<T>>>,
 }
 
-impl Barrier {
+impl<T> Barrier<T> {
     /// Combine all layers into a single cell-wise maximum-rank array
     ///
     /// Returns `Ok(None)` when the barrier has no layers.
@@ -170,8 +185,8 @@ impl Barrier {
     /// checked on every combination.
     async fn compute<F>(&self, features: &F) -> Result<Option<BarrierArray>>
     where
-        F: FeatureSource,
-        F::Elem: From<f32> + PartialOrd + Copy,
+        F: FeatureSource<Elem = T>,
+        T: BarrierThreshold,
     {
         let Some(layers) = self.layers.as_ref() else {
             return Ok(None);
@@ -294,7 +309,21 @@ mod test {
         operator: BarrierOperator,
         threshold: f32,
         rank: Option<u8>,
-    ) -> BarrierLayer {
+    ) -> BarrierLayer<f32> {
+        BarrierLayer {
+            name: name.to_string(),
+            operator,
+            threshold,
+            rank,
+        }
+    }
+
+    fn layer_f64(
+        name: &str,
+        operator: BarrierOperator,
+        threshold: f64,
+        rank: Option<u8>,
+    ) -> BarrierLayer<f64> {
         BarrierLayer {
             name: name.to_string(),
             operator,
@@ -327,11 +356,23 @@ mod test {
     #[tokio::test]
     async fn compute_supports_f64_features() {
         let features = MockFeaturesF64::new([("slope", feature_f64([1.0, 2.0, 3.0, 4.0]))]);
-        let computed = layer("slope", BarrierOperator::GreaterThan, 2.0, Some(5))
+        let computed = layer_f64("slope", BarrierOperator::GreaterThan, 2.0, Some(5))
             .compute(&features)
             .await
             .unwrap();
         assert_eq!(computed, barriers([0, 0, 5, 5]));
+    }
+
+    #[tokio::test]
+    async fn compute_matches_f64_threshold_without_precision_loss() {
+        // 0.1 has no exact f32 representation, so widening an f32 threshold
+        // to f64 would miss this cell; the generic threshold stays f64.
+        let features = MockFeaturesF64::new([("slope", feature_f64([0.1, 0.2, 0.3, 0.4]))]);
+        let computed = layer_f64("slope", BarrierOperator::Equal, 0.1, Some(5))
+            .compute(&features)
+            .await
+            .unwrap();
+        assert_eq!(computed, barriers([5, 0, 0, 0]));
     }
 
     #[tokio::test]
@@ -495,9 +536,9 @@ mod test {
 
     #[test]
     fn ranks_are_empty_without_layers() {
-        assert_eq!(Barrier { layers: None }.ranks().count(), 0);
+        assert_eq!(Barrier::<f32> { layers: None }.ranks().count(), 0);
         assert_eq!(
-            Barrier {
+            Barrier::<f32> {
                 layers: Some(vec![])
             }
             .ranks()
@@ -515,7 +556,7 @@ mod test {
             "barrier_importance": 10
         }"#;
 
-        let layer: BarrierLayer = serde_json::from_str(payload).unwrap();
+        let layer: BarrierLayer<f32> = serde_json::from_str(payload).unwrap();
         assert_eq!(layer.name, "slope");
         assert!(matches!(
             layer.operator,
@@ -533,7 +574,7 @@ mod test {
             "barrier_threshold": 1.0
         }"#;
 
-        let layer: BarrierLayer = serde_json::from_str(payload).unwrap();
+        let layer: BarrierLayer<f32> = serde_json::from_str(payload).unwrap();
         assert_eq!(layer.rank, None);
     }
 }
