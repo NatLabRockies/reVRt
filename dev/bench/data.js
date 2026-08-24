@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787610598139,
+  "lastUpdate": 1787615119906,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -14279,6 +14279,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 295076632,
             "range": "± 4642219",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "ppinchuk@nrel.gov",
+            "name": "Paul Pinchuk",
+            "username": "ppinchuk"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0a4ebd7f7dfdee7f05dffdf8c8b5ffe7304c9824",
+          "message": "Add output cols (#330)\n\n* Specify skip keys\n\n* Break out costs by option\n\n* Add tests for new cost outputs\n\n* Add tests for new outputs\n\n* Fix test\n\n* Better outputs\n\n* Formatting\n\n* Route metrics now returns route result\n\n* Simplify route result writer\n\n* Update tests\n\n* Update docs\n\n* Bump version\n\n* Minor logic update",
+          "timestamp": "2026-08-24T17:32:32-06:00",
+          "tree_id": "f16af990ad0ea944c7cc1796269a97635eef69b5",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/0a4ebd7f7dfdee7f05dffdf8c8b5ffe7304c9824"
+        },
+        "date": 1787615117998,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 50903993,
+            "range": "± 939314",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 54415024,
+            "range": "± 879774",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 65013835,
+            "range": "± 1585668",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 93373544,
+            "range": "± 1553068",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 457540373,
+            "range": "± 20255963",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 145164411,
+            "range": "± 620996",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 147635950,
+            "range": "± 687825",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 156255367,
+            "range": "± 906869",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 184645572,
+            "range": "± 1263809",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 291158130,
+            "range": "± 4463224",
             "unit": "ns/iter"
           }
         ]
