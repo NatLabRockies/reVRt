@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787605387443,
+  "lastUpdate": 1787610598139,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -14195,6 +14195,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 293387927,
             "range": "± 7169864",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "guilherme@castelao.net",
+            "name": "Guilherme Castelão",
+            "username": "castelao"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4fb7bb6df564e9de1c752be19cea7468e556462b",
+          "message": "Prototyping a new concept for barrier layer (#324)\n\n* feat: Prototype of new agnostic barrier concept\n\nThe current barrier is entangled with the Zarr store. This new prototype\nhas two achievements: 1) Decouple with I/O and handle barrier as nD\narrays, thus making maintenance much easier while allowing possible\nfuture new I/O engines; 2) Support async access to features, thus better\nhandling the features access which is the true bottleneck here.\n\nOne change in concept is to combine all barriers, soft and hard\nbarriers, in one single matrix, so it is calculated once and allow\nsuccessive soft layer drops without recalculating the barriers.\n\n* cfg: Adding requirement on futures\n\n* feat: Adding type FeatureType and trait FeatureSource\n\n* fetures must be crate-wide acessible\n\nWe might relocate features in the future.\n\n* Linking cost sub-module barrier\n\n* refact: Use UFCS to disambiguate inherent get in FeatureSource impl\n\n* refact: Require Send + Sync on FeatureSource trait\n\n* fix: Make Barrier and BarrierLayer module-private\n\n* doc: Document uniform-shape assumption for barrier layer combination\n\n* refact: Generic barrier threshold over feature element type",
+          "timestamp": "2026-08-24T16:11:13-06:00",
+          "tree_id": "927abee041b6cd025babf15c7f4229372e4bfc74",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/4fb7bb6df564e9de1c752be19cea7468e556462b"
+        },
+        "date": 1787610596949,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 52113876,
+            "range": "± 894813",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 62097326,
+            "range": "± 988232",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 67178544,
+            "range": "± 1131474",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 95630031,
+            "range": "± 1711087",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 462811648,
+            "range": "± 13103623",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 146247548,
+            "range": "± 1624638",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 149164445,
+            "range": "± 713613",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 158013857,
+            "range": "± 1133041",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 187107301,
+            "range": "± 1714521",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 295076632,
+            "range": "± 4642219",
             "unit": "ns/iter"
           }
         ]
