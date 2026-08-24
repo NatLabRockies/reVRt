@@ -25,6 +25,7 @@ mod lazy_subset;
 #[cfg(test)]
 mod samples;
 
+use std::future::Future;
 use std::sync::Arc;
 
 use object_store::local::LocalFileSystem;
@@ -34,7 +35,24 @@ use zarrs::storage::AsyncReadableListableStorage;
 use zarrs_object_store::AsyncObjectStore;
 
 use crate::error::Result;
-use lazy_subset::{AsyncLazyElement, AsyncLazySubset};
+pub(crate) use lazy_subset::AsyncLazyElement;
+pub(crate) use lazy_subset::AsyncLazySubset;
+
+/// A multi-dimensional array of feature values
+pub(crate) type FeatureArray<T> = ndarray::ArrayD<T>;
+
+/// A source of named feature layers with async, per-variable access
+pub(crate) trait FeatureSource: Send + Sync {
+    /// Element type of the feature arrays this source yields
+    type Elem;
+
+    /// Fetch the feature array registered under `varname`
+    ///
+    /// Every variable resolves to an array of the same shape, so callers
+    /// may combine results from different variables element-wise without
+    /// re-checking shapes.
+    fn get(&self, varname: &str) -> impl Future<Output = Result<FeatureArray<Self::Elem>>> + Send;
+}
 
 /// Input features used by the cost function.
 ///

@@ -1982,6 +1982,7 @@ version = "0.1.6"
 dependencies = [
  "criterion",
  "derive_builder",
+ "futures",
  "ndarray",
  "num-traits",
  "object_store",

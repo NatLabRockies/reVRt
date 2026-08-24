@@ -21,6 +21,7 @@
 
 use std::collections::HashMap;
 use std::fmt;
+use std::future::Future;
 use std::sync::Arc;
 
 use ndarray::{ArrayD, IxDyn, SliceInfoElem};
@@ -31,6 +32,8 @@ use zarrs::array::{Array, ArraySubset, ElementOwned};
 use zarrs::storage::{AsyncReadableListableStorage, AsyncReadableListableStorageTraits};
 
 use crate::error::{Error, Result};
+
+use super::{FeatureArray, FeatureSource};
 
 /// Marker trait for element types that [`AsyncLazySubset`] can store.
 ///
@@ -391,6 +394,14 @@ impl<T: AsyncLazyElement> AsyncLazySubset<T> {
             .assign(&loaded.view());
 
         Ok(output)
+    }
+}
+
+impl<T: AsyncLazyElement> FeatureSource for AsyncLazySubset<T> {
+    type Elem = T;
+
+    fn get(&self, varname: &str) -> impl Future<Output = Result<FeatureArray<T>>> + Send {
+        AsyncLazySubset::<T>::get(self, varname)
     }
 }
 
