@@ -668,10 +668,10 @@ class RouteMetrics:
     @cached_property
     def _lengths_by_option(self):
         """dict: Total route lengths in kilometers by routing option"""
-        point_lens = da.asarray(self._lens)
+        point_lens = np.asarray(self._lens)
         return {
             option: float(
-                da.sum(point_lens[self._route_options == option]).compute()
+                point_lens[self._route_options == option].sum()
                 * self.cell_size
                 / 1000
             )
