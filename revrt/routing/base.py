@@ -451,12 +451,7 @@ class CharacterizedLayer:
     """Encapsulate tracked routing layer metadata"""
 
     def __init__(
-        self,
-        name,
-        layer,
-        option,
-        is_length_invariant=False,
-        agg_method=None,
+        self, name, layer, option, is_length_invariant=False, agg_method=None
     ):
         """
 
@@ -541,22 +536,16 @@ class CharacterizedLayer:
     def _empty_metrics(self):
         """dict: Empty metrics for routes that skip this option"""
         if self.agg_method is None:
-            return {
-                f"{self.name}_cost": 0,
-                f"{self.name}_length_km": 0,
-            }
+            return {"cost": 0, "length_km": 0}
 
-        return {f"{self.name}_{self.agg_method}": np.float32(np.nan)}
+        return {self.agg_method: np.float32(np.nan)}
 
     def _compute_total_and_length(
         self, layer_values, route, cell_size, point_lens
     ):
         """Compute total cost and length metrics for the layer"""
         if len(route) == 0:
-            return {
-                f"{self.name}_cost": 0,
-                f"{self.name}_length_km": 0,
-            }
+            return {"cost": 0, "length_km": 0}
 
         layer_data = getattr(layer_values, "data", layer_values)
         if not isinstance(layer_data, da.Array):  # pragma: no cover
