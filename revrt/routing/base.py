@@ -3,6 +3,8 @@
 import json
 import logging
 from warnings import warn
+from numbers import Number
+from dataclasses import field, dataclass
 from functools import cached_property
 from itertools import pairwise
 
@@ -262,10 +264,7 @@ class RoutingLayerManager:
         for (layer_name, is_li), cost in reported_costs.items():
             self.tracked_layers.append(
                 CharacterizedLayer(
-                    f"{layer_name}_{option}",
-                    cost,
-                    option=option,
-                    is_length_invariant=is_li,
+                    layer_name, cost, option=option, is_length_invariant=is_li
                 )
             )
 
@@ -310,7 +309,7 @@ class RoutingLayerManager:
                 layer_name = "_".join(multiplier_layer_names or ())
                 self.tracked_layers.append(
                     CharacterizedLayer(
-                        f"{layer_name}_{option}", friction_layer, option=option
+                        layer_name, friction_layer, option=option
                     )
                 )
             frictions += friction_layer
@@ -438,7 +437,7 @@ class RoutingLayerManager:
             for option in self.routing_scenario.routing_option_names:
                 self.tracked_layers.append(
                     CharacterizedLayer(
-                        f"{tracked_layer}_{option}",
+                        tracked_layer,
                         layer,
                         option=option,
                         is_length_invariant=is_li,
@@ -451,12 +450,7 @@ class CharacterizedLayer:
     """Encapsulate tracked routing layer metadata"""
 
     def __init__(
-        self,
-        name,
-        layer,
-        option,
-        is_length_invariant=False,
-        agg_method=None,
+        self, name, layer, option, is_length_invariant=False, agg_method=None
     ):
         """
 
@@ -476,11 +470,16 @@ class CharacterizedLayer:
             Name of dask aggregation used when tracking statistics.
             By default, ``None``.
         """
-        self.name = name
+        self.feature_name = name
         self.layer = layer
         self.option = option
         self.is_length_invariant = is_length_invariant
         self.agg_method = agg_method
+
+    @property
+    def name(self):
+        """str: Identifier used in flattened primary route outputs"""
+        return f"{self.feature_name}_{self.option}"
 
     def __repr__(self):
         return (
@@ -541,22 +540,16 @@ class CharacterizedLayer:
     def _empty_metrics(self):
         """dict: Empty metrics for routes that skip this option"""
         if self.agg_method is None:
-            return {
-                f"{self.name}_cost": 0,
-                f"{self.name}_length_km": 0,
-            }
+            return {"cost": 0, "length_km": 0}
 
-        return {f"{self.name}_{self.agg_method}": np.float32(np.nan)}
+        return {self.agg_method: np.float32(np.nan)}
 
     def _compute_total_and_length(
         self, layer_values, route, cell_size, point_lens
     ):
         """Compute total cost and length metrics for the layer"""
         if len(route) == 0:
-            return {
-                f"{self.name}_cost": 0,
-                f"{self.name}_length_km": 0,
-            }
+            return {"cost": 0, "length_km": 0}
 
         layer_data = getattr(layer_values, "data", layer_values)
         if not isinstance(layer_data, da.Array):  # pragma: no cover
@@ -571,18 +564,14 @@ class CharacterizedLayer:
         layer_length = da.sum(point_lens[layer_data > 0]) * cell_size / 1000
 
         return {
-            f"{self.name}_cost": layer_cost.astype(np.float32).compute(),
-            f"{self.name}_length_km": (
-                layer_length.astype(np.float32).compute()
-            ),
+            "cost": layer_cost.astype(np.float32).compute(),
+            "length_km": layer_length.astype(np.float32).compute(),
         }
 
     def _compute_agg(self, layer_values):
         """Compute aggregated statistic for tracked layer"""
-        aggregate = getattr(da, self.agg_method)(layer_values).astype(
-            np.float32
-        )
-        return {f"{self.name}_{self.agg_method}": aggregate.compute()}
+        aggregate = getattr(da, self.agg_method)(layer_values)
+        return {self.agg_method: aggregate.astype(np.float32).compute()}
 
 
 class RouteMetrics:
@@ -617,7 +606,6 @@ class RouteMetrics:
         self._route = route
         self._optimized_objective = optimized_objective
         self.__lens = self._total_path_length = None
-        self._by_layer_results = {}
         self._add_geom = add_geom
         self._attrs = attrs or {}
 
@@ -650,29 +638,52 @@ class RouteMetrics:
             self._compute_path_length()
         return self._total_path_length
 
+    @cached_property
+    def _costs_by_option(self):
+        """dict: Total route costs indexed by routing option"""
+        rows, cols = np.array(self._route_row_col).T
+        point_lens = xr.DataArray(self._lens, dims="points")
+        costs = {}
+
+        for opt in self._routing_layers.routing_scenario.routing_option_names:
+            mask = self._route_options == opt
+            if not mask.any():
+                costs[opt] = 0.0
+                continue
+
+            option_rows = xr.DataArray(rows[mask], dims="points")
+            option_cols = xr.DataArray(cols[mask], dims="points")
+            cell_costs = self._routing_layers.costs[opt].isel(
+                y=option_rows, x=option_cols
+            )
+            inv_cell_costs = self._routing_layers.li_costs[opt].isel(
+                y=option_rows, x=option_cols
+            )
+            costs[opt] = (
+                da.sum(cell_costs * point_lens[mask]) + da.sum(inv_cell_costs)
+            ).compute()
+
+        return costs
+
+    @cached_property
+    def _lengths_by_option(self):
+        """dict: Total route lengths in kilometers by routing option"""
+        point_lens = np.asarray(self._lens)
+        return {
+            option: float(
+                point_lens[self._route_options == option].sum()
+                * self.cell_size
+                / 1000
+            )
+            for option in (
+                self._routing_layers.routing_scenario.routing_option_names
+            )
+        }
+
     @property
     def cost(self):
         """float: Optimized objective evaluated over the route"""
-        rows, cols = np.array(self._route_row_col).T
-        point_lens = xr.DataArray(self._lens, dims="points")
-        total_cost = da.zeros((), dtype=np.float32)
-
-        for option in np.unique(self._route_options):
-            mask = self._route_options == option
-            option_rows = xr.DataArray(rows[mask], dims="points")
-            option_cols = xr.DataArray(cols[mask], dims="points")
-
-            cell_costs = self._routing_layers.costs[option].isel(
-                y=option_rows, x=option_cols
-            )
-            total_cost += da.sum(cell_costs * point_lens[mask])
-
-            inv_cell_costs = self._routing_layers.li_costs[option].isel(
-                y=option_rows, x=option_cols
-            )
-            total_cost += da.sum(inv_cell_costs)
-
-        return total_cost.compute() + self._transition_cost()
+        return sum(self._costs_by_option.values()) + self._transition_cost()
 
     def _transition_cost(self):
         """float: Total transition cost implied by option changes"""
@@ -685,6 +696,7 @@ class RouteMetrics:
         return sum(
             pairwise_costs.get((src, dst), default_cost)
             for src, dst in pairwise(self._route_options)
+            if src != dst
         )
 
     @property
@@ -722,36 +734,185 @@ class RouteMetrics:
         return LineString(simplify_using_slopes(list(zip(x, y, strict=True))))
 
     def compute(self):
-        """Assemble route metrics and optional geometry payload"""
-        results = {
-            "length_km": self.total_path_length,
-            "cost": self.cost,
+        """Assemble a structured route result
+
+        Returns
+        -------
+        RouteResult
+            Structured result containing metadata, summary, attributes,
+            options, and geometry.
+        """
+        metadata = {
             "poi_lat": self.end_lat,
             "poi_lon": self.end_lon,
             "start_row": self._route[0][0],
             "start_col": self._route[0][1],
             "end_row": self._route[-1][0],
             "end_col": self._route[-1][1],
-            "optimized_objective": self._optimized_objective,
         }
-
-        results.update(self._attrs)
-        for layer in self._routing_layers.tracked_layers:
-            layer_result = layer.compute(
-                self._route, self.cell_size, self._lens
+        summary = {
+            "optimized_objective": self._optimized_objective,
+            "length_km": self.total_path_length,
+            "cost": self.cost,
+            "total_transition_costs": self._transition_cost(),
+        }
+        options = {
+            option: _RoutingOptionResult(
+                totals={
+                    "cost": self._costs_by_option[option],
+                    "length_km": self._lengths_by_option[option],
+                }
             )
-            results.update(layer_result)
+            for option in (
+                self._routing_layers.routing_scenario.routing_option_names
+            )
+        }
+        attributes = _structure_route_attributes(self._attrs, options)
+        for layer in self._routing_layers.tracked_layers:
+            feature_metrics = options[layer.option].features.setdefault(
+                layer.feature_name, {}
+            )
+            feature_metrics.update(
+                layer.compute(self._route, self.cell_size, self._lens)
+            )
 
-        if self._add_geom:
-            results["geometry"] = self.geom
-
-        return results
+        return RouteResult(
+            metadata=metadata,
+            summary=summary,
+            attributes=attributes,
+            options=options,
+            geometry=self.geom if self._add_geom else None,
+        )
 
     def _compute_path_length(self):
         """Compute the total length and cell by cell length of LCP"""
         self.__lens, self._total_path_length = compute_lens(
             self._route_row_col, self.cell_size
         )
+
+
+@dataclass
+class RouteResult:
+    """Structured route result with explicit routing-option ownership"""
+
+    metadata: dict
+    """Dictionary containing metadata for the route result"""
+
+    summary: dict
+    """Dictionary containing summary metrics for the route result"""
+
+    attributes: dict
+    """Dictionary containing shared route attributes"""
+
+    options: dict
+    """Dictionary containing routing options and their results"""
+
+    geometry: object = None
+    """Geometry object representing the route, if available"""
+
+    def primary_record(self):
+        """Flattened record for the primary route output
+
+        Returns
+        -------
+        dict
+            Flattened record for the primary route output.
+        """
+        record = {**self.metadata, **self.summary}
+        for option, option_result in self.options.items():
+            record.update(option_result.primary_record(option))
+        record.update(self.attributes)
+        if self.geometry is not None:
+            record["geometry"] = self.geometry
+        return record
+
+    def option_record(self, option):
+        """Flattened record for one companion-output row
+
+        Parameters
+        ----------
+        option : str
+            The routing option for which to generate the
+            companion-output row.
+
+        Returns
+        -------
+        dict
+            Flattened record for the specified routing option.
+
+        """
+        defaults = {}
+        for option_result in self.options.values():
+            for key, value in option_result.option_record().items():
+                defaults.setdefault(
+                    key, np.nan if isinstance(value, Number) else None
+                )
+
+        return {
+            **self.metadata,
+            **self.attributes,
+            **defaults,
+            **self.options[option].option_record(),
+        }
+
+
+@dataclass
+class _RoutingOptionResult:
+    """Structured metrics and attributes for one routing option"""
+
+    totals: dict = field(default_factory=dict)
+    attributes: dict = field(default_factory=dict)
+    features: dict = field(default_factory=dict)
+
+    def primary_record(self, option):
+        """dict: Option values using primary-output column names"""
+        record = {
+            f"{option}_{metric}": value
+            for metric, value in self.totals.items()
+        }
+        record.update(
+            {
+                f"{attribute}_{option}": value
+                for attribute, value in self.attributes.items()
+            }
+        )
+        for feature, metrics in self.features.items():
+            record.update(
+                {
+                    f"{feature}_{option}_{metric}": value
+                    for metric, value in metrics.items()
+                }
+            )
+        return record
+
+    def option_record(self):
+        """dict: Option values using companion-output column names"""
+        record = {**self.totals, **self.attributes}
+        for feature, metrics in self.features.items():
+            record.update(
+                {
+                    f"{feature}_{metric}": value
+                    for metric, value in metrics.items()
+                }
+            )
+        return record
+
+
+def _structure_route_attributes(attributes, options):
+    """Split flat route attributes into shared and per-option values"""
+    shared_attributes = {}
+    option_names = sorted(options, key=len, reverse=True)
+    for key, value in attributes.items():
+        for option in option_names:
+            option_suffix = f"_{option}"
+            if key.endswith(option_suffix):
+                attribute = key.removesuffix(option_suffix)
+                options[option].attributes[attribute] = value
+                break
+        else:
+            shared_attributes[key] = value
+
+    return shared_attributes
 
 
 def _transition_cost_lookup(transition_costs):

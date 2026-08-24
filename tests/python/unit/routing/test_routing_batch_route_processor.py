@@ -11,7 +11,7 @@ import geopandas as gpd
 from rasterio.transform import from_origin
 
 from revrt.utilities import LayeredFile
-from revrt.routing.base import RoutingScenario
+from revrt.routing.base import RouteMetrics, RoutingScenario
 from revrt.routing.processing import (
     BatchRouteProcessor,
     _RouteDefinitionFormatter,
@@ -346,13 +346,24 @@ def test_multi_option_routes_write_companion_output(
             "underground": {"cost_layers": [{"layer_name": "layer_2"}]},
         },
         drivers={"default": {"overhead": 1, "underground": 10}},
-        transition_costs={"default": 0},
+        transition_costs={"default": 3.5},
+        tracked_layers=[{"layer_name": "layer_3", "agg_method": "mean"}],
         invalid_costs_block_routing=True,
     )
     route_computer = BatchRouteProcessor(
         routing_scenario=scenario,
         route_definitions=[(7, [(1, 1, "overhead")], [(1, 3, "underground")])],
-        route_attrs={(7, (1, 1, "overhead")): {"route_id": "route_7"}},
+        route_attrs={
+            (7, (1, 1, "overhead")): {
+                "route_id": "route_7",
+                "polarity": "shared",
+                "voltage": 0,
+                "polarity_overhead": "ac",
+                "voltage_overhead": 500,
+                "polarity_underground": "dc",
+                "voltage_underground": 345,
+            }
+        },
     )
 
     out_fp = tmp_path / ("routes.gpkg" if save_paths else "routes.csv")
@@ -373,6 +384,77 @@ def test_multi_option_routes_write_companion_output(
     }
     assert set(option_routes["route_id"]) == {"route_7"}
     assert np.all(option_routes["length_km"] > 0)
+    full_route = full_routes.iloc[0]
+    assert {
+        "cost",
+        "length_km",
+        "total_transition_costs",
+        "overhead_cost",
+        "overhead_length_km",
+        "underground_cost",
+        "underground_length_km",
+    } <= set(full_routes.columns)
+    assert full_route["total_transition_costs"] == pytest.approx(3.5)
+    assert full_route["cost"] == pytest.approx(
+        full_route["overhead_cost"]
+        + full_route["underground_cost"]
+        + full_route["total_transition_costs"]
+    )
+    assert full_route["length_km"] == pytest.approx(
+        full_route["overhead_length_km"] + full_route["underground_length_km"]
+    )
+    assert {
+        "polarity_overhead",
+        "voltage_overhead",
+        "polarity_underground",
+        "voltage_underground",
+        "layer_1_overhead_cost",
+        "layer_2_underground_cost",
+        "layer_3_overhead_mean",
+        "layer_3_underground_mean",
+    } <= set(full_routes.columns)
+    assert not {
+        "total_transition_costs",
+        "overhead_cost",
+        "overhead_length_km",
+        "underground_cost",
+        "underground_length_km",
+    } & set(option_routes.columns)
+    assert not {
+        "polarity_overhead",
+        "voltage_overhead",
+        "polarity_underground",
+        "voltage_underground",
+        "layer_1_overhead_cost",
+        "layer_2_underground_cost",
+        "layer_3_overhead_mean",
+        "layer_3_underground_mean",
+    } & set(option_routes.columns)
+    by_option = option_routes.set_index("routing_option")
+    assert by_option.loc["overhead", "cost"] == pytest.approx(
+        full_route["overhead_cost"]
+    )
+    assert by_option.loc["underground", "cost"] == pytest.approx(
+        full_route["underground_cost"]
+    )
+    assert by_option.loc["overhead", "polarity"] == "ac"
+    assert by_option.loc["underground", "polarity"] == "dc"
+    assert by_option.loc["overhead", "voltage"] == 500
+    assert by_option.loc["underground", "voltage"] == 345
+    assert by_option.loc["overhead", "layer_1_cost"] == pytest.approx(
+        full_route["layer_1_overhead_cost"]
+    )
+    assert pd.isna(by_option.loc["underground", "layer_1_cost"])
+    assert by_option.loc["underground", "layer_2_cost"] == pytest.approx(
+        full_route["layer_2_underground_cost"]
+    )
+    assert pd.isna(by_option.loc["overhead", "layer_2_cost"])
+    assert by_option.loc["overhead", "layer_3_mean"] == pytest.approx(
+        full_route["layer_3_overhead_mean"]
+    )
+    assert by_option.loc["underground", "layer_3_mean"] == pytest.approx(
+        full_route["layer_3_underground_mean"]
+    )
     assert ("geometry" in option_routes.columns) is save_paths
     if save_paths:
         assert set(option_routes.geometry.geom_type) == {"MultiLineString"}
@@ -402,20 +484,18 @@ def test_routing_option_results_split_transition_segment_midpoint(
     )
 
     try:
-        results = result_writer._routing_option_results(
-            [
-                (1, 1, "overhead"),
-                (1, 2, "underground"),
-                (1, 3, "underground"),
-            ],
-            {
-                "route_id": "route_8",
-                "geometry": None,
-                "cost": 0,
-                "optimized_objective": 0,
-                "length_km": 0,
-            },
-        )
+        indices = [
+            (1, 1, "overhead"),
+            (1, 2, "underground"),
+            (1, 3, "underground"),
+        ]
+        route_result = RouteMetrics(
+            route_computer.routing_layers,
+            indices,
+            optimized_objective=0,
+            attrs={"route_id": "route_8"},
+        ).compute()
+        results = result_writer._routing_option_results(indices, route_result)
     finally:
         route_computer._reset_routing_layers()
 

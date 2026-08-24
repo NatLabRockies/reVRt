@@ -20,7 +20,6 @@ from shapely.geometry.linestring import LineString
 
 from revrt import RouteFinder, simplify_using_slopes
 from revrt.routing.base import RoutingLayerManager, RouteMetrics
-from revrt.routing.utilities import compute_lens
 from revrt.utilities.handlers import IncrementalWriter
 from revrt.utilities.monitoring import log_runtime
 from revrt.exceptions import (
@@ -401,14 +400,14 @@ class _RouteResultWriter:
 
         Parameters
         ----------
-        route_result : dict
-            Route result dictionary as built by
+        route_result : revrt.routing.base.RouteResult
+            Structured route result built by
             ``RouteMetrics.compute()``.
         indices : list
             List of route indices as returned by the Rust routing
             engine.
         """
-        self._writer.save(route_result)
+        self._writer.save(route_result.primary_record())
 
         for option_result in self._routing_option_results(
             indices, route_result
@@ -423,27 +422,11 @@ class _RouteResultWriter:
 
     def _build_option_results(self, segments_by_option, route_result):
         """list: Output records for each routing option traversed"""
-        cell_size = abs(self._transform.a)
-        base_result = {
-            key: value
-            for key, value in route_result.items()
-            if key
-            not in {
-                "geometry",
-                "cost",
-                "optimized_objective",
-                "length_km",
-            }
-        }
         results = []
         for option, segments in segments_by_option.items():
-            length_km = sum(
-                compute_lens(segment, cell_size)[1] for segment in segments
-            )
             option_result = {
-                **base_result,
+                **route_result.option_record(option),
                 "routing_option": option,
-                "length_km": length_km,
             }
             if self._save_paths:
                 geometry = self._option_geometry(segments)
