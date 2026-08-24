@@ -375,8 +375,15 @@ def test_multi_option_route_metrics_use_option_layers(
                 (1, 3, "underground"),
             ],
             optimized_objective=42.5,
+            attrs={
+                "route_id": "route_1",
+                "polarity": "shared",
+                "polarity_overhead": "ac",
+                "polarity_underground": "dc",
+            },
         )
-        result = metrics.compute()
+        structured_result = metrics.compute()
+        result = structured_result.primary_record()
 
         # expected_cost = 3.0 + 9.0 + 3.5
         expected_cost = (
@@ -412,6 +419,22 @@ def test_multi_option_route_metrics_use_option_layers(
             + result["total_transition_costs"]
         )
         assert result["optimized_objective"] == pytest.approx(42.5)
+        assert structured_result.attributes == {
+            "route_id": "route_1",
+            "polarity": "shared",
+        }
+        assert structured_result.options["overhead"].attributes == {
+            "polarity": "ac"
+        }
+        assert structured_result.options["underground"].attributes == {
+            "polarity": "dc"
+        }
+        assert structured_result.options["overhead"].totals["cost"] == (
+            pytest.approx(result["overhead_cost"])
+        )
+        assert "layer_1" in structured_result.options["overhead"].features
+        assert "layer_2" in structured_result.options["underground"].features
+        assert metrics.compute().primary_record() == result
     finally:
         routing_layers.close()
 
@@ -558,11 +581,15 @@ def test_tracked_layers_apply_multiplier_scalar_and_layer(
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
-        result = RouteMetrics(
-            routing_layers,
-            route=[(1, 1, "default"), (2, 1, "default")],
-            optimized_objective=0.0,
-        ).compute()
+        result = (
+            RouteMetrics(
+                routing_layers,
+                route=[(1, 1, "default"), (2, 1, "default")],
+                optimized_objective=0.0,
+            )
+            .compute()
+            .primary_record()
+        )
 
         assert result["layer_1_default_max"] == pytest.approx(2.0)
         assert result["layer_2_default_mean"] == pytest.approx(4.0)
@@ -590,15 +617,19 @@ def test_user_tracked_layers_are_built_and_scoped_per_option(
         assert "layer_1_default_mean" not in tracked_names
         assert {"layer_1_default", "layer_1_alt"}.issubset(tracked_names)
 
-        result = RouteMetrics(
-            routing_layers,
-            route=[
-                (1, 1, "default"),
-                (1, 2, "default"),
-                (1, 3, "alt"),
-            ],
-            optimized_objective=0.0,
-        ).compute()
+        result = (
+            RouteMetrics(
+                routing_layers,
+                route=[
+                    (1, 1, "default"),
+                    (1, 2, "default"),
+                    (1, 3, "alt"),
+                ],
+                optimized_objective=0.0,
+            )
+            .compute()
+            .primary_record()
+        )
 
         assert result["layer_1_default_mean"] == pytest.approx(1.5)
         assert result["layer_1_alt_mean"] == pytest.approx(2.0)
@@ -621,15 +652,19 @@ def test_option_bound_characterized_layers_only_use_matching_segments(
 
     routing_layers = RoutingLayerManager(scenario).build()
     try:
-        result = RouteMetrics(
-            routing_layers,
-            route=[
-                (1, 1, "default"),
-                (1, 2, "default"),
-                (1, 3, "alt"),
-            ],
-            optimized_objective=0.0,
-        ).compute()
+        result = (
+            RouteMetrics(
+                routing_layers,
+                route=[
+                    (1, 1, "default"),
+                    (1, 2, "default"),
+                    (1, 3, "alt"),
+                ],
+                optimized_objective=0.0,
+            )
+            .compute()
+            .primary_record()
+        )
 
         assert result["layer_1_default_cost"] == pytest.approx(2.5)
         assert result["layer_1_alt_cost"] == pytest.approx(1.0)
@@ -976,11 +1011,15 @@ def test_length_invariant_layer_costs_ignore_path_length(sample_layered_data):
     routing_layers = RoutingLayerManager(scenario).build()
     try:
         route = [(1, 1), (1, 2)]
-        result = RouteMetrics(
-            routing_layers,
-            [(1, 1, "default"), (1, 2, "default")],
-            optimized_objective=0.0,
-        ).compute()
+        result = (
+            RouteMetrics(
+                routing_layers,
+                [(1, 1, "default"), (1, 2, "default")],
+                optimized_objective=0.0,
+            )
+            .compute()
+            .primary_record()
+        )
 
         layer_two = (
             routing_layers._layer_fh["layer_2"]
@@ -1186,7 +1225,7 @@ def test_characterized_layer_length_metric_uses_positive_mask(
             point_lens,
         )
 
-        assert metrics["layer_1_default_length_km"] >= 0
+        assert metrics["length_km"] >= 0
     finally:
         routing_layers.close()
 
@@ -1279,8 +1318,8 @@ def test_characterized_layer_total_length_computation(sample_layered_data):
             point_lens,
         )
 
-        assert metrics["layer_1_default_cost"] > 0
-        assert metrics["layer_1_default_length_km"] >= 0
+        assert metrics["cost"] > 0
+        assert metrics["length_km"] >= 0
     finally:
         routing_layers.close()
 

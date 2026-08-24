@@ -11,7 +11,7 @@ import geopandas as gpd
 from rasterio.transform import from_origin
 
 from revrt.utilities import LayeredFile
-from revrt.routing.base import RoutingScenario
+from revrt.routing.base import RouteMetrics, RoutingScenario
 from revrt.routing.processing import (
     BatchRouteProcessor,
     _RouteDefinitionFormatter,
@@ -347,6 +347,7 @@ def test_multi_option_routes_write_companion_output(
         },
         drivers={"default": {"overhead": 1, "underground": 10}},
         transition_costs={"default": 3.5},
+        tracked_layers=[{"layer_name": "layer_3", "agg_method": "mean"}],
         invalid_costs_block_routing=True,
     )
     route_computer = BatchRouteProcessor(
@@ -409,6 +410,8 @@ def test_multi_option_routes_write_companion_output(
         "voltage_underground",
         "layer_1_overhead_cost",
         "layer_2_underground_cost",
+        "layer_3_overhead_mean",
+        "layer_3_underground_mean",
     } <= set(full_routes.columns)
     assert not {
         "total_transition_costs",
@@ -424,6 +427,8 @@ def test_multi_option_routes_write_companion_output(
         "voltage_underground",
         "layer_1_overhead_cost",
         "layer_2_underground_cost",
+        "layer_3_overhead_mean",
+        "layer_3_underground_mean",
     } & set(option_routes.columns)
     by_option = option_routes.set_index("routing_option")
     assert by_option.loc["overhead", "cost"] == pytest.approx(
@@ -444,6 +449,12 @@ def test_multi_option_routes_write_companion_output(
         full_route["layer_2_underground_cost"]
     )
     assert pd.isna(by_option.loc["overhead", "layer_2_cost"])
+    assert by_option.loc["overhead", "layer_3_mean"] == pytest.approx(
+        full_route["layer_3_overhead_mean"]
+    )
+    assert by_option.loc["underground", "layer_3_mean"] == pytest.approx(
+        full_route["layer_3_underground_mean"]
+    )
     assert ("geometry" in option_routes.columns) is save_paths
     if save_paths:
         assert set(option_routes.geometry.geom_type) == {"MultiLineString"}
@@ -470,24 +481,21 @@ def test_routing_option_results_split_transition_segment_midpoint(
         True,
         route_computer.routing_layers.cost_crs,
         route_computer.routing_layers.transform,
-        route_computer.routing_scenario.routing_option_names,
     )
 
     try:
-        results = result_writer._routing_option_results(
-            [
-                (1, 1, "overhead"),
-                (1, 2, "underground"),
-                (1, 3, "underground"),
-            ],
-            {
-                "route_id": "route_8",
-                "geometry": None,
-                "cost": 0,
-                "optimized_objective": 0,
-                "length_km": 0,
-            },
-        )
+        indices = [
+            (1, 1, "overhead"),
+            (1, 2, "underground"),
+            (1, 3, "underground"),
+        ]
+        route_result = RouteMetrics(
+            route_computer.routing_layers,
+            indices,
+            optimized_objective=0,
+            attrs={"route_id": "route_8"},
+        ).compute()
+        results = result_writer._routing_option_results(indices, route_result)
     finally:
         route_computer._reset_routing_layers()
 
@@ -504,6 +512,8 @@ def test_routing_option_results_split_transition_segment_midpoint(
         np.asarray(by_option["underground"]["geometry"].geoms[0].coords),
         np.asarray([(2.0, 5.5), (3.5, 5.5)]),
     )
+    assert by_option["overhead"]["length_km"] == pytest.approx(0.0005)
+    assert by_option["underground"]["length_km"] == pytest.approx(0.0015)
     assert by_option["overhead"]["route_id"] == "route_8"
     assert by_option["underground"]["route_id"] == "route_8"
 
