@@ -351,7 +351,7 @@ layers to try to find a route, but will always keep the ``important_barrier`` la
 as a barrier.
 
 
-### Spatial ROW and voltage/polarity multipliers
+## Spatial ROW and voltage/polarity multipliers
 
 Cost and friction layers with ``"apply_row_mult": true`` can use
 spatial ROW multipliers. The value must be nested below the selected
