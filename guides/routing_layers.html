@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Routing Layer Concept Model &#8212; reVRt 0.12.0 documentation</title>
+    <title>Routing Layer Concept Model &#8212; reVRt 0.14.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="../_static/documentation_options.js?v=9e420a66"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -53,7 +53,7 @@
     <link rel="prev" title="Guides and Examples" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.12.0" />
+  <meta name="docsearch:version" content="0.14.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">reVRt 0.12.0 documentation</p>
+    <p class="title logo__title">reVRt 0.14.0 documentation</p>
   
 </a></div>
     
@@ -729,8 +729,9 @@ barrier, it will be dropped as well.</p>
 layers to try to find a route, but will always keep the <code class="docutils literal notranslate"><span class="pre">important_barrier</span></code> layer
 as a barrier.</p>
 </section>
+</section>
 <section id="spatial-row-and-voltage-polarity-multipliers">
-<h3>Spatial ROW and voltage/polarity multipliers<a class="headerlink" href="#spatial-row-and-voltage-polarity-multipliers" title="Link to this heading">#</a></h3>
+<h2>Spatial ROW and voltage/polarity multipliers<a class="headerlink" href="#spatial-row-and-voltage-polarity-multipliers" title="Link to this heading">#</a></h2>
 <p>Cost and friction layers with <code class="docutils literal notranslate"><span class="pre">&quot;apply_row_mult&quot;:</span> <span class="pre">true</span></code> can use
 spatial ROW multipliers. The value must be nested below the selected
 routing option:</p>
@@ -791,7 +792,6 @@ same layer name, that name remains twice in that term and therefore acts
 as <code class="docutils literal notranslate"><span class="pre">layer</span> <span class="pre">*</span> <span class="pre">layer</span></code>. No masks are required to be mutually exclusive or
 exhaustive: overlaps add their applicable terms, while cells outside all
 listed masks receive zero contribution from the expanded source layer.</p>
-</section>
 </section>
 </section>
 
@@ -861,9 +861,9 @@ listed masks receive zero contribution from the expanded source layer.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#barrier-layers">Barrier Layers</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-barrier-layers">Building barrier layers</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#soft-barriers">Soft Barriers</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spatial-row-and-voltage-polarity-multipliers">Spatial ROW and voltage/polarity multipliers</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spatial-row-and-voltage-polarity-multipliers">Spatial ROW and voltage/polarity multipliers</a></li>
 </ul>
   </nav></div>
 

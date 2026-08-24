@@ -21,4 +21,10 @@ revrt.routing.base.CharacterizedLayer
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CharacterizedLayer.name
+   
    

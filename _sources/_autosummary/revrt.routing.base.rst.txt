@@ -28,6 +28,7 @@ revrt.routing.base
    
       CharacterizedLayer
       RouteMetrics
+      RouteResult
       RoutingLayerManager
       RoutingScenario
    

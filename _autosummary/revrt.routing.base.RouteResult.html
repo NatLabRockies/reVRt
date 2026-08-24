@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>revrt.routing.utilities.make_rev_sc_points &#8212; reVRt 0.14.0 documentation</title>
+    <title>revrt.routing.base.RouteResult &#8212; reVRt 0.14.0 documentation</title>
   
   
   
@@ -44,12 +44,12 @@
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_autosummary/revrt.routing.utilities.make_rev_sc_points';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_autosummary/revrt.routing.base.RouteResult';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="revrt.routing.utilities.map_to_costs" href="revrt.routing.utilities.map_to_costs.html" />
-    <link rel="prev" title="revrt.routing.utilities.filter_points_outside_cost_domain" href="revrt.routing.utilities.filter_points_outside_cost_domain.html" />
+    <link rel="next" title="revrt.routing.base.RoutingLayerManager" href="revrt.routing.base.RoutingLayerManager.html" />
+    <link rel="prev" title="revrt.routing.base.RouteMetrics" href="revrt.routing.base.RouteMetrics.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.14.0" />
@@ -460,11 +460,11 @@
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="revrt.routing.html">revrt.routing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.base.html">revrt.routing.base</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.routing.base.html">revrt.routing.base</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.LCP_AGG_COST_LAYER_NAME.html">revrt.routing.base.LCP_AGG_COST_LAYER_NAME</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.CharacterizedLayer.html">revrt.routing.base.CharacterizedLayer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RouteMetrics.html">revrt.routing.base.RouteMetrics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RouteResult.html">revrt.routing.base.RouteResult</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">revrt.routing.base.RouteResult</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingLayerManager.html">revrt.routing.base.RoutingLayerManager</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.base.RoutingScenario.html">revrt.routing.base.RoutingScenario</a></li>
 </ul>
@@ -508,10 +508,10 @@
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.processing.BatchRouteProcessor.html">revrt.routing.processing.BatchRouteProcessor</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="revrt.routing.utilities.html">revrt.routing.utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.convert_lat_lon_to_row_col.html">revrt.routing.utilities.convert_lat_lon_to_row_col</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.filter_points_outside_cost_domain.html">revrt.routing.utilities.filter_points_outside_cost_domain</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">revrt.routing.utilities.make_rev_sc_points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.make_rev_sc_points.html">revrt.routing.utilities.make_rev_sc_points</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.map_to_costs.html">revrt.routing.utilities.map_to_costs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.points_csv_to_geo_dataframe.html">revrt.routing.utilities.points_csv_to_geo_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="revrt.routing.utilities.PointToFeatureMapper.html">revrt.routing.utilities.PointToFeatureMapper</a></li>
@@ -646,9 +646,9 @@
     <li class="breadcrumb-item"><a href="revrt.routing.html" class="nav-link">revrt.routing</a></li>
     
     
-    <li class="breadcrumb-item"><a href="revrt.routing.utilities.html" class="nav-link">revrt.routing.utilities</a></li>
+    <li class="breadcrumb-item"><a href="revrt.routing.base.html" class="nav-link">revrt.routing.base</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">revrt.routing.utilities.make_rev_sc_points</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">revrt.routing.base.RouteResult</span></li>
   </ul>
 </nav>
 </div>
@@ -665,28 +665,102 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="revrt-routing-utilities-make-rev-sc-points">
-<h1>revrt.routing.utilities.make_rev_sc_points<a class="headerlink" href="#revrt-routing-utilities-make-rev-sc-points" title="Link to this heading">#</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="revrt.routing.utilities.make_rev_sc_points">
-<span class="sig-name descname"><span class="pre">make_rev_sc_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">excl_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">excl_cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/utilities.html#make_rev_sc_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.utilities.make_rev_sc_points" title="Link to this definition">#</a></dt>
-<dd><p>Generate reV supply curve points for a given exclusion grid size</p>
+  <section id="revrt-routing-base-routeresult">
+<h1>revrt.routing.base.RouteResult<a class="headerlink" href="#revrt-routing-base-routeresult" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="revrt.routing.base.RouteResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RouteResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><span class="pre">object</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#RouteResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.RouteResult" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Structured route result with explicit routing-option ownership</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.routing.base.RouteResult.option_record" title="revrt.routing.base.RouteResult.option_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">option_record</span></code></a>(option)</p></td>
+<td><p>Flattened record for one companion-output row</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.routing.base.RouteResult.primary_record" title="revrt.routing.base.RouteResult.primary_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">primary_record</span></code></a>()</p></td>
+<td><p>Flattened record for the primary route output</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Attributes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.routing.base.RouteResult.geometry" title="revrt.routing.base.RouteResult.geometry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geometry</span></code></a></p></td>
+<td><p>Geometry object representing the route, if available</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.routing.base.RouteResult.metadata" title="revrt.routing.base.RouteResult.metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metadata</span></code></a></p></td>
+<td><p>Dictionary containing metadata for the route result</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.routing.base.RouteResult.summary" title="revrt.routing.base.RouteResult.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a></p></td>
+<td><p>Dictionary containing summary metrics for the route result</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#revrt.routing.base.RouteResult.attributes" title="revrt.routing.base.RouteResult.attributes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attributes</span></code></a></p></td>
+<td><p>Dictionary containing shared route attributes</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#revrt.routing.base.RouteResult.options" title="revrt.routing.base.RouteResult.options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">options</span></code></a></p></td>
+<td><p>Dictionary containing routing options and their results</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.routing.base.RouteResult.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span><a class="headerlink" href="#revrt.routing.base.RouteResult.metadata" title="Link to this definition">#</a></dt>
+<dd><p>Dictionary containing metadata for the route result</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.routing.base.RouteResult.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span><a class="headerlink" href="#revrt.routing.base.RouteResult.summary" title="Link to this definition">#</a></dt>
+<dd><p>Dictionary containing summary metrics for the route result</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.routing.base.RouteResult.attributes">
+<span class="sig-name descname"><span class="pre">attributes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span><a class="headerlink" href="#revrt.routing.base.RouteResult.attributes" title="Link to this definition">#</a></dt>
+<dd><p>Dictionary containing shared route attributes</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.routing.base.RouteResult.options">
+<span class="sig-name descname"><span class="pre">options</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span><a class="headerlink" href="#revrt.routing.base.RouteResult.options" title="Link to this definition">#</a></dt>
+<dd><p>Dictionary containing routing options and their results</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="revrt.routing.base.RouteResult.geometry">
+<span class="sig-name descname"><span class="pre">geometry</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><span class="pre">object</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#revrt.routing.base.RouteResult.geometry" title="Link to this definition">#</a></dt>
+<dd><p>Geometry object representing the route, if available</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="revrt.routing.base.RouteResult.primary_record">
+<span class="sig-name descname"><span class="pre">primary_record</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#RouteResult.primary_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.RouteResult.primary_record" title="Link to this definition">#</a></dt>
+<dd><p>Flattened record for the primary route output</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>excl_rows</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Dimensions of the exclusion grid.</p></li>
-<li><p><strong>excl_cols</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Dimensions of the exclusion grid.</p></li>
-<li><p><strong>crs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://pyproj4.github.io/pyproj/stable/api/crs/crs.html#pyproj.crs.CRS" title="(in pyproj v3.7.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyproj.crs.CRS</span></code></a>) – Coordinate reference system for the exclusion raster.</p></li>
-<li><p><strong>transform</strong> (<a class="reference external" href="https://affine.readthedocs.io/en/latest/index.html#affine.Affine" title="(in rasterio/affine)"><code class="xref py py-class docutils literal notranslate"><span class="pre">affine.Affine</span></code></a>) – Affine transform object representing the exclusion raster
-transformation.</p></li>
-<li><p><strong>resolution</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">128</span></code>) – Resolution of the supply curve grid w.r.t the exclusion grid
-(i.e. reV aggregation factor). By default, <code class="docutils literal notranslate"><span class="pre">128</span></code>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> – Supply curve points with geometry and start row/column indices.</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Flattened record for the primary route output.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="revrt.routing.base.RouteResult.option_record">
+<span class="sig-name descname"><span class="pre">option_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">option</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#RouteResult.option_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.RouteResult.option_record" title="Link to this definition">#</a></dt>
+<dd><p>Flattened record for one companion-output row</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>option</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The routing option for which to generate the
+companion-output row.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Flattened record for the specified routing option.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -702,20 +776,20 @@ transformation.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="revrt.routing.utilities.filter_points_outside_cost_domain.html"
+       href="revrt.routing.base.RouteMetrics.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">revrt.routing.utilities.filter_points_outside_cost_domain</p>
+        <p class="prev-next-title">revrt.routing.base.RouteMetrics</p>
       </div>
     </a>
     <a class="right-next"
-       href="revrt.routing.utilities.map_to_costs.html"
+       href="revrt.routing.base.RoutingLayerManager.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">revrt.routing.utilities.map_to_costs</p>
+        <p class="prev-next-title">revrt.routing.base.RoutingLayerManager</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -738,7 +812,16 @@ transformation.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.utilities.make_rev_sc_points"><code class="docutils literal notranslate"><span class="pre">make_rev_sc_points()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.base.RouteResult"><code class="docutils literal notranslate"><span class="pre">RouteResult</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.base.RouteResult.metadata"><code class="docutils literal notranslate"><span class="pre">RouteResult.metadata</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.base.RouteResult.summary"><code class="docutils literal notranslate"><span class="pre">RouteResult.summary</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.base.RouteResult.attributes"><code class="docutils literal notranslate"><span class="pre">RouteResult.attributes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.base.RouteResult.options"><code class="docutils literal notranslate"><span class="pre">RouteResult.options</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.base.RouteResult.geometry"><code class="docutils literal notranslate"><span class="pre">RouteResult.geometry</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.base.RouteResult.primary_record"><code class="docutils literal notranslate"><span class="pre">RouteResult.primary_record()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#revrt.routing.base.RouteResult.option_record"><code class="docutils literal notranslate"><span class="pre">RouteResult.option_record()</span></code></a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

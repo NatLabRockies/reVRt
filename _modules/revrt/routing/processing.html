@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>revrt.routing.processing &#8212; reVRt 0.12.0 documentation</title>
+    <title>revrt.routing.processing &#8212; reVRt 0.14.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../../_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="../../../_static/documentation_options.js?v=9e420a66"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -405,7 +405,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.12.0" />
+  <meta name="docsearch:version" content="0.14.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -473,7 +473,7 @@ window.runMermaid = runMermaid;</script>
   
   
   
-    <p class="title logo__title">reVRt 0.12.0 documentation</p>
+    <p class="title logo__title">reVRt 0.14.0 documentation</p>
   
 </a></div>
     
@@ -764,7 +764,6 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt</span><span class="w"> </span><span class="kn">import</span> <span class="n">RouteFinder</span><span class="p">,</span> <span class="n">simplify_using_slopes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoutingLayerManager</span><span class="p">,</span> <span class="n">RouteMetrics</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">revrt.routing.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_lens</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.handlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">IncrementalWriter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.utilities.monitoring</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_runtime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">revrt.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -1163,14 +1162,14 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        route_result : dict</span>
-<span class="sd">            Route result dictionary as built by</span>
+<span class="sd">        route_result : revrt.routing.base.RouteResult</span>
+<span class="sd">            Structured route result built by</span>
 <span class="sd">            ``RouteMetrics.compute()``.</span>
 <span class="sd">        indices : list</span>
 <span class="sd">            List of route indices as returned by the Rust routing</span>
 <span class="sd">            engine.</span>
 <span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">route_result</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">route_result</span><span class="o">.</span><span class="n">primary_record</span><span class="p">())</span>
 
         <span class="k">for</span> <span class="n">option_result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_routing_option_results</span><span class="p">(</span>
             <span class="n">indices</span><span class="p">,</span> <span class="n">route_result</span>
@@ -1185,27 +1184,11 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_option_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segments_by_option</span><span class="p">,</span> <span class="n">route_result</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""list: Output records for each routing option traversed"""</span>
-        <span class="n">cell_size</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-        <span class="n">base_result</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">route_result</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">key</span>
-            <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span>
-                <span class="s2">"geometry"</span><span class="p">,</span>
-                <span class="s2">"cost"</span><span class="p">,</span>
-                <span class="s2">"optimized_objective"</span><span class="p">,</span>
-                <span class="s2">"length_km"</span><span class="p">,</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="n">segments</span> <span class="ow">in</span> <span class="n">segments_by_option</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">length_km</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-                <span class="n">compute_lens</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">cell_size</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span>
-            <span class="p">)</span>
             <span class="n">option_result</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="o">**</span><span class="n">base_result</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">route_result</span><span class="o">.</span><span class="n">option_record</span><span class="p">(</span><span class="n">option</span><span class="p">),</span>
                 <span class="s2">"routing_option"</span><span class="p">:</span> <span class="n">option</span><span class="p">,</span>
-                <span class="s2">"length_km"</span><span class="p">:</span> <span class="n">length_km</span><span class="p">,</span>
             <span class="p">}</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_paths</span><span class="p">:</span>
                 <span class="n">geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_option_geometry</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span>

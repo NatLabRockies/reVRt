@@ -1,0 +1,35 @@
+revrt.routing.base.RouteResult
+==============================
+
+.. currentmodule:: revrt.routing.base
+
+.. autoclass:: RouteResult
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RouteResult.option_record
+      ~RouteResult.primary_record
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RouteResult.geometry
+      ~RouteResult.metadata
+      ~RouteResult.summary
+      ~RouteResult.attributes
+      ~RouteResult.options
+   
+   
