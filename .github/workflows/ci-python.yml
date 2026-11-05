@@ -33,7 +33,7 @@ jobs:
           args: "format --check"
           src: "./revrt"
       - name: Check Python Code Complexity (Complexipy)
-        uses: rohaquinlop/complexipy-action@a076ecec49e0beb4af51658c6042124923979628 # v8.1.0
+        uses: rohaquinlop/complexipy-action@710ee3ad7da94522a043ef86fac7675d85b06566 # v8.3.0
         with:
           paths: "./revrt"
           max_complexity_allowed: 10
