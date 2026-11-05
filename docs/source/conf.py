@@ -81,7 +81,7 @@ intersphinx_mapping = {
     "rasterio": ("https://rasterio.readthedocs.io/en/stable/", None),
     "rex": ("https://natlabrockies.github.io/rex/", None),
     "reVX": ("https://natlabrockies.github.io/reVX/", None),
-    "rioxarray": ("https://corteva.github.io/rioxarray/stable/", None),
+    "rioxarray": ("https://vylor.github.io/rioxarray/stable/", None),
     "shapely": ("https://shapely.readthedocs.io/en/stable/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
     "xarray": ("https://docs.xarray.dev/en/stable/", None),
