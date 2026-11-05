@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788283501071,
+  "lastUpdate": 1793912105173,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -14531,6 +14531,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 288223494,
             "range": "± 1909977",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ca7fe415e3c9bc05c65bdbdbd77921d96a4dc31",
+          "message": "ci: Bump the github-actions group across 1 directory with 12 updates (#336)\n\nBumps the github-actions group with 12 updates in the / directory:\n\n| Package | From | To |\n| --- | --- | --- |\n| [prefix-dev/setup-pixi](https://github.com/prefix-dev/setup-pixi) | `0.10.2` | `0.11.2` |\n| [Swatinem/rust-cache](https://github.com/swatinem/rust-cache) | `2.9.2` | `2.9.3` |\n| [benchmark-action/github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark) | `1.22.1` | `1.22.2` |\n| [rohaquinlop/complexipy-action](https://github.com/rohaquinlop/complexipy-action) | `7.0.1` | `8.1.0` |\n| [actions/setup-python](https://github.com/actions/setup-python) | `7.0.0` | `7.1.0` |\n| [codecov/codecov-action](https://github.com/codecov/codecov-action) | `7.0.0` | `7.1.1` |\n| [github/codeql-action/init](https://github.com/github/codeql-action) | `4.37.9` | `4.39.1` |\n| [github/codeql-action/analyze](https://github.com/github/codeql-action) | `4.37.9` | `4.39.1` |\n| [actions/upload-artifact](https://github.com/actions/upload-artifact) | `7.0.1` | `7.0.2` |\n| [actions/download-artifact](https://github.com/actions/download-artifact) | `8.0.1` | `8.0.2` |\n| [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) | `1.14.2` | `1.14.3` |\n| [release-drafter/release-drafter](https://github.com/release-drafter/release-drafter) | `7.7.0` | `7.10.0` |\n\n\n\nUpdates `prefix-dev/setup-pixi` from 0.10.2 to 0.11.2\n- [Release notes](https://github.com/prefix-dev/setup-pixi/releases)\n- [Commits](https://github.com/prefix-dev/setup-pixi/compare/d3f436a425481402e6a95a1d1fc10331c708cd9e...ad1da6449d9e506fd127fd67ab2d054a769f6a94)\n\nUpdates `Swatinem/rust-cache` from 2.9.2 to 2.9.3\n- [Release notes](https://github.com/swatinem/rust-cache/releases)\n- [Changelog](https://github.com/Swatinem/rust-cache/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/swatinem/rust-cache/compare/6323deb102c322ba6fcbdcafc7e3dddab59af2b6...d1527c8f67ef9af357290475d4af4b0fab8f12e0)\n\nUpdates `benchmark-action/github-action-benchmark` from 1.22.1 to 1.22.2\n- [Release notes](https://github.com/benchmark-action/github-action-benchmark/releases)\n- [Changelog](https://github.com/benchmark-action/github-action-benchmark/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/benchmark-action/github-action-benchmark/compare/52576c92bccf6ac60c8223ec7eb2565637cae9ba...4322e5726e6334590d251fc4f92bec0efafc45dc)\n\nUpdates `rohaquinlop/complexipy-action` from 7.0.1 to 8.1.0\n- [Release notes](https://github.com/rohaquinlop/complexipy-action/releases)\n- [Commits](https://github.com/rohaquinlop/complexipy-action/compare/e2b05bcc06d899a24e2b6bb8b1354ac42800a95e...a076ecec49e0beb4af51658c6042124923979628)\n\nUpdates `actions/setup-python` from 7.0.0 to 7.1.0\n- [Release notes](https://github.com/actions/setup-python/releases)\n- [Commits](https://github.com/actions/setup-python/compare/5fda3b95a4ea91299a34e894583c3862153e4b97...6d4fd22b20465ccc0f7354476588e8df7c9ca0e0)\n\nUpdates `codecov/codecov-action` from 7.0.0 to 7.1.1\n- [Release notes](https://github.com/codecov/codecov-action/releases)\n- [Changelog](https://github.com/codecov/codecov-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/codecov/codecov-action/compare/fb8b3582c8e4def4969c97caa2f19720cb33a72f...303a32d7a59b442fa8d48b6a1cc6825c09c847a5)\n\nUpdates `github/codeql-action/init` from 4.37.9 to 4.39.1\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/cdf488f595d80d6e07e03d4674febd5ab45fa938...9b3254085494b55a0f7c4c2b3d2d52cc712ce370)\n\nUpdates `github/codeql-action/analyze` from 4.37.9 to 4.39.1\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/cdf488f595d80d6e07e03d4674febd5ab45fa938...9b3254085494b55a0f7c4c2b3d2d52cc712ce370)\n\nUpdates `actions/upload-artifact` from 7.0.1 to 7.0.2\n- [Release notes](https://github.com/actions/upload-artifact/releases)\n- [Commits](https://github.com/actions/upload-artifact/compare/043fb46d1a93c77aae656e7c1c64a875d1fc6a0a...cf430e030ddbb5b0abf93d22962f4752f3646cd9)\n\nUpdates `actions/download-artifact` from 8.0.1 to 8.0.2\n- [Release notes](https://github.com/actions/download-artifact/releases)\n- [Commits](https://github.com/actions/download-artifact/compare/3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c...9000827ccba6bdab643e8b6fd33ac0654aef8333)\n\nUpdates `pypa/gh-action-pypi-publish` from 1.14.2 to 1.14.3\n- [Release notes](https://github.com/pypa/gh-action-pypi-publish/releases)\n- [Commits](https://github.com/pypa/gh-action-pypi-publish/compare/dc37677b2e1c63e2034f94d8a5b11f265b73ba33...7245906fb61fa33a13554f9d5fb856fe61758086)\n\nUpdates `release-drafter/release-drafter` from 7.7.0 to 7.10.0\n- [Release notes](https://github.com/release-drafter/release-drafter/releases)\n- [Commits](https://github.com/release-drafter/release-drafter/compare/34d80673e067bdc0c24568d3af899c216adcfaa9...978bb0b30c5ee8cdd332ced253758157150d43f0)\n\n---\nupdated-dependencies:\n- dependency-name: prefix-dev/setup-pixi\n  dependency-version: 0.11.2\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n- dependency-name: Swatinem/rust-cache\n  dependency-version: 2.9.3\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: benchmark-action/github-action-benchmark\n  dependency-version: 1.22.2\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: rohaquinlop/complexipy-action\n  dependency-version: 8.1.0\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n  dependency-group: github-actions\n- dependency-name: actions/setup-python\n  dependency-version: 7.1.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n- dependency-name: codecov/codecov-action\n  dependency-version: 7.1.1\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/init\n  dependency-version: 4.39.1\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/analyze\n  dependency-version: 4.39.1\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n- dependency-name: actions/upload-artifact\n  dependency-version: 7.0.2\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: actions/download-artifact\n  dependency-version: 8.0.2\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: pypa/gh-action-pypi-publish\n  dependency-version: 1.14.3\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: release-drafter/release-drafter\n  dependency-version: 7.10.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-05T13:44:39-07:00",
+          "tree_id": "8cf990cb1b918f719dc799e4ff3c2b85dc0e2336",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/1ca7fe415e3c9bc05c65bdbdbd77921d96a4dc31"
+        },
+        "date": 1793912103912,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 36687431,
+            "range": "± 6595882",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 48962880,
+            "range": "± 6345584",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 44287120,
+            "range": "± 12103550",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 67792972,
+            "range": "± 33487105",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 379487654,
+            "range": "± 50726271",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 108733650,
+            "range": "± 2518098",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 112180163,
+            "range": "± 5662490",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 125171202,
+            "range": "± 6087004",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 152711852,
+            "range": "± 12491162",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 227477351,
+            "range": "± 15009115",
             "unit": "ns/iter"
           }
         ]
