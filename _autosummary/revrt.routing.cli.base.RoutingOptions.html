@@ -673,11 +673,11 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.routing.cli.base.RoutingOptions">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RoutingOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routing_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/base.html#RoutingOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.base.RoutingOptions" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class to manage validated routing-option configurations</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Mapping of routing-option names to dictionaries describing
+<dd class="field-odd"><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Mapping of routing-option names to dictionaries describing
 the cost, friction, barrier, and option-level multiplier
 inputs for that option. See
 <a class="reference internal" href="revrt.models.routing.RoutingOptionConfig.html#revrt.models.routing.RoutingOptionConfig" title="revrt.models.routing.RoutingOptionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoutingOptionConfig</span></code></a>.</p>
@@ -707,7 +707,7 @@ inputs for that option. See
 <dd><p>Default routing option to use if omitted from points</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -719,14 +719,14 @@ inputs for that option. See
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pv_by_option</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Dictionary mapping routing options to their corresponding
+<li><p><strong>pv_by_option</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Dictionary mapping routing options to their corresponding
 polarity and voltage values, for example
 <code class="docutils literal notranslate"><span class="pre">{&quot;option_name&quot;:</span> <span class="pre">{&quot;polarity&quot;:</span> <span class="pre">&quot;val&quot;,</span> <span class="pre">&quot;voltage&quot;:</span> <span class="pre">&quot;val&quot;}}</span></code>.</p></li>
-<li><p><strong>transmission_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Dictionary of transmission cost configuration values.</p></li>
+<li><p><strong>transmission_config</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Dictionary of transmission cost configuration values.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Updated routing options with multipliers applied based on
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Updated routing options with multipliers applied based on
 the provided polarity and voltage values.</p>
 </dd>
 </dl>

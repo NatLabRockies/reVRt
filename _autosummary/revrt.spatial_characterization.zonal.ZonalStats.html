@@ -670,12 +670,12 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.spatial_characterization.zonal.ZonalStats">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ZonalStats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_touched</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zone_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/spatial_characterization/zonal.html#ZonalStats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.spatial_characterization.zonal.ZonalStats" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class to compute zonal statistics</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – <p>Names of all statistics to compute. Statistics must be one
+<li><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – <p>Names of all statistics to compute. Statistics must be one
 of the members of
 <a class="reference internal" href="revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat" title="revrt.spatial_characterization.stats.Stat"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stat</span></code></a> or
 <a class="reference internal" href="revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat" title="revrt.spatial_characterization.stats.FractionalStat"><code class="xref py py-class docutils literal notranslate"><span class="pre">FractionalStat</span></code></a>,
@@ -704,20 +704,20 @@ inputs:</p>
 </div></blockquote>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </p></li>
-<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Value in the raster that represents <cite>nodata</cite>. This value
+<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Value in the raster that represents <cite>nodata</cite>. This value
 will not show up in any statistics except for the <cite>nodata</cite>
 statistic itself, which computes the number of <cite>nodata</cite>
 values within the zone. Note that this value is used <strong>in
 addition to</strong> any <cite>NODATA</cite> value in the raster’s metadata.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>all_touched</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Flag indicating whether to include every raster cell touched
+<li><p><strong>all_touched</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Flag indicating whether to include every raster cell touched
 by a geometry (<code class="docutils literal notranslate"><span class="pre">True</span></code>), or only those having a center
 point within the polygon (<code class="docutils literal notranslate"><span class="pre">False</span></code>). By default, <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
-<li><p><strong>category_map</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary mapping raster values to new names. If given,
+<li><p><strong>category_map</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary mapping raster values to new names. If given,
 this mapping will be applied to the pixel count dictionary,
 so you can use it to map raster values to human-readable
 category names. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>add_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – <p>Dictionary mapping extra stat names to callable functions
+<li><p><strong>add_stats</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – <p>Dictionary mapping extra stat names to callable functions
 that can be used to compute that stat. The functions must
 take exactly three arguments as input:</p>
 <blockquote>
@@ -742,7 +742,7 @@ representing the rasterized zone.</p>
 </div></blockquote>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </p></li>
-<li><p><strong>zone_func</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">callable()</span></code></a>, <em>optional</em>) – Callable function to apply to the zone-masked raster array
+<li><p><strong>zone_func</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#callable" title="(in Python v3.15)"><code class="xref py py-func docutils literal notranslate"><span class="pre">callable()</span></code></a>, <em>optional</em>) – Callable function to apply to the zone-masked raster array
 prior to computing stats. Must take exactly one input: the
 zone-masked raster array. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
 </ul>
@@ -784,7 +784,7 @@ zone-masked raster array. By default, <code class="docutils literal notranslate"
 <dd><p>Map of values to category names</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -796,21 +796,21 @@ zone-masked raster array. By default, <code class="docutils literal notranslate"
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>zones_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to GeoPackage defining zone polygons.</p></li>
-<li><p><strong>raster_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to GeoTiff representing the data that should be used
+<li><p><strong>zones_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to GeoPackage defining zone polygons.</p></li>
+<li><p><strong>raster_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to GeoTiff representing the data that should be used
 for statistics computations.</p></li>
-<li><p><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – A string representing a prefix to add to each stat name. If
+<li><p><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – A string representing a prefix to add to each stat name. If
 you wish to have the prefix separated by a delimiter, you
 must include it in this string (e.g. <code class="docutils literal notranslate"><span class="pre">prefix=&quot;test_&quot;</span></code>).
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>copy_properties</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of columns names to copy over from the zone
+<li><p><strong>copy_properties</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of columns names to copy over from the zone
 feature. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>parallel</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Option to perform processing in parallel using dask.
+<li><p><strong>parallel</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Option to perform processing in parallel using dask.
 By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> – List of dictionaries, each of which containing computed
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> – List of dictionaries, each of which containing computed
 statistics for a zone.</p>
 </dd>
 </dl>
@@ -823,25 +823,25 @@ statistics for a zone.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>zones</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – GeoDataFrame containing the zone polygons.</p></li>
-<li><p><strong>raster_array</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2026.7.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.DataArray</span></code></a>) – Xarray DataArray representing the data that should be used
+<li><p><strong>zones</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.2.1.dev0.dev+g199fc53c8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – GeoDataFrame containing the zone polygons.</p></li>
+<li><p><strong>raster_array</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.DataArray</span></code></a>) – Xarray DataArray representing the data that should be used
 to compute statistics.</p></li>
 <li><p><strong>affine_transform</strong> (<a class="reference external" href="https://affine.readthedocs.io/en/latest/index.html#affine.Affine" title="(in rasterio/affine)"><code class="xref py py-class docutils literal notranslate"><span class="pre">affine.Affine</span></code></a>) – Affine transform object representing the raster
 transformation. This is used to compute the raster shapes
 for statistics computations as well as the pixel area
 for each pixel value in the raster.</p></li>
-<li><p><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – A string representing a prefix to add to each stat name. If
+<li><p><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – A string representing a prefix to add to each stat name. If
 you wish to have the prefix separated by a delimiter, you
 must include it in this string (e.g. <code class="docutils literal notranslate"><span class="pre">prefix=&quot;test_&quot;</span></code>).
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>copy_properties</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of columns names to copy over from the zone
+<li><p><strong>copy_properties</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of columns names to copy over from the zone
 feature. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>parallel</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Option to perform processing in parallel using dask.
+<li><p><strong>parallel</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Option to perform processing in parallel using dask.
 By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Yields<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Dictionary of statistics computed for a single zone.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Dictionary of statistics computed for a single zone.</p>
 </dd>
 </dl>
 </dd></dl>

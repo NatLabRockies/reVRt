@@ -679,9 +679,9 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>routes</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – GeoDataFrame of routes to buffer. This dataframe must contain
+<li><p><strong>routes</strong> (<a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.2.1.dev0.dev+g199fc53c8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a>) – GeoDataFrame of routes to buffer. This dataframe must contain
 the route geometry as well as the <cite>row_width_key</cite> column.</p></li>
-<li><p><strong>row_widths</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – <p>A dictionary specifying the row widths in the following format:
+<li><p><strong>row_widths</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – <p>A dictionary specifying the row widths in the following format:
 <code class="docutils literal notranslate"><span class="pre">{&quot;row_width_id&quot;:</span> <span class="pre">row_width_meters}</span></code>. The <code class="docutils literal notranslate"><span class="pre">row_width_id</span></code> is
 a value used to match each route with a particular ROW width
 (this is typically a voltage). The value should be found under
@@ -693,7 +693,7 @@ provided.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </p></li>
-<li><p><strong>row_width_ranges</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – <p>Optional list of dictionaries, where each dictionary contains
+<li><p><strong>row_width_ranges</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – <p>Optional list of dictionaries, where each dictionary contains
 the keys “min”, “max”, and “width”. This can be used to specify
 row widths based on ranges of values (e.g. voltage). For
 example, the following input:</p>
@@ -719,12 +719,12 @@ ranges above.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </p></li>
-<li><p><strong>row_width_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;voltage&quot;</span></code>) – Name of column in vector file of routes used to map to the ROW
+<li><p><strong>row_width_key</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;voltage&quot;</span></code>) – Name of column in vector file of routes used to map to the ROW
 widths. By default, <code class="docutils literal notranslate"><span class="pre">&quot;voltage&quot;</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> – Route input with buffered paths (and without routes that are
+<dd class="field-even"><p><a class="reference external" href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html#geopandas.GeoDataFrame" title="(in GeoPandas v1.2.1.dev0.dev+g199fc53c8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">geopandas.GeoDataFrame</span></code></a> – Route input with buffered paths (and without routes that are
 missing a voltage specification in the <cite>row_widths</cite> or
 <cite>row_width_ranges</cite> input).</p>
 </dd>

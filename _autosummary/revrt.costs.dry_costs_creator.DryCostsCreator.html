@@ -676,9 +676,9 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>io_handler</strong> (<a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>) – Transmission layer IO handler</p></li>
-<li><p><strong>input_layer_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory to search for input layers in, if not found in
+<li><p><strong>input_layer_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory to search for input layers in, if not found in
 current directory. By default, <code class="docutils literal notranslate"><span class="pre">'.'</span></code>.</p></li>
-<li><p><strong>output_tiff_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where cost layers should be saved as GeoTIFF.
+<li><p><strong>output_tiff_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where cost layers should be saved as GeoTIFF.
 By default, <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code>.</p></li>
 <li><p><strong>dtype</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>, <em>optional</em>) – Data type for final dataset. By default, <code class="docutils literal notranslate"><span class="pre">float32</span></code>.</p></li>
 </ul>
@@ -703,7 +703,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <td><p>Layer chunks (no band dimension)</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir" title="revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_tiff_dir</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#revrt.costs.dry_costs_creator.DryCostsCreator.shape" title="revrt.costs.dry_costs_creator.DryCostsCreator.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></p></td>
 <td><p>Layer shape</p></td>
@@ -720,10 +720,10 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>iso_region_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the ISO region GeoTIFF.</p></li>
-<li><p><strong>nlcd_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the National Land Coverage Database GeoTIFF.</p></li>
-<li><p><strong>slope_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the slope GeoTIFF. Slope must be in decimal percent.</p></li>
-<li><p><strong>transmission_config</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – <p>Dictionary or path to JSON file containing dictionary with
+<li><p><strong>iso_region_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to the ISO region GeoTIFF.</p></li>
+<li><p><strong>nlcd_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to the National Land Coverage Database GeoTIFF.</p></li>
+<li><p><strong>slope_tiff</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to the slope GeoTIFF. Slope must be in decimal percent.</p></li>
+<li><p><strong>transmission_config</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – <p>Dictionary or path to JSON file containing dictionary with
 transmission cost configuration values. Valid configuration
 keys are:</p>
 <blockquote>
@@ -747,7 +747,7 @@ uses the default cost configs for all values.</p>
 <li><p><strong>mask</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>) – Boolean array representing mask where dry cost values should
 be applied. BY default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not apply a
 mask to the cost array.</p></li>
-<li><p><strong>default_multipliers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference internal" href="revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers" title="revrt.models.cost_layers.IsoMultipliers"><code class="xref py py-class docutils literal notranslate"><span class="pre">IsoMultipliers</span></code></a>, <em>optional</em>) – <p>Multipliers for regions not specified in the
+<li><p><strong>default_multipliers</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> or <a class="reference internal" href="revrt.models.cost_layers.IsoMultipliers.html#revrt.models.cost_layers.IsoMultipliers" title="revrt.models.cost_layers.IsoMultipliers"><code class="xref py py-class docutils literal notranslate"><span class="pre">IsoMultipliers</span></code></a>, <em>optional</em>) – <p>Multipliers for regions not specified in the
 <cite>iso_region_tiff</cite>. Must be a dictionary of the form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">"land_use"</span><span class="p">:</span> <span class="p">{</span>
     <span class="s2">"cropland"</span><span class="p">:</span> <span class="mf">1.03</span><span class="p">,</span>
@@ -766,18 +766,18 @@ mask to the cost array.</p></li>
 </div>
 <p>All keys are optional. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </p></li>
-<li><p><strong>extra_tiffs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – Optional list of extra GeoTIFFs to add to cost layer file
+<li><p><strong>extra_tiffs</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – Optional list of extra GeoTIFFs to add to cost layer file
 (e.g. a transmission barrier file). By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>,
 which does not add any extra layers.</p></li>
-<li><p><strong>descriptions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping  where keys are layer names and values are
+<li><p><strong>descriptions</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping  where keys are layer names and values are
 descriptions to add to the layer’s attributes meta
 dictionary under the “description” key.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, which does not add any description.</p></li>
-<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping where keys are layer names and values are
+<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping where keys are layer names and values are
 the nodata value for the output raster of that layer. This
 value will be added to the layer’s attributes meta
 dictionary under the “nodata” key. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>lock</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> or <cite>dask.distributed.Lock</cite>, <em>optional</em>) – Lock to use to write data to GeoTIFF using dask. If not
+<li><p><strong>lock</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> or <cite>dask.distributed.Lock</cite>, <em>optional</em>) – Lock to use to write data to GeoTIFF using dask. If not
 supplied, a single process is used for writing data to disk.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>**profile_kwargs</strong> – <p>Additional keyword arguments to pass into writing output
@@ -806,7 +806,7 @@ using properties of the
 <dd><p>Size of cell in layer file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -817,7 +817,7 @@ using properties of the
 <dd><p>Layer chunks (no band dimension)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -825,7 +825,7 @@ using properties of the
 <dl class="py property">
 <dt class="sig sig-object py" id="revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">output_tiff_dir</span></span><a class="headerlink" href="#revrt.costs.dry_costs_creator.DryCostsCreator.output_tiff_dir" title="Link to this definition">#</a></dt>
-<dd><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p>
+<dd><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p>
 </dd></dl>
 
 <dl class="py property">
@@ -834,7 +834,7 @@ using properties of the
 <dd><p>Layer shape</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>

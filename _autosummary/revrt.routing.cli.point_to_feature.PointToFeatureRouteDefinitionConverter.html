@@ -678,19 +678,19 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cost_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to layered Zarr file containing cost and other required
+<li><p><strong>cost_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to layered Zarr file containing cost and other required
 routing layers.</p></li>
-<li><p><strong>route_points</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a>) – DataFrame defining the points to be routed. This DataFrame
+<li><p><strong>route_points</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a>) – DataFrame defining the points to be routed. This DataFrame
 should contain route definitions to be transformed and
 passed down to the Rust routing algorithm.</p></li>
-<li><p><strong>out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to output file where computed routes will be saved.
+<li><p><strong>out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to output file where computed routes will be saved.
 This file will be checked for existing routes to avoid
 recomputation.</p></li>
-<li><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Mapping of routing-option names to dictionaries describing
+<li><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Mapping of routing-option names to dictionaries describing
 the cost, friction, barrier, and option-level multiplier
 inputs for each option. See
 <a class="reference internal" href="revrt.models.routing.RoutingOptionConfig.html#revrt.models.routing.RoutingOptionConfig" title="revrt.models.routing.RoutingOptionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoutingOptionConfig</span></code></a>.</p></li>
-<li><p><strong>transmission_config</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary of transmission cost configuration values, or
+<li><p><strong>transmission_config</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a> or <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary of transmission cost configuration values, or
 path to JSON/JSON5 file containing this dictionary. See the
 description of
 <a class="reference internal" href="revrt.routing.cli.point_to_point.compute_lcp_routes.html#revrt.routing.cli.point_to_point.compute_lcp_routes" title="revrt.routing.cli.point_to_point.compute_lcp_routes"><code class="xref py py-func docutils literal notranslate"><span class="pre">revrt.routing.cli.point_to_point.compute_lcp_routes()</span></code></a>
@@ -728,7 +728,7 @@ for more details.</p></li>
 <dd><p>Metadata from cost file (CRS, transform, shape)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -739,7 +739,7 @@ for more details.</p></li>
 <dd><p>Already computed routes in the output file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.14)">set</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#set" title="(in Python v3.15)">set</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -750,7 +750,7 @@ for more details.</p></li>
 <dd><p>Number of routes to be computed</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -761,7 +761,7 @@ for more details.</p></li>
 <dd><p>Validated routing points</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.5)">pandas.DataFrame</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)">pandas.DataFrame</a></p>
 </dd>
 </dl>
 </dd></dl>

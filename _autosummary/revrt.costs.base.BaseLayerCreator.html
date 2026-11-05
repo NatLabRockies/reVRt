@@ -670,15 +670,15 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.costs.base.BaseLayerCreator">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">BaseLayerCreator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">io_handler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_layer_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_tiff_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/costs/base.html#BaseLayerCreator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.costs.base.BaseLayerCreator" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Abstract Base Class to create transmission routing layers</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>io_handler</strong> (<a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>) – Transmission layer IO handler</p></li>
-<li><p><strong>input_layer_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory to search for input layers in, if not found in
+<li><p><strong>input_layer_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory to search for input layers in, if not found in
 current directory. By default, <code class="docutils literal notranslate"><span class="pre">'.'</span></code>.</p></li>
-<li><p><strong>output_tiff_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where cost layers should be saved as GeoTIFF.
+<li><p><strong>output_tiff_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where cost layers should be saved as GeoTIFF.
 By default, <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code>.</p></li>
 <li><p><strong>dtype</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>, <em>optional</em>) – Data type for final dataset. By default, <code class="docutils literal notranslate"><span class="pre">float32</span></code>.</p></li>
 </ul>
@@ -703,7 +703,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <td><p>Layer chunks (no band dimension)</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.costs.base.BaseLayerCreator.output_tiff_dir" title="revrt.costs.base.BaseLayerCreator.output_tiff_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_tiff_dir</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#revrt.costs.base.BaseLayerCreator.shape" title="revrt.costs.base.BaseLayerCreator.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></p></td>
 <td><p>Layer shape</p></td>
@@ -717,7 +717,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dd><p>Layer shape</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -728,7 +728,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dd><p>Size of cell in layer file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -736,7 +736,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dl class="py property">
 <dt class="sig sig-object py" id="revrt.costs.base.BaseLayerCreator.output_tiff_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">output_tiff_dir</span></span><a class="reference internal" href="../_modules/revrt/costs/base.html#BaseLayerCreator.output_tiff_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.costs.base.BaseLayerCreator.output_tiff_dir" title="Link to this definition">#</a></dt>
-<dd><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p>
+<dd><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p>
 </dd></dl>
 
 <dl class="py property">
@@ -745,7 +745,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dd><p>Layer chunks (no band dimension)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>

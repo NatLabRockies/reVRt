@@ -664,20 +664,20 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.RouteFinder">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RouteFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zarr_fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_definitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'long_range_dijkstra'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routing_layer_out_fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_limit_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#revrt.RouteFinder" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Find least-cost paths for one or more starting points in parallel.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>zarr_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to zarr file containing cost layers.</p></li>
-<li><p><strong>cost_function</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – JSON string representation of the cost function. Top-level keys
+<li><p><strong>zarr_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to zarr file containing cost layers.</p></li>
+<li><p><strong>cost_function</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – JSON string representation of the cost function. Top-level keys
 include <code class="docutils literal notranslate"><span class="pre">routing_options</span></code>, <code class="docutils literal notranslate"><span class="pre">drivers</span></code>,
 <code class="docutils literal notranslate"><span class="pre">transition_costs</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">invalid_costs_block_routing</span></code>. The <code class="docutils literal notranslate"><span class="pre">cost_layers</span></code>,
 <code class="docutils literal notranslate"><span class="pre">friction_layers</span></code>, and <code class="docutils literal notranslate"><span class="pre">barrier_layers</span></code> definitions must be
 nested under each routing option. See the cost-function
 documentation for details on each of these inputs.</p></li>
-<li><p><strong>route_definitions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>) – List of tuples containing path definitions. Each path definition
+<li><p><strong>route_definitions</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>) – List of tuples containing path definitions. Each path definition
 tuple should be of the form (int, list, list). The int input is
 a route ID (non-negative) that you can use to link results to
 input route definitions. The first list contains the starting
@@ -687,12 +687,12 @@ non-negative array indices and a routing-option name matching one
 of the configured <code class="docutils literal notranslate"><span class="pre">routing_options</span></code>. A unique path will be
 returned for each of the starting points in each of the path
 definition tuples (assuming a valid path exists).</p></li>
-<li><p><strong>routing_layer_out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Optional path to a cost zarr file that will be used to store the routing
+<li><p><strong>routing_layer_out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Optional path to a cost zarr file that will be used to store the routing
 cost layers. If not given, the routing layers will be kept in a temporary
 directory and deleted after the routing is done. By default, <cite>None</cite>.</p></li>
-<li><p><strong>mem_limit_bytes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">250_000_000</span></code>) – Overall memory limit to use for routing computations, in bytes.
+<li><p><strong>mem_limit_bytes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">250_000_000</span></code>) – Overall memory limit to use for routing computations, in bytes.
 By default, <cite>250,000,000</cite> (250MB).</p></li>
-<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values are
+<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values are
 <code class="docutils literal notranslate"><span class="pre">&quot;astar&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_astar&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code>.
 <code class="docutils literal notranslate"><span class="pre">&quot;astar&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;dijkstra&quot;</span></code> are faster in-memory
@@ -700,14 +700,14 @@ implementations but do not respect the <cite>mem_limit_bytes</cite> input.
 Prefer a long-range option unless you know for a fact that your route
 computations will not need much memory and speed is very important to you.
 By default, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>.</p></li>
-<li><p><strong>log_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Logging level for Rust tracing emitted to stderr. Roughly follows the
+<li><p><strong>log_level</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Logging level for Rust tracing emitted to stderr. Roughly follows the
 Python logging module levels, where 0 = TRACE, 10 = DEBUG, 20 = INFO,
 30 = WARN, and 40 = ERROR. If None is given, no logging is set up.
 By default, <cite>None</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Yields<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> – A tuple representing the route finding result for a single
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> – A tuple representing the route finding result for a single
 path definition. The first element is the route definition ID
 (as given in the input) and the second element is a list of path
 routing results. Each routing result is a tuple where the first

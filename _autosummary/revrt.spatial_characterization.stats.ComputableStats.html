@@ -670,17 +670,17 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.spatial_characterization.stats.ComputableStats">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ComputableStats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fractional_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/spatial_characterization/stats.html#ComputableStats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.spatial_characterization.stats.ComputableStats" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>A class to represent computable statistics for zonal stats</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of “base” statistics to compute (i.e. not
+<li><p><strong>base_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of “base” statistics to compute (i.e. not
 fractional or percentile). By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>percentiles</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary mapping the percentile stat name to the int or
+<li><p><strong>percentiles</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary mapping the percentile stat name to the int or
 float representing the percentile that can be passed to
 <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.percentile.html#numpy.percentile" title="(in NumPy v2.5)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.percentile()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>fractional_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – One or mre stats from the <a class="reference internal" href="revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat" title="revrt.spatial_characterization.stats.FractionalStat"><code class="xref py py-class docutils literal notranslate"><span class="pre">FractionalStat</span></code></a> enum to
+<li><p><strong>fractional_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – One or mre stats from the <a class="reference internal" href="revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat" title="revrt.spatial_characterization.stats.FractionalStat"><code class="xref py py-class docutils literal notranslate"><span class="pre">FractionalStat</span></code></a> enum to
 compute. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -721,7 +721,7 @@ compute. By default, <code class="docutils literal notranslate"><span class="pre
 <dd><p>Dict with empty stat values</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -739,7 +739,7 @@ collection can contain NaN values, which will be ignored in
 the final output.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Dictionary where keys are the unique array entries and the
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Dictionary where keys are the unique array entries and the
 values are the counts for each entry. This dictionary will
 be empty if this stats collection does not contain any stats
 that require a pixel count.</p>
@@ -757,7 +757,7 @@ that require a pixel count.</p>
 <li><p><strong>processed_raster</strong> (<a class="reference external" href="https://numpy.org/doc/stable/glossary.html#term-array_like" title="(in NumPy v2.5)"><span class="xref std std-term">array-like</span></a>) – Array to compute statistics for. This collection can
 contain NaN values, which will be ignored in the final
 output.</p></li>
-<li><p><strong>category_map</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary mapping raster values to new names. If given,
+<li><p><strong>category_map</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Dictionary mapping raster values to new names. If given,
 this mapping will be applied to the pixel count dictionary,
 so you can use it to map raster values to human-readable
 category names. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
@@ -784,7 +784,7 @@ it’s not masked out with NaNs).</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Dictionary of computed statistics.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Dictionary of computed statistics.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -805,10 +805,10 @@ output.</p></li>
 transformation. This is used to compute the raster shapes
 for statistics computations as well as the pixel area
 for each pixel value in the raster.</p></li>
-<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Value representing “nodata” in the array. These values in
+<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Value representing “nodata” in the array. These values in
 the raster will be ignored and will not contribute to the
 statistics and will not be reported. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>category_map</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping for raster values. If given, the outputs
+<li><p><strong>category_map</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional mapping for raster values. If given, the outputs
 will be labeled using the categories in this mapping instead
 of the raster values directly. The map does not have to
 be exhaustive - missing values will just be reported using
@@ -816,7 +816,7 @@ the raw array value. By default, <code class="docutils literal notranslate"><spa
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Dictionary of computed fractional statistics. The keys are
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> – Dictionary of computed fractional statistics. The keys are
 the names of the statistics in the <a class="reference internal" href="revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat" title="revrt.spatial_characterization.stats.FractionalStat"><code class="xref py py-class docutils literal notranslate"><span class="pre">FractionalStat</span></code></a>
 enum and the values are the computed statistics.</p>
 </dd>
@@ -833,8 +833,8 @@ enum and the values are the computed statistics.</p>
 </dd>
 <dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> – Name of percentile stat</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> – Value representing that percentile in the array.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> – Name of percentile stat</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> – Value representing that percentile in the array.</p></li>
 </ul>
 </dd>
 </dl>
@@ -846,7 +846,7 @@ enum and the values are the computed statistics.</p>
 <dd><p>Create a ComputableStats object from an iterable of stats</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – <p>Names of all statistics to compute. Statistics must be one
+<dd class="field-odd"><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – <p>Names of all statistics to compute. Statistics must be one
 of the members of <a class="reference internal" href="revrt.spatial_characterization.stats.Stat.html#revrt.spatial_characterization.stats.Stat" title="revrt.spatial_characterization.stats.Stat"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stat</span></code></a> or <a class="reference internal" href="revrt.spatial_characterization.stats.FractionalStat.html#revrt.spatial_characterization.stats.FractionalStat" title="revrt.spatial_characterization.stats.FractionalStat"><code class="xref py py-class docutils literal notranslate"><span class="pre">FractionalStat</span></code></a>,
 or must start with the <code class="docutils literal notranslate"><span class="pre">percentile_</span></code> prefix and end with
 an int or float representing the percentile to compute (e.g.

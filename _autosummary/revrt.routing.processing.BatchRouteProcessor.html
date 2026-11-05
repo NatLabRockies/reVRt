@@ -670,7 +670,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.routing.processing.BatchRouteProcessor">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">BatchRouteProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">routing_scenario</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_definitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem_limit_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/processing.html#BatchRouteProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.processing.BatchRouteProcessor" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class to manage batches of route computations</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -680,12 +680,12 @@
 defining which points to route between. Each of
 <code class="docutils literal notranslate"><span class="pre">start_points</span></code> and <code class="docutils literal notranslate"><span class="pre">end_points</span></code> should be a list of
 <code class="docutils literal notranslate"><span class="pre">(row,</span> <span class="pre">col,</span> <span class="pre">option_name)</span></code> tuples.</p></li>
-<li><p><strong>route_attrs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Mapping of tuples of the form (int, (int, int, option))
+<li><p><strong>route_attrs</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Mapping of tuples of the form (int, (int, int, option))
 where the first integer represents the route ID and the
 tuple of integers + str represents the starting index to
 additional attributes to include in the output for that
 route. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>mem_limit_gb</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">4</span></code>) – Memory limit in gigabytes for routing computations.
+<li><p><strong>mem_limit_gb</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">4</span></code>) – Memory limit in gigabytes for routing computations.
 By default, <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
 </ul>
 </dd>
@@ -723,7 +723,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">4</span
 <dd><p>Default attributes for all routes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -734,7 +734,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">4</span
 <dd><p>Mapping of frozen route node pair sets to attributes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -756,7 +756,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">4</span
 <dd><p>Validated route definitions for computation</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -768,13 +768,13 @@ By default, <code class="docutils literal notranslate"><span class="pre">4</span
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to output file. If <code class="docutils literal notranslate"><span class="pre">save_paths=True</span></code>, a GeoPackage
+<li><p><strong>out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to output file. If <code class="docutils literal notranslate"><span class="pre">save_paths=True</span></code>, a GeoPackage
 will be created (recommend to pass in a filepath ending in
 “.gpkg”). Otherwise, a CSV file will be created (recommend
 to pass in a filepath ending in “.csv”).</p></li>
-<li><p><strong>save_paths</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Include shapely geometries in the output when <code class="docutils literal notranslate"><span class="pre">True</span></code>.
+<li><p><strong>save_paths</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#False" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Include shapely geometries in the output when <code class="docutils literal notranslate"><span class="pre">True</span></code>.
 By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>routing_layer_out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Optional output path for Rust routing-layer cache data.
+<li><p><strong>routing_layer_out_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Optional output path for Rust routing-layer cache data.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>

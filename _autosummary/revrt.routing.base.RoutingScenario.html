@@ -670,27 +670,27 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.routing.base.RoutingScenario">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RoutingScenario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_fpath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routing_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drivers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition_costs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid_costs_block_routing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bidirectional_long_range_dijkstra'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/base.html#RoutingScenario"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.base.RoutingScenario" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Container for routing scenario configuration</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cost_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the cost layer Zarr store used for routing.</p></li>
-<li><p><strong>tracked_layers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – List of dictionaries defining layers to summarize along the
+<li><p><strong>cost_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to the cost layer Zarr store used for routing.</p></li>
+<li><p><strong>tracked_layers</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – List of dictionaries defining layers to summarize along the
 route after applying optional multiplier inputs. See
 <a class="reference internal" href="revrt.models.routing.TrackedLayer.html#revrt.models.routing.TrackedLayer" title="revrt.models.routing.TrackedLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrackedLayer</span></code></a> for the
 canonical schema.</p></li>
-<li><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Validated mapping of routing-option names to dictionaries
+<li><p><strong>routing_options</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>) – Validated mapping of routing-option names to dictionaries
 containing cost, friction, and barrier definitions.</p></li>
-<li><p><strong>drivers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional driver-rule configuration keyed by routing option.
+<li><p><strong>drivers</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional driver-rule configuration keyed by routing option.
 See <a class="reference internal" href="revrt.models.routing.DriverConfig.html#revrt.models.routing.DriverConfig" title="revrt.models.routing.DriverConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">DriverConfig</span></code></a> and
 <a class="reference internal" href="revrt.models.routing.DriverZoneConfig.html#revrt.models.routing.DriverZoneConfig" title="revrt.models.routing.DriverZoneConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">DriverZoneConfig</span></code></a>.</p></li>
-<li><p><strong>transition_costs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional transition-cost configuration between routing
+<li><p><strong>transition_costs</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – Optional transition-cost configuration between routing
 options. See
 <a class="reference internal" href="revrt.models.routing.TransitionCostsConfig.html#revrt.models.routing.TransitionCostsConfig" title="revrt.models.routing.TransitionCostsConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitionCostsConfig</span></code></a> and
 <a class="reference internal" href="revrt.models.routing.TransitionCostRule.html#revrt.models.routing.TransitionCostRule" title="revrt.models.routing.TransitionCostRule"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransitionCostRule</span></code></a>.</p></li>
-<li><p><strong>invalid_costs_block_routing</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Flag indicating whether non-positive costs block traversal.</p></li>
-<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values
+<li><p><strong>invalid_costs_block_routing</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Flag indicating whether non-positive costs block traversal.</p></li>
+<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>) – Routing algorithm implementation to use. Supported values
 are <code class="docutils literal notranslate"><span class="pre">&quot;astar&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;long_range_astar&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;long_range_dijkstra&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;bidirectional_long_range_dijkstra&quot;</span></code>, and
@@ -727,7 +727,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;b
 <dd><p>Routing option names in solver index order</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -738,7 +738,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;b
 <dd><p>JSON string describing configured cost layers</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
 </dd>
 </dl>
 </dd></dl>

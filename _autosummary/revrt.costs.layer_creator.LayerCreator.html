@@ -678,9 +678,9 @@
 <li><p><strong>io_handler</strong> (<a class="reference internal" href="revrt.utilities.handlers.LayeredFile.html#revrt.utilities.handlers.LayeredFile" title="revrt.utilities.handlers.LayeredFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayeredFile</span></code></a>) – Layered file IO handler.</p></li>
 <li><p><strong>masks</strong> (<a class="reference internal" href="revrt.costs.masks.Masks.html#revrt.costs.masks.Masks" title="revrt.costs.masks.Masks"><code class="xref py py-class docutils literal notranslate"><span class="pre">Masks</span></code></a>) – Masks instance that can be used to retrieve multiple types
 of masks.</p></li>
-<li><p><strong>input_layer_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory to search for input layers in, if not found in
+<li><p><strong>input_layer_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory to search for input layers in, if not found in
 current directory. By default, <code class="docutils literal notranslate"><span class="pre">'.'</span></code>.</p></li>
-<li><p><strong>output_tiff_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where cost layers should be saved as GeoTIFF.
+<li><p><strong>output_tiff_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where cost layers should be saved as GeoTIFF.
 By default, <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code>.</p></li>
 <li><p><strong>dtype</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>, <em>optional</em>) – Data type for final dataset. By default, <code class="docutils literal notranslate"><span class="pre">float32</span></code>.</p></li>
 </ul>
@@ -711,7 +711,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <td><p>Layer chunks (no band dimension)</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#revrt.costs.layer_creator.LayerCreator.output_tiff_dir" title="revrt.costs.layer_creator.LayerCreator.output_tiff_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_tiff_dir</span></code></a></p></td>
-<td><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p></td>
+<td><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#revrt.costs.layer_creator.LayerCreator.shape" title="revrt.costs.layer_creator.LayerCreator.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></p></td>
 <td><p>Layer shape</p></td>
@@ -725,7 +725,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dd><p>Attribute key containing the serialized build config</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -736,7 +736,7 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dd><p>Attribute key containing ‘values are cost per mile’ flag</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -748,12 +748,12 @@ By default, <code class="docutils literal notranslate"><span class="pre">&quot;.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of layer to use in Zarr and for output tiff.</p></li>
+<li><p><strong>layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of layer to use in Zarr and for output tiff.</p></li>
 <li><p><strong>build_config</strong> (<a class="reference internal" href="revrt.models.cost_layers.LayerBuildComponents.html#revrt.models.cost_layers.LayerBuildComponents" title="revrt.models.cost_layers.LayerBuildComponents"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerBuildComponents</span></code></a>) – Dict of LayerBuildConfig keyed by GeoTIFF/vector filenames.</p></li>
-<li><p><strong>values_are_costs_per_mile</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Option to convert values into costs per cell under the
+<li><p><strong>values_are_costs_per_mile</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#False" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Option to convert values into costs per cell under the
 assumption that the resulting values are costs in $/mile.
 By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>, which writes raw values to TIFF/Zarr.</p></li>
-<li><p><strong>write_to_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>) – <p>Option to write the layer to file after creation.</p>
+<li><p><strong>write_to_file</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#True" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>) – <p>Option to write the layer to file after creation.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>This will overwrite existing layers with the same name
@@ -761,15 +761,15 @@ already in the file.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </p></li>
-<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Optional description to store with this layer in the Zarr
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Optional description to store with this layer in the Zarr
 file. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>tiff_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;file&quot;</span></code>) – Chunk size to use when reading the GeoTIFF file. This will
+<li><p><strong>tiff_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;file&quot;</span></code>) – Chunk size to use when reading the GeoTIFF file. This will
 be passed down as the <code class="docutils literal notranslate"><span class="pre">chunks</span></code> argument to
-<a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;file&quot;</span></code>.</p></li>
-<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Optional nodata value for output rasters. This value will
+<a class="reference external" href="https://vylor.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.24.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. By default, <code class="docutils literal notranslate"><span class="pre">&quot;file&quot;</span></code>.</p></li>
+<li><p><strong>nodata</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Optional nodata value for output rasters. This value will
 be added to the layer’s attributes meta dictionary under the
 “nodata” key.</p></li>
-<li><p><strong>lock</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> or <cite>dask.distributed.Lock</cite>, <em>optional</em>) – Lock to use to write data to GeoTIFF using dask. If not
+<li><p><strong>lock</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> or <cite>dask.distributed.Lock</cite>, <em>optional</em>) – Lock to use to write data to GeoTIFF using dask. If not
 supplied, a single process is used for writing data to disk.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>**profile_kwargs</strong> – <p>Additional keyword arguments to pass into writing output
@@ -798,7 +798,7 @@ using properties of the
 <dd><p>Size of cell in layer file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -809,7 +809,7 @@ using properties of the
 <dd><p>Layer chunks (no band dimension)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -817,7 +817,7 @@ using properties of the
 <dl class="py property">
 <dt class="sig sig-object py" id="revrt.costs.layer_creator.LayerCreator.output_tiff_dir">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">output_tiff_dir</span></span><a class="headerlink" href="#revrt.costs.layer_creator.LayerCreator.output_tiff_dir" title="Link to this definition">#</a></dt>
-<dd><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p>
+<dd><p><a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a> GeoTIFFs output dir</p>
 </dd></dl>
 
 <dl class="py property">
@@ -826,7 +826,7 @@ using properties of the
 <dd><p>Layer shape</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>

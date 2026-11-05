@@ -675,11 +675,11 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>geotiff_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the raster file.</p></li>
-<li><p><strong>route_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to the vector file of routes. Must contain a “geometry”
+<li><p><strong>geotiff_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to the raster file.</p></li>
+<li><p><strong>route_fp</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to the vector file of routes. Must contain a “geometry”
 column and the <cite>row_width_key</cite> column (used to map to path ROW
 width).</p></li>
-<li><p><strong>row_widths</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – <p>A dictionary specifying the row widths in the following format:
+<li><p><strong>row_widths</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <em>optional</em>) – <p>A dictionary specifying the row widths in the following format:
 <code class="docutils literal notranslate"><span class="pre">{&quot;row_width_id&quot;:</span> <span class="pre">row_width_meters}</span></code>. The <code class="docutils literal notranslate"><span class="pre">row_width_id</span></code> is
 a value used to match each route with a particular ROW width
 (this is typically a voltage). The value should be found under
@@ -691,7 +691,7 @@ provided.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </p></li>
-<li><p><strong>row_width_ranges</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – <p>Optional list of dictionaries, where each dictionary contains
+<li><p><strong>row_width_ranges</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, <em>optional</em>) – <p>Optional list of dictionaries, where each dictionary contains
 the keys “min”, “max”, and “width”. This can be used to specify
 row widths based on ranges of values (e.g. voltage). For
 example, the following input:</p>
@@ -717,26 +717,26 @@ ranges above.</p>
 </div>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </p></li>
-<li><p><strong>multiplier_scalar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Optional multiplier value to apply to layer before computing
+<li><p><strong>multiplier_scalar</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Optional multiplier value to apply to layer before computing
 statistics. This is useful if you want to scale the values in
 the raster before computing statistics. By default, <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
-<li><p><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – A string representing a prefix to add to each stat name. If you
+<li><p><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – A string representing a prefix to add to each stat name. If you
 wish to have the prefix separated by a delimiter, you must
 include it in this string (e.g. <code class="docutils literal notranslate"><span class="pre">prefix=&quot;test_&quot;</span></code>).
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>copy_properties</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of columns names to copy over from the zone feature.
+<li><p><strong>copy_properties</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a> of <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Iterable of columns names to copy over from the zone feature.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>parallel</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Option to perform processing in parallel using dask.
+<li><p><strong>parallel</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>optional</em>) – Option to perform processing in parallel using dask.
 By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>row_width_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;voltage&quot;</span></code>) – Name of column in vector file of routes used to map to the
+<li><p><strong>row_width_key</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;voltage&quot;</span></code>) – Name of column in vector file of routes used to map to the
 ROW widths. By default, <code class="docutils literal notranslate"><span class="pre">&quot;voltage&quot;</span></code>.</p></li>
-<li><p><strong>chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – <code class="docutils literal notranslate"><span class="pre">chunks</span></code> keyword argument to pass down to
-<a class="reference external" href="https://corteva.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.22.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. Use this to control the Dask
+<li><p><strong>chunks</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) – <code class="docutils literal notranslate"><span class="pre">chunks</span></code> keyword argument to pass down to
+<a class="reference external" href="https://vylor.github.io/rioxarray/stable/rioxarray.html#rioxarray.open_rasterio" title="(in rioxarray v0.24.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">rioxarray.open_rasterio()</span></code></a>. Use this to control the Dask
 chunk size. By default, <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> – Pandas DataFrame containing computed characteristics/stats.</p>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> – Pandas DataFrame containing computed characteristics/stats.</p>
 </dd>
 </dl>
 </dd></dl>

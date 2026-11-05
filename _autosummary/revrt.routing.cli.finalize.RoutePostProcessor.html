@@ -673,22 +673,22 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="revrt.routing.cli.finalize.RoutePostProcessor">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RoutePostProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collect_pattern</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_line_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_mult_kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simplify_geo_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_fpath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmission_feature_id_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'trans_gid'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purge_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/revrt/routing/cli/finalize.html#RoutePostProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#revrt.routing.cli.finalize.RoutePostProcessor" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class to finalize routing outputs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>collect_pattern</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unix-style <code class="docutils literal notranslate"><span class="pre">/filepath/pattern*.gpkg</span></code> representing the
+<li><p><strong>collect_pattern</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unix-style <code class="docutils literal notranslate"><span class="pre">/filepath/pattern*.gpkg</span></code> representing the
 file(s) to be collected into a single output file. Can also
 just be a path to a single file if data is already in one
 place.</p></li>
-<li><p><strong>project_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>) – Path to project directory. This path is used to resolve the
+<li><p><strong>project_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>) – Path to project directory. This path is used to resolve the
 out filepath input from the user.</p></li>
-<li><p><strong>job_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Label used to name the generated output file.</p></li>
-<li><p><strong>out_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where finalized routing file should be written.
+<li><p><strong>job_name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Label used to name the generated output file.</p></li>
+<li><p><strong>out_dir</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Directory where finalized routing file should be written.
 If not given, defaults to <code class="docutils literal notranslate"><span class="pre">project_dir</span></code>.
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>min_line_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">0</span></code>) – Minimum line length in km. If a line length is below this
+<li><p><strong>min_line_length</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">0</span></code>) – Minimum line length in km. If a line length is below this
 value, its length and cost are adjust to meet this minimum.
 Costs are scaled up linearly. By default, <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p><strong>length_mult_kind</strong> (<code class="docutils literal notranslate"><span class="pre">{None,</span> <span class="pre">&quot;step&quot;,</span> <span class="pre">&quot;linear&quot;}</span></code>, <em>optional</em>) – Type of length multiplier calculation to apply. Length
@@ -705,7 +705,7 @@ was <code class="docutils literal notranslate"><span class="pre">&quot;step&quot
 <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code>. Length multiplier data source:
 <a class="reference external" href="https://www.wecc.org/Administrative/TEPPC_TransCapCostCalculator_E3_2019_Update.xlsx">https://www.wecc.org/Administrative/TEPPC_TransCapCostCalculator_E3_2019_Update.xlsx</a>
 By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>simplify_geo_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Option to simplify geometries before saving to output. Note
+<li><p><strong>simplify_geo_tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <em>optional</em>) – Option to simplify geometries before saving to output. Note
 that this changes the path geometry and therefore create a
 mismatch between the geometry and any associated attributes
 (e.g., length, cost, etc). This also means the paths should
@@ -717,14 +717,14 @@ parts of a simplified geometry will be no more than
 same units as the coordinate reference system of the
 GeoSeries. Only works for GeoPackage outputs (errors
 otherwise). By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>cost_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Filepath to cost layer used for routing. If provided along
+<li><p><strong>cost_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Filepath to cost layer used for routing. If provided along
 with <cite>features_fpath</cite>, the routes will be merged with the
 transmission features that they connected to. To skip this
 functionality, leave out <strong>both</strong> <cite>cost_fpath</cite> and
 <cite>features_fpath</cite>. This is used to obtain profile information
 for the cost raster layer in order to compute transmission
 feature row/column indices. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>features_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.14)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Filepath to transmission features GeoPackage. If provided
+<li><p><strong>features_fpath</strong> (<a class="reference external" href="https://docs.python.org/3/glossary.html#term-path-like-object" title="(in Python v3.15)"><span class="xref std std-term">path-like</span></a>, <em>optional</em>) – Filepath to transmission features GeoPackage. If provided
 along with <cite>cost_fpath</cite>, the routes will be merged with the
 transmission features that they connected to. The features
 in this file must contain a column matching
@@ -733,13 +733,13 @@ transmission feature. These features will be merged into the
 routes based on which features the routes connected to. To
 skip this functionality, leave out <strong>both</strong> <cite>cost_fpath</cite> and
 <cite>features_fpath</cite>. By default, <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p><strong>transmission_feature_id_col</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;trans_gid&quot;</span></code>) – Name of column in features file uniquely identifying each
+<li><p><strong>transmission_feature_id_col</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">&quot;trans_gid&quot;</span></code>) – Name of column in features file uniquely identifying each
 transmission feature. This is only used if both <cite>cost_fpath</cite>
 and <cite>features_fpath</cite> are provided.
 By default, <code class="docutils literal notranslate"><span class="pre">&quot;trans_gid&quot;</span></code>.</p></li>
-<li><p><strong>purge_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Option to delete single-node input files after the
+<li><p><strong>purge_chunks</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <em>default</em> <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#False" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>) – Option to delete single-node input files after the
 collection step. By default, <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>chunk_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">10_000</span></code>) – Number of features to read into memory at a time when
+<li><p><strong>chunk_size</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>default</em> <code class="docutils literal notranslate"><span class="pre">10_000</span></code>) – Number of features to read into memory at a time when
 merging files. This helps limit memory usage when merging
 large files. By default, <code class="docutils literal notranslate"><span class="pre">10_000</span></code>.</p></li>
 </ul>
@@ -784,7 +784,7 @@ large files. By default, <code class="docutils literal notranslate"><span class=
 <dd><p>List of files to collect</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)">list</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -795,7 +795,7 @@ large files. By default, <code class="docutils literal notranslate"><span class=
 <dd><p>Output file suffix</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -806,7 +806,7 @@ large files. By default, <code class="docutils literal notranslate"><span class=
 <dd><p>Output filepath</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)">pathlib.Path</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -817,7 +817,7 @@ large files. By default, <code class="docutils literal notranslate"><span class=
 <dd><p>Directory for chunk files</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)">pathlib.Path</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
 </dd>
 </dl>
 </dd></dl>
