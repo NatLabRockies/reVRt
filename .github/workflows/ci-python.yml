@@ -33,7 +33,7 @@ jobs:
           args: "format --check"
           src: "./revrt"
       - name: Check Python Code Complexity (Complexipy)
-        uses: rohaquinlop/complexipy-action@e2b05bcc06d899a24e2b6bb8b1354ac42800a95e # v7.0.1
+        uses: rohaquinlop/complexipy-action@a076ecec49e0beb4af51658c6042124923979628 # v8.1.0
         with:
           paths: "./revrt"
           max_complexity_allowed: 10
@@ -56,7 +56,7 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
 
-    - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
+    - uses: prefix-dev/setup-pixi@ad1da6449d9e506fd127fd67ab2d054a769f6a94 # v0.11.2
       with:
         pixi-version: v0.69.0
         locked: true
@@ -88,7 +88,7 @@ jobs:
       if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
-    - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
+    - uses: prefix-dev/setup-pixi@ad1da6449d9e506fd127fd67ab2d054a769f6a94 # v0.11.2
       with:
         pixi-version: v0.69.0
         locked: true
@@ -121,7 +121,7 @@ jobs:
       if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
-    - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
+    - uses: prefix-dev/setup-pixi@ad1da6449d9e506fd127fd67ab2d054a769f6a94 # v0.11.2
       with:
         pixi-version: v0.69.0
         locked: true
@@ -158,7 +158,7 @@ jobs:
       uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
