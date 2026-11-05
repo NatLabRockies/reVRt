@@ -13,13 +13,13 @@ authors:
     given-names: Guilherme
     affiliation: National Laboratory of the Rockies
     orcid: 'https://orcid.org/0000-0002-6765-0708'
-  - family-names: Gu
-    given-names: Jianyu
-    affiliation: National Laboratory of the Rockies
   - family-names: Rivers
     given-names: Marie
     affiliation: National Laboratory of the Rockies
     orcid: 'https://orcid.org/0000-0002-0804-9365'
+  - family-names: Gu
+    given-names: Jianyu
+    affiliation: National Laboratory of the Rockies
 identifiers:
   - type: doi
     value: 10.5281/zenodo.17173574
@@ -43,5 +43,5 @@ keywords:
   - Transmission
   - Least-cost-path
 license: BSD-3-Clause
-version: 0.2.0
-date-released: '2025-09-21'
+version: 0.14.1
+date-released: '2026-11-05'
