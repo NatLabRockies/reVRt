@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793917553720,
+  "lastUpdate": 1794275669470,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -14699,6 +14699,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 299333930,
             "range": "± 3795382",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c5bfaf23d8e62419692662f739286b0da08f70ce",
+          "message": "ci: Bump the github-actions group with 4 updates (#338)\n\nBumps the github-actions group with 4 updates: [prefix-dev/setup-pixi](https://github.com/prefix-dev/setup-pixi), [rohaquinlop/complexipy-action](https://github.com/rohaquinlop/complexipy-action), [github/codeql-action/init](https://github.com/github/codeql-action) and [github/codeql-action/analyze](https://github.com/github/codeql-action).\n\n\nUpdates `prefix-dev/setup-pixi` from 0.11.2 to 0.11.3\n- [Release notes](https://github.com/prefix-dev/setup-pixi/releases)\n- [Commits](https://github.com/prefix-dev/setup-pixi/compare/ad1da6449d9e506fd127fd67ab2d054a769f6a94...9936258fee697aff89b3fed6ca1f80a382ef694e)\n\nUpdates `rohaquinlop/complexipy-action` from 8.1.0 to 8.3.0\n- [Release notes](https://github.com/rohaquinlop/complexipy-action/releases)\n- [Commits](https://github.com/rohaquinlop/complexipy-action/compare/a076ecec49e0beb4af51658c6042124923979628...d17bd9cda04238df5ba20184ec399630f09a3dd5)\n\nUpdates `github/codeql-action/init` from 4.39.1 to 4.39.3\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/9b3254085494b55a0f7c4c2b3d2d52cc712ce370...33d7b85da1a04171e211befe2c739303b9a4c066)\n\nUpdates `github/codeql-action/analyze` from 4.39.1 to 4.39.3\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/9b3254085494b55a0f7c4c2b3d2d52cc712ce370...33d7b85da1a04171e211befe2c739303b9a4c066)\n\n---\nupdated-dependencies:\n- dependency-name: prefix-dev/setup-pixi\n  dependency-version: 0.11.3\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: rohaquinlop/complexipy-action\n  dependency-version: 8.3.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/init\n  dependency-version: 4.39.3\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/analyze\n  dependency-version: 4.39.3\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-09T18:32:19-07:00",
+          "tree_id": "98d231566f47e3c850c2c44594024903db371ef6",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/c5bfaf23d8e62419692662f739286b0da08f70ce"
+        },
+        "date": 1794275668017,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 51099883,
+            "range": "± 8578886",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 48328477,
+            "range": "± 5483870",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 60507743,
+            "range": "± 7475264",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 93265232,
+            "range": "± 13630971",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 439214352,
+            "range": "± 66365516",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 107009254,
+            "range": "± 1606614",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 109688063,
+            "range": "± 2721334",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 119766761,
+            "range": "± 9797253",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 146948922,
+            "range": "± 5885106",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 259331233,
+            "range": "± 8472958",
             "unit": "ns/iter"
           }
         ]
