@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794275669470,
+  "lastUpdate": 1794868450463,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -14783,6 +14783,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 259331233,
             "range": "± 8472958",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9d4fede0e2e9f9878149964256fbdc70a9dcf9aa",
+          "message": "ci: Bump rohaquinlop/complexipy-action (#339)\n\nBumps the github-actions group with 1 update: [rohaquinlop/complexipy-action](https://github.com/rohaquinlop/complexipy-action).\n\n\nUpdates `rohaquinlop/complexipy-action` from 8.3.0 to 9.0.0\n- [Release notes](https://github.com/rohaquinlop/complexipy-action/releases)\n- [Commits](https://github.com/rohaquinlop/complexipy-action/compare/d17bd9cda04238df5ba20184ec399630f09a3dd5...da72864ca17b65629490daaaffd40d56ae103a57)\n\n---\nupdated-dependencies:\n- dependency-name: rohaquinlop/complexipy-action\n  dependency-version: 9.0.0\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n  dependency-group: github-actions\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-16T15:21:27-07:00",
+          "tree_id": "4268aa76e3cd269a77aac27f65f20a16d52a8b20",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/9d4fede0e2e9f9878149964256fbdc70a9dcf9aa"
+        },
+        "date": 1794868449133,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 42310912,
+            "range": "± 6020015",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 80628709,
+            "range": "± 36227739",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 57370129,
+            "range": "± 50911370",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 89485675,
+            "range": "± 43646761",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 515427113,
+            "range": "± 195917200",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 118387851,
+            "range": "± 6846384",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 121657415,
+            "range": "± 18689777",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 131515977,
+            "range": "± 41709629",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 160340735,
+            "range": "± 39778806",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 268575583,
+            "range": "± 40272906",
             "unit": "ns/iter"
           }
         ]
