@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794868450463,
+  "lastUpdate": 1795475552317,
   "repoUrl": "https://github.com/NatLabRockies/reVRt",
   "entries": {
     "Rust Benchmark": [
@@ -14867,6 +14867,90 @@ window.BENCHMARK_DATA = {
             "name": "distance/10",
             "value": 268575583,
             "range": "± 40272906",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "225b10e76f6c00770aae04c78eea0ddcfe4d917b",
+          "message": "ci: Bump the github-actions group with 3 updates (#340)\n\nBumps the github-actions group with 3 updates: [github/codeql-action/init](https://github.com/github/codeql-action), [github/codeql-action/analyze](https://github.com/github/codeql-action) and [release-drafter/release-drafter](https://github.com/release-drafter/release-drafter).\n\n\nUpdates `github/codeql-action/init` from 4.39.3 to 4.39.4\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/33d7b85da1a04171e211befe2c739303b9a4c066...1bd86f2fdb4b86187fa4059f16f31a3202acc9ea)\n\nUpdates `github/codeql-action/analyze` from 4.39.3 to 4.39.4\n- [Release notes](https://github.com/github/codeql-action/releases)\n- [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/github/codeql-action/compare/33d7b85da1a04171e211befe2c739303b9a4c066...1bd86f2fdb4b86187fa4059f16f31a3202acc9ea)\n\nUpdates `release-drafter/release-drafter` from 7.10.0 to 7.11.0\n- [Release notes](https://github.com/release-drafter/release-drafter/releases)\n- [Commits](https://github.com/release-drafter/release-drafter/compare/978bb0b30c5ee8cdd332ced253758157150d43f0...d1a19e60e81a7e650d00a7de9277f87e439117ea)\n\n---\nupdated-dependencies:\n- dependency-name: github/codeql-action/init\n  dependency-version: 4.39.4\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: github/codeql-action/analyze\n  dependency-version: 4.39.4\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: github-actions\n- dependency-name: release-drafter/release-drafter\n  dependency-version: 7.11.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: github-actions\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-23T15:00:40-07:00",
+          "tree_id": "164d3a32ddbba4815810d20ca83744850c34bcc3",
+          "url": "https://github.com/NatLabRockies/reVRt/commit/225b10e76f6c00770aae04c78eea0ddcfe4d917b"
+        },
+        "date": 1795475551251,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "constant_cost",
+            "value": 50865022,
+            "range": "± 1313329",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "random_cost",
+            "value": 49474691,
+            "range": "± 1212883",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_near_routes",
+            "value": 63894619,
+            "range": "± 1360065",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "multiple_spread_routes",
+            "value": 95228929,
+            "range": "± 3035433",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "single_chunk",
+            "value": 486851292,
+            "range": "± 20978506",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/0",
+            "value": 132848981,
+            "range": "± 2349003",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/1",
+            "value": 135739478,
+            "range": "± 1921033",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/2",
+            "value": 146495263,
+            "range": "± 1761316",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/5",
+            "value": 178992581,
+            "range": "± 1731835",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "distance/10",
+            "value": 300655145,
+            "range": "± 6610748",
             "unit": "ns/iter"
           }
         ]
